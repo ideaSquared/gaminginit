@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WARDOGS Community</title>
+    <meta name="description" content="A WARDOGS community: live server status, player stats and our Discord." />
+    <meta property="og:title" content="WARDOGS Community" />
+    <meta property="og:description" content="Live server status, player stats and our Discord." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0e0f0c" />
+    <!-- Where the bot serves its stats. See README.md. -->
+    <meta name="stats-url" content="https://wardogs-discord-bot.YOUR-SUBDOMAIN.workers.dev/api/stats" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top" aria-label="WARDOGS Community, home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M16 2 29 9v14L16 30 3 23V9Z" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9 12l7 5 7-5M9 17l7 5 7-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" />
+          </svg>
+          <span>WARDOGS Community</span>
+        </a>
+        <nav aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="#server">Server</a></li>
+            <li><a href="#stats">Stats</a></li>
+            <li><a href="#matches">Matches</a></li>
+            <li><a href="#join">Join</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn-discord btn-small" href="https://discord.gg/jnsZkudxpD" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+          <span>Discord</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="wrap hero-inner">
+          <div class="hero-copy">
+            <p class="eyebrow">Fan-run server &amp; Discord</p>
+            <h1>WARDOGS Community</h1>
+            <p class="lede">
+              Squad up with regulars, help seed the server and play full matches together. Everything is organised on our
+              Discord, and the bot there tells you when the server is filling up.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-discord" href="https://discord.gg/jnsZkudxpD" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                <span>Join our Discord</span>
+              </a>
+              <a class="btn btn-ghost" href="#server">Server status</a>
+            </div>
+            <p class="discord-count" id="discord-count" hidden></p>
+          </div>
+
+          <article class="card server-card" id="server" aria-labelledby="server-name">
+            <div class="server-top">
+              <span class="status" id="server-status" data-kind="waiting" aria-live="polite">
+                <span class="status-icon" aria-hidden="true"></span>
+                <span class="status-label">Connecting</span>
+              </span>
+              <span class="updated" id="server-updated"></span>
+            </div>
+            <h2 class="server-name" id="server-name">Game server</h2>
+            <p class="server-detail" id="server-detail">Loading live status…</p>
+            <div class="players">
+              <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
+              <div
+                class="meter"
+                id="players-meter"
+                role="meter"
+                aria-label="Players online"
+                aria-valuemin="0"
+                aria-valuemax="1"
+                aria-valuenow="0"
+              >
+                <span class="meter-fill"></span>
+                <span class="meter-mark" title="Goes live here"></span>
+              </div>
+            </div>
+            <dl class="server-facts">
+              <div>
+                <dt>Map</dt>
+                <dd id="server-map">–</dd>
+              </div>
+              <div>
+                <dt>Score</dt>
+                <dd id="server-score">–</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <div class="notice wrap" id="notice" role="status" hidden></div>
+
+      <section class="section" id="stats" aria-labelledby="stats-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="stats-title">Server stats</h2>
+            <p class="section-note">Read from the game server once a minute by our Discord bot.</p>
+          </div>
+
+          <div class="tiles">
+            <div class="tile">
+              <p class="tile-label">Players now</p>
+              <p class="tile-value" id="tile-now">–</p>
+            </div>
+            <div class="tile">
+              <p class="tile-label">Peak, last 24 hours</p>
+              <p class="tile-value" id="tile-peak">–</p>
+            </div>
+            <div class="tile">
+              <p class="tile-label">Live today</p>
+              <p class="tile-value" id="tile-live">–</p>
+            </div>
+            <div class="tile">
+              <p class="tile-label">Matches, last 24 hours</p>
+              <p class="tile-value" id="tile-matches">–</p>
+            </div>
+          </div>
+
+          <div class="charts">
+            <figure class="card chart-card">
+              <figcaption>
+                <h3>Players, last 24 hours</h3>
+                <p class="chart-sub">Your local time. Gaps are when the server did not answer.</p>
+              </figcaption>
+              <div
+                class="chart"
+                id="population-chart"
+                tabindex="0"
+                role="img"
+                aria-label="Players online over the last 24 hours. Use the left and right arrow keys to read values."
+              ></div>
+              <details class="table-view">
+                <summary>Show as table</summary>
+                <div class="table-scroll"><table id="population-table"></table></div>
+              </details>
+            </figure>
+
+            <figure class="card chart-card">
+              <figcaption>
+                <h3>Daily peak, last 14 days</h3>
+                <p class="chart-sub">Most players online at once each day (UTC days).</p>
+              </figcaption>
+              <div class="chart" id="daily-chart"></div>
+              <details class="table-view">
+                <summary>Show as table</summary>
+                <div class="table-scroll"><table id="daily-table"></table></div>
+              </details>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="matches" aria-labelledby="matches-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="matches-title">Matches</h2>
+            <p class="section-note">Top players by kills. A match counts once the server has gone live.</p>
+          </div>
+          <div class="matches">
+            <article class="card current-match" aria-labelledby="current-title">
+              <h3 id="current-title">On now</h3>
+              <div id="current-match"><p class="muted">Loading…</p></div>
+            </article>
+            <div class="recent">
+              <h3>Recent matches</h3>
+              <ol class="match-list" id="match-list"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section join" id="join" aria-labelledby="join-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="join-title">Get in the fight</h2>
+          </div>
+          <ol class="steps">
+            <li class="card step">
+              <span class="step-n" aria-hidden="true">1</span>
+              <h3>Join the Discord</h3>
+              <p>Meet the regulars, find a squad and hear about events first.</p>
+              <a class="btn btn-discord" href="https://discord.gg/jnsZkudxpD" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                <span>Join our Discord</span>
+              </a>
+            </li>
+            <li class="card step">
+              <span class="step-n" aria-hidden="true">2</span>
+              <h3>Watch for the alerts</h3>
+              <p>
+                The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
+                going.
+              </p>
+            </li>
+            <li class="card step">
+              <span class="step-n" aria-hidden="true">3</span>
+              <h3>Find the server</h3>
+              <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
+        <p>Fan-made community site. Not affiliated with the developers or publishers of WARDOGS.</p>
+      </div>
+    </footer>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="discord-logo" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+        />
+      </symbol>
+    </svg>
+  </body>
+</html>

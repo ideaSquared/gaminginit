@@ -1,0 +1,97 @@
+// Pure helpers for turning the bot's /api/stats numbers into text. No DOM here, so they can be tested in Node.
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+// The bot checks the server once a minute; a reading older than this means it could not reach the server.
+export const STALE_MS = 3 * MINUTE;
+
+export const timeAgo = (ms) => {
+  if (ms < MINUTE) return 'just now';
+  if (ms < HOUR) return `${Math.floor(ms / MINUTE)} min ago`;
+  if (ms < DAY) return `${Math.floor(ms / HOUR)} h ago`;
+  const days = Math.floor(ms / DAY);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+};
+
+export const formatDuration = (ms) => {
+  const minutes = Math.round(ms / MINUTE);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')} min`;
+};
+
+export const formatHours = (minutes) => {
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  const hours = minutes / 60;
+  return `${hours < 10 ? hours.toFixed(1) : Math.round(hours)} h`;
+};
+
+export const compact = (n) => {
+  if (n < 10_000) return n.toLocaleString('en-GB');
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 100_000 ? 1 : 0)}K`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+};
+
+export const kd = (kills, deaths) => (kills / Math.max(deaths, 1)).toFixed(2);
+
+const byScore = (scores) => [...scores].sort((a, b) => b.score - a.score);
+
+// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores.
+export const result = (scores) => {
+  const [first, second] = byScore(scores ?? []);
+  if (!first || !second) return null;
+  if (first.score === second.score) return { winner: null, text: `Draw ${first.score}–${second.score}` };
+  return { winner: first.name, text: `${first.name} won ${first.score}–${second.score}` };
+};
+
+// What the server is doing, as the page should describe it.
+export const serverState = (stats, now) => {
+  const server = stats?.server;
+  if (!server) return { kind: 'waiting', label: 'Waiting', detail: 'Waiting for the first reading from the bot.' };
+  if (now - server.seenAt > STALE_MS) {
+    return { kind: 'offline', label: 'Offline', detail: `Not responding. Last seen ${timeAgo(now - server.seenAt)}.` };
+  }
+  if (server.phase === 'live') return { kind: 'live', label: 'Live', detail: 'Full match in progress.' };
+  if (server.phase === 'seeding') {
+    const needed = Math.max(0, stats.thresholds.live - server.players);
+    return {
+      kind: 'seeding',
+      label: 'Seeding',
+      detail: `${needed} more player${needed === 1 ? '' : 's'} to go live. Jump in and help fill it.`,
+    };
+  }
+  return { kind: 'empty', label: 'Empty', detail: 'Nobody on yet. Be the first in and start the seed.' };
+};
+
+export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
+
+// Splits samples wherever the bot missed readings, so the chart shows a gap instead of a made-up line.
+export const segments = (history, maxGapMs = STALE_MS) =>
+  history.reduce((parts, sample, i) => {
+    const previous = history[i - 1];
+    if (previous === undefined || sample[0] - previous[0] > maxGapMs) parts.push([sample]);
+    else parts[parts.length - 1].push(sample);
+    return parts;
+  }, []);
+
+// A round axis maximum with evenly spaced ticks: 0, 16, 32, 48, 64 or 0, 25, 50, 75, 100.
+export const niceScale = (value, tickCount = 4) => {
+  const max = Math.max(1, value);
+  const rough = max / tickCount;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  // Player counts are whole numbers, so steps are too.
+  const step = Math.max(1, [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= rough && Number.isInteger(s)) ?? 10 * magnitude);
+  const top = Math.ceil(max / step) * step;
+  return { max: top, ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
+};
+
+// "Valkyra 43–32 Kharr", in the order the server lists the factions.
+export const scoreLine = (scores) => {
+  const list = scores ?? [];
+  const [a, b] = list;
+  if (list.length === 2 && a && b) return `${a.name} ${a.score}–${b.score} ${b.name}`;
+  return list.map((s) => `${s.name} ${s.score}`).join(' · ');
+};
