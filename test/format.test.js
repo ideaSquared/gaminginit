@@ -5,6 +5,7 @@ import {
   formatDuration,
   formatHours,
   kd,
+  mapKey,
   niceScale,
   peak,
   result,
@@ -153,5 +154,14 @@ describe('leaderboard boards', () => {
       seeding: ['4', '1.5 h'],
     });
     assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
+  });
+});
+
+describe('mapKey', () => {
+  it('gives the three maps their colour key, whatever the case, and nothing to any other map', () => {
+    assert.deepEqual(['Bakurani', 'OZETI', ' Zestafona '].map(mapKey), ['bakurani', 'ozeti', 'zestafona']);
+    assert.equal(mapKey('Kavkazi'), null);
+    assert.equal(mapKey(''), null);
+    assert.equal(mapKey(undefined), null);
   });
 });
