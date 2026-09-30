@@ -43,7 +43,7 @@ Edit `public/index.html`:
 | Community name  | `<title>`, the `og:title` meta, the `.brand` link text and the `<h1>`                         |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
-Commit and push the change if you will use option B or C below.
+Commit and push the change to `main` if you will use option B or C below.
 
 ### 3. Deploy the site
 
@@ -68,11 +68,9 @@ To update the site later: edit the files, then run `npm run deploy` again.
 This uses Cloudflare's Git integration for Workers. Menu names in the Cloudflare dashboard change from time to time;
 the settings below are what matter.
 
-1. The site's code is on the branch `claude/trusting-noether-j1zjlr`. Rename it to `main` first: on GitHub, open
-   the repo → **Branches** → pencil icon next to the branch.
-2. In the Cloudflare dashboard, go to **Workers & Pages** → **Create**, and choose to import a Git repository.
-3. Connect GitHub if asked, then pick `ParagonJenko/gaminginit`.
-4. Use these settings:
+1. In the Cloudflare dashboard, go to **Workers & Pages** → **Create**, and choose to import a Git repository.
+2. Connect GitHub if asked, then pick `ParagonJenko/gaminginit`.
+3. Use these settings:
 
    | Setting           | Value                                                            |
    | ----------------- | ---------------------------------------------------------------- |
@@ -82,15 +80,14 @@ the settings below are what matter.
    | Deploy command    | `npx wrangler deploy`                                            |
    | Root directory    | `/`                                                              |
 
-5. Save and deploy. Every push to `main` now redeploys the site.
+4. Save and deploy. Every push to `main` now redeploys the site.
 
 #### Option C: GitHub Pages
 
 GitHub Pages is free for public repos. For a private repo it needs a paid GitHub plan.
 
-1. Rename the branch to `main`, as in option B step 1.
-2. On GitHub: repo → **Settings** → **Pages** → **Source**: **GitHub Actions**.
-3. Add this file as `.github/workflows/pages.yml` and push it:
+1. On GitHub: repo → **Settings** → **Pages** → **Source**: **GitHub Actions**.
+2. Add this file as `.github/workflows/pages.yml` and push it:
    ```yaml
    name: Deploy to GitHub Pages
 
@@ -123,7 +120,7 @@ GitHub Pages is free for public repos. For a private repo it needs a paid GitHub
          - id: deployment
            uses: actions/deploy-pages@v4
    ```
-4. The site appears at `https://paragonjenko.github.io/gaminginit/`. The URL is also shown under
+3. The site appears at `https://paragonjenko.github.io/gaminginit/`. The URL is also shown under
    **Settings** → **Pages**.
 
 ### 4. Use your own domain (optional, Cloudflare)
