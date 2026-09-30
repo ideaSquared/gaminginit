@@ -1,0 +1,4 @@
+# Keep the workers.dev copies (production and branch previews) out of search results.
+# Only gaminginit.com should be indexed.
+https://:worker.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex
