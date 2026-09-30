@@ -13,6 +13,9 @@ import {
   serverState,
   STALE_MS,
   timeAgo,
+  vipDetail,
+  vipOffer,
+  BOARDS,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -101,5 +104,39 @@ describe('chart helpers', () => {
     assert.deepEqual(niceScale(10), { max: 10, ticks: [0, 5, 10] });
     assert.deepEqual(niceScale(3), { max: 3, ticks: [0, 1, 2, 3] });
     assert.deepEqual(niceScale(0), { max: 1, ticks: [0, 1] });
+  });
+});
+
+const vip = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
+
+describe('seeder VIP', () => {
+  it('says what seeding earns, from the bot’s rule', () => {
+    assert.equal(vipOffer(vip), 'Seed on 3 days in a week and get a reserved slot for a week.');
+    assert.equal(vipOffer({ ...vip, seedDays: 1, windowDays: 14 }), 'Seed on 1 day in 14 days and get a reserved slot for a week.');
+    assert.match(vipDetail(vip), /^A day counts when you're on for more than 10 minutes while the server seeds, and it goes live\./);
+  });
+
+  it('mentions VIP in the server status while seeding or empty, only when the bot gives it', () => {
+    const withVip = (s) => ({ ...stats(s), vip });
+
+    assert.match(serverState(withVip(server(14, 'seeding')), NOW).detail, /help fill it\. Seeding earns VIP\.$/);
+    assert.match(serverState(withVip(server(0, 'empty')), NOW).detail, /start the seed\. Seeding earns VIP\.$/);
+    assert.doesNotMatch(serverState(withVip(server(30, 'live')), NOW).detail, /VIP/);
+    assert.doesNotMatch(serverState(stats(server(14, 'seeding')), NOW).detail, /VIP/);
+  });
+});
+
+describe('leaderboard boards', () => {
+  const player = { name: 'Ash', seedingMinutes: 90, liveMinutes: 150, seedDays: 4, matches: 7, kills: 60, deaths: 24 };
+  const cells = Object.fromEntries(BOARDS.map((b) => [b.key, b.cells(player)]));
+
+  it('shows each board’s numbers', () => {
+    assert.deepEqual(cells, {
+      kills: ['60', '2.50'],
+      kd: ['2.50', '60'],
+      playtime: ['4.0 h', '7'],
+      seeding: ['4', '1.5 h'],
+    });
+    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
   });
 });

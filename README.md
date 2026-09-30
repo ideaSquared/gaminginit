@@ -12,6 +12,9 @@ What it shows:
 - Discord member and online counts.
 - Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
 - The current match's top 5 players, and the last 10 matches with winner, length, peak players and top 5.
+- A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
+- Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
+  when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
@@ -21,7 +24,8 @@ You need:
 
 - [Node.js](https://nodejs.org) 22 or newer.
 - A free Cloudflare account. Use the same one as the bot.
-- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`).
+- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). The leaderboard and VIP
+  sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
 
 ### 1. Get the bot's stats URL
 

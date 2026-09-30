@@ -1,6 +1,19 @@
 import { dailyChart, populationChart } from './charts.js';
 import { demoStats } from './demo.js';
-import { compact, formatDuration, formatHours, kd, peak, result, scoreLine, serverState, timeAgo } from './format.js';
+import {
+  BOARDS,
+  compact,
+  formatDuration,
+  formatHours,
+  kd,
+  peak,
+  result,
+  scoreLine,
+  serverState,
+  timeAgo,
+  vipDetail,
+  vipOffer,
+} from './format.js';
 
 const REFRESH_MS = 60_000;
 const DAY = 86_400_000;
@@ -244,14 +257,74 @@ const renderMatches = (now) => {
   );
 };
 
+// What seeding earns, when the bot gives seeders VIP.
+const renderVip = () => {
+  const vip = stats?.vip ?? null;
+  $('vip-cta').hidden = !vip;
+  $('vip').hidden = !vip;
+  if (!vip) return;
+  setText($('vip-cta-text'), vipOffer(vip));
+  setText($('vip-step-offer'), vipOffer(vip));
+  setText($('vip-step-detail'), vipDetail(vip));
+};
+
+const boardTable = (board, rows) =>
+  el(
+    'table',
+    { className: 'players-table' },
+    el(
+      'thead',
+      {},
+      el('tr', {}, ...['#', 'Player', ...board.headings].map((h) => el('th', { scope: 'col', textContent: h }))),
+    ),
+    el(
+      'tbody',
+      {},
+      ...rows.map((p, i) =>
+        el(
+          'tr',
+          {},
+          el('td', { className: 'rank', textContent: String(i + 1) }),
+          el('td', { className: 'player', textContent: p.name }),
+          ...board.cells(p).map((cell) => el('td', { textContent: cell })),
+        ),
+      ),
+    ),
+  );
+
+const renderLeaderboard = () => {
+  const root = $('boards');
+  const leaderboard = stats?.leaderboard;
+  if (!leaderboard) {
+    const message = stats ? 'The leaderboard appears once the bot keeps player records.' : 'Waiting for live stats.';
+    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
+    return;
+  }
+  setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
+  root.replaceChildren(
+    ...BOARDS.map((board) => {
+      const rows = leaderboard[board.key] ?? [];
+      return el(
+        'article',
+        { className: 'card board' },
+        el('h3', { textContent: board.title }),
+        board.sub ? el('p', { className: 'board-sub', textContent: board.sub(leaderboard) }) : null,
+        rows.length > 0 ? boardTable(board, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }),
+      );
+    }),
+  );
+};
+
 const render = () => {
   const now = Date.now();
   renderServer(now);
   renderDiscord();
+  renderVip();
   renderTiles(now);
   renderCharts(now);
   renderCurrentMatch(now);
   renderMatches(now);
+  renderLeaderboard();
 };
 
 const link = (href, textContent) => el('a', { href, textContent });

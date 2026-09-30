@@ -88,5 +88,29 @@ export const demoStats = (now) => {
           }
         : null,
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
+    leaderboard: leaderboard(),
+    vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
+  };
+};
+
+// Thirty days of made-up totals for ten regulars.
+const leaderboard = () => {
+  const players = NAMES.map((name, i) => ({
+    name,
+    seedingMinutes: [410, 95, 260, 30, 180, 0, 520, 75, 140, 12][i],
+    liveMinutes: 1900 - i * 150 + (i % 3) * 90,
+    seedDays: [9, 2, 6, 1, 4, 0, 11, 2, 3, 0][i],
+    matches: 42 - i * 3,
+    kills: 820 - i * 61 + (i % 4) * 40,
+    deaths: 310 - i * 14 + (i % 3) * 25,
+  }));
+  const by = (value) => [...players].sort((a, b) => value(b) - value(a));
+  return {
+    days: 30,
+    kdMinMatches: 3,
+    kills: by((p) => p.kills),
+    kd: by((p) => p.kills / Math.max(p.deaths, 1)),
+    playtime: by((p) => p.seedingMinutes + p.liveMinutes),
+    seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
   };
 };
