@@ -1,0 +1,15 @@
+{
+  "name": "wardogs-community-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Community website for a WARDOGS server, with live stats from the wardogs-discord-bot.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "npx --yes serve@14 public",
+    "test": "node --test",
+    "deploy": "npx --yes wrangler@4 deploy"
+  }
+}
