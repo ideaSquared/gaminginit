@@ -23,7 +23,7 @@ Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requ
    | What            | Where                                                                                                   |
    | --------------- | ------------------------------------------------------------------------------------------------------- |
    | Stats URL       | `<meta name="stats-url" content="…">` → your Worker URL + `/api/stats`                                  |
-   | Discord invite  | Replace all 3 `https://discord.gg/YOUR-INVITE` links. Use an invite that never expires.                 |
+   | Discord invite  | Set to `https://discord.gg/jnsZkudxpD` in 3 places. Change all 3 if the invite changes.                  |
    | Community name  | `<title>`, the `og:title` meta, the `.brand` link text and the `<h1>`                                    |
    | Intro text      | The `.lede` paragraph under the heading                                                                  |
 
