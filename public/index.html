@@ -35,6 +35,7 @@
             <li><a href="#server">Server</a></li>
             <li><a href="#stats">Stats</a></li>
             <li><a href="#matches">Matches</a></li>
+            <li><a href="#leaderboard">Leaderboard</a></li>
             <li><a href="#join">Join</a></li>
           </ul>
         </nav>
@@ -55,6 +56,12 @@
               A gaming community built around playing together. Right now that means our WARDOGS server: squad up with
               regulars, help seed it and play full matches. Everything is organised on our Discord, and the bot there tells
               you when the server is filling up.
+            </p>
+            <!-- Shown when the bot gives seeders VIP. -->
+            <p class="vip-cta" id="vip-cta" hidden>
+              <span class="vip-tag">Seeder VIP</span>
+              <span id="vip-cta-text"></span>
+              <a href="#vip">How it works</a>
             </p>
             <div class="hero-actions">
               <a class="btn btn-discord" href="https://discord.gg/jnsZkudxpD" rel="noopener">
@@ -186,6 +193,16 @@
         </div>
       </section>
 
+      <section class="section" id="leaderboard" aria-labelledby="leaderboard-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="leaderboard-title">Leaderboard</h2>
+            <p class="section-note" id="leaderboard-note">The last 30 days on our server.</p>
+          </div>
+          <div class="boards" id="boards"><p class="muted">Loading…</p></div>
+        </div>
+      </section>
+
       <section class="section join" id="join" aria-labelledby="join-title">
         <div class="wrap">
           <div class="section-head">
@@ -213,6 +230,12 @@
               <span class="step-n" aria-hidden="true">3</span>
               <h3>Find the server</h3>
               <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
+            </li>
+            <li class="card step step-vip" id="vip" hidden>
+              <span class="step-n" aria-hidden="true">4</span>
+              <h3>Seed and get VIP</h3>
+              <p><strong id="vip-step-offer"></strong></p>
+              <p id="vip-step-detail"></p>
             </li>
           </ol>
         </div>

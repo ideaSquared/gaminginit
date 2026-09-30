@@ -825,6 +825,7 @@ tbody tr:last-child td {
 .players-table td:nth-child(n + 3),
 .players-table th:nth-child(n + 3) {
   text-align: right;
+  white-space: nowrap;
 }
 
 /* The name column takes the spare width, so short names never wrap and only very long ones break. */
@@ -956,6 +957,87 @@ tbody tr:last-child td {
   color: var(--text);
 }
 
+/* Leaderboard */
+
+.boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 760px) {
+  .boards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.board {
+  padding: 20px;
+  min-width: 0;
+}
+
+.board h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.board-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.board .players-table,
+.board-empty {
+  margin-top: 12px;
+}
+
+@media (max-width: 400px) {
+  .board {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* Seeder VIP */
+
+.vip-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.vip-cta[hidden] {
+  display: none;
+}
+
+.vip-cta a {
+  font-weight: 600;
+}
+
+.vip-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* Join */
 
 .join {
@@ -975,6 +1057,12 @@ tbody tr:last-child td {
   .steps {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* The VIP step is a perk rather than a step to take in order, so it spans the row under the others. */
+.step-vip {
+  grid-column: 1 / -1;
+  border-left: 3px solid var(--accent);
 }
 
 .step {
@@ -997,8 +1085,16 @@ tbody tr:last-child td {
   font-weight: 800;
 }
 
+.step[hidden] {
+  display: none;
+}
+
 .step p {
   color: var(--text-2);
+}
+
+.step p strong {
+  color: var(--text);
 }
 
 .step .btn {

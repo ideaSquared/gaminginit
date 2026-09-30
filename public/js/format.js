@@ -55,16 +55,59 @@ export const serverState = (stats, now) => {
     return { kind: 'offline', label: 'Offline', detail: `Not responding. Last seen ${timeAgo(now - server.seenAt)}.` };
   }
   if (server.phase === 'live') return { kind: 'live', label: 'Live', detail: 'Full match in progress.' };
+  const vip = stats.vip ? ' Seeding earns VIP.' : '';
   if (server.phase === 'seeding') {
     const needed = Math.max(0, stats.thresholds.live - server.players);
     return {
       kind: 'seeding',
       label: 'Seeding',
-      detail: `${needed} more player${needed === 1 ? '' : 's'} to go live. Jump in and help fill it.`,
+      detail: `${needed} more player${needed === 1 ? '' : 's'} to go live. Jump in and help fill it.${vip}`,
     };
   }
-  return { kind: 'empty', label: 'Empty', detail: 'Nobody on yet. Be the first in and start the seed.' };
+  return { kind: 'empty', label: 'Empty', detail: `Nobody on yet. Be the first in and start the seed.${vip}` };
 };
+
+const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+const span = (days) => (days === 7 ? 'a week' : plural(days, 'day'));
+
+// What seeding earns, from the bot's `vip` rule: "Seed on 3 days in a week and get a reserved slot for a week."
+export const vipOffer = (vip) =>
+  `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a reserved slot for ${span(vip.lengthDays)}.`;
+
+export const vipDetail = (vip) =>
+  `A day counts when you're on for more than ${vip.seedMinutes} minutes while the server seeds, and it goes live. ` +
+  'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
+  "server's next daily restart. Keep seeding to keep it.";
+
+// The leaderboard's boards: what each one shows, besides the rank and the name.
+export const BOARDS = [
+  {
+    key: 'kills',
+    title: 'Most kills',
+    headings: ['Kills', 'K/D'],
+    cells: (p) => [String(p.kills), kd(p.kills, p.deaths)],
+  },
+  {
+    key: 'kd',
+    title: 'Best K/D',
+    sub: (board) => `At least ${board.kdMinMatches} matches.`,
+    headings: ['K/D', 'Kills'],
+    cells: (p) => [kd(p.kills, p.deaths), String(p.kills)],
+  },
+  {
+    key: 'playtime',
+    title: 'Most time played',
+    headings: ['Time', 'Matches'],
+    cells: (p) => [formatHours(p.seedingMinutes + p.liveMinutes), String(p.matches)],
+  },
+  {
+    key: 'seeding',
+    title: 'Top seeders',
+    sub: () => 'Time on the server before it went live.',
+    headings: ['Seed days', 'Seeding'],
+    cells: (p) => [String(p.seedDays), formatHours(p.seedingMinutes)],
+  },
+];
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 
