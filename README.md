@@ -44,7 +44,7 @@ Edit `public/index.html`:
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats` |
-| Discord invite  | Already `https://discord.gg/jnsZkudxpD` in 4 places. If the invite changes, change all 4.     |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4` in 4 places. If the invite changes, change all 4. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg` |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
