@@ -1,8 +1,9 @@
-# WARDOGS community site
+# gaminginit
 
-A one-page website for a WARDOGS community: a Discord invite, live server status and stats. The live numbers come
-from [wardogs-discord-bot](https://github.com/ParagonJenko/wardogs-discord-bot), which reads the game server's RCON
-once a minute and serves them at `GET /api/stats`.
+The website for the gaminginit gaming community, at [gaminginit.com](https://gaminginit.com): a Discord invite, and
+live status and stats for our WARDOGS server. The live numbers come from
+[wardogs-discord-bot](https://github.com/ParagonJenko/wardogs-discord-bot), which reads the game server's RCON once
+a minute and serves them at `GET /api/stats`.
 
 What it shows:
 
@@ -40,7 +41,7 @@ Edit `public/index.html`:
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats` |
 | Discord invite  | Already `https://discord.gg/jnsZkudxpD` in 3 places. If the invite changes, change all 3.     |
-| Community name  | `<title>`, the `og:title` meta, the `.brand` link text and the `<h1>`                         |
+| Name and logo   | Already gaminginit: `<title>`, the `og:` metas, the `.wordmark` spans and `favicon.svg`       |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.
@@ -59,7 +60,8 @@ npm run deploy
 ```
 
 Wrangler prints the site's URL: `https://wardogs-community-site.<your-subdomain>.workers.dev`. The first part comes
-from `name` in `wrangler.jsonc`; change it there if you want a different name.
+from `name` in `wrangler.jsonc`. Don't rename it once a custom domain is attached: a new name deploys a new Worker,
+and the domain stays on the old one.
 
 To update the site later: edit the files, then run `npm run deploy` again.
 
@@ -81,6 +83,9 @@ the settings below are what matter.
    | Root directory    | `/`                                                              |
 
 4. Save and deploy. Every push to `main` now redeploys the site.
+
+Pushes to other branches, such as pull requests, run `npx wrangler preview` and get a preview link instead. That
+command needs the `previews` block in `wrangler.jsonc`, which is already there.
 
 #### Option C: GitHub Pages
 

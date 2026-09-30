@@ -53,7 +53,7 @@ export const demoStats = (now) => {
     generatedAt: now,
     thresholds: { seeding: 1, live: LIVE },
     server: {
-      name: 'WARDOGS Community #1',
+      name: 'gaminginit #1',
       players,
       maxPlayers: CAPACITY,
       map: 'Ozeti',
@@ -87,6 +87,6 @@ export const demoStats = (now) => {
             top: top(2),
           }
         : null,
-    discord: { name: 'WARDOGS Community', members: 1284, online: 213, fetchedAt: minute },
+    discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
   };
 };

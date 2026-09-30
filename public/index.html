@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WARDOGS Community</title>
-    <meta name="description" content="A WARDOGS community: live server status, player stats and our Discord." />
-    <meta property="og:title" content="WARDOGS Community" />
-    <meta property="og:description" content="Live server status, player stats and our Discord." />
+    <title>gaminginit</title>
+    <meta name="description" content="gaminginit is a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <link rel="canonical" href="https://gaminginit.com/" />
+    <meta property="og:site_name" content="gaminginit" />
+    <meta property="og:title" content="gaminginit" />
+    <meta property="og:description" content="A gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta property="og:url" content="https://gaminginit.com/" />
     <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#0e0f0c" />
+    <meta name="theme-color" content="#0b0d10" />
     <!-- Where the bot serves its stats. See README.md. -->
-    <meta name="stats-url" content="https://wardogs-discord-bot.YOUR-SUBDOMAIN.workers.dev/api/stats" />
+    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="js/app.js"></script>
@@ -20,12 +23,12 @@
 
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="brand" href="#top" aria-label="WARDOGS Community, home">
+        <a class="brand" href="#top" aria-label="gaminginit, home">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M16 2 29 9v14L16 30 3 23V9Z" fill="none" stroke="currentColor" stroke-width="2" />
-            <path d="M9 12l7 5 7-5M9 17l7 5 7-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" />
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <span>WARDOGS Community</span>
+          <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
         <nav aria-label="Sections">
           <ul class="nav-links">
@@ -46,11 +49,12 @@
       <section class="hero" id="top">
         <div class="wrap hero-inner">
           <div class="hero-copy">
-            <p class="eyebrow">Fan-run server &amp; Discord</p>
-            <h1>WARDOGS Community</h1>
+            <p class="eyebrow">Gaming community · Now playing WARDOGS</p>
+            <h1 class="wordmark">gaming<span class="wordmark-accent">init</span></h1>
             <p class="lede">
-              Squad up with regulars, help seed the server and play full matches together. Everything is organised on our
-              Discord, and the bot there tells you when the server is filling up.
+              A gaming community built around playing together. Right now that means our WARDOGS server: squad up with
+              regulars, help seed it and play full matches. Everything is organised on our Discord, and the bot there tells
+              you when the server is filling up.
             </p>
             <div class="hero-actions">
               <a class="btn btn-discord" href="https://discord.gg/jnsZkudxpD" rel="noopener">
@@ -107,7 +111,7 @@
         <div class="wrap">
           <div class="section-head">
             <h2 id="stats-title">Server stats</h2>
-            <p class="section-note">Read from the game server once a minute by our Discord bot.</p>
+            <p class="section-note">Our WARDOGS server, read once a minute by our Discord bot.</p>
           </div>
 
           <div class="tiles">
@@ -185,12 +189,12 @@
       <section class="section join" id="join" aria-labelledby="join-title">
         <div class="wrap">
           <div class="section-head">
-            <h2 id="join-title">Get in the fight</h2>
+            <h2 id="join-title">Play with us</h2>
           </div>
           <ol class="steps">
             <li class="card step">
               <span class="step-n" aria-hidden="true">1</span>
-              <h3>Join the Discord</h3>
+              <h3>Join the gaminginit Discord</h3>
               <p>Meet the regulars, find a squad and hear about events first.</p>
               <a class="btn btn-discord" href="https://discord.gg/jnsZkudxpD" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -217,8 +221,9 @@
 
     <footer class="footer">
       <div class="wrap footer-inner">
+        <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
         <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
-        <p>Fan-made community site. Not affiliated with the developers or publishers of WARDOGS.</p>
+        <p>Not affiliated with the developers or publishers of WARDOGS.</p>
       </div>
     </footer>
 
