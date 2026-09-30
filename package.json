@@ -2,7 +2,7 @@
   "name": "wardogs-community-site",
   "version": "1.0.0",
   "private": true,
-  "description": "Community website for a WARDOGS server, with live stats from the wardogs-discord-bot.",
+  "description": "Website for the gaminginit gaming community, with live WARDOGS server stats from the wardogs-discord-bot.",
   "type": "module",
   "engines": {
     "node": ">=22"

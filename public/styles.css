@@ -1,16 +1,17 @@
 :root {
   color-scheme: dark;
-  --page: #0e0f0c;
-  --surface: #171814;
-  --surface-2: #1f201b;
-  --hairline: #2c2d27;
-  --axis: #3a3b34;
-  --text: #f4f2ea;
-  --text-2: #c3c1b4;
-  --muted: #8d8b80;
-  --accent: #d6b772;
-  --accent-ink: #17140c;
-  --series: #bf8230;
+  --page: #0b0d10;
+  --surface: #13161b;
+  --surface-2: #1a1e25;
+  --hairline: #262b33;
+  --axis: #353c46;
+  --text: #eef2f6;
+  --text-2: #b9c2cd;
+  --muted: #8a94a3;
+  /* gaminginit teal. --series is a darker step of the same hue, checked for charts on --surface. */
+  --accent: #4fd6cc;
+  --accent-ink: #04201e;
+  --series: #20a4b0;
   --discord: #4752c4;
   --discord-hover: #3c45a5;
   --good: #0ca30c;
@@ -181,11 +182,19 @@ a {
   gap: 10px;
   color: var(--text);
   text-decoration: none;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   margin-right: auto;
+}
+
+/* The gaminginit wordmark: lowercase, heavy and tight, with "init" in the brand colour. */
+.wordmark {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+
+.wordmark-accent {
+  color: var(--accent);
 }
 
 .brand-mark {
@@ -229,7 +238,7 @@ a {
   position: relative;
   border-bottom: 1px solid var(--hairline);
   background:
-    radial-gradient(ellipse 80% 70% at 85% 10%, rgb(214 183 114 / 0.1), transparent 60%),
+    radial-gradient(ellipse 80% 70% at 85% 10%, rgb(79 214 204 / 0.1), transparent 60%),
     linear-gradient(var(--hairline) 1px, transparent 1px) 0 0 / 48px 48px,
     linear-gradient(90deg, var(--hairline) 1px, transparent 1px) 0 0 / 48px 48px,
     var(--page);
@@ -273,15 +282,12 @@ a {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 1.4rem + 5vw, 4.5rem);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  line-height: 0.95;
+  font-size: clamp(3rem, 1.6rem + 6.5vw, 6rem);
+  line-height: 0.9;
 }
 
 .lede {
-  margin-top: 20px;
+  margin-top: 28px;
   max-width: 36em;
   color: var(--text-2);
   font-size: 1.1rem;
@@ -821,6 +827,12 @@ tbody tr:last-child td {
   text-align: right;
 }
 
+/* The name column takes the spare width, so short names never wrap and only very long ones break. */
+.players-table .player {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .players-table .rank {
   color: var(--muted);
   width: 2em;
@@ -828,13 +840,32 @@ tbody tr:last-child td {
 
 .player {
   font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+/* The smallest phones: tighter cells so a five-column player table fits without sideways scrolling. */
+@media (max-width: 400px) {
+  th,
+  td {
+    padding: 8px 4px;
+  }
+
+  th {
+    letter-spacing: 0.02em;
+  }
+
+  .current-match,
+  .match {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
 }
 
 /* Matches */
 
 .matches {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -986,6 +1017,15 @@ tbody tr:last-child td {
 .footer-inner {
   display: grid;
   gap: 6px;
+}
+
+.footer-brand {
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.footer-brand .wordmark {
+  color: var(--text);
 }
 
 /* While a refresh is in flight, the numbers stay put and dim slightly instead of jumping. */
