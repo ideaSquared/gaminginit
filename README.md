@@ -44,8 +44,8 @@ Edit `public/index.html`:
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats` |
-| Discord invite  | Already `https://discord.gg/jnsZkudxpD` in 3 places. If the invite changes, change all 3.     |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, `og-image.png`, the `.wordmark` spans and `favicon.svg` |
+| Discord invite  | Already `https://discord.gg/jnsZkudxpD` in 4 places. If the invite changes, change all 4.     |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg` |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.

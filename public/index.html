@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>gaminginit</title>
+    <title>gaminginit | WARDOGS server stats and gaming community</title>
     <meta name="description" content="gaminginit is a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <link rel="canonical" href="https://gaminginit.com/" />
     <meta property="og:site_name" content="gaminginit" />
-    <meta property="og:title" content="gaminginit" />
+    <meta property="og:title" content="gaminginit | WARDOGS server stats and gaming community" />
     <meta property="og:description" content="A gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta property="og:url" content="https://gaminginit.com/" />
     <meta property="og:type" content="website" />
@@ -18,7 +18,7 @@
     <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="gaminginit" />
+    <meta name="twitter:title" content="gaminginit | WARDOGS server stats and gaming community" />
     <meta name="twitter:description" content="A gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
     <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
@@ -26,7 +26,32 @@
     <!-- Where the bot serves its stats. See README.md. -->
     <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://gaminginit.com/#website",
+            "url": "https://gaminginit.com/",
+            "name": "gaminginit",
+            "description": "A gaming community. Live WARDOGS server status, player stats and our Discord.",
+            "inLanguage": "en-GB",
+            "publisher": { "@id": "https://gaminginit.com/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://gaminginit.com/#organization",
+            "name": "gaminginit",
+            "url": "https://gaminginit.com/",
+            "logo": "https://gaminginit.com/apple-touch-icon.png",
+            "sameAs": ["https://discord.gg/jnsZkudxpD"]
+          }
+        ]
+      }
+    </script>
     <script type="module" src="js/app.js"></script>
   </head>
   <body>
