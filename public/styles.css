@@ -1140,6 +1140,14 @@ tbody tr:last-child td {
   color: var(--text);
 }
 
+.footer-credit {
+  margin-top: 6px;
+}
+
+.footer-credit a {
+  font-weight: 700;
+}
+
 /* While a refresh is in flight, the numbers stay put and dim slightly instead of jumping. */
 body.refreshing .chart,
 body.refreshing .tile-value {
