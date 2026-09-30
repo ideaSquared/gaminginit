@@ -913,6 +913,22 @@ tbody tr:last-child td {
   letter-spacing: 0.08em;
 }
 
+/* Each map in its own colour, the same hues as the Discord bot, dark enough for white text (5:1 or more). */
+.map-tag[data-map='bakurani'] {
+  background: #c2410c;
+  color: #fff;
+}
+
+.map-tag[data-map='ozeti'] {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.map-tag[data-map='zestafona'] {
+  background: #7e22ce;
+  color: #fff;
+}
+
 .match-score {
   font-weight: 700;
 }

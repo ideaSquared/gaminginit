@@ -6,6 +6,7 @@ import {
   formatDuration,
   formatHours,
   kd,
+  mapKey,
   peak,
   result,
   scoreLine,
@@ -37,6 +38,14 @@ const el = (tag, props = {}, ...children) => {
   Object.assign(node, props);
   node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
   return node;
+};
+
+// A map's name as a tag in the map's own colour.
+const mapTag = (name) => {
+  const tag = el('span', { className: 'map-tag', textContent: name || 'Unknown map' });
+  const key = mapKey(name);
+  if (key) tag.dataset.map = key;
+  return tag;
 };
 
 const hourClock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -71,7 +80,7 @@ const renderServer = (now) => {
   setText($('server-updated'), server ? `Updated ${timeAgo(now - server.seenAt)}` : '');
   setText($('players-now'), online ? String(server.players) : '–');
   setText($('players-max'), server ? `/ ${server.maxPlayers} players` : '');
-  setText($('server-map'), online && server.map ? server.map : '–');
+  $('server-map').replaceChildren(online && server.map ? mapTag(server.map) : '–');
   setText($('server-score'), (online && scoreLine(server.factionScores)) || '–');
   setText($('join-server-name'), server?.name ?? 'our server');
 
@@ -195,7 +204,7 @@ const renderCurrentMatch = (now) => {
     el(
       'p',
       { className: 'match-headline' },
-      el('span', { className: 'map-tag', textContent: match.map || 'Unknown map' }),
+      mapTag(match.map),
       score ? el('span', { className: 'match-score', textContent: score }) : null,
     ),
     el('p', {
@@ -229,7 +238,7 @@ const renderMatches = (now) => {
         el(
           'p',
           { className: 'match-headline' },
-          el('span', { className: 'map-tag', textContent: match.map || 'Unknown map' }),
+          mapTag(match.map),
           el('span', { className: 'match-score', textContent: outcome?.text ?? 'No score recorded' }),
         ),
         el('p', {

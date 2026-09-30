@@ -35,6 +35,15 @@ export const compact = (n) => {
   return `${(n / 1_000_000).toFixed(1)}M`;
 };
 
+// Each map has its own colour, the same hues as the Discord bot (🟧 Bakurani, 🟦 Ozeti, 🟪 Zestafona). The key picks
+// it in the stylesheet; a map without one keeps the plain tag.
+const COLOURED_MAPS = ['bakurani', 'ozeti', 'zestafona'];
+
+export const mapKey = (name) => {
+  const key = String(name ?? '').trim().toLowerCase();
+  return COLOURED_MAPS.includes(key) ? key : null;
+};
+
 export const kd = (kills, deaths) => (kills / Math.max(deaths, 1)).toFixed(2);
 
 const byScore = (scores) => [...scores].sort((a, b) => b.score - a.score);
