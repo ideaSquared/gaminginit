@@ -39,12 +39,18 @@ export const kd = (kills, deaths) => (kills / Math.max(deaths, 1)).toFixed(2);
 
 const byScore = (scores) => [...scores].sort((a, b) => b.score - a.score);
 
-// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores.
+// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores. With three or more factions, it names
+// them all: "Valkyra won 100, Kharr 67, Haldor 41".
 export const result = (scores) => {
-  const [first, second] = byScore(scores ?? []);
+  const ranked = byScore(scores ?? []);
+  const [first, second, ...rest] = ranked;
   if (!first || !second) return null;
-  if (first.score === second.score) return { winner: null, text: `Draw ${first.score}–${second.score}` };
-  return { winner: first.name, text: `${first.name} won ${first.score}–${second.score}` };
+  const winner = first.score === second.score ? null : first.name;
+  if (rest.length === 0) {
+    return { winner, text: winner ? `${first.name} won ${first.score}–${second.score}` : `Draw ${first.score}–${second.score}` };
+  }
+  const others = ranked.slice(1).map((s) => `${s.name} ${s.score}`).join(', ');
+  return { winner, text: winner ? `${first.name} won ${first.score}, ${others}` : `Draw: ${first.name} ${first.score}, ${others}` };
 };
 
 // What the server is doing, as the page should describe it.

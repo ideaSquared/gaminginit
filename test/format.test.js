@@ -82,6 +82,21 @@ describe('text', () => {
     assert.equal(scoreLine(scores), 'Kharr 255–300 Valkyra');
     assert.equal(scoreLine([]), '');
   });
+
+  it('names every faction when there are three', () => {
+    const three = [
+      { name: 'Kharr', score: 67 },
+      { name: 'Valkyra', score: 100 },
+      { name: 'Haldor', score: 41 },
+    ];
+
+    assert.deepEqual(result(three), { winner: 'Valkyra', text: 'Valkyra won 100, Kharr 67, Haldor 41' });
+    assert.deepEqual(result([{ name: 'A', score: 9 }, { name: 'B', score: 9 }, { name: 'C', score: 2 }]), {
+      winner: null,
+      text: 'Draw: A 9, B 9, C 2',
+    });
+    assert.equal(scoreLine(three), 'Kharr 67 · Valkyra 100 · Haldor 41');
+  });
 });
 
 describe('chart helpers', () => {
