@@ -84,6 +84,9 @@ the settings below are what matter.
 
 4. Save and deploy. Every push to `main` now redeploys the site.
 
+Pushes to other branches, such as pull requests, run `npx wrangler preview` and get a preview link instead. That
+command needs the `previews` block in `wrangler.jsonc`, which is already there.
+
 #### Option C: GitHub Pages
 
 GitHub Pages is free for public repos. For a private repo it needs a paid GitHub plan.
