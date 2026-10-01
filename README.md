@@ -12,8 +12,10 @@ What it shows:
 - Discord member and online counts.
 - Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
 - The current match's top 5 players, and the last 10 matches with winner, length, peak players and top 5.
-- What seeding is: the empty, seeding and live states with the bot's player thresholds, how to help, and what seeding
-  earns. The reward comes from the bot's `vip` field and is hidden when automatic VIP is off.
+- A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
+- Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
+  when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
+- What seeding is: the empty, seeding and live states with the bot's player thresholds, and how to help.
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
@@ -23,7 +25,8 @@ You need:
 
 - [Node.js](https://nodejs.org) 22 or newer.
 - A free Cloudflare account. Use the same one as the bot.
-- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`).
+- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). The leaderboard and VIP
+  sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
 
 ### 1. Get the bot's stats URL
 
@@ -42,8 +45,8 @@ Edit `public/index.html`:
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats` |
-| Discord invite  | Already `https://discord.gg/jnsZkudxpD` in 3 places. If the invite changes, change all 3.     |
-| Name and logo   | Already gaminginit: `<title>`, the `og:` metas, the `.wordmark` spans and `favicon.svg`       |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4` in 4 places. If the invite changes, change all 4. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg` |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.

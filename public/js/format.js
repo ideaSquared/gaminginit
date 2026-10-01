@@ -35,16 +35,31 @@ export const compact = (n) => {
   return `${(n / 1_000_000).toFixed(1)}M`;
 };
 
+// Each map has its own colour, the same hues as the Discord bot (🟧 Bakurani, 🟦 Ozeti, 🟪 Zestafona). The key picks
+// it in the stylesheet; a map without one keeps the plain tag.
+const COLOURED_MAPS = ['bakurani', 'ozeti', 'zestafona'];
+
+export const mapKey = (name) => {
+  const key = String(name ?? '').trim().toLowerCase();
+  return COLOURED_MAPS.includes(key) ? key : null;
+};
+
 export const kd = (kills, deaths) => (kills / Math.max(deaths, 1)).toFixed(2);
 
 const byScore = (scores) => [...scores].sort((a, b) => b.score - a.score);
 
-// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores.
+// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores. With three or more factions, it names
+// them all: "Valkyra won 100, Kharr 67, Haldor 41".
 export const result = (scores) => {
-  const [first, second] = byScore(scores ?? []);
+  const ranked = byScore(scores ?? []);
+  const [first, second, ...rest] = ranked;
   if (!first || !second) return null;
-  if (first.score === second.score) return { winner: null, text: `Draw ${first.score}–${second.score}` };
-  return { winner: first.name, text: `${first.name} won ${first.score}–${second.score}` };
+  const winner = first.score === second.score ? null : first.name;
+  if (rest.length === 0) {
+    return { winner, text: winner ? `${first.name} won ${first.score}–${second.score}` : `Draw ${first.score}–${second.score}` };
+  }
+  const others = ranked.slice(1).map((s) => `${s.name} ${s.score}`).join(', ');
+  return { winner, text: winner ? `${first.name} won ${first.score}, ${others}` : `Draw: ${first.name} ${first.score}, ${others}` };
 };
 
 // What the server is doing, as the page should describe it.
@@ -55,15 +70,16 @@ export const serverState = (stats, now) => {
     return { kind: 'offline', label: 'Offline', detail: `Not responding. Last seen ${timeAgo(now - server.seenAt)}.` };
   }
   if (server.phase === 'live') return { kind: 'live', label: 'Live', detail: 'Full match in progress.' };
+  const vip = stats.vip ? ' Seeding earns VIP.' : '';
   if (server.phase === 'seeding') {
     const needed = Math.max(0, stats.thresholds.live - server.players);
     return {
       kind: 'seeding',
       label: 'Seeding',
-      detail: `${needed} more player${needed === 1 ? '' : 's'} to go live. Jump in and help fill it.`,
+      detail: `${needed} more player${needed === 1 ? '' : 's'} to go live. Jump in and help fill it.${vip}`,
     };
   }
-  return { kind: 'empty', label: 'Empty', detail: 'Nobody on yet. Be the first in and start the seed.' };
+  return { kind: 'empty', label: 'Empty', detail: `Nobody on yet. Be the first in and start the seed.${vip}` };
 };
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
@@ -76,12 +92,44 @@ export const phaseRanges = ({ seeding, live }) => ({
   live: `${live}+ players`,
 });
 
-// What seeding earns, in the same words as the bot's Discord posts.
-export const seedOffer = (vip) =>
+// What seeding earns, from the bot's `vip` rule: "Seed on 3 days in a week and get a reserved slot for a week."
+export const vipOffer = (vip) =>
   `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a reserved slot for ${span(vip.lengthDays)}.`;
 
-export const seedRule = (vip) =>
-  `A day counts when you are on for more than ${vip.seedMinutes} min while the server seeds, and it then goes live (UTC days).`;
+export const vipDetail = (vip) =>
+  `A day counts when you're on for more than ${vip.seedMinutes} minutes while the server seeds, and it goes live. ` +
+  'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
+  "server's next daily restart. Keep seeding to keep it.";
+
+// The leaderboard's boards: what each one shows, besides the rank and the name.
+export const BOARDS = [
+  {
+    key: 'kills',
+    title: 'Most kills',
+    headings: ['Kills', 'K/D'],
+    cells: (p) => [String(p.kills), kd(p.kills, p.deaths)],
+  },
+  {
+    key: 'kd',
+    title: 'Best K/D',
+    sub: (board) => `At least ${board.kdMinMatches} matches.`,
+    headings: ['K/D', 'Kills'],
+    cells: (p) => [kd(p.kills, p.deaths), String(p.kills)],
+  },
+  {
+    key: 'playtime',
+    title: 'Most time played',
+    headings: ['Time', 'Matches'],
+    cells: (p) => [formatHours(p.seedingMinutes + p.liveMinutes), String(p.matches)],
+  },
+  {
+    key: 'seeding',
+    title: 'Top seeders',
+    sub: () => 'Time on the server before it went live.',
+    headings: ['Seed days', 'Seeding'],
+    cells: (p) => [String(p.seedDays), formatHours(p.seedingMinutes)],
+  },
+];
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 

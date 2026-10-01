@@ -226,7 +226,8 @@ a {
   background: var(--surface-2);
 }
 
-@media (min-width: 760px) {
+/* Six links need about 880px next to the brand and the Discord button. */
+@media (min-width: 900px) {
   .nav-links {
     display: flex;
   }
@@ -830,6 +831,7 @@ tbody tr:last-child td {
 .players-table td:nth-child(n + 3),
 .players-table th:nth-child(n + 3) {
   text-align: right;
+  white-space: nowrap;
 }
 
 /* The name column takes the spare width, so short names never wrap and only very long ones break. */
@@ -918,6 +920,22 @@ tbody tr:last-child td {
   letter-spacing: 0.08em;
 }
 
+/* Each map in its own colour, the same hues as the Discord bot, dark enough for white text (5:1 or more). */
+.map-tag[data-map='bakurani'] {
+  background: #c2410c;
+  color: #fff;
+}
+
+.map-tag[data-map='ozeti'] {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.map-tag[data-map='zestafona'] {
+  background: #7e22ce;
+  color: #fff;
+}
+
 .match-score {
   font-weight: 700;
 }
@@ -960,6 +978,87 @@ tbody tr:last-child td {
 
 .mvp .player {
   color: var(--text);
+}
+
+/* Leaderboard */
+
+.boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 760px) {
+  .boards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.board {
+  padding: 20px;
+  min-width: 0;
+}
+
+.board h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.board-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.board .players-table,
+.board-empty {
+  margin-top: 12px;
+}
+
+@media (max-width: 400px) {
+  .board {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* Seeder VIP */
+
+.vip-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.vip-cta[hidden] {
+  display: none;
+}
+
+.vip-cta a {
+  font-weight: 600;
+}
+
+.vip-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* Seeding */
@@ -1025,32 +1124,9 @@ tbody tr:last-child td {
   animation: none;
 }
 
-.seed-cards {
-  display: grid;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-/* auto-fit lets "How to help" take the full width when there is no reward to show. */
-@media (min-width: 900px) {
-  .seed-cards {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  }
-}
-
 .seed-card {
+  margin-top: 16px;
   padding: 24px;
-}
-
-.seed-reward {
-  border-top: 3px solid var(--accent);
-}
-
-.seed-offer {
-  margin-bottom: 14px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-wrap: balance;
 }
 
 .seed-list {
@@ -1071,6 +1147,16 @@ tbody tr:last-child td {
   border-top: 1px solid var(--hairline);
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.seed-vip {
+  margin-top: 8px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.seed-vip a {
+  font-weight: 600;
 }
 
 /* Join */
@@ -1094,6 +1180,12 @@ tbody tr:last-child td {
   }
 }
 
+/* The VIP step is a perk rather than a step to take in order, so it spans the row under the others. */
+.step-vip {
+  grid-column: 1 / -1;
+  border-left: 3px solid var(--accent);
+}
+
 .step {
   position: relative;
   padding: 24px;
@@ -1114,8 +1206,16 @@ tbody tr:last-child td {
   font-weight: 800;
 }
 
+.step[hidden] {
+  display: none;
+}
+
 .step p {
   color: var(--text-2);
+}
+
+.step p strong {
+  color: var(--text);
 }
 
 .step .btn {
@@ -1143,6 +1243,14 @@ tbody tr:last-child td {
 
 .footer-brand .wordmark {
   color: var(--text);
+}
+
+.footer-credit {
+  margin-top: 6px;
+}
+
+.footer-credit a {
+  font-weight: 700;
 }
 
 /* While a refresh is in flight, the numbers stay put and dim slightly instead of jumping. */
