@@ -88,5 +88,6 @@ export const demoStats = (now) => {
           }
         : null,
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
+    vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
   };
 };

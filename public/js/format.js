@@ -66,6 +66,23 @@ export const serverState = (stats, now) => {
   return { kind: 'empty', label: 'Empty', detail: 'Nobody on yet. Be the first in and start the seed.' };
 };
 
+const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+const span = (days) => (days === 7 ? 'a week' : plural(days, 'day'));
+
+// Players for each server state, from the bot's thresholds: "0 players", "1–19 players", "20+ players".
+export const phaseRanges = ({ seeding, live }) => ({
+  empty: seeding <= 1 ? '0 players' : `0–${seeding - 1} players`,
+  seeding: seeding === live - 1 ? plural(seeding, 'player') : `${seeding}–${live - 1} players`,
+  live: `${live}+ players`,
+});
+
+// What seeding earns, in the same words as the bot's Discord posts.
+export const seedOffer = (vip) =>
+  `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a reserved slot for ${span(vip.lengthDays)}.`;
+
+export const seedRule = (vip) =>
+  `A day counts when you are on for more than ${vip.seedMinutes} min while the server seeds, and it then goes live (UTC days).`;
+
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 
 // Splits samples wherever the bot missed readings, so the chart shows a gap instead of a made-up line.

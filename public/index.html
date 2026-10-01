@@ -35,6 +35,7 @@
             <li><a href="#server">Server</a></li>
             <li><a href="#stats">Stats</a></li>
             <li><a href="#matches">Matches</a></li>
+            <li><a href="#seeding">Seeding</a></li>
             <li><a href="#join">Join</a></li>
           </ul>
         </nav>
@@ -53,7 +54,7 @@
             <h1 class="wordmark">gaming<span class="wordmark-accent">init</span></h1>
             <p class="lede">
               A gaming community built around playing together. Right now that means our WARDOGS server: squad up with
-              regulars, help seed it and play full matches. Everything is organised on our Discord, and the bot there tells
+              regulars, <a href="#seeding">help seed it</a> and play full matches. Everything is organised on our Discord, and the bot there tells
               you when the server is filling up.
             </p>
             <div class="hero-actions">
@@ -76,6 +77,7 @@
             </div>
             <h2 class="server-name" id="server-name">Game server</h2>
             <p class="server-detail" id="server-detail">Loading live status…</p>
+            <p class="server-help" id="server-help" hidden><a href="#seeding">What is seeding?</a></p>
             <div class="players">
               <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
               <div
@@ -181,6 +183,69 @@
             <div class="recent">
               <h3>Recent matches</h3>
               <ol class="match-list" id="match-list"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section seeding" id="seeding" aria-labelledby="seeding-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="seeding-title">Seeding</h2>
+            <p class="section-note">How an empty server becomes a full match.</p>
+          </div>
+          <p class="seeding-lede">
+            Seeding is playing on the server while it has few or no players, so that it fills up. Most players skip a
+            server that looks empty, so it takes a few of us to get it going. Once it reaches
+            <strong><span id="seed-live">20</span> players</strong> it goes live and full matches start.
+          </p>
+
+          <ol class="phases">
+            <li class="card phase" data-kind="empty">
+              <span class="status" data-kind="empty">
+                <span class="status-icon" aria-hidden="true"></span>
+                <span class="status-label">Empty</span>
+              </span>
+              <p class="phase-range" id="range-empty">0 players</p>
+              <p>Nobody is on. The first player to join starts the seed.</p>
+            </li>
+            <li class="card phase" data-kind="seeding">
+              <span class="status" data-kind="seeding">
+                <span class="status-icon" aria-hidden="true"></span>
+                <span class="status-label">Seeding</span>
+              </span>
+              <p class="phase-range" id="range-seeding">1–19 players</p>
+              <p>The bot posts in Discord to bring more people in. Play as normal while it fills up.</p>
+            </li>
+            <li class="card phase" data-kind="live">
+              <span class="status" data-kind="live">
+                <span class="status-icon" aria-hidden="true"></span>
+                <span class="status-label">Live</span>
+              </span>
+              <p class="phase-range" id="range-live">20+ players</p>
+              <p>Full matches. If players leave and it stays low for a few minutes, the bot asks for help to keep it going.</p>
+            </li>
+          </ol>
+
+          <div class="seed-cards">
+            <div class="card seed-card">
+              <h3>How to help</h3>
+              <ul class="seed-list">
+                <li>Join when the bot posts a seeding alert in our Discord, or when the server card above says Seeding.</li>
+                <li>Stay until it goes live. The server card shows how many more players it needs; the line on its bar marks the live point.</li>
+                <li>Bring friends. A squad fills the server faster than one player.</li>
+              </ul>
+              <p class="seed-note">When the server goes live, the bot names the 3 players who seeded longest in Discord.</p>
+            </div>
+            <div class="card seed-card seed-reward" id="seed-reward" hidden>
+              <h3>What seeding earns</h3>
+              <p class="seed-offer" id="seed-offer"></p>
+              <ul class="seed-list">
+                <li>A reserved slot lets you skip the queue when the server is full.</li>
+                <li id="seed-rule"></li>
+                <li>Seed enough again before your slot ends and you keep it.</li>
+                <li>Slots start and end at the server’s next restart, usually its daily one.</li>
+              </ul>
             </div>
           </div>
         </div>

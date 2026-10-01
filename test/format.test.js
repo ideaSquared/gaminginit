@@ -7,8 +7,11 @@ import {
   kd,
   niceScale,
   peak,
+  phaseRanges,
   result,
   scoreLine,
+  seedOffer,
+  seedRule,
   segments,
   serverState,
   STALE_MS,
@@ -78,6 +81,27 @@ describe('text', () => {
     assert.equal(result([]), null);
     assert.equal(scoreLine(scores), 'Kharr 255–300 Valkyra');
     assert.equal(scoreLine([]), '');
+  });
+});
+
+describe('seeding', () => {
+  it('gives the players for each server state', () => {
+    assert.deepEqual(phaseRanges({ seeding: 1, live: 20 }), {
+      empty: '0 players',
+      seeding: '1–19 players',
+      live: '20+ players',
+    });
+    assert.deepEqual(phaseRanges({ seeding: 3, live: 4 }), { empty: '0–2 players', seeding: '3 players', live: '4+ players' });
+  });
+
+  it('says what seeding earns', () => {
+    const vip = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
+    assert.equal(seedOffer(vip), 'Seed on 3 days in a week and get a reserved slot for a week.');
+    assert.equal(seedOffer({ ...vip, seedDays: 1, lengthDays: 14 }), 'Seed on 1 day in a week and get a reserved slot for 14 days.');
+    assert.equal(
+      seedRule(vip),
+      'A day counts when you are on for more than 10 min while the server seeds, and it then goes live (UTC days).',
+    );
   });
 });
 

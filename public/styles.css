@@ -440,6 +440,11 @@ h1 {
   color: var(--text-2);
 }
 
+.server-help {
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
 .players {
   margin-top: 20px;
 }
@@ -881,7 +886,8 @@ tbody tr:last-child td {
 }
 
 .current-match h3,
-.recent h3 {
+.recent h3,
+.seed-card h3 {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.85rem;
@@ -954,6 +960,117 @@ tbody tr:last-child td {
 
 .mvp .player {
   color: var(--text);
+}
+
+/* Seeding */
+
+.seeding-lede {
+  max-width: 44em;
+  color: var(--text-2);
+  font-size: 1.05rem;
+}
+
+.seeding-lede strong {
+  color: var(--text);
+}
+
+.phases {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .phases {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* Same colours as the server card, so the two read as one key. */
+.phase {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  border-top: 3px solid var(--muted);
+}
+
+.phase[data-kind='seeding'] {
+  border-top-color: var(--warning);
+}
+
+.phase[data-kind='live'] {
+  border-top-color: var(--good);
+}
+
+.phase p {
+  color: var(--text-2);
+}
+
+.phase .phase-range {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A key, not the live state, so the live dot stays still here. */
+.phase .status[data-kind='live'] .status-icon {
+  animation: none;
+}
+
+.seed-cards {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* auto-fit lets "How to help" take the full width when there is no reward to show. */
+@media (min-width: 900px) {
+  .seed-cards {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+.seed-card {
+  padding: 24px;
+}
+
+.seed-reward {
+  border-top: 3px solid var(--accent);
+}
+
+.seed-offer {
+  margin-bottom: 14px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.seed-list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 8px;
+  color: var(--text-2);
+}
+
+.seed-list li::marker {
+  color: var(--accent);
+}
+
+.seed-note {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 /* Join */

@@ -1,6 +1,19 @@
 import { dailyChart, populationChart } from './charts.js';
 import { demoStats } from './demo.js';
-import { compact, formatDuration, formatHours, kd, peak, result, scoreLine, serverState, timeAgo } from './format.js';
+import {
+  compact,
+  formatDuration,
+  formatHours,
+  kd,
+  peak,
+  phaseRanges,
+  result,
+  scoreLine,
+  seedOffer,
+  seedRule,
+  serverState,
+  timeAgo,
+} from './format.js';
 
 const REFRESH_MS = 60_000;
 const DAY = 86_400_000;
@@ -54,6 +67,7 @@ const renderServer = (now) => {
   setText(status.querySelector('.status-label'), state.label);
   $('server').dataset.kind = state.kind;
   setText($('server-detail'), state.detail);
+  $('server-help').hidden = state.kind !== 'seeding' && state.kind !== 'empty';
   setText($('server-name'), server?.name ?? 'Game server');
   setText($('server-updated'), server ? `Updated ${timeAgo(now - server.seenAt)}` : '');
   setText($('players-now'), online ? String(server.players) : '–');
@@ -71,6 +85,22 @@ const renderServer = (now) => {
   meter.style.setProperty('--fill', String(Math.min(players / max, 1)));
   meter.style.setProperty('--mark', String(Math.min((stats?.thresholds.live ?? 0) / max, 1)));
   meter.classList.toggle('no-mark', !server);
+};
+
+// Uses the bot's own thresholds and reward, so the explanation stays right if they change. Until the stats load,
+// the page shows the bot's defaults and no reward.
+const renderSeeding = () => {
+  if (stats?.thresholds) {
+    const ranges = phaseRanges(stats.thresholds);
+    for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);
+    setText($('seed-live'), String(stats.thresholds.live));
+  }
+  // Null when the bot's automatic VIP is off.
+  const vip = stats?.vip;
+  $('seed-reward').hidden = !vip;
+  if (!vip) return;
+  setText($('seed-offer'), seedOffer(vip));
+  setText($('seed-rule'), seedRule(vip));
 };
 
 const renderDiscord = () => {
@@ -252,6 +282,7 @@ const render = () => {
   renderCharts(now);
   renderCurrentMatch(now);
   renderMatches(now);
+  renderSeeding();
 };
 
 const link = (href, textContent) => el('a', { href, textContent });

@@ -12,6 +12,8 @@ What it shows:
 - Discord member and online counts.
 - Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
 - The current match's top 5 players, and the last 10 matches with winner, length, peak players and top 5.
+- What seeding is: the empty, seeding and live states with the bot's player thresholds, how to help, and what seeding
+  earns. The reward comes from the bot's `vip` field and is hidden when automatic VIP is off.
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
