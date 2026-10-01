@@ -171,7 +171,7 @@ const renderStats = (now) => {
       : el(
           'table',
           { className: 'players-table stat-table' },
-          el('thead', {}, el('tr', {}, ...['Map', 'Matches', 'Won', 'K/D', 'Best'].map((h) => el('th', { scope: 'col', textContent: h })))),
+          el('thead', {}, el('tr', {}, ...['Map', 'Matches', 'Win rate', 'K/D', 'Best'].map((h) => el('th', { scope: 'col', textContent: h })))),
           el(
             'tbody',
             {},
@@ -325,7 +325,7 @@ const renderActivity = (now) => {
   tableOf(
     $('form-table'),
     ['Ended', 'Map', 'Kills', 'Deaths', 'Result', 'Place'],
-    [...latest].reverse().map((m) => [ended.format(m.endedAt), m.map, String(m.kills), String(m.deaths), m.result ?? '–', `${ordinal(m.place)} of ${m.players}`]),
+    latest.map((m) => [ended.format(m.endedAt), m.map, String(m.kills), String(m.deaths), m.result ?? '–', `${ordinal(m.place)} of ${m.players}`]),
   );
 };
 
