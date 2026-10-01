@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  busiestHours,
+  busyRuns,
+  busyShares,
   compact,
   emptyNote,
   formatDuration,
@@ -214,12 +215,31 @@ describe('busiest times', () => {
     assert.equal(averages[3], null);
   });
 
-  it('finds the busiest three hours in a row, across midnight too', () => {
-    const evening = Array.from({ length: 24 }, (_, h) => (h >= 18 ? 40 + h : 5));
-    assert.deepEqual(busiestHours(evening), { start: 21, length: 3, average: 62 });
+  it('gives the share of each hour’s readings with at least the busy threshold', () => {
+    const day = Date.UTC(2026, 9, 1);
+    const history = [[day + 20 * HOUR, 98], [day + 20.25 * HOUR, 97], [day + 20.5 * HOUR, 96], [day + 20.75 * HOUR, 90]];
+    const shares = busyShares([...history, [day + 21 * HOUR, 40]], 97, utcHour);
 
-    const late = Array.from({ length: 24 }, (_, h) => ([23, 0, 1].includes(h) ? 50 : 10));
-    assert.deepEqual(busiestHours(late), { start: 23, length: 3, average: 50 });
+    assert.equal(shares[20], 0.5);
+    assert.equal(shares[21], 0);
+    assert.equal(shares[3], null);
+  });
+
+  it('finds the busy hours, at least half the time, as runs across midnight too', () => {
+    const shares = Array(24).fill(0);
+    shares[13] = 0.5;
+    shares[19] = 0.6;
+    shares[20] = 0.9;
+    shares[21] = 0.7;
+    shares[22] = 0.49;
+    assert.deepEqual(busyRuns(shares), [
+      { start: 13, length: 1 },
+      { start: 19, length: 3 },
+    ]);
+
+    const late = Array.from({ length: 24 }, (_, h) => ([23, 0, 1].includes(h) ? 0.8 : null));
+    assert.deepEqual(busyRuns(late), [{ start: 23, length: 3 }]);
+    assert.deepEqual(busyRuns(Array(24).fill(1)), [{ start: 0, length: 24 }]);
   });
 
   it('moves the bot’s UTC hours to local hours', () => {
@@ -232,17 +252,9 @@ describe('busiest times', () => {
     assert.equal(toLocalHours([1], 0)[5], null);
   });
 
-  it('skips runs with an hour that has no readings, and gives nothing when nobody played', () => {
-    const gaps = Array(24).fill(null);
-    gaps[10] = 30;
-    gaps[14] = 12;
-    gaps[15] = 12;
-    gaps[16] = 12;
-    assert.deepEqual(busiestHours(gaps), { start: 14, length: 3, average: 12 });
-    gaps[15] = null;
-    assert.equal(busiestHours(gaps), null);
-    assert.equal(busiestHours(Array(24).fill(0)), null);
-    assert.equal(busiestHours(Array(24).fill(null)), null);
+  it('gives no busy hours when none is busy at least half the time', () => {
+    assert.deepEqual(busyRuns(Array(24).fill(0.49)), []);
+    assert.deepEqual(busyRuns(Array(24).fill(null)), []);
   });
 
   it('says player or players', () => {

@@ -288,15 +288,15 @@ export const dailyChart = (root) => {
 // "19:00", for an hour of the day in local time.
 export const hourLabel = (hour) => clock.format(new Date(2000, 0, 1, hour));
 
-// Average players in each hour of the day. The busiest hours are in the series colour and the rest in gray, so the
+// Average players in each hour of the day. The busy hours are in the series colour and the rest in gray, so the
 // reader sees when to play before reading any numbers.
-// data: { averages: (number | null)[24], busiest: { start, length } | null, period: 'the last 14 days' }
+// data: { averages: (number | null)[24], busy: boolean[24], period: 'the last 14 days' }
 export const busiestChart = (root) => {
   let data = null;
 
   const draw = () => {
     if (data === null) return;
-    const { averages, busiest, period } = data;
+    const { averages, busy, period } = data;
     if (averages.every((a) => a === null)) {
       emptyMessage(root, `No readings in ${period} yet.`);
       return;
@@ -317,7 +317,6 @@ export const busiestChart = (root) => {
     const band = plotW / 24;
     const barW = Math.min(24, band * 0.7);
     const y = (v) => m.top + plotH - (v / max) * plotH;
-    const isBusy = (hour) => busiest !== null && (hour - busiest.start + 24) % 24 < busiest.length;
     // Only the busiest single hour carries its value; the tooltip and table have the rest.
     const label = values.indexOf(most);
 
@@ -336,7 +335,7 @@ export const busiestChart = (root) => {
       svg('rect', { class: 'hit', x: cx - band / 2, y: m.top, width: band, height: plotH }, group);
       if (average > 0) {
         const h = Math.max(1, y(0) - y(average));
-        svg('path', { class: isBusy(hour) ? 'column' : 'column column-quiet', d: columnPath(cx - barW / 2, y(average), barW, h) }, group);
+        svg('path', { class: busy[hour] ? 'column' : 'column column-quiet', d: columnPath(cx - barW / 2, y(average), barW, h) }, group);
       }
       if (hour === label) text(chart, { class: 'cap-label', x: cx, y: y(average) - 6, 'text-anchor': 'middle' }, String(Math.round(average)));
       return { group, cx, average };
@@ -352,7 +351,7 @@ export const busiestChart = (root) => {
       const { group, cx, average } = groups[index];
       group.classList.add('active');
       const value = average === null ? 'No readings' : `${playerCount(Math.round(average))} on average`;
-      const hours = `${hourLabel(index)}–${hourLabel((index + 1) % 24)}`;
+      const hours = `${hourLabel(index)}–${hourLabel((index + 1) % 24)}${busy[index] ? ' · busy' : ''}`;
       tip.show(cx, y(average ?? 0), value, hours);
       return `${hours}: ${value}`;
     };
@@ -371,7 +370,8 @@ export const busiestChart = (root) => {
       event.preventDefault();
       const step = moves[event.key];
       // The chart is one image to a screen reader, so the hour it lands on is read out from the live region.
-      live.textContent = showAt(Number.isFinite(step) ? (index < 0 ? (busiest?.start ?? 0) : index + step) : step < 0 ? 0 : 23);
+      const first = Math.max(0, busy.indexOf(true));
+      live.textContent = showAt(Number.isFinite(step) ? (index < 0 ? first : index + step) : step < 0 ? 0 : 23);
     };
   };
 
