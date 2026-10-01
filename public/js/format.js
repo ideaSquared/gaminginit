@@ -142,6 +142,40 @@ export const BOARDS = [
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 
+// Average players in each hour of the day, 0 to 23, from history samples. Local hours unless hourOf says otherwise.
+// An hour with no readings is null.
+export const hourlyAverages = (history, hourOf = (at) => new Date(at).getHours()) => {
+  const hours = Array.from({ length: 24 }, () => ({ total: 0, count: 0 }));
+  for (const [at, players] of history) {
+    const hour = hours[hourOf(at)];
+    hour.total += players;
+    hour.count += 1;
+  }
+  return hours.map((h) => (h.count === 0 ? null : h.total / h.count));
+};
+
+// The bot's 14-day averages are by UTC hour; this moves them to the reader's local hours. offsetMinutes is
+// Date#getTimezoneOffset (UTC minus local, so -60 in London in summer). Half-hour time zones round to the nearest hour.
+export const toLocalHours = (utcAverages, offsetMinutes) => {
+  const shift = Math.round(-offsetMinutes / 60);
+  return Array.from({ length: 24 }, (_, hour) => utcAverages[(((hour - shift) % 24) + 24) % 24] ?? null);
+};
+
+// The busiest `length` hours in a row, wrapping past midnight: { start, length, average }. Only runs where every hour
+// has readings count, since a missing hour is unknown rather than empty. Null when no run has players.
+export const busiestHours = (averages, length = 3) => {
+  let best = null;
+  for (let start = 0; start < 24; start++) {
+    const run = Array.from({ length }, (_, i) => averages[(start + i) % 24] ?? null);
+    if (run.includes(null)) continue;
+    const average = run.reduce((sum, a) => sum + a, 0) / length;
+    if (average > (best?.average ?? 0)) best = { start, length, average };
+  }
+  return best;
+};
+
+export const playerCount = (n) => `${n} player${n === 1 ? '' : 's'}`;
+
 // Splits samples wherever the bot missed readings, so the chart shows a gap instead of a made-up line.
 export const segments = (history, maxGapMs = STALE_MS) =>
   history.reduce((parts, sample, i) => {

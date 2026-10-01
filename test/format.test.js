@@ -1,22 +1,26 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  busiestHours,
   compact,
   emptyNote,
   formatDuration,
   formatHours,
+  hourlyAverages,
   kd,
   latestMatches,
   mapKey,
   niceScale,
   peak,
   phaseRanges,
+  playerCount,
   result,
   scoreLine,
   segments,
   serverState,
   STALE_MS,
   timeAgo,
+  toLocalHours,
   vipDetail,
   vipOffer,
   BOARDS,
@@ -193,5 +197,57 @@ describe('latestMatches', () => {
     assert.equal(latestMatches(matches, 10).length, 5);
     assert.deepEqual(matches.map((m) => m.endedAt), [1, 4, 2, 5, 3]);
     assert.deepEqual(latestMatches(undefined, 3), []);
+  });
+});
+
+describe('busiest times', () => {
+  const HOUR = 3_600_000;
+  const utcHour = (at) => new Date(at).getUTCHours();
+
+  it('averages the players in each hour of the day', () => {
+    const day = Date.UTC(2026, 9, 1);
+    const averages = hourlyAverages([[day + 19 * HOUR, 40], [day + 19.5 * HOUR, 50], [day + 20 * HOUR, 60]], utcHour);
+
+    assert.equal(averages.length, 24);
+    assert.equal(averages[19], 45);
+    assert.equal(averages[20], 60);
+    assert.equal(averages[3], null);
+  });
+
+  it('finds the busiest three hours in a row, across midnight too', () => {
+    const evening = Array.from({ length: 24 }, (_, h) => (h >= 18 ? 40 + h : 5));
+    assert.deepEqual(busiestHours(evening), { start: 21, length: 3, average: 62 });
+
+    const late = Array.from({ length: 24 }, (_, h) => ([23, 0, 1].includes(h) ? 50 : 10));
+    assert.deepEqual(busiestHours(late), { start: 23, length: 3, average: 50 });
+  });
+
+  it('moves the bot’s UTC hours to local hours', () => {
+    const utc = Array.from({ length: 24 }, (_, h) => h * 10);
+
+    assert.equal(toLocalHours(utc, -60)[20], 190);
+    assert.equal(toLocalHours(utc, -60)[0], 230);
+    assert.equal(toLocalHours(utc, 300)[0], 50);
+    assert.equal(toLocalHours(utc, -330)[12], 60);
+    assert.equal(toLocalHours([1], 0)[5], null);
+  });
+
+  it('skips runs with an hour that has no readings, and gives nothing when nobody played', () => {
+    const gaps = Array(24).fill(null);
+    gaps[10] = 30;
+    gaps[14] = 12;
+    gaps[15] = 12;
+    gaps[16] = 12;
+    assert.deepEqual(busiestHours(gaps), { start: 14, length: 3, average: 12 });
+    gaps[15] = null;
+    assert.equal(busiestHours(gaps), null);
+    assert.equal(busiestHours(Array(24).fill(0)), null);
+    assert.equal(busiestHours(Array(24).fill(null)), null);
+  });
+
+  it('says player or players', () => {
+    assert.equal(playerCount(1), '1 player');
+    assert.equal(playerCount(0), '0 players');
+    assert.equal(playerCount(61), '61 players');
   });
 });
