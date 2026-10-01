@@ -11,8 +11,7 @@ What it shows:
   more players are needed to go live.
 - Discord member and online counts.
 - Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
-- The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
-- A matches page (`/matches`) with the last 10 matches, each with its top 5.
+- The current match's top 5 players, and the last 10 matches with winner, length, peak players and top 5.
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
   when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
@@ -41,13 +40,13 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and `public/matches.html` where it says so:
+Edit `public/index.html`:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in both pages. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 in `matches.html`. If the invite changes, change all 5. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html` has its own `<title>`, metas and wordmarks. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats` |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4` in 4 places. If the invite changes, change all 4. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg` |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.
@@ -162,8 +161,7 @@ Serving the site's files is free and unlimited on Cloudflare. Only the stats req
 npm start                      # serves public/ on http://localhost:3000
 ```
 
-- `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. Links between
-  the pages keep `?demo` (and `?stats=`).
+- `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up.
 - `http://localhost:3000/?stats=http://localhost:8787/api/stats` reads a bot running locally with `wrangler dev`.
 
 Until the stats URL is set, the page says live stats are not connected and links to the demo.
@@ -182,6 +180,5 @@ Until the stats URL is set, the page says live stats are not connected and links
 npm test    # Node's built-in test runner; no dependencies to install
 ```
 
-The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the stats
-for both pages, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` renders the
-matches page, `charts.js` draws the SVG charts and `demo.js` makes the sample data.
+The formatting and state logic is in `public/js/format.js` and is what the tests cover. `charts.js` draws the SVG
+charts, `app.js` fetches and renders, and `demo.js` makes the sample data.

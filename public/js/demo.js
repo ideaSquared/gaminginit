@@ -68,7 +68,7 @@ export const demoStats = (now) => {
       const sofar = history.filter(([at]) => at >= today).map(([, p]) => p);
       return { day, peak: Math.max(0, ...sofar), liveMinutes: sofar.filter((p) => p >= LIVE).length };
     }),
-    matches: Array.from({ length: 10 }, (_, i) => ({
+    matches: Array.from({ length: 6 }, (_, i) => ({
       map: MAPS[i % MAPS.length],
       endedAt: minute - (i + 1) * 55 * MINUTE - 10 * HOUR,
       durationMs: (38 + ((i * 7) % 20)) * MINUTE,

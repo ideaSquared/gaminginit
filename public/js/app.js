@@ -1,4 +1,5 @@
 import { dailyChart, populationChart } from './charts.js';
+import { demoStats } from './demo.js';
 import {
   BOARDS,
   compact,
@@ -6,31 +7,64 @@ import {
   formatDuration,
   formatHours,
   kd,
-  latestMatches,
+  mapKey,
   peak,
   phaseRanges,
+  result,
   scoreLine,
   serverState,
   timeAgo,
   vipDetail,
   vipOffer,
 } from './format.js';
-import { startLive } from './live.js';
-import { el, mapTag, matchHeadline, matchMeta, playersTable, setText } from './views.js';
 
+const REFRESH_MS = 60_000;
 const DAY = 86_400_000;
-// The rest are on the matches page.
-const RECENT_MATCHES = 3;
+
+// ?demo shows sample numbers; ?stats=<url> reads another bot, e.g. one running locally with `wrangler dev`.
+const params = new URLSearchParams(location.search);
+const demo = params.has('demo');
+const statsUrl = params.get('stats') ?? document.querySelector('meta[name="stats-url"]')?.content ?? '';
+const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
 
 const $ = (id) => document.getElementById(id);
+
+// Only touches the DOM when the text changes, so screen readers are not told the same thing every 15 seconds.
+const setText = (node, value) => {
+  if (node.textContent !== value) node.textContent = value;
+};
+
+// Builds DOM with textContent only: player and server names come from the game and are never trusted as HTML.
+const el = (tag, props = {}, ...children) => {
+  const node = document.createElement(tag);
+  Object.assign(node, props);
+  node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
+  return node;
+};
+
+// A map's name as a tag in the map's own colour.
+const mapTag = (name) => {
+  const tag = el('span', { className: 'map-tag', textContent: name || 'Unknown map' });
+  const key = mapKey(name);
+  if (key) tag.dataset.map = key;
+  return tag;
+};
 
 const hourClock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 let stats = null;
+let lastLoad = 0;
+let timer = 0;
 
 const population = populationChart($('population-chart'));
 const daily = dailyChart($('daily-chart'));
+
+const showNotice = (...content) => {
+  const notice = $('notice');
+  notice.replaceChildren(...content);
+  notice.hidden = content.length === 0;
+};
 
 const isOnline = (state) => state.kind === 'live' || state.kind === 'seeding' || state.kind === 'empty';
 
@@ -128,6 +162,32 @@ const renderCharts = (now) => {
   );
 };
 
+const playersTable = (top) =>
+  el(
+    'table',
+    { className: 'players-table' },
+    el(
+      'thead',
+      {},
+      el('tr', {}, ...['#', 'Player', 'Kills', 'Deaths', 'K/D'].map((h) => el('th', { scope: 'col', textContent: h }))),
+    ),
+    el(
+      'tbody',
+      {},
+      ...top.map((p, i) =>
+        el(
+          'tr',
+          {},
+          el('td', { className: 'rank', textContent: String(i + 1) }),
+          el('td', { className: 'player', textContent: p.name }),
+          el('td', { textContent: String(p.kills) }),
+          el('td', { textContent: String(p.deaths) }),
+          el('td', { textContent: kd(p.kills, p.deaths) }),
+        ),
+      ),
+    ),
+  );
+
 const renderCurrentMatch = (now) => {
   const root = $('current-match');
   const state = serverState(stats, now);
@@ -150,32 +210,48 @@ const renderCurrentMatch = (now) => {
       mapTag(match.map),
       score ? el('span', { className: 'match-score', textContent: score }) : null,
     ),
-    matchMeta(
-      `Started ${timeAgo(now - match.startedAt)}`,
-      match.liveAt ? `live for ${formatDuration(now - match.liveAt)}` : 'not live yet',
-      `peak ${match.peakPlayers} players`,
-    ),
+    el('p', {
+      className: 'match-meta',
+      textContent: [
+        `Started ${timeAgo(now - match.startedAt)}`,
+        match.liveAt ? `live for ${formatDuration(now - match.liveAt)}` : 'not live yet',
+        `peak ${match.peakPlayers} players`,
+      ].join(' · '),
+    }),
     match.top.length > 0 ? playersTable(match.top) : el('p', { className: 'muted', textContent: 'No kills yet.' }),
   );
 };
 
-// The latest few matches, one short row each. The matches page has the rest, with each match's top players.
 const renderMatches = (now) => {
   const list = $('match-list');
-  const matches = latestMatches(stats?.matches, RECENT_MATCHES);
+  const matches = stats?.matches ?? [];
   if (matches.length === 0) {
-    const message = stats ? 'No finished matches yet. They appear here after the server has been live.' : 'Waiting for live stats.';
-    list.replaceChildren(el('li', { className: 'muted', textContent: message }));
+    list.replaceChildren(
+      el('li', { className: 'muted', textContent: 'No finished matches yet. They appear here after the server has been live.' }),
+    );
     return;
   }
   list.replaceChildren(
     ...matches.map((match) => {
+      const outcome = result(match.factionScores);
       const mvp = match.top[0];
       return el(
         'li',
-        { className: 'match-row' },
-        matchHeadline(match),
-        matchMeta(formatDuration(match.durationMs), `peak ${match.peakPlayers} players`, `ended ${timeAgo(now - match.endedAt)}`),
+        { className: 'card match' },
+        el(
+          'p',
+          { className: 'match-headline' },
+          mapTag(match.map),
+          el('span', { className: 'match-score', textContent: outcome?.text ?? 'No score recorded' }),
+        ),
+        el('p', {
+          className: 'match-meta',
+          textContent: [
+            formatDuration(match.durationMs),
+            `peak ${match.peakPlayers} players`,
+            `ended ${timeAgo(now - match.endedAt)}`,
+          ].join(' · '),
+        }),
         mvp
           ? el(
               'p',
@@ -184,6 +260,9 @@ const renderMatches = (now) => {
               el('span', { className: 'player', textContent: mvp.name }),
               ` ${mvp.kills} kills, ${kd(mvp.kills, mvp.deaths)} K/D`,
             )
+          : null,
+        match.top.length > 1
+          ? el('details', { className: 'table-view' }, el('summary', { textContent: 'Top 5' }), playersTable(match.top))
           : null,
       );
     }),
@@ -259,8 +338,7 @@ const renderLeaderboard = () => {
   );
 };
 
-const render = (latest) => {
-  stats = latest;
+const render = () => {
   const now = Date.now();
   renderServer(now);
   renderDiscord();
@@ -273,9 +351,52 @@ const render = (latest) => {
   renderSeeding();
 };
 
-startLive(render);
+const link = (href, textContent) => el('a', { href, textContent });
+
+const load = async () => {
+  clearTimeout(timer);
+  lastLoad = Date.now();
+  if (demo) {
+    stats = demoStats(Date.now());
+    showNotice('Showing sample numbers, not the real server. ', link(location.pathname, 'See live stats'));
+    render();
+    return;
+  }
+  if (!configured) {
+    showNotice('Live stats are not connected yet. ', link('?demo', 'Preview with sample numbers'));
+    render();
+    return;
+  }
+
+  document.body.classList.add('refreshing');
+  try {
+    const response = await fetch(statsUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    stats = await response.json();
+    showNotice();
+    render();
+  } catch (error) {
+    console.error('Could not load stats', error);
+    showNotice(
+      stats ? 'Could not refresh the live stats. Showing the last numbers we had; trying again in a minute.' : 'Could not load the live stats. Trying again in a minute.',
+    );
+    if (!stats) render();
+  } finally {
+    document.body.classList.remove('refreshing');
+    if (!document.hidden) timer = setTimeout(load, REFRESH_MS);
+  }
+};
+
+// Only poll while someone is looking; catch up straight away when they come back.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) clearTimeout(timer);
+  else if (Date.now() - lastLoad >= REFRESH_MS) load();
+  else timer = setTimeout(load, REFRESH_MS - (Date.now() - lastLoad));
+});
 
 // Keep "updated 2 min ago" honest between fetches.
 setInterval(() => {
   if (!document.hidden) renderServer(Date.now());
 }, 15_000);
+
+load();
