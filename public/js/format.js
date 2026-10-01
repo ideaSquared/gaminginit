@@ -161,17 +161,20 @@ export const toLocalHours = (utcAverages, offsetMinutes) => {
   return Array.from({ length: 24 }, (_, hour) => utcAverages[(((hour - shift) % 24) + 24) % 24] ?? null);
 };
 
-// The busiest `length` hours in a row, wrapping past midnight: { start, length, average }, or null when nobody played.
-// An hour with no readings counts as empty, since the server was most likely down.
+// The busiest `length` hours in a row, wrapping past midnight: { start, length, average }. Only runs where every hour
+// has readings count, since a missing hour is unknown rather than empty. Null when no run has players.
 export const busiestHours = (averages, length = 3) => {
   let best = null;
   for (let start = 0; start < 24; start++) {
-    let total = 0;
-    for (let i = 0; i < length; i++) total += averages[(start + i) % 24] ?? 0;
-    if (best === null || total / length > best.average) best = { start, length, average: total / length };
+    const run = Array.from({ length }, (_, i) => averages[(start + i) % 24] ?? null);
+    if (run.includes(null)) continue;
+    const average = run.reduce((sum, a) => sum + a, 0) / length;
+    if (average > (best?.average ?? 0)) best = { start, length, average };
   }
-  return best.average > 0 ? best : null;
+  return best;
 };
+
+export const playerCount = (n) => `${n} player${n === 1 ? '' : 's'}`;
 
 // Splits samples wherever the bot missed readings, so the chart shows a gap instead of a made-up line.
 export const segments = (history, maxGapMs = STALE_MS) =>

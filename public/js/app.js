@@ -11,6 +11,7 @@ import {
   latestMatches,
   peak,
   phaseRanges,
+  playerCount,
   scoreLine,
   serverState,
   timeAgo,
@@ -130,7 +131,7 @@ const renderCharts = (now) => {
   $('busiest-summary').hidden = !busiest;
   if (busiest) {
     setText($('busiest-when'), `${hourLabel(busiest.start)}–${hourLabel((busiest.start + busiest.length) % 24)}`);
-    setText($('busiest-players'), `${Math.round(busiest.average)} players on average`);
+    setText($('busiest-players'), `${playerCount(Math.round(busiest.average))} on average`);
   }
 
   // Hourly summary of the 24-hour chart, newest first.

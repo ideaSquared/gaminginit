@@ -13,6 +13,7 @@ import {
   niceScale,
   peak,
   phaseRanges,
+  playerCount,
   result,
   scoreLine,
   segments,
@@ -231,14 +232,22 @@ describe('busiest times', () => {
     assert.equal(toLocalHours([1], 0)[5], null);
   });
 
-  it('counts hours without readings as empty, and gives nothing when nobody played', () => {
+  it('skips runs with an hour that has no readings, and gives nothing when nobody played', () => {
     const gaps = Array(24).fill(null);
     gaps[10] = 30;
     gaps[14] = 12;
     gaps[15] = 12;
     gaps[16] = 12;
-    assert.equal(busiestHours(gaps).start, 14);
+    assert.deepEqual(busiestHours(gaps), { start: 14, length: 3, average: 12 });
+    gaps[15] = null;
+    assert.equal(busiestHours(gaps), null);
     assert.equal(busiestHours(Array(24).fill(0)), null);
     assert.equal(busiestHours(Array(24).fill(null)), null);
+  });
+
+  it('says player or players', () => {
+    assert.equal(playerCount(1), '1 player');
+    assert.equal(playerCount(0), '0 players');
+    assert.equal(playerCount(61), '61 players');
   });
 });

@@ -1,4 +1,4 @@
-import { formatHours, niceScale, segments } from './format.js';
+import { formatHours, niceScale, playerCount, segments } from './format.js';
 
 // Small hand-drawn SVG charts: a 24-hour population line and a daily-peak column chart.
 // Both redraw at their container's real width so text stays crisp, and both work with a keyboard.
@@ -297,9 +297,12 @@ export const busiestChart = (root) => {
   const draw = () => {
     if (data === null) return;
     const { averages, busiest, period } = data;
-    if (busiest === null) {
-      const nothing = averages.every((a) => a === null);
-      emptyMessage(root, nothing ? `No readings in ${period} yet.` : `Nobody has played in ${period}.`);
+    if (averages.every((a) => a === null)) {
+      emptyMessage(root, `No readings in ${period} yet.`);
+      return;
+    }
+    if (averages.every((a) => !a)) {
+      emptyMessage(root, `Nobody has played in ${period}.`);
       return;
     }
 
@@ -314,7 +317,7 @@ export const busiestChart = (root) => {
     const band = plotW / 24;
     const barW = Math.min(24, band * 0.7);
     const y = (v) => m.top + plotH - (v / max) * plotH;
-    const isBusy = (hour) => (hour - busiest.start + 24) % 24 < busiest.length;
+    const isBusy = (hour) => busiest !== null && (hour - busiest.start + 24) % 24 < busiest.length;
     // Only the busiest single hour carries its value; the tooltip and table have the rest.
     const label = values.indexOf(most);
 
@@ -348,8 +351,10 @@ export const busiestChart = (root) => {
       index = Math.max(0, Math.min(23, i));
       const { group, cx, average } = groups[index];
       group.classList.add('active');
-      const value = average === null ? 'No readings' : `${Math.round(average)} players on average`;
-      tip.show(cx, y(average ?? 0), value, `${hourLabel(index)}–${hourLabel((index + 1) % 24)}`);
+      const value = average === null ? 'No readings' : `${playerCount(Math.round(average))} on average`;
+      const hours = `${hourLabel(index)}–${hourLabel((index + 1) % 24)}`;
+      tip.show(cx, y(average ?? 0), value, hours);
+      return `${hours}: ${value}`;
     };
     const hide = () => {
       groups[index]?.group.classList.remove('active');
@@ -365,9 +370,15 @@ export const busiestChart = (root) => {
       if (!(event.key in moves)) return;
       event.preventDefault();
       const step = moves[event.key];
-      showAt(Number.isFinite(step) ? (index < 0 ? busiest.start : index + step) : step < 0 ? 0 : 23);
+      // The chart is one image to a screen reader, so the hour it lands on is read out from the live region.
+      live.textContent = showAt(Number.isFinite(step) ? (index < 0 ? (busiest?.start ?? 0) : index + step) : step < 0 ? 0 : 23);
     };
   };
+
+  const live = document.createElement('p');
+  live.className = 'visually-hidden';
+  live.setAttribute('aria-live', 'polite');
+  root.after(live);
 
   onResize(root, draw);
   return {
