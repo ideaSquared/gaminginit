@@ -14,6 +14,7 @@ import {
   scoreLine,
   serverState,
   timeAgo,
+  toLocalHours,
   vipDetail,
   vipOffer,
 } from './format.js';
@@ -112,18 +113,27 @@ const renderCharts = (now) => {
   });
   daily.update({ days: stats?.days ?? [], today: new Date(now).toISOString().slice(0, 10), count: 14 });
 
-  // When the server was busiest: the three hours in a row with the most players on average.
+  // When the server is busiest: the three hours in a row with the most players on average. Over the last 14 days when
+  // the bot sends hourly averages, otherwise over the last 24 hours of readings.
   const recent = history.filter(([t]) => t >= now - DAY);
-  const averages = hourlyAverages(recent);
+  const hourly = stats?.hourly;
+  const period = hourly ? `the last ${hourly.days} days` : 'the last 24 hours';
+  const averages = hourly ? toLocalHours(hourly.players, new Date(now).getTimezoneOffset()) : hourlyAverages(recent);
   const busiest = busiestHours(averages);
-  busiestView.update({ averages, busiest });
+  busiestView.update({ averages, busiest, period });
+  setText($('busiest-sub'), `Average players in each hour of the day over ${period}, your local time.`);
+  tableOf(
+    $('busiest-table'),
+    ['Hour', 'Average players'],
+    averages.map((average, hour) => [`${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`, average === null ? '–' : Math.round(average)]),
+  );
   $('busiest-summary').hidden = !busiest;
   if (busiest) {
     setText($('busiest-when'), `${hourLabel(busiest.start)}–${hourLabel((busiest.start + busiest.length) % 24)}`);
     setText($('busiest-players'), `${Math.round(busiest.average)} players on average`);
   }
 
-  // Hourly summary of both 24-hour charts, newest first.
+  // Hourly summary of the 24-hour chart, newest first.
   const hours = new Map();
   for (const [at, players] of recent) {
     const hour = Math.floor(at / 3_600_000) * 3_600_000;

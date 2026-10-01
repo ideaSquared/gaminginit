@@ -19,6 +19,7 @@ import {
   serverState,
   STALE_MS,
   timeAgo,
+  toLocalHours,
   vipDetail,
   vipOffer,
   BOARDS,
@@ -218,6 +219,16 @@ describe('busiest times', () => {
 
     const late = Array.from({ length: 24 }, (_, h) => ([23, 0, 1].includes(h) ? 50 : 10));
     assert.deepEqual(busiestHours(late), { start: 23, length: 3, average: 50 });
+  });
+
+  it('moves the bot’s UTC hours to local hours', () => {
+    const utc = Array.from({ length: 24 }, (_, h) => h * 10);
+
+    assert.equal(toLocalHours(utc, -60)[20], 190);
+    assert.equal(toLocalHours(utc, -60)[0], 230);
+    assert.equal(toLocalHours(utc, 300)[0], 50);
+    assert.equal(toLocalHours(utc, -330)[12], 60);
+    assert.equal(toLocalHours([1], 0)[5], null);
   });
 
   it('counts hours without readings as empty, and gives nothing when nobody played', () => {

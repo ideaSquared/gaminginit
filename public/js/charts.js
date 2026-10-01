@@ -290,16 +290,16 @@ export const hourLabel = (hour) => clock.format(new Date(2000, 0, 1, hour));
 
 // Average players in each hour of the day. The busiest hours are in the series colour and the rest in gray, so the
 // reader sees when to play before reading any numbers.
-// data: { averages: (number | null)[24], busiest: { start, length } | null }
+// data: { averages: (number | null)[24], busiest: { start, length } | null, period: 'the last 14 days' }
 export const busiestChart = (root) => {
   let data = null;
 
   const draw = () => {
     if (data === null) return;
-    const { averages, busiest } = data;
+    const { averages, busiest, period } = data;
     if (busiest === null) {
       const nothing = averages.every((a) => a === null);
-      emptyMessage(root, nothing ? 'No readings in the last 24 hours yet.' : 'Nobody has played in the last 24 hours.');
+      emptyMessage(root, nothing ? `No readings in ${period} yet.` : `Nobody has played in ${period}.`);
       return;
     }
 

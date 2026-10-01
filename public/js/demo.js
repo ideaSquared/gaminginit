@@ -90,6 +90,8 @@ export const demoStats = (now) => {
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
     leaderboard: leaderboard(),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
+    // Average players in each UTC hour over the last 14 days.
+    hourly: { days: 14, players: CURVE.map((p, hour) => Math.max(0, p + wobble(hour * 7) * 3)) },
   };
 };
 

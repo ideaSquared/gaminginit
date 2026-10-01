@@ -154,6 +154,13 @@ export const hourlyAverages = (history, hourOf = (at) => new Date(at).getHours()
   return hours.map((h) => (h.count === 0 ? null : h.total / h.count));
 };
 
+// The bot's 14-day averages are by UTC hour; this moves them to the reader's local hours. offsetMinutes is
+// Date#getTimezoneOffset (UTC minus local, so -60 in London in summer). Half-hour time zones round to the nearest hour.
+export const toLocalHours = (utcAverages, offsetMinutes) => {
+  const shift = Math.round(-offsetMinutes / 60);
+  return Array.from({ length: 24 }, (_, hour) => utcAverages[(((hour - shift) % 24) + 24) % 24] ?? null);
+};
+
 // The busiest `length` hours in a row, wrapping past midnight: { start, length, average }, or null when nobody played.
 // An hour with no readings counts as empty, since the server was most likely down.
 export const busiestHours = (averages, length = 3) => {

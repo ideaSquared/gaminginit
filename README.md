@@ -10,8 +10,9 @@ What it shows:
 - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
   more players are needed to go live.
 - Discord member and online counts.
-- Players over the last 24 hours, the busiest times of day (average players each hour, with the busiest 3 hours
-  highlighted), and the daily peak for the last 14 days. Each chart has a table view.
+- Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
+- The busiest times of day: average players in each hour, with the busiest 3 hours in a row highlighted. Over the
+  last 14 days when the bot sends `hourly`, otherwise over the last 24 hours.
 - The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
@@ -29,6 +30,8 @@ You need:
 - A free Cloudflare account. Use the same one as the bot.
 - The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). The leaderboard and VIP
   sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
+  The 14-day busiest times need `hourly`: `{ "days": 14, "players": [24 numbers] }`, the average players in each UTC
+  hour (0 to 23) over those days, `null` for an hour with no readings.
 
 ### 1. Get the bot's stats URL
 
