@@ -1856,9 +1856,17 @@ tbody tr:last-child td {
   background: var(--surface-2);
 }
 
-.result-none {
-  padding: 0;
+/* Sides are named in their own colour in game, lightened where needed to stay readable. */
+.side {
   font-weight: 600;
+}
+
+.side-mine {
+  font-weight: 800;
+}
+
+.scores {
+  font-variant-numeric: tabular-nums;
 }
 
 .more-matches {

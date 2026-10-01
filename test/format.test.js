@@ -29,6 +29,9 @@ import {
   byMap,
   bySide,
   calendarWeeks,
+  contrast,
+  readableColour,
+  sideColours,
   daysAgo,
   heatLevel,
   inPeriod,
@@ -415,6 +418,27 @@ describe('player pages', () => {
       seedProgress({ rule, seedDays: 0 }, true),
       'No seed days in the last 7 days yet. Seeding on 3 days in a week keeps the reserved slot for another week.',
     );
+  });
+
+  it('keeps a side’s colour when it reads well on the cards, and lightens it until it does', () => {
+    const surface = [0x13, 0x16, 0x1b];
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
+    assert.equal(readableColour('#ff3333'), '#ff3333');
+    assert.equal(readableColour('#3366ffff'), readableColour('#3366ff'));
+    for (const hex of ['#3366ff', '#000000', '#5a1010']) assert.ok(contrast(rgb(readableColour(hex)), surface) >= 4.5, hex);
+    assert.equal(readableColour(undefined), null);
+    assert.equal(readableColour('blue'), null);
+  });
+
+  it('takes each side’s colour from its latest match, however the server spelled it', () => {
+    const colours = sideColours([
+      match(2, { factionScores: [{ name: 'LONESTAR', score: 100, colorHex: '#ff3333' }, { name: 'Valkyra', score: 50 }] }),
+      match(1, { factionScores: [{ name: 'Lone Star', score: 100, colorHex: '#ffaa00' }] }),
+    ]);
+
+    assert.equal(colours.get('lonestar'), '#ff3333');
+    assert.equal(colours.has('valkyra'), false);
   });
 
   it('lists the leaderboard places in the top 10, best first', () => {

@@ -130,6 +130,8 @@ const leaderboard = () => {
 };
 
 const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
+// Made-up colours for the sample; the real ones come from the game server.
+const SIDE_COLOURS = { Valkyra: '#d93a3a', Lonestar: '#3a7bd9', Manticore: '#e0a020' };
 const PROFILE_DAYS = 90;
 const VIP_RULE = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
 
@@ -177,9 +179,11 @@ export const demoProfile = (id, now) => {
       const kills = Math.max(0, Math.round(9 + wobble(k * 1.3) * 8 + keen * 6));
       const deaths = Math.max(1, Math.round(8 + wobble(k * 0.7 + 2) * 5));
       const faction = SIDES[(k + index) % 3];
-      const other = SIDES[(k + index + 1) % 3];
       const won = wobble(k * 2.1) + keen * 0.15 > 0;
-      const score = 70 + ((k * 13) % 29);
+      const others = SIDES.filter((side) => side !== faction);
+      // The winner reaches 100; the others trail.
+      const order = won ? [faction, ...others] : [others[k % 2], faction, others[(k + 1) % 2]];
+      const factionScores = order.map((name, i) => ({ name, score: i === 0 ? 100 : 40 + ((k * (13 + i * 7)) % 55) - i * 10, colorHex: SIDE_COLOURS[name] }));
       const endedAt = today - ago * DAY + (19 + g) * HOUR + ((k * 17) % 50) * MINUTE;
       // Tonight's matches have not happened yet.
       if (endedAt > now) continue;
@@ -193,7 +197,7 @@ export const demoProfile = (id, now) => {
         players: 60 + ((k * 3) % 38),
         faction,
         result: won ? 'won' : 'lost',
-        factionScores: won ? [{ name: faction, score: 100 }, { name: other, score }] : [{ name: other, score: 100 }, { name: faction, score }],
+        factionScores,
       });
       day.liveMinutes += 40 + ((k * 11) % 15);
       day.matches += 1;

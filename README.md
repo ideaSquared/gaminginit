@@ -22,7 +22,8 @@ What it shows:
   leaderboard board; whether they are in game now; seeder VIP and how close they are to earning it; personal bests
   (most kills and best K/D in a match, most kills in a day, MVPs, top-3 finishes); their maps and sides; a calendar of
   their days on the server with streaks; kills in each of their last 20 matches; and their recent matches with the
-  result and their place on the scoreboard.
+  result, every side's score and their place on the scoreboard. Sides are named in their colour in game, from the
+  bot's match records, lightened where needed so they read on the dark cards.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only

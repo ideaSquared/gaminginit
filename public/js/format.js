@@ -273,7 +273,54 @@ export const results = (matches) => {
 };
 
 // "Lonestar", "LONESTAR" and "Lone Star" are the same side.
-const sideKey = (name) => name.toLowerCase().replace(/[^a-z]/g, '');
+export const sideKey = (name) => name.toLowerCase().replace(/[^a-z]/g, '');
+
+const channels = (hex) => {
+  const match = /^#?([0-9a-f]{6})(?:[0-9a-f]{2})?$/i.exec(hex ?? '');
+  if (!match) return null;
+  const value = parseInt(match[1], 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+};
+
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+export const contrast = (a, b) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+const toHex = (rgb) => `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
+
+// A side's colour in game (the server's "#3366ff" or "#3366ffff"), made light enough to read as text on the cards:
+// mixed with white until it has 4.5:1 contrast. Null when the server gave no colour.
+export const readableColour = (hex, background = '#13161b') => {
+  const rgb = channels(hex);
+  const bg = channels(background);
+  if (rgb === null || bg === null) return null;
+  for (let mix = 0; mix <= 1; mix += 0.05) {
+    const blended = rgb.map((c) => c + (255 - c) * mix);
+    if (contrast(blended, bg) >= 4.5) return toHex(blended);
+  }
+  return '#ffffff';
+};
+
+// Each side's colour from the latest match that had one, by sideKey. Matches come newest first.
+export const sideColours = (matches) => {
+  const colours = new Map();
+  for (const m of matches) {
+    for (const s of m.factionScores ?? []) {
+      const colour = readableColour(s.colorHex);
+      if (colour && !colours.has(sideKey(s.name))) colours.set(sideKey(s.name), colour);
+    }
+  }
+  return colours;
+};
 
 const groupBy = (matches, key) => {
   const groups = new Map();

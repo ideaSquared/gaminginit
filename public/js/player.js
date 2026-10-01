@@ -15,6 +15,8 @@ import {
   played,
   results,
   seedProgress,
+  sideColours,
+  sideKey,
   streaks,
   sumDays,
   topRanks,
@@ -105,7 +107,7 @@ const renderHead = (now) => {
       el('span', { className: 'online-dot', ariaHidden: 'true' }),
       el('strong', { textContent: 'In game now' }),
       mapTag(online.map),
-      online.faction ? el('span', { textContent: online.faction }) : null,
+      online.faction ? sideName(online.faction, sideColours(profile.matches), 'side side-mine') : null,
       el('span', { className: 'muted', textContent: `${plural(online.kills, 'kill')}, ${plural(online.deaths, 'death')} this match` }),
     );
   }
@@ -189,6 +191,7 @@ const renderStats = (now) => {
   );
 
   const sides = bySide(matches);
+  const colours = sideColours(profile.matches);
   $('player-sides').replaceChildren(
     sides.length === 0
       ? el('p', { className: 'muted', textContent: matches.length === 0 ? 'No matches in this time.' : 'The bot records which side players are on from now on.' })
@@ -203,7 +206,7 @@ const renderStats = (now) => {
               el(
                 'tr',
                 {},
-                el('td', { className: 'player', textContent: s.faction }),
+                el('td', {}, sideName(s.faction, colours, 'side side-mine')),
                 el('td', { textContent: String(s.matches) }),
                 el('td', { textContent: String(s.won) }),
                 el('td', { textContent: percent(s.share) }),
@@ -231,13 +234,32 @@ const renderSeeding = () => {
   setText($('seed-progress'), seedProgress(seeding, profile.vip !== null));
 };
 
-const resultText = (match) => {
-  const label = { won: 'Won', lost: 'Lost', draw: 'Draw' }[match.result];
-  const scores = [...match.factionScores].sort((a, b) => b.score - a.score);
-  const score = scores.length >= 2 ? ` ${scores[0].score}–${scores[1].score}` : '';
-  if (!label) return scores.length >= 2 ? `${scores[0].name} won${score}` : 'No score recorded';
-  return `${label}${score}${match.faction ? ` as ${match.faction}` : ''}`;
+// A side's name in its colour in game, when the server reported one.
+const sideName = (name, colours, className = 'side') => {
+  const node = el('span', { className, textContent: name });
+  const colour = colours.get(sideKey(name));
+  if (colour) node.style.color = colour;
+  return node;
 };
+
+// Every side's score, highest first, each name in its own colour: "Valkyra 100 · Lonestar 72 · Manticore 41". Their own
+// side is in bold.
+const scoreList = (match) => {
+  const colours = sideColours([match]);
+  const scores = [...match.factionScores].sort((a, b) => b.score - a.score);
+  const mine = match.faction ? sideKey(match.faction) : null;
+  return el(
+    'span',
+    { className: 'scores' },
+    ...scores.flatMap((s, i) => [
+      i > 0 ? el('span', { className: 'muted', textContent: ' · ' }) : null,
+      sideName(s.name, colours, sideKey(s.name) === mine ? 'side side-mine' : 'side'),
+      ` ${s.score}`,
+    ]),
+  );
+};
+
+const RESULT_LABELS = { won: 'Won', lost: 'Lost', draw: 'Draw' };
 
 const renderMatches = () => {
   const list = $('player-matches');
@@ -255,8 +277,14 @@ const renderMatches = () => {
         el(
           'div',
           { className: 'pm-main' },
-          el('p', { className: 'match-headline' }, mapTag(m.map), el('span', { className: `result result-${m.result ?? 'none'}`, textContent: resultText(m) })),
-          el('p', { className: 'match-meta', textContent: `${ended.format(m.endedAt)} · ${formatDuration(m.durationMs)}` }),
+          el(
+            'p',
+            { className: 'match-headline' },
+            mapTag(m.map),
+            m.result ? el('span', { className: `result result-${m.result}`, textContent: RESULT_LABELS[m.result] }) : null,
+            m.factionScores.length > 0 ? scoreList(m) : el('span', { className: 'muted', textContent: 'No score recorded' }),
+          ),
+          el('p', { className: 'match-meta', textContent: [m.faction ? `As ${m.faction}` : null, ended.format(m.endedAt), formatDuration(m.durationMs)].filter(Boolean).join(' · ') }),
         ),
         el(
           'p',
