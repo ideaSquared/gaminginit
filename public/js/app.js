@@ -3,11 +3,13 @@ import { demoStats } from './demo.js';
 import {
   BOARDS,
   compact,
+  emptyNote,
   formatDuration,
   formatHours,
   kd,
   mapKey,
   peak,
+  phaseRanges,
   result,
   scoreLine,
   serverState,
@@ -76,6 +78,7 @@ const renderServer = (now) => {
   setText(status.querySelector('.status-label'), state.label);
   $('server').dataset.kind = state.kind;
   setText($('server-detail'), state.detail);
+  $('server-help').hidden = state.kind !== 'seeding' && state.kind !== 'empty';
   setText($('server-name'), server?.name ?? 'Game server');
   setText($('server-updated'), server ? `Updated ${timeAgo(now - server.seenAt)}` : '');
   setText($('players-now'), online ? String(server.players) : '–');
@@ -277,6 +280,17 @@ const renderVip = () => {
   setText($('vip-step-detail'), vipDetail(vip));
 };
 
+// Uses the bot's own thresholds, so the explanation stays right if they change. Until the stats load, the page shows
+// the bot's defaults.
+const renderSeeding = () => {
+  $('seed-vip').hidden = !stats?.vip;
+  if (!stats?.thresholds) return;
+  const ranges = phaseRanges(stats.thresholds);
+  for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);
+  setText($('note-empty'), emptyNote(stats.thresholds));
+  setText($('seed-live'), String(stats.thresholds.live));
+};
+
 const boardTable = (board, rows) =>
   el(
     'table',
@@ -334,6 +348,7 @@ const render = () => {
   renderCurrentMatch(now);
   renderMatches(now);
   renderLeaderboard();
+  renderSeeding();
 };
 
 const link = (href, textContent) => el('a', { href, textContent });

@@ -15,6 +15,7 @@ What it shows:
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
   when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
+- What seeding is: the empty, seeding and live states with the bot's player thresholds, and how to help.
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
