@@ -226,6 +226,10 @@ a {
   background: var(--surface-2);
 }
 
+.nav-links a[aria-current='page'] {
+  color: var(--text);
+}
+
 /* Six links need about 880px next to the brand and the Discord button. */
 @media (min-width: 900px) {
   .nav-links {
@@ -862,6 +866,7 @@ tbody tr:last-child td {
   }
 
   .current-match,
+  .recent,
   .match {
     padding-left: 14px;
     padding-right: 14px;
@@ -883,7 +888,8 @@ tbody tr:last-child td {
   }
 }
 
-.current-match {
+.current-match,
+.recent {
   padding: 20px;
 }
 
@@ -897,7 +903,9 @@ tbody tr:last-child td {
   margin-bottom: 12px;
 }
 
-.current-match .players-table {
+.current-match .players-table,
+.match .players-table,
+.match-empty {
   margin-top: 12px;
 }
 
@@ -950,12 +958,69 @@ tbody tr:last-child td {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* The home page's recent matches: short rows in one card, split by a hairline. */
+.match-row + .match-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+}
+
+.more-link {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 4px 0;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.more-link:hover {
+  text-decoration: underline;
+}
+
+/* The matches page: one card per match, two to a row on wide screens. */
+.match-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .match-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .match {
   padding: 16px 18px;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem);
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+}
+
+.back {
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.back a {
+  color: var(--text-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back a:hover {
+  color: var(--text);
 }
 
 .mvp {
