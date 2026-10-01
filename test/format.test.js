@@ -6,6 +6,7 @@ import {
   formatDuration,
   formatHours,
   kd,
+  latestMatches,
   mapKey,
   niceScale,
   peak,
@@ -181,5 +182,16 @@ describe('mapKey', () => {
     assert.equal(mapKey('Kavkazi'), null);
     assert.equal(mapKey(''), null);
     assert.equal(mapKey(undefined), null);
+  });
+});
+
+describe('latestMatches', () => {
+  it('puts the newest matches first and keeps only as many as asked for', () => {
+    const matches = [1, 4, 2, 5, 3].map((endedAt) => ({ endedAt }));
+
+    assert.deepEqual(latestMatches(matches, 3).map((m) => m.endedAt), [5, 4, 3]);
+    assert.equal(latestMatches(matches, 10).length, 5);
+    assert.deepEqual(matches.map((m) => m.endedAt), [1, 4, 2, 5, 3]);
+    assert.deepEqual(latestMatches(undefined, 3), []);
   });
 });
