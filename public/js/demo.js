@@ -26,8 +26,13 @@ const playersAt = (at) => {
   return Math.max(0, Math.min(CAPACITY, Math.round(base + wobble(at / MINUTE) * 2)));
 };
 
+// Each sample player's id, shaped like the bot's: 12 hex characters.
+const demoId = (i) => `d${String(i).padStart(11, '0')}`;
+const idOf = (name) => demoId(NAMES.indexOf(name));
+
 const top = (seed, count = 5) =>
   NAMES.slice(seed % 4, (seed % 4) + count).map((name, i) => ({
+    id: idOf(name),
     name,
     kills: 24 - i * 4 + (seed % 3),
     deaths: 6 + ((i + seed) % 5),
@@ -104,6 +109,7 @@ export const demoStats = (now) => {
 // Thirty days of made-up totals for ten regulars.
 const leaderboard = () => {
   const players = NAMES.map((name, i) => ({
+    id: demoId(i),
     name,
     seedingMinutes: [410, 95, 260, 30, 180, 0, 520, 75, 140, 12][i],
     liveMinutes: 1900 - i * 150 + (i % 3) * 90,
@@ -120,5 +126,98 @@ const leaderboard = () => {
     kd: by((p) => p.kills / Math.max(p.deaths, 1)),
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
+  };
+};
+
+const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
+// Made-up colours for the sample; the real ones come from the game server.
+const SIDE_COLOURS = { Valkyra: '#d93a3a', Lonestar: '#3a7bd9', Manticore: '#e0a020' };
+const PROFILE_DAYS = 90;
+const VIP_RULE = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
+
+// Everyone in the sample, for the players page: the regulars, then occasional players.
+export const demoPlayers = (now) => {
+  const today = new Date(now).toISOString().slice(0, 10);
+  const online = playersAt(Math.floor(now / MINUTE) * MINUTE) > 0;
+  const extras = ['Gale', 'Hollow', 'Ibis', 'Juno', 'Kite', 'Lark', 'Mako', 'Nova', 'Onyx', 'Quill', 'Ruin', 'Sprocket'];
+  return {
+    generatedAt: now,
+    days: PROFILE_DAYS,
+    players: [...NAMES, ...extras].map((name, i) => ({
+      id: demoId(i),
+      name,
+      minutes: Math.round(2400 / (1 + i * 0.45)),
+      lastSeen: new Date(now - (i < 6 ? 0 : (i % 9) * DAY)).toISOString().slice(0, 10),
+      online: online && i < 6,
+    })),
+  };
+};
+
+// One sample player's page, or null for an id that is not in the sample.
+export const demoProfile = (id, now) => {
+  const index = demoPlayers(now).players.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+  const name = demoPlayers(now).players[index].name;
+  const today = Math.floor(now / DAY) * DAY;
+  const keen = Math.max(0.25, 1 - index * 0.08);
+  const activity = [];
+  const matches = [];
+  for (let ago = PROFILE_DAYS - 1; ago >= 0; ago--) {
+    const n = ago + index * 13;
+    // Plays most evenings, more at weekends, with a quiet spell a month ago.
+    const weekend = [0, 6].includes(new Date(today - ago * DAY).getUTCDay());
+    const chance = (wobble(n * 3.7) + 1) / 2 + (weekend ? 0.25 : 0) - (ago > 30 && ago < 38 ? 0.6 : 0);
+    if (chance < 1.3 - keen) continue;
+    const games = 1 + Math.round(((wobble(n) + 1) / 2) * 2 * keen);
+    const day = { day: new Date(today - ago * DAY).toISOString().slice(0, 10), seedingMinutes: 0, liveMinutes: 0, seedDays: 0, matches: 0, kills: 0, deaths: 0 };
+    if ((n + index) % 3 === 0) {
+      day.seedingMinutes = 15 + ((n * 7) % 40);
+      day.seedDays = 1;
+    }
+    for (let g = 0; g < games; g++) {
+      const k = n * 5 + g;
+      const kills = Math.max(0, Math.round(9 + wobble(k * 1.3) * 8 + keen * 6));
+      const deaths = Math.max(1, Math.round(8 + wobble(k * 0.7 + 2) * 5));
+      const faction = SIDES[(k + index) % 3];
+      const won = wobble(k * 2.1) + keen * 0.15 > 0;
+      const others = SIDES.filter((side) => side !== faction);
+      // The winner reaches 100; the others trail.
+      const order = won ? [faction, ...others] : [others[k % 2], faction, others[(k + 1) % 2]];
+      const factionScores = order.map((name, i) => ({ name, score: i === 0 ? 100 : 40 + ((k * (13 + i * 7)) % 55) - i * 10, colorHex: SIDE_COLOURS[name] }));
+      const endedAt = today - ago * DAY + (19 + g) * HOUR + ((k * 17) % 50) * MINUTE;
+      // Tonight's matches have not happened yet.
+      if (endedAt > now) continue;
+      matches.push({
+        map: MAPS[k % MAPS.length],
+        endedAt,
+        durationMs: (38 + ((k * 7) % 20)) * MINUTE,
+        kills,
+        deaths,
+        place: Math.max(1, Math.round(1 + (1 - keen) * 20 + wobble(k * 0.9) * 8)),
+        players: 60 + ((k * 3) % 38),
+        faction,
+        result: won ? 'won' : 'lost',
+        factionScores,
+      });
+      day.liveMinutes += 40 + ((k * 11) % 15);
+      day.matches += 1;
+      day.kills += kills;
+      day.deaths += deaths;
+    }
+    activity.push(day);
+  }
+  matches.sort((a, b) => b.endedAt - a.endedAt);
+  const online = demoPlayers(now).players[index].online;
+  return {
+    generatedAt: now,
+    id,
+    name,
+    days: PROFILE_DAYS,
+    activity: activity.filter((d) => d.matches > 0 || d.seedingMinutes > 0),
+    matches,
+    ranks: { days: 30, kdMinMatches: 3, players: 214, kills: index + 1, kd: index < 5 ? 5 - index : 14 + index, playtime: index * 2 + 2, seeding: index === 0 ? 1 : null },
+    online: online ? { map: 'Ozeti', faction: 'Valkyra', kills: 11 - index, deaths: 3 + index } : null,
+    vip: index % 2 === 0 ? { until: today + 5 * DAY + 4 * HOUR } : null,
+    seeding: { rule: VIP_RULE, seedDays: Math.min(3, (index + 1) % 4) },
   };
 };

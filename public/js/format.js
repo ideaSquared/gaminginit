@@ -219,3 +219,237 @@ export const scoreLine = (scores) => {
   if (list.length === 2 && a && b) return `${a.name} ${a.score}–${b.score} ${b.name}`;
   return list.map((s) => `${s.name} ${s.score}`).join(' · ');
 };
+
+// Player pages. The bot sends each player's days and matches (GET /api/player); these turn them into the page's
+// numbers. Days are UTC dates, like the bot's records.
+
+export const utcDay = (at) => new Date(at).toISOString().slice(0, 10);
+
+const shiftDay = (day, days) => utcDay(Date.parse(`${day}T00:00:00Z`) + days * DAY);
+
+// "1st", "2nd", "3rd", "4th", "11th", "22nd".
+export const ordinal = (n) => {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th');
+  return `${n}${suffix}`;
+};
+
+export const percent = (share) => (share === null ? '–' : `${Math.round(share * 100)}%`);
+
+// The player's days and matches in the last `days` UTC days, today included. A match counts on the day it ended.
+export const inPeriod = (profile, days, now) => {
+  const first = utcDay(now - (days - 1) * DAY);
+  return {
+    activity: profile.activity.filter((d) => d.day >= first),
+    matches: profile.matches.filter((m) => utcDay(m.endedAt) >= first),
+  };
+};
+
+export const played = (t) => t.seedingMinutes + t.liveMinutes;
+
+// Totals over some of a player's days, and how many days they played.
+export const sumDays = (activity) =>
+  activity.reduce(
+    (t, d) => ({
+      days: t.days + 1,
+      seedingMinutes: t.seedingMinutes + d.seedingMinutes,
+      liveMinutes: t.liveMinutes + d.liveMinutes,
+      seedDays: t.seedDays + d.seedDays,
+      matches: t.matches + d.matches,
+      kills: t.kills + d.kills,
+      deaths: t.deaths + d.deaths,
+    }),
+    { days: 0, seedingMinutes: 0, liveMinutes: 0, seedDays: 0, matches: 0, kills: 0, deaths: 0 },
+  );
+
+// Wins, losses and draws, from the matches whose result is known. The share is null when none is.
+export const results = (matches) => {
+  const count = (result) => matches.filter((m) => m.result === result).length;
+  const won = count('won');
+  const lost = count('lost');
+  const draw = count('draw');
+  const decided = won + lost + draw;
+  return { won, lost, draw, decided, share: decided === 0 ? null : won / decided };
+};
+
+// "Lonestar", "LONESTAR" and "Lone Star" are the same side.
+export const sideKey = (name) => name.toLowerCase().replace(/[^a-z]/g, '');
+
+const channels = (hex) => {
+  const match = /^#?([0-9a-f]{6})(?:[0-9a-f]{2})?$/i.exec(hex ?? '');
+  if (!match) return null;
+  const value = parseInt(match[1], 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+};
+
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+export const contrast = (a, b) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+const toHex = (rgb) => `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
+
+// A side's colour in game (the server's "#3366ff" or "#3366ffff"), made light enough to read as text on the cards:
+// mixed with white until it has 4.5:1 contrast. Null when the server gave no colour.
+export const readableColour = (hex, background = '#13161b') => {
+  const rgb = channels(hex);
+  const bg = channels(background);
+  if (rgb === null || bg === null) return null;
+  for (let mix = 0; mix <= 1; mix += 0.05) {
+    const blended = rgb.map((c) => c + (255 - c) * mix);
+    if (contrast(blended, bg) >= 4.5) return toHex(blended);
+  }
+  return '#ffffff';
+};
+
+// Each side's colour from the latest match that had one, by sideKey. Matches come newest first.
+export const sideColours = (matches) => {
+  const colours = new Map();
+  for (const m of matches) {
+    for (const s of m.factionScores ?? []) {
+      const colour = readableColour(s.colorHex);
+      if (colour && !colours.has(sideKey(s.name))) colours.set(sideKey(s.name), colour);
+    }
+  }
+  return colours;
+};
+
+const groupBy = (matches, key) => {
+  const groups = new Map();
+  for (const m of matches) {
+    const k = key(m);
+    if (k === null) continue;
+    groups.set(k, [...(groups.get(k) ?? []), m]);
+  }
+  return [...groups.values()];
+};
+
+const most = (list, value) => list.reduce((best, item) => (best === null || value(item) > value(best) ? item : best), null);
+
+// Each map they played, most played first: matches, results, kills, deaths and their best match on it.
+export const byMap = (matches) =>
+  groupBy(matches, (m) => m.map || null)
+    .map((list) => ({
+      map: list[0].map,
+      matches: list.length,
+      ...results(list),
+      kills: list.reduce((sum, m) => sum + m.kills, 0),
+      deaths: list.reduce((sum, m) => sum + m.deaths, 0),
+      best: most(list, (m) => m.kills),
+    }))
+    .sort((a, b) => b.matches - a.matches || a.map.localeCompare(b.map));
+
+// Each side they played on, most played first, named as in their latest match on it. Matches without a side are
+// left out.
+export const bySide = (matches) =>
+  groupBy(matches, (m) => (m.faction ? sideKey(m.faction) : null))
+    .map((list) => ({ faction: list[0].faction, matches: list.length, ...results(list) }))
+    .sort((a, b) => b.matches - a.matches || a.faction.localeCompare(b.faction));
+
+// A K/D only counts as a best with at least this many kills, so one kill and no deaths is not a record.
+export const BEST_KD_KILLS = 5;
+
+// Their best match by kills and by K/D, best day by kills, and how often they topped the scoreboard (MVP) or made the
+// top 3. A tie goes to the earlier one, which got there first. Matches come newest first.
+export const bests = (matches, activity) => {
+  const oldestFirst = [...matches].reverse();
+  const scored = oldestFirst.filter((m) => m.kills > 0);
+  const day = most(activity.filter((d) => d.kills > 0), (d) => d.kills);
+  return {
+    kills: most(scored, (m) => m.kills),
+    kd: most(scored.filter((m) => m.kills >= BEST_KD_KILLS), (m) => m.kills / Math.max(m.deaths, 1)),
+    day,
+    mvps: scored.filter((m) => m.place === 1).length,
+    podiums: scored.filter((m) => m.place <= 3).length,
+  };
+};
+
+// Days in a row on the server: the longest run, and the current one, which ends today, or yesterday while they have
+// not played yet today.
+export const streaks = (activity, today) => {
+  const days = new Set(activity.filter((d) => played(d) > 0 || d.matches > 0).map((d) => d.day));
+  let longest = 0;
+  for (const day of days) {
+    if (days.has(shiftDay(day, -1))) continue;
+    let length = 1;
+    while (days.has(shiftDay(day, length))) length += 1;
+    longest = Math.max(longest, length);
+  }
+  let current = 0;
+  let day = days.has(today) ? today : shiftDay(today, -1);
+  while (days.has(day)) {
+    current += 1;
+    day = shiftDay(day, -1);
+  }
+  return { current, longest };
+};
+
+// The calendar's columns: one per week, Monday first, ending with the week that has today. Days after today, and
+// before `first`, are null.
+export const calendarWeeks = (today, weeks, first) => {
+  const weekday = (new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7;
+  const start = shiftDay(today, -weekday - (weeks - 1) * 7);
+  return Array.from({ length: weeks }, (_, w) =>
+    Array.from({ length: 7 }, (_, d) => {
+      const day = shiftDay(start, w * 7 + d);
+      return day > today || day < first ? null : day;
+    }),
+  );
+};
+
+// Minutes played from which a calendar day takes the next shade: under 30 minutes, under 1.5 hours, under 3 hours,
+// then 3 hours or more.
+export const HEAT_STEPS = [30, 90, 180];
+
+export const heatLevel = (minutes) => (minutes <= 0 ? 0 : 1 + HEAT_STEPS.filter((step) => minutes >= step).length);
+
+// "Today", "Yesterday", "3 days ago", from UTC days.
+export const daysAgo = (day, today) => {
+  const days = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) / DAY);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return `${days} days ago`;
+};
+
+// How close a player is to seeder VIP, under the bot's own rule. With VIP already, seeding again keeps it: the bot
+// renews it for players who earned it again by the time it ends.
+export const seedProgress = ({ rule, seedDays }, hasVip = false) => {
+  const days = `in the last ${plural(rule.windowDays, 'day')}`;
+  const goal = hasVip ? `keeps the reserved slot for another ${span(rule.lengthDays).replace(/^a /, '')}` : 'earns a reserved slot';
+  const left = rule.seedDays - seedDays;
+  if (left <= 0) return `${plural(seedDays, 'seed day')} ${days}. That ${goal}.`;
+  if (seedDays === 0) return `No seed days ${days} yet. Seeding on ${plural(rule.seedDays, 'day')} in ${span(rule.windowDays)} ${goal}.`;
+  return `${seedDays} of ${plural(rule.seedDays, 'seed day')} ${days}. ${left} more ${goal}.`;
+};
+
+// What each leaderboard place reads as in a player's highlights: "#3 in kills".
+const RANK_LABELS = { kills: 'in kills', kd: 'in K/D', playtime: 'in time played', seeding: 'seeder' };
+
+// Places on the leaderboard: only the top 10 are on it.
+export const LEADERBOARD_SIZE = 10;
+
+// The player's leaderboard places that make the top 10, best first.
+export const topRanks = (ranks) =>
+  Object.entries(RANK_LABELS)
+    .filter(([key]) => ranks?.[key] != null && ranks[key] <= LEADERBOARD_SIZE)
+    .map(([key, label]) => ({ key, place: ranks[key], text: `#${ranks[key]} ${label}` }))
+    .sort((a, b) => a.place - b.place);
+
+const fold = (text) => text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
+
+// Players whose name has the search in it, ignoring case and accents. Names that start with it come first; otherwise
+// the list keeps its order.
+export const searchPlayers = (players, query) => {
+  const q = fold(query.trim());
+  if (q === '') return players;
+  const matching = players.filter((p) => fold(p.name).includes(q));
+  return [...matching.filter((p) => fold(p.name).startsWith(q)), ...matching.filter((p) => !fold(p.name).startsWith(q))];
+};

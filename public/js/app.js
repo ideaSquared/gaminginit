@@ -22,7 +22,7 @@ import {
   vipOffer,
 } from './format.js';
 import { startLive } from './live.js';
-import { el, mapTag, matchHeadline, matchMeta, playersTable, setText } from './views.js';
+import { el, mapTag, matchHeadline, matchMeta, playerName, playersTable, setText } from './views.js';
 
 const DAY = 86_400_000;
 // The rest are on the matches page.
@@ -226,7 +226,7 @@ const renderMatches = (now) => {
               'p',
               { className: 'mvp' },
               el('span', { className: 'mvp-label', textContent: 'Top player' }),
-              el('span', { className: 'player', textContent: mvp.name }),
+              el('span', { className: 'player' }, playerName(mvp)),
               ` ${mvp.kills} kills, ${kd(mvp.kills, mvp.deaths)} K/D`,
             )
           : null,
@@ -274,7 +274,7 @@ const boardTable = (board, rows) =>
           'tr',
           {},
           el('td', { className: 'rank', textContent: String(i + 1) }),
-          el('td', { className: 'player', textContent: p.name }),
+          el('td', { className: 'player' }, playerName(p)),
           ...board.cells(p).map((cell) => el('td', { textContent: cell })),
         ),
       ),

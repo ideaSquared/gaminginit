@@ -16,7 +16,16 @@ What it shows:
   sends `hourly` with `busy`, otherwise over the last 24 hours.
 - The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
-- A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
+- A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders.
+- A page for every player (`/player?id=…`): player names on the leaderboard and in matches link to it. It has their
+  time played, matches, kills, K/D, win rate and seed days over the last 30 or 90 days, with their place on each
+  leaderboard board; whether they are in game now; seeder VIP and how close they are to earning it; personal bests
+  (most kills and best K/D in a match, most kills in a day, MVPs, top-3 finishes); their maps and sides; a calendar of
+  their days on the server with streaks; kills in each of their last 20 matches; and their recent matches with the
+  result, every side's score and their place on the scoreboard. Sides are named in their colour in game, from the
+  bot's match records, lightened where needed so they read on the dark cards.
+- A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
+  player's page. Players are known by an id the bot makes, never their Steam ID.
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
   when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - What seeding is: the empty, seeding and live states with the bot's player thresholds, and how to help.
@@ -31,6 +40,8 @@ You need:
 - A free Cloudflare account. Use the same one as the bot.
 - The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). The leaderboard and VIP
   sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
+  The player pages need a bot that serves `/api/players` and `/api/player`, next to `/api/stats`; with an older bot,
+  names are not links and the players page cannot load.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.
@@ -47,13 +58,13 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and `public/matches.html` where it says so:
+Edit `public/index.html`, and `public/matches.html`, `public/players.html` and `public/player.html` where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in both pages. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 in `matches.html`. If the invite changes, change all 5. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html` has its own `<title>`, metas and wordmarks. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all four pages. The player pages read `/api/players` and `/api/player` from the same place. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 each in `matches.html`, `players.html` and `player.html`. If the invite changes, change all 7. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html`, `players.html` and `player.html` have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.
@@ -169,7 +180,7 @@ npm start                      # serves public/ on http://localhost:3000
 ```
 
 - `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. Links between
-  the pages keep `?demo` (and `?stats=`).
+  the pages keep `?demo` (and `?stats=`). `http://localhost:3000/player?demo&id=d00000000000` is a sample player.
 - `http://localhost:3000/?stats=http://localhost:8787/api/stats` reads a bot running locally with `wrangler dev`.
 
 Until the stats URL is set, the page says live stats are not connected and links to the demo.
@@ -180,7 +191,12 @@ Until the stats URL is set, the page says live stats are not connected and links
 - If the bot has not read the server for 3 minutes, the server shows as **Offline** with when it was last seen.
 - If a refresh fails, the page keeps the last numbers and says it is retrying.
 - Player and server names are inserted as text, never as HTML.
-- Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars.
+- Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
+  player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills chart and use ← →.
+- Player pages are marked `noindex`, so search engines leave individual players out. The players page is indexed.
+- A player page shows days as UTC dates, like the bot's records, and match times in the reader's own time. A match
+  counts on the day it ended. Win rates and sides only cover matches the bot recorded since it started keeping each
+  player's side.
 
 ## Development
 
@@ -188,6 +204,7 @@ Until the stats URL is set, the page says live stats are not connected and links
 npm test    # Node's built-in test runner; no dependencies to install
 ```
 
-The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the stats
-for both pages, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` renders the
-matches page, `charts.js` draws the SVG charts and `demo.js` makes the sample data.
+The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
+numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` the
+matches page, `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
+`demo.js` makes the sample data.
