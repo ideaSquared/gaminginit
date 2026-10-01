@@ -10,6 +10,8 @@ const NAMES = ['Kestrel', 'Bravo_Six', 'Moth', 'Nightjar', 'Pike', 'Rook', 'Sabl
 const MAPS = ['Bakurani', 'Ozeti', 'Zestafona'];
 const CAPACITY = 64;
 const LIVE = 20;
+// Busy near full, like the real server's 97+ of its slots.
+const BUSY = 60;
 
 // Deterministic wobble, so the preview looks the same on every load.
 const wobble = (n) => Math.sin(n * 0.11) * 0.6 + Math.sin(n * 0.029) * 0.4;
@@ -51,7 +53,7 @@ export const demoStats = (now) => {
 
   return {
     generatedAt: now,
-    thresholds: { seeding: 1, live: LIVE },
+    thresholds: { seeding: 1, live: LIVE, busy: BUSY },
     server: {
       name: 'gaminginit #1',
       players,
@@ -90,8 +92,12 @@ export const demoStats = (now) => {
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
     leaderboard: leaderboard(),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
-    // Average players in each UTC hour over the last 14 days.
-    hourly: { days: 14, players: CURVE.map((p, hour) => Math.max(0, p + wobble(hour * 7) * 3)) },
+    // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
+    hourly: {
+      days: 14,
+      players: CURVE.map((p, hour) => Math.max(0, p + wobble(hour * 7) * 3)),
+      busy: CURVE.map((p) => Math.max(0, Math.min(1, (p - 55) / 10))),
+    },
   };
 };
 

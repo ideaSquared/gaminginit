@@ -161,17 +161,33 @@ export const toLocalHours = (utcAverages, offsetMinutes) => {
   return Array.from({ length: 24 }, (_, hour) => utcAverages[(((hour - shift) % 24) + 24) % 24] ?? null);
 };
 
-// The busiest `length` hours in a row, wrapping past midnight: { start, length, average }. Only runs where every hour
-// has readings count, since a missing hour is unknown rather than empty. Null when no run has players.
-export const busiestHours = (averages, length = 3) => {
-  let best = null;
-  for (let start = 0; start < 24; start++) {
-    const run = Array.from({ length }, (_, i) => averages[(start + i) % 24] ?? null);
-    if (run.includes(null)) continue;
-    const average = run.reduce((sum, a) => sum + a, 0) / length;
-    if (average > (best?.average ?? 0)) best = { start, length, average };
+// The players from which the server is busy, for a bot that does not send thresholds.busy.
+export const BUSY_PLAYERS = 97;
+// An hour is busy when at least this share of its readings had BUSY_PLAYERS or more.
+export const BUSY_SHARE = 0.5;
+
+// The share of readings (0 to 1) in each hour of the day with at least `threshold` players. Null for an hour with no
+// readings.
+export const busyShares = (history, threshold, hourOf) =>
+  hourlyAverages(history.map(([at, players]) => [at, players >= threshold ? 1 : 0]), hourOf);
+
+export const isBusy = (share) => share !== null && share !== undefined && share >= BUSY_SHARE;
+
+// The busy hours as runs in a row, wrapping past midnight: [{ start, length }], earliest start first. Empty when no
+// hour is busy.
+export const busyRuns = (shares) => {
+  const busy = Array.from({ length: 24 }, (_, hour) => isBusy(shares[hour]));
+  if (busy.every(Boolean)) return [{ start: 0, length: 24 }];
+  const runs = [];
+  // Starting after a quiet hour keeps a run across midnight whole.
+  const quiet = busy.indexOf(false);
+  for (let i = 1; i <= 24; i++) {
+    const hour = (quiet + i) % 24;
+    if (!busy[hour]) continue;
+    if (busy[(hour + 23) % 24]) runs[runs.length - 1].length += 1;
+    else runs.push({ start: hour, length: 1 });
   }
-  return best;
+  return runs.sort((a, b) => a.start - b.start);
 };
 
 export const playerCount = (n) => `${n} player${n === 1 ? '' : 's'}`;

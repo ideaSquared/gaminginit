@@ -751,7 +751,7 @@ h1 {
   transition: filter 120ms ease;
 }
 
-/* The quiet hours of the busiest-times chart: gray, so the busy ones stand out. */
+/* The quiet hours of the busy-times chart: gray, so the busy ones stand out. */
 .chart .column-quiet {
   fill: var(--series-quiet);
 }
@@ -800,7 +800,7 @@ h1 {
   font-size: 0.8rem;
 }
 
-/* Busiest times, under the 24-hour chart */
+/* Busy times, under the 24-hour chart */
 
 .busiest {
   margin-top: 20px;
@@ -830,7 +830,7 @@ h1 {
   color: var(--text);
 }
 
-/* The swatch says which bars are the busiest; the text beside it stays in text colours. */
+/* The swatch says which bars are busy; the text beside it stays in text colours. */
 .busiest-key {
   width: 10px;
   height: 10px;
