@@ -92,6 +92,12 @@ export const phaseRanges = ({ seeding, live }) => ({
   live: `${live}+ players`,
 });
 
+// What an empty server means. With a seeding threshold above 1, a few players can be on before it counts as seeding.
+export const emptyNote = ({ seeding }) =>
+  seeding <= 1
+    ? 'Nobody is on. The first player to join starts the seed.'
+    : `Fewer than ${seeding} players on. Seeding starts once ${seeding} are in.`;
+
 // What seeding earns, from the bot's `vip` rule: "Seed on 3 days in a week and get a reserved slot for a week."
 export const vipOffer = (vip) =>
   `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a reserved slot for ${span(vip.lengthDays)}.`;

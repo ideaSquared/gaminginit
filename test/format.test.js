@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   compact,
+  emptyNote,
   formatDuration,
   formatHours,
   kd,
@@ -109,6 +110,11 @@ describe('seeding', () => {
       live: '20+ players',
     });
     assert.deepEqual(phaseRanges({ seeding: 3, live: 4 }), { empty: '0–2 players', seeding: '3 players', live: '4+ players' });
+  });
+
+  it('only says nobody is on when one player starts the seed', () => {
+    assert.equal(emptyNote({ seeding: 1, live: 20 }), 'Nobody is on. The first player to join starts the seed.');
+    assert.equal(emptyNote({ seeding: 3, live: 20 }), 'Fewer than 3 players on. Seeding starts once 3 are in.');
   });
 });
 

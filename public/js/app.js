@@ -3,6 +3,7 @@ import { demoStats } from './demo.js';
 import {
   BOARDS,
   compact,
+  emptyNote,
   formatDuration,
   formatHours,
   kd,
@@ -286,6 +287,7 @@ const renderSeeding = () => {
   if (!stats?.thresholds) return;
   const ranges = phaseRanges(stats.thresholds);
   for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);
+  setText($('note-empty'), emptyNote(stats.thresholds));
   setText($('seed-live'), String(stats.thresholds.live));
 };
 
