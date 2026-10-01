@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player | gaminginit WARDOGS server</title>
+    <meta name="description" content="A player’s stats on the gaminginit WARDOGS server: matches, kills, K/D, time played, seeding and their best matches." />
+    <!-- Each player's page is for the community, not for search results. -->
+    <meta name="robots" content="noindex" />
+    <meta property="og:site_name" content="gaminginit" />
+    <meta property="og:title" content="Player | gaminginit WARDOGS server" />
+    <meta property="og:description" content="A player’s stats on the gaminginit WARDOGS server: matches, kills, K/D, time played, seeding and their best matches." />
+    <meta property="og:url" content="https://gaminginit.com/player" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://gaminginit.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Player | gaminginit WARDOGS server" />
+    <meta name="twitter:description" content="A player’s stats on the gaminginit WARDOGS server: matches, kills, K/D, time played, seeding and their best matches." />
+    <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
+    <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta name="theme-color" content="#0b0d10" />
+    <!-- Where the bot serves its stats. Keep it the same as in index.html. See README.md. -->
+    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="js/player.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
+        </a>
+        <nav aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="./#server" data-keep-query>Server</a></li>
+            <li><a href="./#stats" data-keep-query>Stats</a></li>
+            <li><a href="matches" data-keep-query>Matches</a></li>
+            <li><a href="./#leaderboard" data-keep-query>Leaderboard</a></li>
+            <li><a href="players" data-keep-query>Players</a></li>
+            <li><a href="./#seeding" data-keep-query>Seeding</a></li>
+            <li><a href="./#join" data-keep-query>Join</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+          <span>Discord</span>
+        </a>
+      </div>
+    </header>
+
+
+    <main id="main">
+      <div class="notice wrap" id="notice" role="status" hidden></div>
+
+      <section class="section profile" aria-labelledby="player-name">
+        <div class="wrap">
+          <p class="back"><a href="players" data-keep-query><span aria-hidden="true">←</span> All players</a></p>
+
+          <header class="profile-head">
+            <span class="avatar" id="player-avatar" aria-hidden="true"></span>
+            <div class="profile-id">
+              <p class="eyebrow">Player</p>
+              <h1 class="page-title player-title" id="player-name">Loading…</h1>
+              <p class="profile-sub" id="player-sub"></p>
+              <ul class="chips" id="player-chips" aria-label="Highlights"></ul>
+            </div>
+          </header>
+
+          <p class="card online-now" id="player-online" hidden></p>
+
+          <div class="card missing" id="player-missing" hidden>
+            <h2 id="missing-title">No player found</h2>
+            <p id="missing-text">
+              The link may be old: players are listed for 90 days after they last played on our server.
+            </p>
+            <a class="more-link" href="players" data-keep-query>Find a player <span aria-hidden="true">→</span></a>
+          </div>
+
+          <div id="player-body" hidden>
+            <section class="profile-section" aria-labelledby="stats-title">
+              <div class="section-head">
+                <h2 id="stats-title">Stats</h2>
+                <div class="period" role="group" aria-label="Period">
+                  <button type="button" data-days="30" aria-pressed="true">30 days</button>
+                  <button type="button" data-days="90" aria-pressed="false">90 days</button>
+                </div>
+              </div>
+              <p class="section-note" id="period-note">The last 30 days on our server (UTC days). Places are on the leaderboard’s boards.</p>
+              <div class="tiles player-tiles" id="player-tiles"></div>
+
+              <div class="profile-grid">
+                <article class="card panel seed-panel" id="seed-panel" aria-labelledby="seed-title" hidden>
+                  <h3 id="seed-title">Seeder VIP</h3>
+                  <p class="vip-status" id="vip-status" hidden></p>
+                  <div class="pips" id="seed-pips" aria-hidden="true"></div>
+                  <p id="seed-progress"></p>
+                  <a class="more-link" href="./#vip" data-keep-query>How seeder VIP works <span aria-hidden="true">→</span></a>
+                </article>
+                <article class="card panel" aria-labelledby="bests-title">
+                  <h3 id="bests-title">Personal bests</h3>
+                  <dl class="bests" id="player-bests"></dl>
+                </article>
+                <article class="card panel" aria-labelledby="maps-title">
+                  <h3 id="maps-title">Maps</h3>
+                  <div id="player-maps"></div>
+                </article>
+                <article class="card panel" aria-labelledby="sides-title">
+                  <h3 id="sides-title">Sides</h3>
+                  <div id="player-sides"></div>
+                </article>
+              </div>
+            </section>
+
+            <section class="profile-section" aria-labelledby="activity-title">
+              <div class="section-head">
+                <h2 id="activity-title">Activity</h2>
+                <p class="section-note">The last 90 days.</p>
+              </div>
+              <div class="charts profile-charts">
+                <figure class="card chart-card">
+                  <figcaption>
+                    <h3>Days on the server</h3>
+                    <p class="chart-sub">The last 13 weeks, a square for each UTC day, shaded by time played.</p>
+                  </figcaption>
+                  <p class="streaks" id="player-streaks"></p>
+                  <div
+                    class="chart chart-calendar"
+                    id="calendar"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Time played each day. Use the arrow keys to read days: left and right move a week, up and down a day."
+                  ></div>
+                  <ul class="heat-legend" id="heat-legend" aria-label="Shades"></ul>
+                  <details class="table-view">
+                    <summary>Show as table</summary>
+                    <div class="table-scroll"><table id="calendar-table"></table></div>
+                  </details>
+                </figure>
+
+                <figure class="card chart-card">
+                  <figcaption>
+                    <h3>Kills per match</h3>
+                    <p class="chart-sub" id="form-sub">Their latest matches, oldest first. Under each: W won, L lost, D draw.</p>
+                  </figcaption>
+                  <div
+                    class="chart"
+                    id="form-chart"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Kills in each of their latest matches. Use the left and right arrow keys to read values."
+                  ></div>
+                  <details class="table-view">
+                    <summary>Show as table</summary>
+                    <div class="table-scroll"><table id="form-table"></table></div>
+                  </details>
+                </figure>
+              </div>
+
+              <article class="card panel player-matches" aria-labelledby="matches-title">
+                <h3 id="matches-title">Recent matches</h3>
+                <ol class="match-list" id="player-matches"></ol>
+                <button type="button" class="btn btn-ghost btn-small more-matches" id="more-matches" hidden>Show more</button>
+              </article>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
+        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
+        <p>Not affiliated with the developers or publishers of WARDOGS.</p>
+        <p class="footer-credit">Developed by <a href="https://ideasquared.co.uk" rel="noopener">ideaSquared</a></p>
+      </div>
+    </footer>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="discord-logo" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+        />
+      </symbol>
+    </svg>
+  </body>
+</html>

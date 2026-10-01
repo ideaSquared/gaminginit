@@ -25,6 +25,21 @@ import {
   vipDetail,
   vipOffer,
   BOARDS,
+  bests,
+  byMap,
+  bySide,
+  calendarWeeks,
+  daysAgo,
+  heatLevel,
+  inPeriod,
+  ordinal,
+  percent,
+  results,
+  searchPlayers,
+  seedProgress,
+  streaks,
+  sumDays,
+  topRanks,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -261,5 +276,161 @@ describe('busiest times', () => {
     assert.equal(playerCount(1), '1 player');
     assert.equal(playerCount(0), '0 players');
     assert.equal(playerCount(61), '61 players');
+  });
+});
+
+describe('player pages', () => {
+  const day = (date, values = {}) => ({ day: date, seedingMinutes: 0, liveMinutes: 60, seedDays: 0, matches: 1, kills: 5, deaths: 5, ...values });
+  const match = (endedAt, values = {}) => ({
+    map: 'Ozeti',
+    endedAt,
+    durationMs: 45 * 60_000,
+    kills: 10,
+    deaths: 5,
+    place: 4,
+    players: 60,
+    faction: 'Valkyra',
+    result: 'won',
+    factionScores: [],
+    ...values,
+  });
+
+  it('says 1st, 2nd, 3rd and the teens', () => {
+    assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 101, 111].map(ordinal), [
+      '1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd', '23rd', '101st', '111th',
+    ]);
+  });
+
+  it('keeps the days and matches inside the period, by UTC day', () => {
+    const profile = {
+      activity: [day('2026-08-01'), day('2026-09-01'), day('2026-09-30')],
+      matches: [match(NOW), match(Date.UTC(2026, 8, 1, 23, 30)), match(Date.UTC(2026, 7, 31, 23, 30))],
+    };
+    const period = inPeriod(profile, 30, NOW);
+
+    assert.deepEqual(period.activity.map((d) => d.day), ['2026-09-01', '2026-09-30']);
+    assert.equal(period.matches.length, 2);
+  });
+
+  it('adds up days', () => {
+    assert.deepEqual(sumDays([day('2026-09-29', { seedingMinutes: 20, seedDays: 1 }), day('2026-09-30', { kills: 7 })]), {
+      days: 2,
+      seedingMinutes: 20,
+      liveMinutes: 120,
+      seedDays: 1,
+      matches: 2,
+      kills: 12,
+      deaths: 10,
+    });
+  });
+
+  it('counts wins over the matches whose result is known', () => {
+    const list = [match(1), match(2, { result: 'lost' }), match(3, { result: 'draw' }), match(4, { result: null }), match(5)];
+
+    assert.deepEqual(results(list), { won: 2, lost: 1, draw: 1, decided: 4, share: 0.5 });
+    assert.equal(results([match(1, { result: null })]).share, null);
+    assert.equal(percent(0.666), '67%');
+    assert.equal(percent(null), '–');
+  });
+
+  it('breaks matches down by map, most played first', () => {
+    const maps = byMap([match(1, { map: 'Bakurani', kills: 3 }), match(2), match(3, { kills: 20, result: 'lost' })]);
+
+    assert.deepEqual(
+      maps.map((m) => [m.map, m.matches, m.won, m.kills, m.best.kills]),
+      [
+        ['Ozeti', 2, 1, 30, 20],
+        ['Bakurani', 1, 1, 3, 3],
+      ],
+    );
+  });
+
+  it('breaks matches down by side, however the server spelled it, leaving out matches without one', () => {
+    const sides = bySide([match(3, { faction: 'Lone Star' }), match(2, { faction: 'LONESTAR', result: 'lost' }), match(1), match(0, { faction: null })]);
+
+    assert.deepEqual(
+      sides.map((s) => [s.faction, s.matches, s.won]),
+      [
+        ['Lone Star', 2, 1],
+        ['Valkyra', 1, 1],
+      ],
+    );
+  });
+
+  it('finds their best match and day, and counts MVPs and top-3 finishes', () => {
+    const list = [
+      match(4, { kills: 12, deaths: 1, place: 2 }),
+      match(3, { kills: 3, deaths: 0, place: 1 }),
+      match(2, { kills: 20, deaths: 10, place: 1 }),
+      match(1, { kills: 20, deaths: 2, place: 9 }),
+      match(0, { kills: 0, deaths: 3, place: 1 }),
+    ];
+    const best = bests(list, [day('2026-09-29', { kills: 40 }), day('2026-09-30', { kills: 41 })]);
+
+    // A tie goes to the earlier match; the K/D needs 5 kills, so 3 kills and no deaths is not a record.
+    assert.equal(best.kills.endedAt, 1);
+    assert.equal(best.kd.endedAt, 4);
+    assert.equal(best.day.day, '2026-09-30');
+    assert.equal(best.mvps, 2);
+    assert.equal(best.podiums, 3);
+    assert.deepEqual(bests([], []), { kills: null, kd: null, day: null, mvps: 0, podiums: 0 });
+  });
+
+  it('counts days in a row, keeping a streak alive until today is over', () => {
+    const activity = ['2026-09-20', '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-27', '2026-09-28', '2026-09-29'].map((d) => day(d));
+
+    assert.deepEqual(streaks(activity, '2026-09-30'), { current: 3, longest: 4 });
+    assert.deepEqual(streaks(activity, '2026-10-01'), { current: 0, longest: 4 });
+    assert.deepEqual(streaks([...activity, day('2026-09-30')], '2026-09-30'), { current: 4, longest: 4 });
+    assert.deepEqual(streaks([], '2026-09-30'), { current: 0, longest: 0 });
+  });
+
+  it('lays the calendar out in weeks from Monday, with no days after today or before the first', () => {
+    // 2026-10-01 is a Thursday.
+    const weeks = calendarWeeks('2026-10-01', 2, '2026-09-23');
+
+    assert.deepEqual(weeks, [
+      [null, null, '2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26', '2026-09-27'],
+      ['2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01', null, null, null],
+    ]);
+    assert.equal(calendarWeeks('2026-10-01', 13, '2026-01-01').length, 13);
+  });
+
+  it('shades a calendar day by time played', () => {
+    assert.deepEqual([0, 1, 29, 30, 89, 90, 179, 180, 600].map(heatLevel), [0, 1, 1, 2, 2, 3, 3, 4, 4]);
+  });
+
+  it('says how long ago a day was', () => {
+    assert.equal(daysAgo('2026-09-30', '2026-09-30'), 'Today');
+    assert.equal(daysAgo('2026-09-29', '2026-09-30'), 'Yesterday');
+    assert.equal(daysAgo('2026-09-20', '2026-09-30'), '10 days ago');
+  });
+
+  it('words seeder VIP progress from the bot’s rule', () => {
+    const rule = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
+
+    assert.equal(seedProgress({ rule, seedDays: 1 }), '1 of 3 seed days in the last 7 days. 2 more earns a reserved slot.');
+    assert.equal(seedProgress({ rule, seedDays: 3 }), '3 seed days in the last 7 days. That earns a reserved slot.');
+    assert.equal(
+      seedProgress({ rule, seedDays: 0 }, true),
+      'No seed days in the last 7 days yet. Seeding on 3 days in a week keeps the reserved slot for another week.',
+    );
+  });
+
+  it('lists the leaderboard places in the top 10, best first', () => {
+    const ranks = { days: 30, players: 200, kills: 4, kd: null, playtime: 11, seeding: 1 };
+
+    assert.deepEqual(topRanks(ranks).map((r) => r.text), ['#1 seeder', '#4 in kills']);
+    assert.deepEqual(topRanks(undefined), []);
+  });
+
+  it('finds players by any part of their name, ignoring case and accents, names that start with it first', () => {
+    const players = [{ name: 'Bravo_Six' }, { name: 'Sable' }, { name: 'Ébène' }, { name: 'Moth' }];
+
+    assert.deepEqual(searchPlayers(players, 'b').map((p) => p.name), ['Bravo_Six', 'Sable', 'Ébène']);
+    assert.deepEqual(searchPlayers(players, 'e').map((p) => p.name), ['Ébène', 'Sable']);
+    assert.deepEqual(searchPlayers(players, ' EBE ').map((p) => p.name), ['Ébène']);
+    assert.deepEqual(searchPlayers(players, ''), players);
+    assert.deepEqual(searchPlayers(players, 'zz'), []);
   });
 });

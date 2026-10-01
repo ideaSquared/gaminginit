@@ -17,6 +17,19 @@ export const el = (tag, props = {}, ...children) => {
 
 export const link = (href, textContent) => el('a', { href, textContent });
 
+// A player's page. Keeps ?demo and ?stats, so a preview stays a preview.
+export const playerHref = (id) => {
+  const url = new URL('player', location.href);
+  const params = new URLSearchParams(location.search);
+  for (const key of ['demo', 'stats']) if (params.has(key)) url.searchParams.set(key, params.get(key));
+  url.searchParams.set('id', id);
+  return url.pathname + url.search;
+};
+
+// A player's name, linking to their page when the bot sent their id. Older matches have names only.
+export const playerName = (player) =>
+  player.id ? el('a', { className: 'player-link', href: playerHref(player.id), textContent: player.name }) : player.name;
+
 // A map's name as a tag in the map's own colour.
 export const mapTag = (name) => {
   const tag = el('span', { className: 'map-tag', textContent: name || 'Unknown map' });
@@ -42,7 +55,7 @@ export const playersTable = (top) =>
           'tr',
           {},
           el('td', { className: 'rank', textContent: String(i + 1) }),
-          el('td', { className: 'player', textContent: p.name }),
+          el('td', { className: 'player' }, playerName(p)),
           el('td', { textContent: String(p.kills) }),
           el('td', { textContent: String(p.deaths) }),
           el('td', { textContent: kd(p.kills, p.deaths) }),

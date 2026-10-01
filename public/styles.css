@@ -14,6 +14,11 @@
   --series: #20a4b0;
   /* Context marks beside the series colour: 3.4:1 on --surface, and clear of --series for colour-blind readers. */
   --series-quiet: #626b78;
+  /* Time played on the player calendar: one teal hue, darkest for a little, brightest for a lot. */
+  --heat-1: #164a4e;
+  --heat-2: #1b737a;
+  --heat-3: var(--series);
+  --heat-4: var(--accent);
   --discord: #4752c4;
   --discord-hover: #3c45a5;
   --good: #0ca30c;
@@ -245,10 +250,26 @@ a {
   color: var(--text);
 }
 
-/* Six links need about 880px next to the brand and the Discord button. */
+/* Seven links need about 900px next to the brand and the Discord button with tighter padding, so the padding grows
+   once there is room. */
 @media (min-width: 900px) {
   .nav-links {
     display: flex;
+    gap: 2px;
+  }
+
+  .nav-links a {
+    padding: 8px 9px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .nav-links {
+    gap: 4px;
+  }
+
+  .nav-links a {
+    padding: 8px 12px;
   }
 }
 
@@ -1383,6 +1404,547 @@ tbody tr:last-child td {
 
 .footer-credit a {
   font-weight: 700;
+}
+
+/* Player names link to their pages: still the name's colour, with the link shown on hover and focus. */
+.player-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--axis);
+  text-underline-offset: 3px;
+}
+
+.player-link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+/* Player page */
+
+.profile-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px 20px;
+}
+
+@media (min-width: 720px) {
+  .profile-head {
+    align-items: center;
+  }
+}
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--series));
+  color: var(--accent-ink);
+  font-size: 1.9rem;
+  font-weight: 900;
+}
+
+.avatar:empty {
+  visibility: hidden;
+}
+
+.profile-id {
+  min-width: 0;
+}
+
+.profile-id .eyebrow {
+  margin-bottom: 4px;
+}
+
+.player-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: clamp(1.7rem, 1.2rem + 2.4vw, 2.6rem);
+  overflow-wrap: anywhere;
+}
+
+.profile-sub {
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips:empty {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.chip-vip {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip-rank {
+  border-color: var(--series);
+}
+
+.online-now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--good);
+}
+
+.online-now[hidden],
+.online-panel[hidden] {
+  display: none;
+}
+
+.online-now .online-dot,
+.chip .online-dot,
+.panel-title .online-dot {
+  margin-right: 0;
+}
+
+.chip .online-dot {
+  margin-right: 6px;
+}
+
+.missing {
+  margin-top: 24px;
+  padding: 24px;
+  max-width: 40em;
+}
+
+.missing h2 {
+  font-size: 1.2rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.missing p {
+  margin-top: 8px;
+  color: var(--text-2);
+}
+
+.profile-section {
+  margin-top: 48px;
+}
+
+.profile-section .section-head {
+  margin-bottom: 8px;
+}
+
+.profile-section > .section-note {
+  margin-bottom: 16px;
+}
+
+/* 30 days / 90 days: one button pressed at a time. */
+.period {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.period button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.period button:hover {
+  color: var(--text);
+}
+
+.period button[aria-pressed='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+@media (min-width: 760px) {
+  .player-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .player-tiles {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.tile-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 900px) {
+  .profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .profile-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel {
+  padding: 20px;
+  min-width: 0;
+}
+
+.panel h3,
+.panel-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.vip-status {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.pips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pip {
+  width: 28px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+.pip-on {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.seed-panel p:not(.vip-status) {
+  color: var(--text-2);
+}
+
+.bests {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.bests dt {
+  color: var(--text-2);
+}
+
+.bests dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.bests dd strong {
+  font-size: 1.05rem;
+}
+
+.bests dd .muted {
+  font-size: 0.8rem;
+}
+
+/* Maps and sides: the name, then numbers on the right. */
+.stat-table td:nth-child(n + 2),
+.stat-table th:nth-child(n + 2) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stat-table td:first-child {
+  width: 100%;
+}
+
+.streaks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 12px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.streaks strong {
+  color: var(--text);
+}
+
+.chart-calendar {
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.chart .heat {
+  stroke: var(--surface);
+  stroke-width: 0;
+}
+
+.heat-0 {
+  fill: var(--surface-2);
+  background: var(--surface-2);
+}
+
+.chart .heat-0 {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.heat-1 {
+  fill: var(--heat-1);
+  background: var(--heat-1);
+}
+
+.heat-2 {
+  fill: var(--heat-2);
+  background: var(--heat-2);
+}
+
+.heat-3 {
+  fill: var(--heat-3);
+  background: var(--heat-3);
+}
+
+.heat-4 {
+  fill: var(--heat-4);
+  background: var(--heat-4);
+}
+
+.chart .heat.active {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.heat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.heat-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heat-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.heat-swatch.heat-0 {
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.player-matches {
+  margin-top: 16px;
+}
+
+/* A match on a player's page: map and result on the left, their numbers on the right. */
+.pm-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px 16px;
+}
+
+@media (min-width: 640px) {
+  .pm-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .pm-score {
+    text-align: right;
+  }
+}
+
+.pm-score {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pm-score strong {
+  color: var(--text);
+}
+
+.pm-place {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Results carry their word; the tint only backs it up. */
+.result {
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.result-won {
+  background: rgb(12 163 12 / 0.2);
+}
+
+.result-lost {
+  background: rgb(208 59 59 / 0.18);
+}
+
+.result-draw {
+  background: var(--surface-2);
+}
+
+.result-none {
+  padding: 0;
+  font-weight: 600;
+}
+
+.more-matches {
+  margin-top: 16px;
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.more-matches[hidden] {
+  display: none;
+}
+
+/* Players page */
+
+.online-panel {
+  margin-bottom: 16px;
+  padding: 16px 20px;
+}
+
+.online-panel .panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.online-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.online-list a {
+  display: block;
+  padding: 4px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.online-list a:hover {
+  border-color: var(--accent);
+}
+
+.finder-label {
+  display: block;
+  font-weight: 700;
+}
+
+.finder-input {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--text);
+  font: inherit;
+}
+
+.finder-input:focus-visible {
+  outline-offset: 1px;
+}
+
+.finder-count {
+  margin: 12px 0 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.directory-table td:nth-child(n + 2),
+.directory-table th:nth-child(n + 2) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.online-after {
+  margin: 0 0 0 8px;
 }
 
 /* While a refresh is in flight, the numbers stay put and dim slightly instead of jumping. */

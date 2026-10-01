@@ -1,7 +1,8 @@
-import { formatHours, niceScale, playerCount, segments } from './format.js';
+import { formatHours, heatLevel, kd, niceScale, ordinal, played, playerCount, segments } from './format.js';
 
-// Small hand-drawn SVG charts: a 24-hour population line and a daily-peak column chart.
-// Both redraw at their container's real width so text stays crisp, and both work with a keyboard.
+// Small hand-drawn SVG charts: a 24-hour population line, daily-peak and busy-times columns, and on player pages an
+// activity calendar and kills per match. Each redraws at its container's real width so text stays crisp, and each
+// works with a keyboard.
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const HOUR = 3_600_000;
@@ -379,6 +380,207 @@ export const busiestChart = (root) => {
   live.className = 'visually-hidden';
   live.setAttribute('aria-live', 'polite');
   root.after(live);
+
+  onResize(root, draw);
+  return {
+    update(next) {
+      data = next;
+      draw();
+    },
+  };
+};
+
+// A live region beside a chart, for the value a keyboard user lands on: the chart is one image to a screen reader.
+const liveRegion = (root) => {
+  const live = document.createElement('p');
+  live.className = 'visually-hidden';
+  live.setAttribute('aria-live', 'polite');
+  root.after(live);
+  return live;
+};
+
+const KEY_MOVES = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity };
+
+const monthShort = new Intl.DateTimeFormat(undefined, { month: 'short', timeZone: 'UTC' });
+const weekdayShort = new Intl.DateTimeFormat(undefined, { weekday: 'short', timeZone: 'UTC' });
+const utc = (day) => Date.parse(`${day}T00:00:00Z`);
+// When a match ended, in the reader's own time.
+const dayLocal = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
+// What a player did on a calendar day, for its tooltip and the live region.
+const dayDetail = (d) => {
+  if (!d) return { value: 'Not on', label: '' };
+  const parts = [`${d.matches} match${d.matches === 1 ? '' : 'es'}`];
+  if (d.kills > 0) parts.push(`${d.kills} kills`);
+  if (d.seedDays > 0) parts.push('seed day');
+  return { value: `${formatHours(played(d))} played`, label: parts.join(' · ') };
+};
+
+// GitHub-style: a column per week, Monday at the top, each UTC day shaded by the time played.
+// data: { weeks: (day | null)[7][], byDay: Map<day, activity day> }
+export const activityCalendar = (root) => {
+  let data = null;
+  const live = liveRegion(root);
+
+  const draw = () => {
+    if (data === null) return;
+    const { weeks, byDay } = data;
+    const width = root.clientWidth;
+    const m = { top: 18, left: 32 };
+    const gap = 3;
+    const cell = Math.max(8, Math.min(22, Math.floor((width - m.left) / weeks.length) - gap));
+    const height = m.top + 7 * (cell + gap);
+    const chart = svg('svg', { width: m.left + weeks.length * (cell + gap), height, 'aria-hidden': 'true' });
+
+    for (const row of [0, 2, 4]) {
+      const sample = weeks.flat().find((day, i) => day !== null && i % 7 === row);
+      if (sample) text(chart, { class: 'tick', x: m.left - 8, y: m.top + row * (cell + gap) + cell / 2, 'text-anchor': 'end', 'dominant-baseline': 'middle' }, weekdayShort.format(utc(sample)));
+    }
+
+    const cells = [];
+    let lastMonth = '';
+    weeks.forEach((week, w) => {
+      const x = m.left + w * (cell + gap);
+      const first = week.find((day) => day !== null);
+      if (first) {
+        const month = first.slice(0, 7);
+        if (month !== lastMonth && (w > 0 || Number(first.slice(8)) <= 7)) {
+          text(chart, { class: 'tick', x, y: 11 }, monthShort.format(utc(first)));
+        }
+        lastMonth = month;
+      }
+      week.forEach((day, d) => {
+        if (day === null) return;
+        const stats = byDay.get(day);
+        const y = m.top + d * (cell + gap);
+        const rect = svg('rect', { class: `heat heat-${heatLevel(stats ? played(stats) : 0)}`, x, y, width: cell, height: cell, rx: 3 }, chart);
+        cells.push({ day, stats, rect, x: x + cell / 2, y });
+      });
+    });
+
+    root.replaceChildren(chart);
+    const tip = makeTooltip(root);
+    let index = -1;
+    const showAt = (i) => {
+      cells[index]?.rect.classList.remove('active');
+      index = Math.max(0, Math.min(cells.length - 1, i));
+      const { day, stats, rect, x, y } = cells[index];
+      rect.classList.add('active');
+      const { value, label } = dayDetail(stats);
+      const when = dayLong.format(utc(day));
+      tip.show(x, y, value, label ? `${when} · ${label}` : when);
+      return `${when}: ${value}${label ? `, ${label}` : ''}`;
+    };
+    const hide = () => {
+      cells[index]?.rect.classList.remove('active');
+      tip.hide();
+    };
+    cells.forEach((c, i) => c.rect.addEventListener('pointerenter', () => showAt(i)));
+    root.onpointerleave = hide;
+    root.onblur = hide;
+    // Left and right move a week, up and down a day, as the grid is laid out.
+    root.onkeydown = (event) => {
+      const moves = { ...KEY_MOVES, ArrowLeft: -7, ArrowRight: 7, ArrowUp: -1, ArrowDown: 1 };
+      if (event.key === 'Escape') return hide();
+      if (!(event.key in moves)) return;
+      event.preventDefault();
+      const step = moves[event.key];
+      live.textContent = showAt(Number.isFinite(step) ? (index < 0 ? cells.length - 1 : index + step) : step < 0 ? 0 : cells.length - 1);
+    };
+  };
+
+  onResize(root, draw);
+  return {
+    update(next) {
+      data = next;
+      draw();
+    },
+  };
+};
+
+const RESULT_MARK = { won: 'W', lost: 'L', draw: 'D' };
+
+// Kills in each of a player's latest matches, oldest on the left, with their average as a line and each match's
+// result (W, L or D) under its column.
+// data: { matches: player matches, oldest first }
+export const formChart = (root) => {
+  let data = null;
+  const live = liveRegion(root);
+
+  const draw = () => {
+    if (data === null) return;
+    const { matches } = data;
+    if (matches.length === 0) {
+      emptyMessage(root, 'No matches in the last 90 days yet.');
+      return;
+    }
+    const width = root.clientWidth;
+    const height = width < 480 ? 170 : 190;
+    const m = { top: 20, right: 8, bottom: 30, left: 32 };
+    const plotW = width - m.left - m.right;
+    const plotH = height - m.top - m.bottom;
+    const average = matches.reduce((sum, match) => sum + match.kills, 0) / matches.length;
+    const { max, ticks } = niceScale(Math.max(...matches.map((match) => match.kills), average), 3);
+    const band = plotW / Math.max(matches.length, 10);
+    const barW = Math.min(24, band * 0.7);
+    const y = (v) => m.top + plotH - (v / max) * plotH;
+    const best = matches.reduce((b, match, i) => (match.kills > matches[b].kills ? i : b), 0);
+
+    const chart = svg('svg', { width, height, viewBox: `0 0 ${width} ${height}`, 'aria-hidden': 'true' });
+    for (const tick of ticks) {
+      svg('line', { class: 'grid', x1: m.left, x2: m.left + plotW, y1: y(tick), y2: y(tick) }, chart);
+      text(chart, { class: 'tick', x: m.left - 8, y: y(tick), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, String(tick));
+    }
+    svg('line', { class: 'baseline', x1: m.left, x2: m.left + plotW, y1: y(0), y2: y(0) }, chart);
+
+    const groups = matches.map((match, i) => {
+      const cx = m.left + band * i + band / 2;
+      const group = svg('g', { class: 'bar' }, chart);
+      svg('rect', { class: 'hit', x: cx - band / 2, y: m.top, width: band, height: plotH }, group);
+      if (match.kills > 0) {
+        svg('path', { class: 'column', d: columnPath(cx - barW / 2, y(match.kills), barW, Math.max(1, y(0) - y(match.kills))) }, group);
+      }
+      if (i === best && match.kills > 0) text(chart, { class: 'cap-label', x: cx, y: y(match.kills) - 6, 'text-anchor': 'middle' }, String(match.kills));
+      const mark = RESULT_MARK[match.result] ?? '–';
+      text(chart, { class: `tick result-mark${match.result === 'won' ? ' tick-strong' : ''}`, x: cx, y: height - 10, 'text-anchor': 'middle' }, mark);
+      return { group, cx, match };
+    });
+
+    svg('line', { class: 'threshold', x1: m.left, x2: m.left + plotW, y1: y(average), y2: y(average), 'stroke-dasharray': '4 4' }, chart);
+    text(chart, { class: 'threshold-label', x: m.left + plotW, y: y(average) - 6, 'text-anchor': 'end' }, `avg ${average.toFixed(1)}`);
+
+    root.replaceChildren(chart);
+    const tip = makeTooltip(root);
+    let index = -1;
+    const showAt = (i) => {
+      groups[index]?.group.classList.remove('active');
+      index = Math.max(0, Math.min(groups.length - 1, i));
+      const { group, cx, match } = groups[index];
+      group.classList.add('active');
+      const value = `${match.kills} kills, ${match.deaths} deaths`;
+      const result = match.result ? `${match.result} · ` : '';
+      const label = `${match.map} · ${result}${ordinal(match.place)} of ${match.players} · K/D ${kd(match.kills, match.deaths)} · ${dayLocal.format(match.endedAt)}`;
+      tip.show(cx, y(match.kills), value, label);
+      return `${value}. ${label}`;
+    };
+    const hide = () => {
+      groups[index]?.group.classList.remove('active');
+      tip.hide();
+    };
+    root.onpointermove = (event) => {
+      const i = Math.floor((event.clientX - root.getBoundingClientRect().left - m.left) / band);
+      if (i >= 0 && i < groups.length) showAt(i);
+    };
+    root.onpointerleave = hide;
+    root.onblur = hide;
+    root.onkeydown = (event) => {
+      if (event.key === 'Escape') return hide();
+      if (!(event.key in KEY_MOVES)) return;
+      event.preventDefault();
+      const step = KEY_MOVES[event.key];
+      live.textContent = showAt(Number.isFinite(step) ? (index < 0 ? groups.length - 1 : index + step) : step < 0 ? 0 : groups.length - 1);
+    };
+  };
 
   onResize(root, draw);
   return {
