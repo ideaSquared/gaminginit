@@ -142,6 +142,30 @@ export const BOARDS = [
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 
+// Average players in each hour of the day, 0 to 23, from history samples. Local hours unless hourOf says otherwise.
+// An hour with no readings is null.
+export const hourlyAverages = (history, hourOf = (at) => new Date(at).getHours()) => {
+  const hours = Array.from({ length: 24 }, () => ({ total: 0, count: 0 }));
+  for (const [at, players] of history) {
+    const hour = hours[hourOf(at)];
+    hour.total += players;
+    hour.count += 1;
+  }
+  return hours.map((h) => (h.count === 0 ? null : h.total / h.count));
+};
+
+// The busiest `length` hours in a row, wrapping past midnight: { start, length, average }, or null when nobody played.
+// An hour with no readings counts as empty, since the server was most likely down.
+export const busiestHours = (averages, length = 3) => {
+  let best = null;
+  for (let start = 0; start < 24; start++) {
+    let total = 0;
+    for (let i = 0; i < length; i++) total += averages[(start + i) % 24] ?? 0;
+    if (best === null || total / length > best.average) best = { start, length, average: total / length };
+  }
+  return best.average > 0 ? best : null;
+};
+
 // Splits samples wherever the bot missed readings, so the chart shows a gap instead of a made-up line.
 export const segments = (history, maxGapMs = STALE_MS) =>
   history.reduce((parts, sample, i) => {

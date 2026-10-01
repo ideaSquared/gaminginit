@@ -1,10 +1,12 @@
-import { dailyChart, populationChart } from './charts.js';
+import { busiestChart, dailyChart, hourLabel, populationChart } from './charts.js';
 import {
   BOARDS,
+  busiestHours,
   compact,
   emptyNote,
   formatDuration,
   formatHours,
+  hourlyAverages,
   kd,
   latestMatches,
   peak,
@@ -31,6 +33,7 @@ let stats = null;
 
 const population = populationChart($('population-chart'));
 const daily = dailyChart($('daily-chart'));
+const busiestView = busiestChart($('busiest-chart'));
 
 const isOnline = (state) => state.kind === 'live' || state.kind === 'seeding' || state.kind === 'empty';
 
@@ -109,17 +112,35 @@ const renderCharts = (now) => {
   });
   daily.update({ days: stats?.days ?? [], today: new Date(now).toISOString().slice(0, 10), count: 14 });
 
-  // Hourly summary of the 24-hour chart, newest first.
+  // When the server was busiest: the three hours in a row with the most players on average.
+  const recent = history.filter(([t]) => t >= now - DAY);
+  const averages = hourlyAverages(recent);
+  const busiest = busiestHours(averages);
+  busiestView.update({ averages, busiest });
+  $('busiest-summary').hidden = !busiest;
+  if (busiest) {
+    setText($('busiest-when'), `${hourLabel(busiest.start)}–${hourLabel((busiest.start + busiest.length) % 24)}`);
+    setText($('busiest-players'), `${Math.round(busiest.average)} players on average`);
+  }
+
+  // Hourly summary of both 24-hour charts, newest first.
   const hours = new Map();
-  for (const [at, players] of history.filter(([t]) => t >= now - DAY)) {
+  for (const [at, players] of recent) {
     const hour = Math.floor(at / 3_600_000) * 3_600_000;
-    const entry = hours.get(hour) ?? { high: 0, low: Infinity };
-    hours.set(hour, { high: Math.max(entry.high, players), low: Math.min(entry.low, players) });
+    const entry = hours.get(hour) ?? { high: 0, low: Infinity, total: 0, count: 0 };
+    hours.set(hour, {
+      high: Math.max(entry.high, players),
+      low: Math.min(entry.low, players),
+      total: entry.total + players,
+      count: entry.count + 1,
+    });
   }
   tableOf(
     $('population-table'),
-    ['Hour', 'Most players', 'Fewest players'],
-    [...hours.entries()].sort((a, b) => b[0] - a[0]).map(([hour, e]) => [hourClock.format(hour), e.high, e.low]),
+    ['Hour', 'Average', 'Most players', 'Fewest players'],
+    [...hours.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([hour, e]) => [hourClock.format(hour), Math.round(e.total / e.count), e.high, e.low]),
   );
   tableOf(
     $('daily-table'),

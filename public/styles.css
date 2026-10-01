@@ -12,6 +12,8 @@
   --accent: #4fd6cc;
   --accent-ink: #04201e;
   --series: #20a4b0;
+  /* Context marks beside the series colour: 3.4:1 on --surface, and clear of --series for colour-blind readers. */
+  --series-quiet: #626b78;
   --discord: #4752c4;
   --discord-hover: #3c45a5;
   --good: #0ca30c;
@@ -637,6 +639,11 @@ h1 {
   touch-action: pan-y;
 }
 
+.chart-short,
+.chart-short .chart-empty {
+  min-height: 140px;
+}
+
 .chart svg {
   display: block;
   overflow: visible;
@@ -731,6 +738,11 @@ h1 {
   transition: filter 120ms ease;
 }
 
+/* The quiet hours of the busiest-times chart: gray, so the busy ones stand out. */
+.chart .column-quiet {
+  fill: var(--series-quiet);
+}
+
 .chart .hit {
   fill: transparent;
 }
@@ -773,6 +785,48 @@ h1 {
 .chart-tip span {
   color: var(--text-2);
   font-size: 0.8rem;
+}
+
+/* Busiest times, under the 24-hour chart */
+
+.busiest {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.busiest h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.busiest-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 10px;
+  color: var(--text-2);
+}
+
+.busiest-summary[hidden] {
+  display: none;
+}
+
+.busiest-summary strong {
+  color: var(--text);
+}
+
+/* The swatch says which bars are the busiest; the text beside it stays in text colours. */
+.busiest-key {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--series);
+}
+
+.busiest .chart {
+  margin-top: 8px;
 }
 
 /* Tables */

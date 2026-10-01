@@ -284,3 +284,96 @@ export const dailyChart = (root) => {
     },
   };
 };
+
+// "19:00", for an hour of the day in local time.
+export const hourLabel = (hour) => clock.format(new Date(2000, 0, 1, hour));
+
+// Average players in each hour of the day. The busiest hours are in the series colour and the rest in gray, so the
+// reader sees when to play before reading any numbers.
+// data: { averages: (number | null)[24], busiest: { start, length } | null }
+export const busiestChart = (root) => {
+  let data = null;
+
+  const draw = () => {
+    if (data === null) return;
+    const { averages, busiest } = data;
+    if (busiest === null) {
+      const nothing = averages.every((a) => a === null);
+      emptyMessage(root, nothing ? 'No readings in the last 24 hours yet.' : 'Nobody has played in the last 24 hours.');
+      return;
+    }
+
+    const width = root.clientWidth;
+    const height = width < 480 ? 140 : 160;
+    const m = { top: 20, right: 8, bottom: 28, left: 32 };
+    const plotW = width - m.left - m.right;
+    const plotH = height - m.top - m.bottom;
+    const values = averages.map((a) => a ?? 0);
+    const most = Math.max(...values);
+    const { max, ticks } = niceScale(most, 3);
+    const band = plotW / 24;
+    const barW = Math.min(24, band * 0.7);
+    const y = (v) => m.top + plotH - (v / max) * plotH;
+    const isBusy = (hour) => (hour - busiest.start + 24) % 24 < busiest.length;
+    // Only the busiest single hour carries its value; the tooltip and table have the rest.
+    const label = values.indexOf(most);
+
+    const chart = svg('svg', { width, height, viewBox: `0 0 ${width} ${height}`, 'aria-hidden': 'true' });
+    for (const tick of ticks) {
+      svg('line', { class: 'grid', x1: m.left, x2: m.left + plotW, y1: y(tick), y2: y(tick) }, chart);
+      text(chart, { class: 'tick', x: m.left - 8, y: y(tick), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, String(tick));
+    }
+    svg('line', { class: 'baseline', x1: m.left, x2: m.left + plotW, y1: y(0), y2: y(0) }, chart);
+
+    const every = band * 3 < 56 ? 6 : 3;
+    const groups = averages.map((average, hour) => {
+      const cx = m.left + band * hour + band / 2;
+      if (hour % every === 0) text(chart, { class: 'tick', x: cx, y: height - 8, 'text-anchor': 'middle' }, hourLabel(hour));
+      const group = svg('g', { class: 'bar' }, chart);
+      svg('rect', { class: 'hit', x: cx - band / 2, y: m.top, width: band, height: plotH }, group);
+      if (average > 0) {
+        const h = Math.max(1, y(0) - y(average));
+        svg('path', { class: isBusy(hour) ? 'column' : 'column column-quiet', d: columnPath(cx - barW / 2, y(average), barW, h) }, group);
+      }
+      if (hour === label) text(chart, { class: 'cap-label', x: cx, y: y(average) - 6, 'text-anchor': 'middle' }, String(Math.round(average)));
+      return { group, cx, average };
+    });
+
+    root.replaceChildren(chart);
+    const tip = makeTooltip(root);
+
+    let index = -1;
+    const showAt = (i) => {
+      groups[index]?.group.classList.remove('active');
+      index = Math.max(0, Math.min(23, i));
+      const { group, cx, average } = groups[index];
+      group.classList.add('active');
+      const value = average === null ? 'No readings' : `${Math.round(average)} players on average`;
+      tip.show(cx, y(average ?? 0), value, `${hourLabel(index)}–${hourLabel((index + 1) % 24)}`);
+    };
+    const hide = () => {
+      groups[index]?.group.classList.remove('active');
+      tip.hide();
+    };
+
+    root.onpointermove = (event) => showAt(Math.floor((event.clientX - root.getBoundingClientRect().left - m.left) / band));
+    root.onpointerleave = hide;
+    root.onblur = hide;
+    root.onkeydown = (event) => {
+      const moves = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity };
+      if (event.key === 'Escape') return hide();
+      if (!(event.key in moves)) return;
+      event.preventDefault();
+      const step = moves[event.key];
+      showAt(Number.isFinite(step) ? (index < 0 ? busiest.start : index + step) : step < 0 ? 0 : 23);
+    };
+  };
+
+  onResize(root, draw);
+  return {
+    update(next) {
+      data = next;
+      draw();
+    },
+  };
+};

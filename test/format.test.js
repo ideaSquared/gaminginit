@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  busiestHours,
   compact,
   emptyNote,
   formatDuration,
   formatHours,
+  hourlyAverages,
   kd,
   latestMatches,
   mapKey,
@@ -193,5 +195,39 @@ describe('latestMatches', () => {
     assert.equal(latestMatches(matches, 10).length, 5);
     assert.deepEqual(matches.map((m) => m.endedAt), [1, 4, 2, 5, 3]);
     assert.deepEqual(latestMatches(undefined, 3), []);
+  });
+});
+
+describe('busiest times', () => {
+  const HOUR = 3_600_000;
+  const utcHour = (at) => new Date(at).getUTCHours();
+
+  it('averages the players in each hour of the day', () => {
+    const day = Date.UTC(2026, 9, 1);
+    const averages = hourlyAverages([[day + 19 * HOUR, 40], [day + 19.5 * HOUR, 50], [day + 20 * HOUR, 60]], utcHour);
+
+    assert.equal(averages.length, 24);
+    assert.equal(averages[19], 45);
+    assert.equal(averages[20], 60);
+    assert.equal(averages[3], null);
+  });
+
+  it('finds the busiest three hours in a row, across midnight too', () => {
+    const evening = Array.from({ length: 24 }, (_, h) => (h >= 18 ? 40 + h : 5));
+    assert.deepEqual(busiestHours(evening), { start: 21, length: 3, average: 62 });
+
+    const late = Array.from({ length: 24 }, (_, h) => ([23, 0, 1].includes(h) ? 50 : 10));
+    assert.deepEqual(busiestHours(late), { start: 23, length: 3, average: 50 });
+  });
+
+  it('counts hours without readings as empty, and gives nothing when nobody played', () => {
+    const gaps = Array(24).fill(null);
+    gaps[10] = 30;
+    gaps[14] = 12;
+    gaps[15] = 12;
+    gaps[16] = 12;
+    assert.equal(busiestHours(gaps).start, 14);
+    assert.equal(busiestHours(Array(24).fill(0)), null);
+    assert.equal(busiestHours(Array(24).fill(null)), null);
   });
 });

@@ -191,6 +191,22 @@
                 role="img"
                 aria-label="Players online over the last 24 hours. Use the left and right arrow keys to read values."
               ></div>
+              <div class="busiest">
+                <h4>Busiest times</h4>
+                <p class="chart-sub">Average players in each hour of the day, your local time.</p>
+                <p class="busiest-summary" id="busiest-summary" hidden>
+                  <span class="busiest-key" aria-hidden="true"></span>
+                  <strong id="busiest-when"></strong>
+                  <span id="busiest-players"></span>
+                </p>
+                <div
+                  class="chart chart-short"
+                  id="busiest-chart"
+                  tabindex="0"
+                  role="img"
+                  aria-label="Average players in each hour of the day. Use the left and right arrow keys to read values."
+                ></div>
+              </div>
               <details class="table-view">
                 <summary>Show as table</summary>
                 <div class="table-scroll"><table id="population-table"></table></div>

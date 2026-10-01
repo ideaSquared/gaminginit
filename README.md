@@ -10,7 +10,8 @@ What it shows:
 - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
   more players are needed to go live.
 - Discord member and online counts.
-- Players over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
+- Players over the last 24 hours, the busiest times of day (average players each hour, with the busiest 3 hours
+  highlighted), and the daily peak for the last 14 days. Each chart has a table view.
 - The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders. Names only.
