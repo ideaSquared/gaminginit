@@ -62,6 +62,9 @@ export const result = (scores) => {
   return { winner, text: winner ? `${first.name} won ${first.score}, ${others}` : `Draw: ${first.name} ${first.score}, ${others}` };
 };
 
+// The newest finished matches first, at most `count` of them.
+export const latestMatches = (matches, count) => [...(matches ?? [])].sort((a, b) => b.endedAt - a.endedAt).slice(0, count);
+
 // What the server is doing, as the page should describe it.
 export const serverState = (stats, now) => {
   const server = stats?.server;
