@@ -1,4 +1,4 @@
-import { demoAdmin, demoCall, demoCommands } from './demo.js';
+import { demoAdmin, demoCall, demoCommands, demoRotations, demoRotationsChange } from './demo.js';
 import {
   accountAge,
   alertCount,
@@ -29,13 +29,14 @@ import {
   withVehicle,
 } from './format.js';
 import { demo, showNotice, thisPage } from './live.js';
+import { createRotations } from './rotations.js';
 import { createTools } from './tools.js';
 import { el, link, mapTag, playerName } from './views.js';
 
-// The staff page, in three tabs. Players: everyone in game now, to search and act on. Alerts: what the bot found by
+// The staff page, in four tabs. Players: everyone in game now, to search and act on. Alerts: what the bot found by
 // itself: risky Steam accounts, possible griefers from the kill feed (team kills and suicides) and the incidents behind
 // them. Admin: the admin tools (every staff command), the bans on the server, the reserved slots and everything staff did
-// through the bot. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
+// through the bot. Rotations: the map rotations, the week and what is on the server (see rotations.js). Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
 // session token, which this page keeps for this browser and sends with each request. ?demo shows sample data without
 // signing in.
 
@@ -84,8 +85,8 @@ const forgetToken = () => {
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['players', 'alerts', 'admin'];
-const TAB_NAMES = { players: 'Players', alerts: 'Alerts', admin: 'Admin' };
+const TABS = ['players', 'alerts', 'admin', 'rotations'];
+const TAB_NAMES = { players: 'Players', alerts: 'Alerts', admin: 'Admin', rotations: 'Rotations' };
 let tab = 'players';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order.
 const filters = { query: '', team: '', watch: false, sort: 'team' };
@@ -122,6 +123,7 @@ const signedOut = (message) => {
   $('signin-link').href = signInHref();
   $('signin-error').hidden = !message;
   $('signin-error').textContent = message ?? '';
+  rotations.reset();
 };
 
 const signOut = () => {
@@ -157,6 +159,8 @@ const selectTab = (name, { focus = false } = {}) => {
   if (focus) $(`tab-${tab}`).focus();
   const hash = tab === 'players' ? '' : `#${tab}`;
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+  // Loaded when first opened, as only staff working on rotations need them.
+  if (tab === 'rotations' && data) rotations.show();
 };
 
 // Opens an admin tool with the player picked, on the Admin tab, with a way back to where staff were. `key` null keeps
@@ -725,6 +729,7 @@ const render = (overview) => {
   renderBans(overview);
   renderReserved(overview);
   if (!tools.ready) loadCommands();
+  if (tab === 'rotations') rotations.ensure();
 };
 
 // Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.
@@ -748,6 +753,27 @@ const call = async (path, body) => {
 };
 
 const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: () => data?.staff ?? {} });
+
+// Reads from the bot's staff API as the signed-in staff member.
+const get = async (path) => {
+  const token = loadToken();
+  if (!token) {
+    signedOut('Your sign-in has run out. Sign in again.');
+    return { ok: false, status: 401, json: { error: 'Your sign-in has run out. Sign in again.' } };
+  }
+  const response = await fetch(botUrl(path), { headers: { accept: 'application/json', authorization: `Bearer ${token}` } });
+  if (response.status === 401) {
+    forgetToken();
+    signedOut('Your sign-in has run out. Sign in again.');
+  }
+  return { ok: response.ok, status: response.status, json: await response.json().catch(() => null) };
+};
+
+const rotations = createRotations({
+  root: $('rotations'),
+  load: () => (demo ? demoRotations() : get('admin/rotations')),
+  send: (body) => (demo ? demoRotationsChange(body) : call('admin/rotations', body)),
+});
 
 // The bot's staff commands, once, for the admin tools' forms.
 let commandsAsked = false;

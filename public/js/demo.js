@@ -772,3 +772,165 @@ export const demoCall = async (path, { name, options, focused }) => {
   const sub = options.subcommand ? ` ${options.subcommand}` : '';
   return { ok: true, json: { content: `Sample only: nothing was done. Signed in, this runs **/${name}${sub}** on the bot, as you.` } };
 };
+
+// The Rotations tab in ?demo (GET and POST /api/admin/rotations): sample rotations kept in this page only, changed the
+// way the bot changes them, so every button can be tried. Nothing reaches a server.
+const KOTH = (map) => `${map}_KOTH_01`;
+const DEMO_LIGHTINGS = [
+  ['DayStartClear', 'Dawn, clear'],
+  ['DayEarlyClear', 'Morning, clear'],
+  ['DayEarlyFog', 'Morning fog'],
+  ['DayClear', 'Day, clear'],
+  ['DayLateClear', 'Afternoon, clear'],
+  ['DayLateGray', 'Afternoon, overcast'],
+  ['DayLateGrayFog', 'Afternoon fog'],
+  ['DayEndClear', 'Dusk, clear'],
+].map(([id, name]) => ({ id, name }));
+
+const demoMap = (id, name, zones) => ({
+  id,
+  name,
+  modes: [
+    { id: KOTH(id), name: 'King of the Hill' },
+    { id: `${id}_KOTH_02`, name: 'King of the Hill (small)' },
+  ],
+  modifiers: [
+    { key: 'infantry_only', name: 'Infantry only', id: 'KOTH_InfantryOnly' },
+    { key: 'hardcore', name: 'Hardcore', id: 'KOTH_Hardcore' },
+  ],
+  zones: zones.map((z) => ({ id: `ZoneAlternator.${name}.Default.${z}`, name: z })),
+});
+
+const DEMO_CATALOG = {
+  maps: [demoMap('Kavkazi', 'Bakurani', ['Circle', 'Line', 'Factory']), demoMap('Europe', 'Ozeti', ['Circle', 'Village']), demoMap('NorthAmerica', 'Zestafona', ['Circle', 'Ridge'])],
+  lightings: DEMO_LIGHTINGS,
+  experiences: [],
+};
+
+const entry = (map, { mode = KOTH(map), modifiers = [], lighting, zone } = {}) => ({
+  map,
+  experiences: [mode, ...modifiers],
+  ...(lighting ? { lighting } : {}),
+  ...(zone ? { zoneAlternator: zone } : {}),
+});
+
+const demoRotationState = {
+  rotations: [
+    {
+      name: 'Default',
+      entries: [
+        entry('Kavkazi', { lighting: 'DayClear' }),
+        entry('Europe'),
+        entry('NorthAmerica', { lighting: 'DayLateClear' }),
+        entry('Kavkazi', { lighting: 'DayEndClear', zone: 'ZoneAlternator.Bakurani.Default.Line' }),
+        entry('Europe', { lighting: 'DayEarlyFog' }),
+        entry('NorthAmerica'),
+      ],
+    },
+    {
+      name: 'Weekend',
+      entries: [
+        entry('Europe', { modifiers: ['KOTH_InfantryOnly'], lighting: 'DayEndClear' }),
+        entry('Kavkazi', { modifiers: ['KOTH_Hardcore'] }),
+        entry('NorthAmerica', { mode: 'NorthAmerica_KOTH_02', lighting: 'DayLateGrayFog' }),
+        entry('Kavkazi', { modifiers: ['KOTH_InfantryOnly'], lighting: 'DayStartClear', zone: 'ZoneAlternator.Bakurani.Default.Factory' }),
+      ],
+    },
+    {
+      name: 'Infantry night',
+      entries: [
+        entry('Europe', { modifiers: ['KOTH_InfantryOnly'], lighting: 'DayEndClear' }),
+        entry('Kavkazi', { modifiers: ['KOTH_InfantryOnly'], lighting: 'DayEndClear' }),
+        entry('NorthAmerica', { modifiers: ['KOTH_InfantryOnly'], lighting: 'DayEndClear' }),
+      ],
+    },
+  ],
+  week: [null, null, null, null, 'Infantry night', 'Weekend', 'Weekend'],
+  applied: null,
+};
+
+const DEMO_HOUR = 5;
+const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const demoToday = () => {
+  const shifted = new Date(Date.now() - DEMO_HOUR * 60 * MINUTE);
+  return { day: shifted.toISOString().slice(0, 10), weekday: (shifted.getUTCDay() + 6) % 7 };
+};
+
+const findDemo = (name) => demoRotationState.rotations.find((r) => r.name.toLowerCase() === String(name ?? '').trim().toLowerCase()) ?? null;
+const demoPlan = (weekday) => {
+  const own = findDemo(demoRotationState.week[weekday]);
+  return own && own.entries.length > 0 ? own.name : 'Default';
+};
+
+const demoRotationsPage = () => {
+  const today = demoToday();
+  if (demoRotationState.applied?.day !== today.day) {
+    demoRotationState.applied = { name: demoPlan(today.weekday), day: today.day, at: Date.now(), by: 'schedule', pending: false };
+  }
+  const playing = findDemo(demoRotationState.applied.name) ?? demoRotationState.rotations[0];
+  return {
+    defaultName: 'Default',
+    hour: DEMO_HOUR,
+    limits: { rotations: 10, maps: 100, name: 32 },
+    today,
+    weekdays: WEEKDAY_NAMES,
+    rotations: structuredClone(demoRotationState.rotations),
+    week: [...demoRotationState.week],
+    plan: WEEKDAY_NAMES.map((_, i) => demoPlan(i)),
+    current: { ...demoRotationState.applied },
+    server: { enabled: true, mode: 'ordered', entries: playing.entries.map((e, i) => ({ ...e, status: i === 1 ? 'now' : i === 2 ? 'next' : null })) },
+    catalog: DEMO_CATALOG,
+  };
+};
+
+export const demoRotations = async () => ({ ok: true, status: 200, json: demoRotationsPage() });
+
+// A change, as the bot makes it: refused with a reason, or the page as it is after it.
+export const demoRotationsChange = async (body) => {
+  const refuse = (error) => ({ ok: false, json: { error } });
+  const state = demoRotationState;
+  const today = demoToday();
+  demoRotationsPage();
+  const choose = (name) => {
+    state.applied = { name, day: today.day, at: Date.now(), by: 'demo', byName: 'Sarge', pending: false };
+    return { outcome: 'updated' };
+  };
+  let outcome = null;
+  if (body.action === 'save') {
+    const name = body.name.trim().replace(/\s+/g, ' ');
+    const from = body.from ? findDemo(body.from) : null;
+    if (body.from && !from) return refuse(`There's no rotation called "${body.from}".`);
+    if (from?.name === 'Default' && name !== 'Default') return refuse('**Default** keeps its name.');
+    const clash = findDemo(name);
+    if (from && clash && clash !== from) return refuse(`There's already a rotation called **${clash.name}**.`);
+    if (body.entries.length === 0) return refuse('A rotation needs at least one map.');
+    const target = from ?? clash;
+    if (!target && state.rotations.length >= 10) return refuse('There are already 10 rotations. Delete one first.');
+    if (target) {
+      const old = target.name;
+      target.name = name;
+      target.entries = structuredClone(body.entries);
+      state.week = state.week.map((n) => (n && n.toLowerCase() === old.toLowerCase() ? name : n));
+      if (state.applied.name.toLowerCase() === old.toLowerCase()) {
+        state.applied.name = name;
+        outcome = { outcome: 'updated' };
+      }
+    } else state.rotations.push({ name, entries: structuredClone(body.entries) });
+  } else if (body.action === 'use') {
+    if (!findDemo(body.name)) return refuse(`There's no rotation called "${body.name}".`);
+    outcome = choose(findDemo(body.name).name);
+  } else if (body.action === 'schedule') {
+    const rotation = body.name ? findDemo(body.name) : null;
+    for (const d of body.days) state.week[d] = rotation && rotation.name !== 'Default' ? rotation.name : null;
+    if (body.days.includes(today.weekday)) outcome = choose(demoPlan(today.weekday));
+  } else if (body.action === 'delete') {
+    const rotation = findDemo(body.name);
+    if (!rotation) return refuse(`There's no rotation called "${body.name}".`);
+    if (rotation.name === 'Default') return refuse("**Default** can't be deleted.");
+    state.rotations = state.rotations.filter((r) => r !== rotation);
+    state.week = state.week.map((n) => (n === rotation.name ? null : n));
+    if (state.applied.name === rotation.name) outcome = choose('Default');
+  }
+  return { ok: true, json: { ...demoRotationsPage(), ...(outcome ? { outcome } : {}) } };
+};

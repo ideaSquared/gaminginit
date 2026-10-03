@@ -2567,10 +2567,10 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
-/* Staff page tabs: Players, Alerts, Admin. Each says what is in it, so the page reads at a glance. */
+/* Staff page tabs: Players, Alerts, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -2636,6 +2636,10 @@ body.refreshing .tile-value {
 }
 
 @media (max-width: 559px) {
+  .admin-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .admin-tabs [role='tab'] {
     padding: 10px 12px;
   }
@@ -3045,4 +3049,1073 @@ textarea.tool-input {
 
 .row-actions .btn + .btn {
   margin-left: 6px;
+}
+
+/* Rotations tab: the week, what is on the server today, and the rotation editor with drag and drop. Each map keeps the
+   colour it has everywhere else on the site (--map). */
+
+:where([data-map='bakurani']) {
+  --map: #c2410c;
+}
+
+:where([data-map='ozeti']) {
+  --map: #1d4ed8;
+}
+
+:where([data-map='zestafona']) {
+  --map: #7e22ce;
+}
+
+.rot {
+  display: grid;
+  gap: 16px;
+}
+
+.rot-field-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rot-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.rot-warn {
+  color: var(--warning);
+}
+
+.rot-loading {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+}
+
+/* Buttons */
+
+.rot button {
+  font: inherit;
+}
+
+.rot .btn {
+  cursor: pointer;
+}
+
+.rot .btn:disabled,
+.rot-icon-btn:disabled,
+.rot-tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.admin .rot button.rot-btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.admin .rot button.rot-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+}
+
+/* A map's name in its colour. */
+.rot-map {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--map, var(--surface-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 14%, transparent);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The maps of a rotation as a bar of colours, in order. */
+.rot-strip {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.rot-strip:empty {
+  background: var(--hairline);
+}
+
+.rot-strip-piece {
+  flex: 1;
+  min-width: 3px;
+  background: var(--map, var(--series-quiet));
+}
+
+.rot-strip-big {
+  height: 14px;
+  border-radius: 7px;
+}
+
+.rot-strip-mini {
+  height: 5px;
+  margin-top: 8px;
+}
+
+.rot-strip-day {
+  height: 6px;
+  margin-top: 10px;
+}
+
+.rot-strip-today {
+  max-width: 420px;
+  margin-top: 12px;
+}
+
+/* Today */
+
+.rot-today {
+  display: grid;
+  gap: 20px;
+  padding: 20px 22px;
+  border-top: 3px solid var(--accent);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
+    var(--surface);
+  box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.7);
+}
+
+@media (min-width: 900px) {
+  .rot-today {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.rot-kicker {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rot-today-name {
+  margin-top: 4px;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.rot-today-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.rot-pending {
+  margin-left: 4px;
+}
+
+.rot-nownext {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.rot-nn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rot-nn-label {
+  width: 3em;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rot-swap-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.rot-swap-row .finder-input {
+  margin-top: 0;
+  min-width: 0;
+}
+
+.rot-swap-row .btn {
+  flex: none;
+}
+
+/* The week */
+
+.rot-week .panel-head {
+  margin-bottom: 12px;
+}
+
+.rot-week .panel-title {
+  margin-bottom: 0;
+}
+
+.rot-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 1000px) {
+  .rot-days {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+.rot-day {
+  position: relative;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.rot-day-today {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 10px 30px -18px var(--accent);
+}
+
+.rot-day-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.rot-day-short {
+  display: none;
+}
+
+@media (min-width: 1000px) and (max-width: 1119px) {
+  .rot-day-long {
+    display: none;
+  }
+
+  .rot-day-short {
+    display: inline;
+  }
+}
+
+/* Sits on the card's top edge, so it never crowds the day's name. */
+.rot-today-chip {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rot-day .rot-day-select {
+  max-width: none;
+  padding: 7px 8px;
+  font-size: 0.88rem;
+}
+
+.rot-day-own .rot-day-select {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--axis));
+}
+
+/* The saved rotations and the editor */
+
+.rot-workspace {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .rot-workspace {
+    grid-template-columns: 270px minmax(0, 1fr);
+  }
+
+  .rot-side {
+    position: sticky;
+    top: 80px;
+  }
+}
+
+.rot-side .panel-title {
+  margin-bottom: 0;
+}
+
+.rot-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rot-names {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 899px) {
+  .rot-names {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+  }
+
+  .rot-names li {
+    flex: 0 0 200px;
+    scroll-snap-align: start;
+  }
+}
+
+.rot-name-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.rot-name-card:hover {
+  border-color: var(--axis);
+}
+
+.rot-name-card[aria-current='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.rot-name-new {
+  border-style: dashed;
+  cursor: default;
+}
+
+.rot-name-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.rot-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rot-name-meta {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rot-name-card .badges {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.rot-name-card .badges:empty {
+  display: none;
+}
+
+.rot-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 25%, transparent);
+}
+
+.rot-new {
+  width: 100%;
+  justify-content: center;
+  border-style: dashed;
+}
+
+/* The editor */
+
+.rot-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.rot-editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.rot-name-field {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.rot-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rot-name-input {
+  width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 2px solid var(--axis);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.rot-name-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.rot-name-input:disabled {
+  border-bottom-color: transparent;
+  color: var(--text);
+  opacity: 1;
+}
+
+.rot-name-note {
+  min-height: 1.2em;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rot-name-note:empty {
+  min-height: 0;
+}
+
+.rot-name-bad {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+}
+
+.rot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rot-status {
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+.rot-status-dirty {
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+.rot-more {
+  position: relative;
+}
+
+.rot-more summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.rot-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.rot-menu {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 230px;
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid var(--axis);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.7);
+}
+
+.rot-menu-item {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rot-menu-item:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.rot-menu-item:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.rot-menu-danger:not(:disabled) {
+  color: color-mix(in srgb, var(--critical) 70%, white);
+}
+
+.rot-preview .rot-note {
+  margin-top: 6px;
+}
+
+/* The maps to drag in */
+
+.rot-palette-label {
+  margin-bottom: -4px;
+}
+
+.rot-palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.rot-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'plus name'
+    'plus meta';
+  align-items: center;
+  column-gap: 10px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--map, var(--series)), color-mix(in srgb, var(--map, var(--series)) 55%, black));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white 16%, transparent),
+    0 8px 20px -14px var(--map, var(--series));
+  color: #fff;
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.rot-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white 24%, transparent),
+    0 14px 26px -14px var(--map, var(--series));
+}
+
+.rot-tile:active:not(:disabled) {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.rot-tile-plus {
+  grid-area: plus;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rot-tile-name {
+  grid-area: name;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rot-tile-meta {
+  grid-area: meta;
+  color: rgb(255 255 255 / 0.75);
+  font-size: 0.75rem;
+}
+
+/* The rotation's maps, in order */
+
+.rot-list {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 6px;
+  border: 1px dashed transparent;
+  border-radius: calc(var(--radius) + 4px);
+  list-style: none;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.rot-list-target,
+.rot-list-empty {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+.rot-empty {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.rot-list-target .rot-empty {
+  display: none;
+}
+
+.rot-item {
+  border: 1px solid var(--hairline);
+  border-left: 4px solid var(--map, var(--series-quiet));
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--map, transparent) 10%, var(--surface-2)), var(--surface-2) 45%);
+  transition: box-shadow 120ms ease;
+}
+
+.rot-item:hover {
+  box-shadow: 0 6px 18px -12px rgb(0 0 0 / 0.8);
+}
+
+.rot-item-open {
+  border-color: var(--axis);
+  border-left-color: var(--map, var(--series-quiet));
+}
+
+.rot-dropped {
+  animation: rot-drop 900ms ease-out;
+}
+
+@keyframes rot-drop {
+  from {
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 0 24px -4px var(--accent);
+  }
+}
+
+.rot-row {
+  display: grid;
+  grid-template-columns: auto 1.8em auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 4px;
+  cursor: pointer;
+}
+
+.rot-handle {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.rot-handle:hover,
+.rot-handle:focus-visible {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Six dots to grab. */
+.rot-grip {
+  width: 10px;
+  height: 16px;
+  background: radial-gradient(circle, currentColor 1.6px, transparent 1.8px) 0 0 / 5px 5.33px;
+}
+
+.rot-num {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.rot-map-big {
+  min-width: 7.6em;
+  justify-content: center;
+  padding: 5px 10px;
+}
+
+.rot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.rot-chip {
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+.rot-chip-mode {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.rot-chip-modifier {
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.rot-chip-hardcore {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  box-shadow: inset 0 0 0 1px var(--critical);
+}
+
+.rot-chip-lighting {
+  color: color-mix(in srgb, var(--warning) 85%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 50%, transparent);
+}
+
+.rot-chip-plain {
+  color: var(--muted);
+  font-style: italic;
+  box-shadow: none;
+}
+
+.rot-row-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.rot-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.rot-icon-btn:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.rot-options-btn[aria-expanded='true'] {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.rot-gear {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.rot-remove:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--critical) 70%, white);
+}
+
+@media (max-width: 639px) {
+  .rot-row {
+    grid-template-columns: auto 1.4em minmax(0, 1fr) auto;
+    grid-template-areas:
+      'handle num map actions'
+      'handle . chips chips';
+    row-gap: 6px;
+  }
+
+  .rot-handle {
+    grid-area: handle;
+    align-self: start;
+  }
+
+  .rot-num {
+    grid-area: num;
+  }
+
+  .rot-map-big {
+    grid-area: map;
+    justify-self: start;
+  }
+
+  .rot-chips {
+    grid-area: chips;
+  }
+
+  .rot-row-actions {
+    grid-area: actions;
+  }
+}
+
+/* A map's options */
+
+.rot-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px 16px;
+  padding: 12px 14px 14px 44px;
+  border-top: 1px solid var(--hairline);
+}
+
+@media (max-width: 639px) {
+  .rot-options {
+    padding-left: 14px;
+  }
+}
+
+.rot-option .finder-input {
+  max-width: none;
+  margin-top: 4px;
+  padding: 8px 10px;
+}
+
+.rot-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 18px;
+}
+
+.rot-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.rot-switch-track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--axis);
+  transition: background-color 140ms ease;
+}
+
+.rot-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 140ms ease;
+}
+
+.rot-switch[aria-checked='true'] .rot-switch-track {
+  background: var(--accent);
+}
+
+.rot-switch[aria-checked='true'] .rot-switch-knob {
+  transform: translateX(16px);
+  background: var(--accent-ink);
+}
+
+.rot-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.rot-options-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.rot-tip {
+  margin-top: 0;
+}
+
+/* Dragging */
+
+.rot-gap {
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.rot-dragging {
+  display: none;
+}
+
+.rot-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  margin: 0;
+  list-style: none;
+  pointer-events: none;
+  rotate: 1.5deg;
+  scale: 1.03;
+  opacity: 0.96;
+  box-shadow:
+    0 24px 48px -12px rgb(0 0 0 / 0.75),
+    0 0 0 2px var(--accent);
+}
+
+.rot-ghost-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.rot-ghost-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+body.rot-grabbing,
+body.rot-grabbing * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.rot-busy .rot-editor,
+.rot-busy .rot-week {
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+
+/* Messages */
+
+.rot-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1001;
+  display: grid;
+  gap: 8px;
+  width: min(420px, calc(100vw - 32px));
+}
+
+.rot-toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 16px;
+  border: 1px solid var(--axis);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.8);
+  font-size: 0.92rem;
+  animation: rot-toast-in 180ms ease-out;
+}
+
+.rot-toast-warn {
+  border-left-color: var(--warning);
+}
+
+.rot-toast-error {
+  border-left-color: var(--critical);
+}
+
+.rot-toast-close {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@keyframes rot-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rot-dropped,
+  .rot-toast {
+    animation: none;
+  }
+
+  .rot-tile,
+  .rot-name-card,
+  .rot-switch-track,
+  .rot-switch-knob {
+    transition: none;
+  }
+
+  .rot-ghost {
+    rotate: none;
+    scale: none;
+  }
 }

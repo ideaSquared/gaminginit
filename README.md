@@ -230,8 +230,8 @@ Until the stats URL is set, the page says live stats are not connected and links
 sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
 browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
 
-The page has three tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
-The address keeps the tab (`/admin#alerts`, `/admin#admin`), so a link opens the right one. ← → move between tabs from
+The page has four tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
+The address keeps the tab (`/admin#alerts`, `/admin#admin`, `/admin#rotations`), so a link opens the right one. ← → move between tabs from
 the keyboard.
 
 ### Players: who is on the server now
@@ -286,6 +286,21 @@ the keyboard.
 - **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
   and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
 
+### Rotations: the maps for each day
+
+- **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
+  being played and the next; and a quick swap to another rotation for the rest of the day.
+- **The week.** A rotation for each day, Monday to Sunday. Days left on Default play **Default**, which starts as the
+  rotation the server had. Changing today's pick puts it on the server straight away (after asking).
+- **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
+  (or tap one to add it at the end), drag maps by their ⠿ handle into order (or focus the handle and use the arrow
+  keys), and open ⚙ for a map's game mode, infantry only, hardcore, lighting and control zones. A bar in the maps'
+  colours shows the order at a glance. Nothing changes until **Save**; **Put on server** swaps to it for the rest of
+  the day; **More** duplicates it, copies in the server's maps, or deletes it. Default can be changed but not renamed
+  or deleted. Leaving the page with unsaved changes asks first.
+- The bot keeps the rules (see its README, "Map rotations"): the server plays a new rotation from the next map, so a
+  match is never cut short, and each day's rotation goes on at the hour shown, in your own time.
+
 ### Everywhere
 
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
@@ -296,7 +311,7 @@ the keyboard.
   through a refresh.
 - It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
-  do.
+  do, and its rotations change in the page only.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
@@ -325,5 +340,6 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `admin.js` renders the staff page and `tools.js` its admin tools. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+`demo.js` makes the sample data. `admin.js` renders the staff page, `tools.js` its admin tools, and `rotations.js` its
+Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.
