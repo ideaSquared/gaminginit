@@ -569,5 +569,55 @@ export const demoAdmin = (days, now) => {
       '100000000000000002': { name: 'Kestrel', username: 'kestrel' },
     },
     user: { id: '100000000000000001', name: 'Sarge' },
+    reserved: {
+      players: [
+        { player: ref('Kestrel'), bot: { since: now - 2 * DAY, until: now + 5 * DAY } },
+        { player: ref('Moth'), bot: { since: now - 6 * DAY, until: now + DAY } },
+        { player: ref('Rook'), bot: null },
+        { player: ref('Sable'), bot: null },
+      ],
+      removals: days > 1 ? [`-DefaultReservedPlayerIds=${steamId('Pike')}`] : [],
+      maxSlots: 2,
+    },
   };
+};
+
+// The bot's staff commands, as GET /api/admin/commands sends them, for the admin tools in ?demo. Copied from the bot;
+// the real page always gets them from the bot.
+export const demoCommands = [
+  {"name":"broadcast","description":"Send a message to everyone in game (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"message","description":"What to show in game (up to 200 characters)","required":true,"max_length":200}]},
+  {"name":"seeders","description":"Who seeded the most, with Steam IDs for VIP (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":4,"name":"days","description":"How many days to count, including today (default 7)","required":false,"min_value":1,"max_value":90}]},
+  {"name":"seednow","description":"Post \"we're seeding now, come join\" to the alerts channel and ping the role (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"message","description":"Anything to add, such as which squad to join","required":false,"max_length":200}]},
+  {"name":"removematch","description":"Delete a wrongly recorded match and its leaderboard counts (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"match","description":"Pick the match from the list","required":true,"autocomplete":true}]},
+  {"name":"warn","description":"Send a player a private warning in game (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to warn: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"message","description":"The warning","required":true,"max_length":140}]},
+  {"name":"player","description":"A player's Steam ID, playtime, seeding, VIP, bans and staff history (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Pick the player, or type a name or Steam ID","required":true,"autocomplete":true}]},
+  {"name":"kick","description":"Remove a player from the server; they can rejoin (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to kick: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"reason","description":"Why; the player sees this","required":true,"max_length":200}]},
+  {"name":"switchteam","description":"Move a player to another team (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to move: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"team","description":"The team to move them to (with two teams, leave it out for the other one)","required":false,"autocomplete":true}]},
+  {"name":"ban","description":"Ban a player for a set time or for good (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Pick the player, or type a name or Steam ID","required":true,"autocomplete":true},{"type":3,"name":"duration","description":"How long","required":true,"choices":[{"name":"1 hour","value":"1h"},{"name":"1 day","value":"1d"},{"name":"3 days","value":"3d"},{"name":"7 days","value":"7d"},{"name":"30 days","value":"30d"},{"name":"Permanent","value":"permanent"}]},{"type":3,"name":"reason","description":"Why; kept with the ban","required":true,"max_length":200}]},
+  {"name":"unban","description":"Lift a ban (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"steam_id","description":"Pick from the banned players, or type a Steam ID","required":true,"autocomplete":true}]},
+  {"name":"setnextmap","description":"Set the map and setup after this match, without changing the rotation (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"map","description":"Pick the map from the list","required":true,"autocomplete":true},{"type":3,"name":"mode","description":"Game mode (default: as in the rotation)","required":false,"autocomplete":true},{"type":5,"name":"infantry_only","description":"Infantry only (default: as in the rotation)","required":false},{"type":5,"name":"hardcore","description":"Hardcore (default: as in the rotation)","required":false},{"type":3,"name":"lighting","description":"Time of day and weather (default: as in the rotation)","required":false,"autocomplete":true},{"type":3,"name":"zones","description":"Control zone layout (default: as in the rotation)","required":false,"autocomplete":true}]},
+  {"name":"changemap","description":"End the current match now and change map and setup (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"map","description":"Pick the map from the list","required":true,"autocomplete":true},{"type":3,"name":"mode","description":"Game mode (default: as in the rotation)","required":false,"autocomplete":true},{"type":5,"name":"infantry_only","description":"Infantry only (default: as in the rotation)","required":false},{"type":5,"name":"hardcore","description":"Hardcore (default: as in the rotation)","required":false},{"type":3,"name":"lighting","description":"Time of day and weather (default: as in the rotation)","required":false,"autocomplete":true},{"type":3,"name":"zones","description":"Control zone layout (default: as in the rotation)","required":false,"autocomplete":true}]},
+  {"name":"vip","description":"Give or take away a reserved slot (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":1,"name":"add","description":"Give a player a reserved slot for a number of days","options":[{"type":3,"name":"steam_id","description":"Pick the player, or type a name or Steam ID","required":true,"autocomplete":true},{"type":4,"name":"days","description":"How many days","required":true,"min_value":1,"max_value":365}]},{"type":1,"name":"remove","description":"Take a player off the reserved list; automatic VIP skips them for 7 days","options":[{"type":3,"name":"steam_id","description":"Pick from the reserved list, or type a Steam ID","required":true,"autocomplete":true}]}]},
+];
+
+const DEMO_MAPS = [
+  { name: '🟧 Bakurani', value: 'Kavkazi' },
+  { name: '🟦 Ozeti', value: 'Europe' },
+  { name: '🟪 Zestafona', value: 'Zestafona' },
+];
+
+// What the bot answers the admin tools in ?demo: sample players and maps to pick from, and nothing done.
+export const demoCall = async (path, { name, options, focused }) => {
+  if (path === 'admin/suggest') {
+    const typed = (options[focused] ?? '').toLowerCase();
+    const choices =
+      focused === 'player' || focused === 'steam_id'
+        ? NAMES.map((n, i) => ({ name: `${n} · ${i % 2 ? 'Kharr' : 'Valkyra'} · 7656119800000${String(i).padStart(4, '0')}`, value: `7656119800000${String(i).padStart(4, '0')}` }))
+        : focused === 'map'
+          ? DEMO_MAPS
+          : [];
+    return { ok: true, json: { choices: choices.filter((c) => c.name.toLowerCase().includes(typed) || c.value.includes(typed)) } };
+  }
+  const sub = options.subcommand ? ` ${options.subcommand}` : '';
+  return { ok: true, json: { content: `Sample only: nothing was done. Signed in, this runs **/${name}${sub}** on the bot, as you.` } };
 };

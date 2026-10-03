@@ -60,6 +60,10 @@ import {
   staffBy,
   staffLabel,
   withVehicle,
+  discordParts,
+  optionLabel,
+  READ_ONLY_TOOLS,
+  toolsFrom,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -594,5 +598,66 @@ describe('staff page', () => {
   it('adds how many were with a vehicle, when any were', () => {
     assert.equal(withVehicle(5, 2), '5 (2 vehicle)');
     assert.equal(withVehicle(5, 0), '5');
+  });
+});
+
+describe('admin tools', () => {
+  const definitions = [
+    { name: 'kick', description: 'Remove a player from the server; they can rejoin (staff only)', options: [{ type: 3, name: 'player', required: true }] },
+    {
+      name: 'vip',
+      description: 'Give or take away a reserved slot (staff only)',
+      options: [
+        { type: 1, name: 'add', description: 'Give a player a reserved slot', options: [{ type: 3, name: 'steam_id' }, { type: 4, name: 'days' }] },
+        { type: 1, name: 'remove', description: 'Take a player off the reserved list', options: [{ type: 3, name: 'steam_id' }] },
+      ],
+    },
+    { name: 'newthing', description: 'Something new (staff only)', options: [] },
+    { name: 'player', description: 'Look someone up', options: [] },
+  ];
+
+  it('makes a tool per command and per subcommand, in the page’s order, with anything new last', () => {
+    const tools = toolsFrom(definitions);
+
+    assert.deepEqual(
+      tools.map((t) => [t.key, t.name, t.subcommand, t.label, t.group]),
+      [
+        ['player', 'player', null, 'Look up a player', 'Players'],
+        ['kick', 'kick', null, 'Kick', 'Players'],
+        ['vip:add', 'vip', 'add', 'Give VIP', 'VIP'],
+        ['vip:remove', 'vip', 'remove', 'Remove VIP', 'VIP'],
+        ['newthing', 'newthing', null, 'Something new', 'Other'],
+      ],
+    );
+    assert.equal(tools[1].description, 'Remove a player from the server; they can rejoin');
+    assert.deepEqual(tools[2].options.map((o) => o.name), ['steam_id', 'days']);
+    assert.ok(READ_ONLY_TOOLS.has('player'));
+    assert.ok(!READ_ONLY_TOOLS.has('kick'));
+  });
+
+  it('labels options', () => {
+    assert.equal(optionLabel('steam_id'), 'Player');
+    assert.equal(optionLabel('player'), 'Player');
+    assert.equal(optionLabel('infantry_only'), 'Infantry only');
+  });
+
+  it('reads Discord’s markdown in a reply', () => {
+    assert.deepEqual(discordParts('🔨 Banned **Ash\\_\\*** until <t:1791000000:f>. By <@42>, pinging <@&7>.'), [
+      { type: 'text', text: '🔨 Banned ' },
+      { type: 'strong', text: 'Ash_*' },
+      { type: 'text', text: ' until ' },
+      { type: 'time', at: 1791000000000 },
+      { type: 'text', text: '. By ' },
+      { type: 'user', id: '42' },
+      { type: 'text', text: ', pinging ' },
+      { type: 'role', id: '7' },
+      { type: 'text', text: '.' },
+    ]);
+    assert.deepEqual(discordParts('`76561198000000001` · [Steam profile](https://steamcommunity.com/profiles/1)'), [
+      { type: 'code', text: '76561198000000001' },
+      { type: 'text', text: ' · ' },
+      { type: 'link', text: 'Steam profile', href: 'https://steamcommunity.com/profiles/1' },
+    ]);
+    assert.deepEqual(discordParts('[bad](javascript:alert(1))'), [{ type: 'text', text: '[bad](javascript:alert(1))' }]);
   });
 });
