@@ -576,7 +576,6 @@ export const demoAdmin = (days, now) => {
         { player: ref('Rook'), bot: null },
         { player: ref('Sable'), bot: null },
       ],
-      removals: days > 1 ? [`-DefaultReservedPlayerIds=${steamId('Pike')}`] : [],
       maxSlots: 2,
     },
   };

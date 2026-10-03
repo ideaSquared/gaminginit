@@ -299,13 +299,11 @@ const renderReserved = (overview) => {
   const reserved = overview.reserved;
   if (reserved === undefined) {
     $('reserved-note').textContent = 'The bot does not send the reserved list yet. Deploy the latest bot.';
-    $('reserved-problems').hidden = true;
     $('reserved').replaceChildren();
     return;
   }
   if (reserved === null) {
     $('reserved-note').textContent = 'Couldn’t read ServerSettings.ini just now. Trying again in a minute.';
-    $('reserved-problems').hidden = true;
     $('reserved').replaceChildren();
     return;
   }
@@ -317,17 +315,6 @@ const renderReserved = (overview) => {
   ]
     .filter(Boolean)
     .join(' ');
-  const problems = $('reserved-problems');
-  problems.hidden = reserved.removals.length === 0;
-  problems.replaceChildren(
-    el(
-      'p',
-      {},
-      el('strong', { textContent: 'Automatic VIP is stopped. ' }),
-      'These lines in ServerSettings.ini remove players from the list, and the bot won’t guess what they leave. Delete them by hand. To take a player’s slot away, delete their +DefaultReservedPlayerIds= line too, or use Remove VIP below.',
-    ),
-    el('ul', {}, ...reserved.removals.map((line) => el('li', {}, el('code', { textContent: line })))),
-  );
   const rows = reserved.players.map((r) =>
     el(
       'tr',

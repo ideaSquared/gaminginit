@@ -228,8 +228,7 @@ Until the stats URL is set, the page says live stats are not connected and links
   with that player picked.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or added by hand, and how many slots are held back for them. Any lines that stop the bot's automatic VIP are shown,
-  with what to do about them.
+  or added by hand, and how many slots are held back for them.
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
