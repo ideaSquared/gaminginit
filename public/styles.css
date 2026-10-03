@@ -1177,6 +1177,106 @@ tbody tr:last-child td {
   }
 }
 
+/* Weapons: the headline numbers beside the list on wide screens, above it on phones. */
+
+.weapons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .weapons {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .weapons .weapon-tiles {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 760px) and (max-width: 899px) {
+  .weapon-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.weapon-tiles .tile-wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 760px) and (max-width: 899px) {
+  .weapon-tiles .tile-wide {
+    grid-column: auto;
+  }
+}
+
+.weapons-table .weapon {
+  width: 100%;
+}
+
+.weapon-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.kind-tag {
+  white-space: nowrap;
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+/* Kills against the weapon with the most, on a track so the bar's length reads against the full width. */
+.weapon-bar {
+  display: block;
+  height: 6px;
+  margin: 6px 0 4px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.weapon-bar::before {
+  content: '';
+  display: block;
+  width: calc(var(--share, 0) * 100%);
+  min-width: 6px;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--series);
+}
+
+.weapon-detail {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Each number stays whole; a line breaks between them, or in the longest kill. */
+.weapon-stat {
+  white-space: nowrap;
+}
+
+.weapon-detail .player-link {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.weapons-more {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 /* Seeder VIP */
 
 .vip-cta {

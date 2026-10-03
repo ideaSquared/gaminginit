@@ -17,10 +17,15 @@ What it shows:
 - The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders.
+- Weapons: the 10 weapons with the most kills over the last 30 days, each with its share of headshots, average distance
+  and longest kill, plus the kills recorded, the share of headshots and the longest kill of all. From the game's kill
+  feed, which the bot takes when it is set up for it; without it, the section stays hidden. Until the feed has run for
+  30 days, it says the day it started.
 - A page for every player (`/player?id=…`): player names on the leaderboard and in matches link to it. It has their
   time played, matches, kills, K/D, win rate and seed days over the last 30 or 90 days, with their place on each
   leaderboard board; whether they are in game now; seeder VIP and how close they are to earning it; personal bests
-  (most kills and best K/D in a match, most kills in a day, MVPs, top-3 finishes); their maps and sides; a calendar of
+  (most kills and best K/D in a match, most kills in a day, longest kill, MVPs, top-3 finishes); their weapons (kills,
+  headshots and longest kill with each, when the bot has the kill feed); their maps and sides; a calendar of
   their days on the server with streaks; kills in each of their last 20 matches; and their recent matches with the
   result, every side's score and their place on the scoreboard. Sides are named in their colour in game, from the
   bot's match records, lightened where needed so they read on the dark cards.
@@ -42,6 +47,8 @@ You need:
   sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
   The player pages need a bot that serves `/api/players` and `/api/player`, next to `/api/stats`; with an older bot,
   names are not links and the players page cannot load.
+  The weapons need a bot with the kill feed set up (its README, "Weapon stats"), which sends `weapons` in
+  `/api/stats` and on player pages; without it, they are not shown.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.

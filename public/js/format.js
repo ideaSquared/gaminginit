@@ -453,3 +453,34 @@ export const searchPlayers = (players, query) => {
   const matching = players.filter((p) => fold(p.name).includes(q));
   return [...matching.filter((p) => fold(p.name).startsWith(q)), ...matching.filter((p) => !fold(p.name).startsWith(q))];
 };
+
+// Weapons. The bot adds up the game's kill feed by weapon: the top weapons over the last 30 days (`weapons` in
+// /api/stats), and each player's weapons by day (`weapons` on their page).
+
+// What a weapon is, beside its name, when it is not carried by hand.
+export const WEAPON_KINDS = { 'vehicle-weapon': 'Vehicle gun', vehicle: 'Vehicle', buildable: 'Built' };
+
+// "612 m", "1,204 m", and to a tenth under 10 m: "4.5 m".
+export const metres = (distance) =>
+  `${distance < 10 ? Number(distance.toFixed(1)) : Math.round(distance).toLocaleString('en-GB')} m`;
+
+// A player's weapons over their days from `first` on, most kills first: kills, headshots and their longest kill with
+// each. Tied weapons go by name.
+export const weaponTotals = (used, first) => {
+  const weapons = new Map();
+  for (const w of used ?? []) {
+    if (w.day < first) continue;
+    const known = weapons.get(w.name) ?? { name: w.name, kind: w.kind, kills: 0, headshots: 0, longest: null };
+    weapons.set(w.name, {
+      ...known,
+      kills: known.kills + w.kills,
+      headshots: known.headshots + w.headshots,
+      longest: w.longest === null ? known.longest : Math.max(known.longest ?? 0, w.longest),
+    });
+  }
+  return [...weapons.values()].sort((a, b) => b.kills - a.kills || a.name.localeCompare(b.name));
+};
+
+// Their longest kill over those weapons, and what with. Null when the feed sent no distances.
+export const longestKill = (weapons) =>
+  weapons.reduce((best, w) => (w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best), null);

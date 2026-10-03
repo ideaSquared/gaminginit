@@ -96,6 +96,7 @@ export const demoStats = (now) => {
         : null,
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
     leaderboard: leaderboard(),
+    weapons: weapons(now),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
     // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
     hourly: {
@@ -126,6 +127,42 @@ const leaderboard = () => {
     kd: by((p) => p.kills / Math.max(p.deaths, 1)),
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
+  };
+};
+
+// The sample's weapons: name, kind, kills over 30 days, share of headshots, average and longest distance in metres.
+const WEAPONS = [
+  ['AK74', 'weapon', 1843, 0.27, 48, 412],
+  ['M4', 'weapon', 1622, 0.31, 52, 388],
+  ['PKM', 'weapon', 911, 0.14, 61, 503],
+  ['SVD', 'weapon', 604, 0.46, 187, 846],
+  ['M249 SAW', 'weapon', 552, 0.12, 44, 297],
+  ['M67 frag grenade', 'weapon', 318, 0, 14, 41],
+  ['Humvee minigun', 'vehicle-weapon', 241, 0.05, 96, 402],
+  ['RPG-7', 'weapon', 187, 0, 63, 311],
+  ['Mosin Nagant', 'weapon', 142, 0.58, 211, 977],
+  ['Barbed wire', 'buildable', 66, 0, 1.2, 3.1],
+];
+
+// The last 30 days by weapon, as the bot adds up the kill feed. The feed started 12 days ago, so the page says so.
+const weapons = (now) => {
+  const top = WEAPONS.map(([name, kind, kills, share, average, longest], i) => ({
+    name,
+    kind,
+    kills,
+    headshots: Math.round(kills * share),
+    averageDistance: average,
+    longest: { distance: longest, name: NAMES[(i * 3) % NAMES.length], id: demoId((i * 3) % NAMES.length) },
+  }));
+  const kills = top.reduce((sum, w) => sum + w.kills, 0) + 412;
+  const longest = top.reduce((best, w) => (w.longest.distance > best.longest.distance ? w : best));
+  return {
+    days: 30,
+    since: new Date(now - 12 * DAY).toISOString().slice(0, 10),
+    kills,
+    headshots: top.reduce((sum, w) => sum + w.headshots, 0) + 40,
+    top,
+    longest: { weapon: longest.name, ...longest.longest },
   };
 };
 
@@ -208,6 +245,21 @@ export const demoProfile = (id, now) => {
   }
   matches.sort((a, b) => b.endedAt - a.endedAt);
   const online = demoPlayers(now).players[index].online;
+  // Their kills each day since the sample's kill feed started, shared out over a few favourite weapons.
+  const since = new Date(now - 12 * DAY).toISOString().slice(0, 10);
+  const favourites = [0, 1, 3, 2, 5, 6, 8, 9].map((w) => WEAPONS[(w + index) % WEAPONS.length]);
+  const used = activity
+    .filter((d) => d.day >= since && d.kills > 0)
+    .flatMap((d, n) => {
+      let left = d.kills;
+      return favourites.flatMap(([name, kind, , share, average, longest], w) => {
+        const kills = w === favourites.length - 1 ? left : Math.min(left, Math.round(d.kills * [0.4, 0.25, 0.12, 0.08, 0.05, 0.04, 0.03, 0.03][w]));
+        left -= kills;
+        if (kills <= 0) return [];
+        const far = Math.round(average + ((longest - average) * ((n * 7 + w * 3) % 10)) / 10);
+        return [{ day: d.day, name, kind, kills, headshots: Math.round(kills * share), longest: far }];
+      });
+    });
   return {
     generatedAt: now,
     id,
@@ -219,5 +271,6 @@ export const demoProfile = (id, now) => {
     online: online ? { map: 'Ozeti', faction: 'Valkyra', kills: 11 - index, deaths: 3 + index } : null,
     vip: index % 2 === 0 ? { until: today + 5 * DAY + 4 * HOUR } : null,
     seeding: { rule: VIP_RULE, seedDays: Math.min(3, (index + 1) % 4) },
+    weapons: { since, used },
   };
 };
