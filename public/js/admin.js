@@ -21,6 +21,7 @@ import {
   sideKey,
   signInResult,
   staffBy,
+  staffNote,
   steamFlagLabel,
   steamFlagRule,
   steamLinkedText,
@@ -723,8 +724,11 @@ const renderReserved = (overview) => {
     return;
   }
   const count = reserved.players.length;
+  // Staff spots: the bot keeps one for each staff member who linked their Steam account.
+  const staffCount = reserved.players.filter((r) => r.staff).length;
   $('reserved-note').textContent = [
     `${count} ${count === 1 ? 'player is' : 'players are'} on the reserved list in ServerSettings.ini, so they skip the queue when the server is full.`,
+    staffNote(staffCount, count),
     reserved.maxSlots === null ? '' : `MaxReservedSlots holds ${reserved.maxSlots} of the server’s slots back for them.`,
     'Changes take effect when the server next restarts.',
   ]
@@ -735,10 +739,11 @@ const renderReserved = (overview) => {
       'tr',
       {},
       el('td', { className: 'player' }, who(r.player)),
-      cell(r.bot ? badge('From the bot', 'accent') : badge('Permanent')),
-      el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.since) : '–' }),
-      el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.until) : 'Never' }),
-      el('td', { className: 'row-actions' }, actButton('Remove VIP', 'vip:remove', r.player)),
+      cell(r.staff ? badge('Staff spot', 'accent') : r.bot ? badge('From the bot', 'accent') : badge('Permanent')),
+      el('td', { className: 'when', textContent: (r.staff ?? r.bot) ? when.format((r.staff ?? r.bot).since) : '–' }),
+      el('td', { className: 'when', textContent: r.staff ? 'While staff' : r.bot ? when.format(r.bot.until) : 'Never' }),
+      // A staff spot goes when their Steam account is unlinked, below.
+      el('td', { className: 'row-actions' }, r.staff ? null : actButton('Remove VIP', 'vip:remove', r.player)),
     ),
   );
   table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
@@ -922,8 +927,8 @@ const openSteam = () => {
 
 const unlinkSteam = async (profile, mine) => {
   const question = mine
-    ? 'Unlink your Steam account? Your time on the server counts as seeding again.'
-    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their time on the server counts as seeding again.`;
+    ? 'Unlink your Steam account? Your staff spot comes off the reserved list, and your time on the server counts as seeding again.'
+    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their staff spot comes off the reserved list, and their time on the server counts as seeding again.`;
   if (!window.confirm(question)) return;
   try {
     const { ok, json } = await call('admin/profile', { action: 'unlink', ...(mine ? {} : { userId: profile.userId }) });

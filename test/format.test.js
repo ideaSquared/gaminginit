@@ -60,6 +60,7 @@ import {
   modActionLabel,
   readSteamId,
   sessionExpiry,
+  staffNote,
   steamLinkedText,
   signInResult,
   SIGN_IN_ERRORS,
@@ -605,6 +606,14 @@ describe('staff page', () => {
     assert.equal(readSteamId('7656119800000000'), null);
     assert.equal(readSteamId(`https://example.com/profiles/${id}`), null);
     assert.equal(readSteamId(undefined), null);
+  });
+
+  it('says how many on the reserved list have staff spots', () => {
+    assert.equal(staffNote(0, 4), '');
+    assert.equal(staffNote(1, 4), '1 of them is staff.');
+    assert.equal(staffNote(2, 4), '2 of them are staff.');
+    assert.equal(staffNote(3, 3), 'All of them are staff.');
+    assert.equal(staffNote(1, 1), 'They are staff.');
   });
 
   it('says whose Steam account was linked, and warns when the bot has not seen it in game', () => {
