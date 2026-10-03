@@ -13,6 +13,16 @@ export const HTML_DEFAULTS = {
 const ID = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/;
 const HOST = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 const INVITE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
+const FIELDS = ['name', 'wordmark', 'origin', 'hosts', 'discordInvite', 'ogImage', 'lede', 'statsUrl'];
+
+// The pages hand these to new URL(), so they must parse, not just look right.
+const isHttpsUrl = (value) => {
+  try {
+    return typeof value === 'string' && new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
 // What is wrong with the communities, as sentences; none when they are fine. Each domain belongs to one community at
 // most, so no domain can ever show one community's page with another's stats.
@@ -21,6 +31,8 @@ export const communityProblems = (communities) => {
   const owners = new Map();
   for (const [id, c] of Object.entries(communities)) {
     const say = (problem) => problems.push(`${id}: ${problem}`);
+    // Anything else, an "id" above all, would be a mistake: the key is the community's id.
+    for (const field of Object.keys(c)) if (!FIELDS.includes(field)) say(`"${field}" is not a field a community has`);
     if (!ID.test(id)) say('the id must be 3 to 32 lowercase letters, digits and dashes, the same as on the bot');
     if (typeof c.name !== 'string' || c.name.trim() === '' || c.name.length > 60) say('name must be 1 to 60 characters');
     if (!/^https:\/\/[a-z0-9.-]+$/.test(c.origin ?? '')) say('origin must be https://<domain>, with no path');
@@ -28,9 +40,11 @@ export const communityProblems = (communities) => {
     if (c.wordmark !== undefined && !(Array.isArray(c.wordmark) && c.wordmark.length === 2 && c.wordmark.every((p) => typeof p === 'string'))) {
       say('wordmark must be two strings: the plain part and the coloured part');
     }
-    if (c.ogImage !== undefined && !/^https:\/\//.test(c.ogImage)) say('ogImage must be an https:// URL');
+    if (c.ogImage !== undefined && !isHttpsUrl(c.ogImage)) say('ogImage must be an https:// URL');
     if (c.lede !== undefined && (typeof c.lede !== 'string' || c.lede.length > 400)) say('lede must be up to 400 characters');
-    if (c.statsUrl !== undefined && !/^https:\/\/.+\/api\/stats$/.test(c.statsUrl)) say('statsUrl must be an https:// URL ending in /api/stats');
+    if (c.statsUrl !== undefined && !(isHttpsUrl(c.statsUrl) && new URL(c.statsUrl).pathname.endsWith('/api/stats'))) {
+      say('statsUrl must be an https:// URL ending in /api/stats');
+    }
     if (!Array.isArray(c.hosts) || c.hosts.length === 0) say('hosts must list its domains');
     for (const host of c.hosts ?? []) {
       if (!HOST.test(host)) say(`"${host}" is not a domain name`);
@@ -43,22 +57,26 @@ export const communityProblems = (communities) => {
 };
 
 // The community a request is for: the one whose domain it came to. Previews (workers.dev and this computer) take
-// ?community=<id>, or else the default. Any other domain is nobody's, and gets a 404.
+// ?community=<id>, or else the default. Any other domain is nobody's, and gets a 404. The id is always the key it is
+// listed under, whatever its entry says.
 export const communityFor = (url, communities, defaultId) => {
   const host = url.hostname.toLowerCase();
-  for (const [id, c] of Object.entries(communities)) if (c.hosts.includes(host)) return { id, ...c };
+  for (const [id, c] of Object.entries(communities)) if (c.hosts.includes(host)) return { ...c, id };
   if (!isPreviewHost(host)) return null;
   const asked = url.searchParams.get('community');
   const id = asked !== null && Object.hasOwn(communities, asked) ? asked : defaultId;
-  return id && Object.hasOwn(communities, id) ? { id, ...communities[id] } : null;
+  return id && Object.hasOwn(communities, id) ? { ...communities[id], id } : null;
 };
 
 // Where the community's stats are: its own address on the bot, unless it gives one.
 export const statsUrlFor = (community, botUrl) =>
   community.statsUrl ?? (botUrl ? `${botUrl.replace(/\/$/, '')}/t/${community.id}/api/stats` : '');
 
-// The HTML's own name and domain, swapped for the community's, in titles, descriptions and links.
-export const brand = (text, community) => text.replaceAll(HTML_DEFAULTS.origin, community.origin).replaceAll(HTML_DEFAULTS.name, community.name);
+// The HTML's own name and domain, swapped for the community's, in titles, descriptions and links. One pass, so a
+// community whose domain or name holds the HTML's name is not changed again.
+const DEFAULTS_IN_TEXT = new RegExp(`${HTML_DEFAULTS.origin.replace(/[.]/g, '\\.')}|${HTML_DEFAULTS.name}`, 'g');
+export const brand = (text, community) =>
+  text.replace(DEFAULTS_IN_TEXT, (found) => (found === HTML_DEFAULTS.origin ? community.origin : community.name));
 
 export const wordmarkOf = (community) => community.wordmark ?? [community.name, ''];
 

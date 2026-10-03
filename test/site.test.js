@@ -25,6 +25,16 @@ describe('communityProblems', () => {
     assert.deepEqual(communityProblems({ alpha, beta }), ['beta: "alpha.example" is also alpha\'s']);
   });
 
+  it('refuses a stats URL or image that would not parse, and fields a community does not have, such as an id', () => {
+    const problems = communityProblems({ alpha: { ...alpha, id: 'gaminginit', statsUrl: 'https:// /api/stats', ogImage: 'https://' } });
+    assert.deepEqual(problems, [
+      'alpha: "id" is not a field a community has',
+      'alpha: ogImage must be an https:// URL',
+      'alpha: statsUrl must be an https:// URL ending in /api/stats',
+    ]);
+    assert.deepEqual(communityProblems({ alpha: { ...alpha, statsUrl: 'https://bot.example/t/alpha/api/stats' } }), []);
+  });
+
   it('refuses bad ids, origins, invites and preview addresses as domains', () => {
     const problems = communityProblems({
       Bad_Id: { ...alpha, origin: 'http://alpha.example/path', discordInvite: 'https://evil.example', hosts: ['x.workers.dev'] },
@@ -41,6 +51,12 @@ describe('communityFor', () => {
   it("picks the community by the domain the request came to, ignoring ?community there", () => {
     assert.equal(communityFor(new URL('https://www.alpha.example/players'), all, 'gaminginit')?.id, 'alpha');
     assert.equal(communityFor(new URL('https://gaminginit.com/?community=alpha'), all, 'gaminginit')?.id, 'gaminginit');
+  });
+
+  it('always uses the id it is listed under, so an entry cannot claim another community', () => {
+    const sneaky = { alpha: { ...alpha, id: 'gaminginit' } };
+    assert.equal(communityFor(new URL('https://alpha.example/'), sneaky, undefined)?.id, 'alpha');
+    assert.equal(communityFor(new URL('http://localhost/?community=alpha'), sneaky, undefined)?.id, 'alpha');
   });
 
   it('gives any other domain nothing, rather than a default', () => {
@@ -69,6 +85,12 @@ describe('brand', () => {
     assert.equal(
       brand('Players | gaminginit WARDOGS server at https://gaminginit.com/players', alpha),
       'Players | Alpha Squad WARDOGS server at https://alpha.example/players',
+    );
+    // The community's own domain and name are left as they are, even when they hold the HTML's name.
+    const lookalike = { ...alpha, name: 'gaminginit EU', origin: 'https://gaminginit-eu.example' };
+    assert.equal(
+      brand('gaminginit | https://gaminginit.com/players', lookalike),
+      'gaminginit EU | https://gaminginit-eu.example/players',
     );
     assert.deepEqual(wordmarkOf(alpha), ['Alpha Squad', '']);
     assert.deepEqual(wordmarkOf(communities.gaminginit), ['gaming', 'init']);
