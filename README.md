@@ -16,6 +16,11 @@ What it shows:
   sends `hourly` with `busy`, otherwise over the last 24 hours.
 - The current match's top 5 players, and the 3 latest matches with winner, length, peak players and top player.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
+- A live page (`/live`) for the match on now, updated as it happens: the score, the kill feed (who killed whom, with
+  what, from how far, headshots, team kills, double and triple kills, kill streaks), each player's kills, deaths and
+  streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
+  multi-kill, most headshots and a rivalry). The bot pushes each change over a WebSocket, a second or two after the
+  kill. Without the bot's kill feed it shows the score and the server's top 5, read once a minute.
 - A leaderboard for the last 30 days: most kills, best K/D, most time played and top seeders.
 - Weapons: the 10 weapons with the most kills over the last 30 days, each with its share of headshots, average distance
   and longest kill, plus the kills recorded, the share of headshots and the longest kill of all. From the game's kill
@@ -48,7 +53,8 @@ You need:
   The player pages need a bot that serves `/api/players` and `/api/player`, next to `/api/stats`; with an older bot,
   names are not links and the players page cannot load.
   The weapons need a bot with the kill feed set up (its README, "Weapon stats"), which sends `weapons` in
-  `/api/stats` and on player pages; without it, they are not shown.
+  `/api/stats` and on player pages; without it, they are not shown. The live page needs a bot that serves
+  `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.
@@ -65,13 +71,13 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and `public/matches.html`, `public/players.html` and `public/player.html` where it says so:
+Edit `public/index.html`, and `public/matches.html`, `public/live.html`, `public/players.html` and `public/player.html` where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all four pages. The player pages read `/api/players` and `/api/player` from the same place. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 each in `matches.html`, `players.html` and `player.html`. If the invite changes, change all 7. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html`, `players.html` and `player.html` have their own `<title>`, metas and wordmarks. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all five pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 each in `matches.html`, `live.html`, `players.html` and `player.html`. If the invite changes, change all 8. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html`, `live.html`, `players.html` and `player.html` have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.
@@ -186,7 +192,8 @@ Serving the site's files is free and unlimited on Cloudflare. Only the stats req
 npm start                      # serves public/ on http://localhost:3000
 ```
 
-- `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. Links between
+- `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. On
+  `http://localhost:3000/live?demo` a sample match plays itself out. Links between
   the pages keep `?demo` (and `?stats=`). `http://localhost:3000/player?demo&id=d00000000000` is a sample player.
 - `http://localhost:3000/?stats=http://localhost:8787/api/stats` reads a bot running locally with `wrangler dev`.
 
@@ -214,4 +221,5 @@ npm test    # Node's built-in test runner; no dependencies to install
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` the
 matches page, `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data.
+`demo.js` makes the sample data. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

@@ -250,7 +250,7 @@ a {
   color: var(--text);
 }
 
-/* Seven links need about 900px next to the brand and the Discord button with tighter padding, so the padding grows
+/* Eight links need about 900px next to the brand and the Discord button with tighter padding, so the padding grows
    once there is room. */
 @media (min-width: 900px) {
   .nav-links {
@@ -259,7 +259,7 @@ a {
   }
 
   .nav-links a {
-    padding: 8px 9px;
+    padding: 8px 6px;
   }
 }
 
@@ -2060,4 +2060,215 @@ body.refreshing .chart,
 body.refreshing .tile-value {
   opacity: 0.85;
   transition: opacity 200ms ease;
+}
+
+/* Live page */
+
+.live-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 0.75rem;
+  letter-spacing: normal;
+  text-transform: none;
+  vertical-align: 1px;
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+.live-link-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.live-link[data-state='live'] .live-link-dot {
+  background: var(--good);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+.live-link[data-state='polling'] .live-link-dot {
+  background: var(--warning);
+}
+
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.live-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-top: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-score .side {
+  font-weight: 700;
+}
+
+.live-head {
+  margin-bottom: 24px;
+}
+
+.live-tiles {
+  margin-bottom: 16px;
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .live-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.live-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.live-players {
+  margin-top: 16px;
+}
+
+.kill-feed {
+  list-style: none;
+  max-height: 30rem;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 900px) {
+  .kill-feed {
+    max-height: 44rem;
+  }
+}
+
+.kill {
+  display: grid;
+  grid-template-columns: 2.6em minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+.kill:last-child {
+  border-bottom: 0;
+}
+
+.kill-time {
+  padding-top: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kill-line {
+  overflow-wrap: anywhere;
+}
+
+.who {
+  font-weight: 600;
+}
+
+/* What did it, as a quiet pill between killer and victim. */
+.kill-weapon {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.kill-weapon-none {
+  font-style: italic;
+}
+
+.kill-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 4px;
+}
+
+.badge {
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px var(--axis);
+}
+
+.badge-accent {
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.badge-hot {
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+/* Lightened so the text reads on the cards. */
+.badge-bad {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  box-shadow: inset 0 0 0 1px var(--critical);
+}
+
+.kill-distance {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A death that has just come in glows for a moment. */
+.kill-new {
+  animation: kill-in 2.4s ease-out;
+}
+
+@keyframes kill-in {
+  from {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+}
+
+.live-players-table .weapon-detail {
+  font-weight: 400;
+}
+
+.live-players-table .hot {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kill-new,
+  .live-link[data-state='live'] .live-link-dot {
+    animation: none;
+  }
 }

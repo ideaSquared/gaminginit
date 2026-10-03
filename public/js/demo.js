@@ -274,3 +274,166 @@ export const demoProfile = (id, now) => {
     weapons: { since, used },
   };
 };
+
+// A sample live match for the live page: a match that starts again every 45 minutes, with a death every 2 to 10
+// seconds, worked out the same way the bot does from the kill feed. The same moment always gives the same match.
+const LIVE_CYCLE = 45 * MINUTE;
+const LIVE_ROSTER = ['Kestrel', 'Bravo_Six', 'Moth', 'Nightjar', 'Pike', 'Rook', 'Sable', 'Tusk', 'Vex', 'Ash', 'Gale', 'Hollow', 'Ibis', 'Juno', 'Kite', 'Lark'];
+const LIVE_SIDES = ['Valkyra', 'Lonestar'];
+const MULTI_SECONDS = 8;
+const ON_FIRE = 5;
+
+// A number from 0 to 1 that only depends on its arguments.
+const chance = (n, salt) => {
+  const x = Math.sin(n * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+export const demoLive = (now) => {
+  const start = Math.floor(now / LIVE_CYCLE) * LIVE_CYCLE;
+  const side = (i) => LIVE_SIDES[i % 2];
+  const players = LIVE_ROSTER.map((name, i) => ({
+    i,
+    name,
+    id: i < NAMES.length ? demoId(i) : undefined,
+    faction: side(i),
+    kills: 0,
+    deaths: 0,
+    headshots: 0,
+    teamKills: 0,
+    streak: 0,
+    bestStreak: 0,
+    chain: 0,
+    chainTime: null,
+    bestChain: 0,
+    longest: null,
+    longestWeapon: null,
+    weapons: {},
+  }));
+  const ref = (p) => ({ name: p.name, ...(p.id ? { id: p.id } : {}), faction: p.faction });
+  const pairs = new Map();
+  const feed = [];
+  let firstBlood = null;
+  let totals = { kills: 0, headshots: 0, teamKills: 0, otherDeaths: 0 };
+  let at = start + 25_000;
+  let lastKiller = null;
+  for (let k = 0; at <= now; k++) {
+    const time = (at - start) / 1000;
+    // Better players kill more; a burst keeps the same killer going.
+    const burst = lastKiller !== null && chance(k, 1) < 0.28;
+    const killer = burst ? lastKiller : players[Math.floor(chance(k, 2) ** 1.7 * players.length)];
+    const fall = chance(k, 3) < 0.04;
+    const teamKill = !fall && chance(k, 4) < 0.02;
+    const victims = players.filter((p) => p !== killer && (teamKill ? p.faction === killer.faction : p.faction !== killer.faction));
+    const victim = victims[Math.floor(chance(k, 5) * victims.length)];
+    const [weapon, kind, , share, average, longest] = WEAPONS[Math.floor(chance(k, 6) ** 1.4 * WEAPONS.length)];
+    const distance = kind === 'buildable' ? 1 + chance(k, 7) * 2 : Math.round(average * (0.3 + chance(k, 7) * 1.4) * 10) / 10;
+    const headshot = !fall && !teamKill && chance(k, 8) < share;
+    const tags = fall ? ['Falling'] : chance(k, 9) < 0.03 ? ['Penetration'] : [];
+    const entry = { id: `demo-${start}-${k}`, at, victim: ref(victim), headshot, teamKill, tags, streak: 0, chain: 0 };
+    if (fall) {
+      Object.assign(entry, { killer: null, weapon: null, kind: null, distance: null });
+      totals.otherDeaths += 1;
+      lastKiller = null;
+    } else {
+      const capped = Math.min(distance, longest);
+      Object.assign(entry, { killer: ref(killer), weapon, kind, distance: capped });
+      if (teamKill) {
+        killer.teamKills += 1;
+        totals.teamKills += 1;
+      } else {
+        killer.kills += 1;
+        killer.headshots += headshot ? 1 : 0;
+        killer.streak += 1;
+        killer.bestStreak = Math.max(killer.bestStreak, killer.streak);
+        killer.chain = killer.chainTime !== null && time - killer.chainTime <= MULTI_SECONDS ? killer.chain + 1 : 1;
+        killer.chainTime = time;
+        killer.bestChain = Math.max(killer.bestChain, killer.chain);
+        if (killer.longest === null || capped > killer.longest) {
+          killer.longest = capped;
+          killer.longestWeapon = weapon;
+        }
+        killer.weapons[weapon] = (killer.weapons[weapon] ?? 0) + 1;
+        pairs.set(`${killer.i}:${victim.i}`, (pairs.get(`${killer.i}:${victim.i}`) ?? 0) + 1);
+        totals.kills += 1;
+        totals.headshots += headshot ? 1 : 0;
+        Object.assign(entry, { streak: killer.streak, chain: killer.chain });
+        firstBlood ??= { killer: ref(killer), victim: ref(victim), weapon };
+      }
+      lastKiller = killer;
+    }
+    victim.deaths += 1;
+    victim.streak = 0;
+    victim.chain = 0;
+    victim.chainTime = null;
+    feed.push(entry);
+    at += (burst ? 2 + chance(k, 10) * 4 : 3 + chance(k, 10) * 7) * 1000;
+  }
+
+  const top = (value, least) => players.reduce((best, p) => (value(p) >= least && (best === null || value(p) > value(best)) ? p : best), null);
+  const longest = top((p) => p.longest ?? -1, 0);
+  const streak = top((p) => p.bestStreak, 3);
+  const multi = top((p) => p.bestChain, 2);
+  const headshots = top((p) => p.headshots, 1);
+  const rivalry = [...pairs].reduce((best, pair) => (pair[1] >= 3 && (best === null || pair[1] > best[1]) ? pair : best), null);
+  const weapons = new Map();
+  for (const p of players) for (const [name, kills] of Object.entries(p.weapons)) weapons.set(name, (weapons.get(name) ?? 0) + kills);
+  const favourite = (p) => Object.entries(p.weapons).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const score = (faction) => Math.min(100, Math.round(players.filter((p) => p.faction === faction).reduce((sum, p) => sum + p.kills, 0) / 3));
+  const factionScores = LIVE_SIDES.map((name) => ({ name, score: score(name), colorHex: SIDE_COLOURS[name] }));
+  const scoreboard = [...players].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths);
+  const minute = Math.floor(now / MINUTE) * MINUTE;
+  return {
+    generatedAt: now,
+    feed: true,
+    server: { name: 'gaminginit #1', players: 62, maxPlayers: CAPACITY, map: 'Zestafona', phase: 'live', factionScores, seenAt: minute },
+    currentMatch: {
+      map: 'Zestafona',
+      startedAt: start,
+      liveAt: start,
+      peakPlayers: 62,
+      factionScores,
+      top: scoreboard.slice(0, 5).map((p) => ({ ...ref(p), kills: p.kills, deaths: p.deaths })),
+    },
+    match:
+      feed.length === 0
+        ? null
+        : {
+            map: 'Zestafona',
+            startedAt: feed[0].at,
+            lastKillAt: feed.at(-1).at,
+            ...totals,
+            feed: feed.slice(-40).reverse(),
+            players: scoreboard.slice(0, 10).map((p) => ({
+              ...ref(p),
+              kills: p.kills,
+              deaths: p.deaths,
+              headshots: p.headshots,
+              teamKills: p.teamKills,
+              streak: p.streak,
+              bestStreak: p.bestStreak,
+              weapon: favourite(p),
+            })),
+            weapons: [...weapons]
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5)
+              .map(([name, kills]) => ({ name, kind: WEAPONS.find((w) => w[0] === name)[1], kills })),
+            highlights: {
+              firstBlood,
+              longest: longest && { player: ref(longest), weapon: longest.longestWeapon, distance: longest.longest },
+              bestStreak: streak && { player: ref(streak), streak: streak.bestStreak },
+              onFire: players
+                .filter((p) => p.streak >= ON_FIRE)
+                .sort((a, b) => b.streak - a.streak)
+                .slice(0, 3)
+                .map((p) => ({ player: ref(p), streak: p.streak })),
+              bestMultiKill: multi && { player: ref(multi), kills: multi.bestChain },
+              mostHeadshots: headshots && { player: ref(headshots), headshots: headshots.headshots },
+              rivalry: rivalry && (() => {
+                const [k, v] = rivalry[0].split(':').map(Number);
+                return { killer: ref(players[k]), victim: ref(players[v]), kills: rivalry[1] };
+              })(),
+            },
+          },
+  };
+};

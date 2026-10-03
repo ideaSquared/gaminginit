@@ -47,6 +47,10 @@ import {
   metres,
   WEAPON_KINDS,
   weaponTotals,
+  DEATH_TAGS,
+  liveState,
+  multiKill,
+  shortAgo,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -497,5 +501,34 @@ describe('weapons', () => {
   it('labels the weapons that are not carried by hand', () => {
     assert.equal(WEAPON_KINDS.weapon, undefined);
     assert.equal(WEAPON_KINDS['vehicle-weapon'], 'Vehicle gun');
+  });
+});
+
+describe('live page', () => {
+  const server = { name: 'UK #1', players: 40, maxPlayers: 100, map: 'Ozeti', phase: 'live', factionScores: [], seenAt: NOW - 20_000 };
+  const snapshot = (overrides) => ({ generatedAt: NOW, feed: true, server, currentMatch: { map: 'Ozeti', top: [] }, match: null, ...overrides });
+
+  it('names kills close together', () => {
+    assert.deepEqual([1, 2, 3, 4, 6].map(multiKill), [null, 'Double kill', 'Triple kill', 'Quad kill', '6× multi-kill']);
+  });
+
+  it('says how long ago a death was, short', () => {
+    assert.deepEqual([2_000, 12_400, 185_000, 2 * 3_600_000].map(shortAgo), ['now', '12s', '3m', '2h']);
+  });
+
+  it('labels what the game says about a death', () => {
+    assert.equal(DEATH_TAGS.Penetration, 'Wallbang');
+    assert.equal(DEATH_TAGS.Headshot, undefined);
+  });
+
+  it('shows the kill feed’s match, or says why there is none', () => {
+    assert.equal(liveState(null, NOW), 'loading');
+    assert.equal(liveState(snapshot({ match: { kills: 3 } }), NOW), 'match');
+    assert.equal(liveState(snapshot(), NOW), 'waiting');
+    assert.equal(liveState(snapshot({ feed: false }), NOW), 'scoreboard');
+    assert.equal(liveState(snapshot({ server: { ...server, phase: 'empty' }, currentMatch: null }), NOW), 'empty');
+    assert.equal(liveState(snapshot({ server: { ...server, seenAt: NOW - 10 * 60_000 } }), NOW), 'offline');
+    assert.equal(liveState(snapshot({ server: null }), NOW), 'offline');
+    assert.equal(liveState(snapshot({ server: null, match: { kills: 3 } }), NOW), 'match');
   });
 });

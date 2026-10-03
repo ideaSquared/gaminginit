@@ -484,3 +484,47 @@ export const weaponTotals = (used, first) => {
 // Their longest kill over those weapons, and what with. Null when the feed sent no distances.
 export const longestKill = (weapons) =>
   weapons.reduce((best, w) => (w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best), null);
+
+// The live page. The bot pushes the match on now (GET /api/live, and its WebSocket): the kill feed, each player's
+// kills and streaks, and the match's highlights.
+
+// What the game says about a death, as the kill feed shows it.
+export const DEATH_TAGS = {
+  RoadKill: 'Roadkill',
+  Penetration: 'Wallbang',
+  Ricochet: 'Ricochet',
+  WeaponMelee: 'Melee',
+  VehicleExplosion: 'Blown up',
+  Falling: 'Fell',
+  Suicide: 'Suicide',
+};
+
+// Kills close together: "Double kill", "Triple kill", "Quad kill", then "5× multi-kill". Null for one kill.
+export const multiKill = (kills) => {
+  if (kills < 2) return null;
+  return { 2: 'Double kill', 3: 'Triple kill', 4: 'Quad kill' }[kills] ?? `${kills}× multi-kill`;
+};
+
+// Kills without dying from which the kill feed says so.
+export const STREAK_SHOWN = 5;
+
+// How long ago, short, for the kill feed: "now", "12s", "3m", "1h".
+export const shortAgo = (ms) => {
+  if (ms < 5_000) return 'now';
+  if (ms < MINUTE) return `${Math.floor(ms / 1000)}s`;
+  if (ms < HOUR) return `${Math.floor(ms / MINUTE)}m`;
+  return `${Math.floor(ms / HOUR)}h`;
+};
+
+// What the live page shows: 'loading' before the first update, 'match' with the kill feed's match (deaths still
+// coming in mean the server is up, even when the bot's checks cannot reach it), 'offline' when the bot cannot reach
+// the server, 'empty' with nobody on, 'scoreboard' when the bot has no kill feed (only the checks' scoreboard), or
+// 'waiting' for the first death of the match on now.
+export const liveState = (snapshot, now) => {
+  if (!snapshot) return 'loading';
+  if (snapshot.match) return 'match';
+  const server = snapshot.server;
+  if (!server || now - server.seenAt > STALE_MS) return 'offline';
+  if (server.phase === 'empty' || !snapshot.currentMatch) return 'empty';
+  return snapshot.feed ? 'waiting' : 'scoreboard';
+};
