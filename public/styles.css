@@ -2567,6 +2567,328 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
+/* Staff page tabs: Players, Alerts, Admin. Each says what is in it, so the page reads at a glance. */
+.admin-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-tabs [role='tab'] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-tabs [role='tab']:hover {
+  border-color: var(--axis);
+  color: var(--text);
+}
+
+.admin-tabs [role='tab'][aria-selected='true'] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.tab-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tab-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.tab-count {
+  min-width: 1.6em;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--axis);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.tab-count:empty {
+  display: none;
+}
+
+.tab-count-alert {
+  background: var(--warning);
+  box-shadow: none;
+  color: #1d1400;
+}
+
+@media (max-width: 559px) {
+  .admin-tabs [role='tab'] {
+    padding: 10px 12px;
+  }
+
+  .tab-hint {
+    display: none;
+  }
+}
+
+.tab-panel > .tiles {
+  margin-bottom: 16px;
+}
+
+/* The server at a glance, above the server list. */
+.server-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+}
+
+.server-score {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.server-seen {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+/* Search, team, sort and "worth a look" above the server list. */
+.list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+
+.list-search {
+  flex: 1 1 240px;
+}
+
+.list-tools .finder-input {
+  margin-top: 6px;
+}
+
+.list-filter .finder-label,
+.list-search .finder-label {
+  font-size: 0.85rem;
+}
+
+.team-filter {
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.team-filter button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-count {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.server-table {
+  min-width: 720px;
+}
+
+/* Team colours in tables, the server strip and the team filter. */
+.admin .team-swatch {
+  display: inline-block;
+  flex: none;
+}
+
+/* On a phone each player in the server list is a small card: name and Act on top, then team, kills and the rest. */
+@media (max-width: 639px) {
+  .server-table {
+    min-width: 0;
+  }
+
+  .server-table thead {
+    display: none;
+  }
+
+  .server-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .server-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .server-table td {
+    padding: 0 0 0 8px;
+    border: 0;
+    text-align: left;
+  }
+
+  .server-table td.row-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .server-table td:not(.player, .row-actions) {
+    grid-column: 1 / -1;
+  }
+
+  .server-table td[data-label]::before {
+    content: attr(data-label) ': ';
+    color: var(--muted);
+  }
+
+  .server-table td.num {
+    text-align: left;
+  }
+
+  /* Nothing worth knowing takes no room on a card. */
+  .server-table td.no-watch {
+    display: none;
+  }
+}
+
+/* A player worth a look gets a mark down the side of their row. */
+.server-table tr.watch td:first-child {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+/* A row's "Act" menu. It opens over the page (see actMenu in admin.js), so tables that scroll sideways never cut it. */
+.act-menu {
+  display: inline-block;
+}
+
+.act-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.act-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.act-menu > summary::after {
+  content: ' ▾';
+}
+
+.act-menu[open] > summary {
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.act-list {
+  position: fixed;
+  z-index: 20;
+  display: grid;
+  width: min(300px, calc(100vw - 16px));
+  padding: 4px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+  white-space: normal;
+  text-align: left;
+}
+
+.act-item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.act-item:hover,
+.act-item:focus-visible {
+  background: var(--surface);
+}
+
+.act-label {
+  font-weight: 700;
+}
+
+.act-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.act-off {
+  margin: 4px 12px 6px;
+}
+
+/* How alerts work, as three short steps. */
+.how-alerts {
+  margin-bottom: 16px;
+}
+
+.alert-steps {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding-left: 1.4em;
+  color: var(--text-2);
+}
+
+/* "How accounts are scored" and the like: open when staff want the detail. */
+.rules {
+  margin-bottom: 12px;
+}
+
+.rules > summary {
+  width: fit-content;
+  margin-bottom: 8px;
+  color: var(--text-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rules > summary:hover {
+  color: var(--text);
+}
+
 /* When the bot last asked Steam, under how old the account is. */
 .admin-table .checked {
   display: block;

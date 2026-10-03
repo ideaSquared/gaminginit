@@ -588,6 +588,27 @@ export const demoAdmin = (days, now) => {
     },
   ];
   const flagged = players.filter((p) => p.flags.length > 0);
+  // Everyone in game now: the sample players and some more, on two teams. Pike has a high-risk Steam account, Vex has
+  // team killed today, Ghost_7 is new today, and Kestrel and Moth have VIP.
+  const today = new Date(now).toISOString().slice(0, 10);
+  const more = ['Ghost_7', 'Falcon', 'Hex', 'Juno', 'Kodiak', 'Lynx', 'Mako', 'Nova', 'Orca', 'Quill', 'Raven', 'Saber', 'Talon', 'Umbra', 'Viper', 'Wren', 'Yeti', 'Zed'];
+  const inGame = [...NAMES.filter((n) => n !== 'Bravo_Six' && n !== 'Nightjar'), ...more].map((name, i) => {
+    const kills = (i * 7) % 17;
+    return {
+      ...(NAMES.includes(name) ? ref(name) : { steamId: `7656119800001${String(i).padStart(4, '0')}`, name }),
+      faction: i % 2 === 0 ? 'Valkyra' : 'Manticore',
+      kills,
+      deaths: (i * 5) % 9,
+      minutesToday: 20 + ((i * 37) % 260),
+      firstSeen: name === 'Ghost_7' ? today : new Date(now - (20 + i) * DAY).toISOString().slice(0, 10),
+      steam: name === 'Pike' ? { risk: 'high', score: 5, flags: ['vacBan', 'recentBan', 'hidden'] } : name === 'Sable' ? { risk: 'medium', score: 3, flags: ['gameBan'] } : { risk: 'low', score: 0, flags: [] },
+      griefFlags: name === 'Vex' ? ['teamKills', 'sameTeammate'] : [],
+      teamKillsToday: name === 'Vex' ? 4 : name === 'Tusk' ? 1 : 0,
+      vehicleSuicidesToday: name === 'Vex' ? 2 : 0,
+      banned: false,
+      reserved: ['Kestrel', 'Moth', 'Rook', 'Sable'].includes(name),
+    };
+  });
   const sum = (key) => players.reduce((n, p) => n + p[key], 0);
   return {
     generatedAt: now,
@@ -620,6 +641,19 @@ export const demoAdmin = (days, now) => {
       ],
       maxSlots: 2,
     },
+    server: {
+      name: 'gaminginit #1 | UK | Seed for VIP',
+      players: inGame.length,
+      maxPlayers: CAPACITY,
+      map: 'Ozeti',
+      phase: 'live',
+      factionScores: [
+        { name: 'Valkyra', score: 61, colorHex: SIDE_COLOURS.Valkyra },
+        { name: 'Manticore', score: 54, colorHex: SIDE_COLOURS.Manticore },
+      ],
+      seenAt: now - 20_000,
+    },
+    online: { at: now - 20_000, map: 'Ozeti', players: inGame },
     steam: {
       flags: { vacBan: 3, gameBan: 3, recentBan: 1, communityBan: 2, tradeBan: 1, newAccount: 3, youngAccount: 1, hidden: 1 },
       marks: { recentBanDays: 365, newAccountDays: 30, youngAccountDays: 180 },

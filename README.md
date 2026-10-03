@@ -226,38 +226,73 @@ Until the stats URL is set, the page says live stats are not connected and links
 `DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. It is linked from every page's footer
 ("Staff sign-in") and kept out of search results.
 
-- **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
-  sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
-  browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
+**Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
+sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
+browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
+
+The page has three tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
+The address keeps the tab (`/admin#alerts`, `/admin#admin`), so a link opens the right one. ← → move between tabs from
+the keyboard.
+
+### Players: who is on the server now
+
+- **The server at a glance:** live, seeding or empty, the map, the players, each team's score, and when the bot last
+  checked. When the bot cannot reach the server, it says so and when it last could.
+- **Tiles:** players in game, how many are worth a look now, risky Steam accounts in game, and players new today.
+- **The server list:** everyone in game, with their team, kills and deaths this match, time on the server today, and
+  what is worth knowing: a high-risk Steam account or one worth a look, team kills and vehicle suicides today (red once
+  they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth a look have a yellow mark
+  by their name.
+- **Search** by name or Steam ID, pick a **team**, **sort** by team, most kills, longest on today or name, and tick
+  **Only players worth a look**. When nobody in game matches a search, "Look up" searches everyone the bot knows.
+- **Act** on a player opens a menu: look up, warn, kick, move to another team, or ban. Each opens that admin tool on the
+  Admin tab with the player picked, and "← Back to Players" goes back.
+- On a phone each player is a small card, with Act at the top.
+
+### Alerts: what the bot found by itself
+
+- **How alerts work**, in three steps: the bot checks every player's Steam account as they join, and every death in
+  the kill feed for team kills and vehicle suicides; the serious ones go to the Discord moderation log channel as they
+  happen; everything is listed here, riskiest first. An alert is a reason to look, not proof.
+- **Tiles:** risky Steam accounts, players flagged for griefing, team kills and vehicle suicides in the period.
+- **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
+  or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
+  or one never set up), how old the account is and when the bot checked, whether they are in game or banned, and their
+  matches, K/D, headshots and time played for scale. "How accounts are scored" lists each flag's points, as the bot
+  sends them. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page says the checks
+  are off.
 - **Possible griefers.** From the bot's kill feed: everyone who team killed, was team killed or killed themselves, with
   flags for a day with 3 or more team kills, killing the same teammate twice or more, 2 or more suicides in a vehicle
   (crashing it, or blowing it up), or 10 or more suicides. Most flagged days first, with their matches, kills and time
   played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
-- **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
-  or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
-  or one never set up), how old the account is and when the bot checked, whether they are in game or banned, and their
-  matches, K/D, headshots and time played for scale. The page lists how each flag is scored, as the bot sends it. A
-  reason to look, not proof. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page
-  says the checks are off.
-- **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
-  and bans made or lifted outside the bot (in game, or in the server's settings).
-- **Admin tools.** Every staff command from Discord, from the page: look up a player, warn, kick, move to another
-  team, ban, unban, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call
-  for seeders, and remove a wrongly recorded match. The forms come from the bot's own command list, and the pick-lists
-  (players in game and seen lately, teams, maps, modes, lighting, zones, bans, the reserved list, recent matches) from
-  the same suggestions Discord shows. Anything that changes the game or the records asks first. Each runs on the bot
-  as you, exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
-  moderation log. "Act" on a possible griefer or a risky Steam account, "Look up" on a risky Steam account, "Unban" on
-  a ban and "Remove VIP" on a reserved slot open the tool with that player picked.
-- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
+- Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers look up and
+  ban, as the game can only warn, kick or move players who are on.
+
+### Admin: commands, bans, VIP and the log
+
+- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
+  give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, and
+  remove a wrongly recorded match. The forms come from the bot's own command list, and the pick-lists (players in game
+  and seen lately, teams, maps, modes, lighting, zones, bans, the reserved list, recent matches) from the same
+  suggestions Discord shows. Anything that changes the game or the records asks first. Each runs on the bot as you,
+  exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
+  moderation log.
+- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
+  tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or added by hand, and how many slots are held back for them.
+  or added by hand, and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+- **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
+  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
+
+### Everywhere
+
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
-- Pick today, 7 days or 30 days (UTC days). It refreshes every minute while the tab is visible.
+- It refreshes every minute while the browser tab is visible, like the bot's checks. A player's Act menu stays open
+  through a refresh.
 - It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
   do.

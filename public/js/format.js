@@ -669,6 +669,70 @@ export const accountAge = (account, now) => (account.createdAt === null ? 'Hidde
 // "62% of 230 kills", from the kill feed, or null without kills.
 export const headshotShare = (kills, headshots) => (kills > 0 ? `${Math.round((headshots / kills) * 100)}% of ${kills} kills` : null);
 
+// The staff page's server list (`online.players` in the bot's answer).
+
+const STEAM_BADGES = { high: 'High-risk Steam account', medium: 'Steam account worth a look' };
+
+// What is worth watching about a player in game, as badges: `kind` is 'bad', 'hot' or 'accent', or '' for a quiet one.
+// `today` is the UTC day, to tell who is new.
+export const watchList = (player, today) => [
+  ...(player.banned ? [{ text: 'Banned', kind: 'bad' }] : []),
+  ...(player.steam && player.steam.risk !== 'low'
+    ? [{ text: STEAM_BADGES[player.steam.risk], kind: player.steam.risk === 'high' ? 'bad' : 'hot', title: player.steam.flags.map(steamFlagLabel).join(', ') }]
+    : []),
+  ...(player.teamKillsToday > 0
+    ? [{ text: `${plural(player.teamKillsToday, 'team kill')} today`, kind: player.griefFlags.length > 0 ? 'bad' : '' }]
+    : []),
+  ...(player.vehicleSuicidesToday > 0
+    ? [{ text: `${plural(player.vehicleSuicidesToday, 'vehicle suicide')} today`, kind: player.griefFlags.includes('vehicleSuicides') ? 'hot' : '' }]
+    : []),
+  ...(player.firstSeen === today ? [{ text: 'New today', kind: 'accent', title: 'First time on the server in 90 days' }] : []),
+  ...(player.reserved ? [{ text: 'VIP', kind: '' }] : []),
+];
+
+// Whether a player in game is worth a look now: banned, a risky Steam account, flagged for griefing today, or new.
+export const needsLook = (player, today) =>
+  player.banned || (player.steam !== null && player.steam.risk !== 'low') || player.griefFlags.length > 0 || player.firstSeen === today;
+
+// Each team in game with how many are on it, biggest first, and players without a team (`name` null) last.
+export const teamCounts = (players) => {
+  const counts = new Map();
+  for (const p of players) {
+    const key = p.faction === null ? null : sideKey(p.faction);
+    const known = counts.get(key) ?? { name: p.faction, count: 0 };
+    counts.set(key, { ...known, count: known.count + 1 });
+  }
+  return [...counts.values()].sort((a, b) => Number(a.name === null) - Number(b.name === null) || b.count - a.count || a.name.localeCompare(b.name));
+};
+
+export const PLAYER_SORTS = {
+  team: 'Team',
+  kills: 'Most kills',
+  today: 'Longest on today',
+  name: 'Name',
+};
+
+// The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
+// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order.
+export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'team' }, today) => {
+  const q = query.trim().toLowerCase();
+  const byName = (a, b) => a.name.localeCompare(b.name);
+  const order = {
+    team: (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b),
+    kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
+    today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),
+    name: byName,
+  };
+  return players
+    .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
+    .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
+    .filter((p) => !watch || needsLook(p, today))
+    .sort(order[sort] ?? order.team);
+};
+
+// How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
+export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);
+
 // Admin tools: the bot's staff commands, run from the staff page. The bot sends their definitions as Discord has them
 // (GET /api/admin/commands); the page builds a form for each. A command with subcommands, such as /vip, is one tool per
 // subcommand, keyed "vip:add".

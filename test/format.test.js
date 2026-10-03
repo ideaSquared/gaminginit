@@ -69,6 +69,11 @@ import {
   steamWhy,
   accountAge,
   headshotShare,
+  watchList,
+  needsLook,
+  teamCounts,
+  filterPlayers,
+  alertCount,
   discordParts,
   optionLabel,
   READ_ONLY_TOOLS,
@@ -751,5 +756,72 @@ describe('mapSegments', () => {
     const map = { map: 'Bakurani', matches: 1, draws: 0, teams: [{ name: 'Haldor', wins: 1 }] };
 
     assert.deepEqual(mapSegments(map, teams), [{ name: 'Haldor', count: 1, share: 1 }]);
+  });
+});
+
+describe('the staff page server list', () => {
+  const TODAY = '2026-10-03';
+  const player = (name, overrides = {}) => ({
+    steamId: `7656119800000${name.length}${name.charCodeAt(0)}`,
+    name,
+    faction: 'Valkyra',
+    kills: 0,
+    deaths: 0,
+    minutesToday: 30,
+    firstSeen: '2026-08-01',
+    steam: null,
+    griefFlags: [],
+    teamKillsToday: 0,
+    vehicleSuicidesToday: 0,
+    banned: false,
+    reserved: false,
+    ...overrides,
+  });
+  const ash = player('Ash', { kills: 12, deaths: 3, minutesToday: 90, steam: { risk: 'high', score: 5, flags: ['vacBan', 'hidden'] } });
+  const bo = player('Bo', { faction: 'Manticore', kills: 4, firstSeen: TODAY });
+  const cy = player('Cy', { faction: null, kills: null, deaths: null, teamKillsToday: 3, griefFlags: ['teamKills'] });
+  const dee = player('Dee', { kills: 4, deaths: 1, reserved: true, teamKillsToday: 1, steam: { risk: 'low', score: 1, flags: ['hidden'] } });
+  const all = [dee, cy, bo, ash];
+
+  it('shows what is worth watching about a player', () => {
+    assert.deepEqual(watchList(ash, TODAY), [{ text: 'High-risk Steam account', kind: 'bad', title: 'VAC ban, Hidden profile' }]);
+    assert.deepEqual(watchList(cy, TODAY), [{ text: '3 team kills today', kind: 'bad' }]);
+    assert.deepEqual(watchList(dee, TODAY), [{ text: '1 team kill today', kind: '' }, { text: 'VIP', kind: '' }]);
+    assert.deepEqual(watchList(bo, TODAY).map((b) => b.text), ['New today']);
+    assert.deepEqual(watchList(player('Eve', { banned: true, vehicleSuicidesToday: 2, griefFlags: ['vehicleSuicides'] }), TODAY), [
+      { text: 'Banned', kind: 'bad' },
+      { text: '2 vehicle suicides today', kind: 'hot' },
+    ]);
+  });
+
+  it('knows who is worth a look', () => {
+    assert.deepEqual(all.filter((p) => needsLook(p, TODAY)).map((p) => p.name), ['Cy', 'Bo', 'Ash']);
+  });
+
+  it('counts each team, biggest first, with no team last', () => {
+    assert.deepEqual(teamCounts(all), [
+      { name: 'Valkyra', count: 2 },
+      { name: 'Manticore', count: 1 },
+      { name: null, count: 1 },
+    ]);
+  });
+
+  it('searches, filters and sorts the list', () => {
+    const names = (options) => filterPlayers(all, options, TODAY).map((p) => p.name);
+
+    assert.deepEqual(names({}), ['Bo', 'Ash', 'Dee', 'Cy']);
+    assert.deepEqual(names({ query: ' a' }), ['Ash']);
+    assert.deepEqual(names({ query: ash.steamId.slice(-4) }), ['Ash']);
+    assert.deepEqual(names({ team: 'valkyra' }), ['Ash', 'Dee']);
+    assert.deepEqual(names({ team: 'none' }), ['Cy']);
+    assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Bo', 'Cy']);
+    // Most kills, then fewest deaths; Cy has no kills reported.
+    assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
+    assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
+  });
+
+  it('counts the alerts worth a look', () => {
+    assert.equal(alertCount({ steam: { accounts: [{}, {}] }, totals: { flaggedPlayers: 3 } }), 5);
+    assert.equal(alertCount({ steam: null, totals: { flaggedPlayers: 0 } }), 0);
   });
 });
