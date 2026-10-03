@@ -50,7 +50,8 @@ const renderCharts = (now) => {
   daily.update({ days: stats?.days ?? [], today: new Date(now).toISOString().slice(0, 10), count: 14 });
 
   // When the server is busy: the hours with the busy threshold or more players at least half the time. Over the last
-  // 14 days when the bot sends hourly figures, otherwise over the last 24 hours of readings.
+  // 14 days when the bot sends hourly figures, each hour from its median day so one bad day does not drag it down;
+  // otherwise over the last 24 hours of readings.
   const recent = history.filter(([t]) => t >= now - DAY);
   const threshold = stats?.thresholds?.busy ?? BUSY_PLAYERS;
   const hourly = stats?.hourly?.busy ? stats.hourly : null;
@@ -61,7 +62,9 @@ const renderCharts = (now) => {
   busiestView.update({ averages, busy: shares.map(isBusy), period });
   setText(
     $('busiest-sub'),
-    `Average players in each hour of the day over ${period}, your local time. ` +
+    (hourly
+      ? `Average players in each hour on a typical day of ${period}, your local time. One bad day does not pull it down. `
+      : `Average players in each hour of the day over ${period}, your local time. `) +
       `Busy hours have ${threshold}+ players at least half the time.`,
   );
   tableOf(
