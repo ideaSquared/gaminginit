@@ -516,6 +516,18 @@ export const demoAdmin = (days, now) => {
       banned: days > 1,
     }),
     row('Tusk', { teamKills: 3 * scale, teamKilled: 1, suicides: 12, flags: ['teamKills', 'suicides'], flaggedDays: Math.min(days, scale) }),
+    // Flagged, but not in game now.
+    row('Nightjar', {
+      teamKills: 3,
+      suicides: 2,
+      mostKilledTeammate: { ...ref('Kestrel'), kills: 2 },
+      flags: ['teamKills', 'sameTeammate'],
+      flaggedDays: 1,
+      matches: 1,
+      kills: 9,
+      deaths: 14,
+      minutes: 52,
+    }),
     row('Pike', { teamKills: 2, vehicleTeamKills: 2, vehicleSuicides: 1, suicides: 4, teamKilled: 2 }),
     row('Moth', { teamKilled: 3 * scale + 1, suicides: 1 }),
     row('Rook', { teamKills: 1, teamKilled: 2, suicides: 2 }),
@@ -544,6 +556,9 @@ export const demoAdmin = (days, now) => {
     incident(58, 'vehicle-suicide', 'Vex', null, 'Humvee', 'vehicle', null, 'Bakurani', ['VehicleExplosion']),
     incident(75, 'team-kill', 'Vex', 'Moth', 'C4 charge', 'weapon', 3.5, 'Bakurani'),
     incident(96, 'team-kill', 'Tusk', 'Rook', 'M249 SAW', 'weapon', 41.6, 'Bakurani'),
+    incident(141, 'team-kill', 'Nightjar', 'Kestrel', 'AK74', 'weapon', 12.4, 'Zestafona'),
+    incident(148, 'team-kill', 'Nightjar', 'Ash', 'M67 frag grenade', 'weapon', 7.9, 'Zestafona'),
+    incident(155, 'team-kill', 'Nightjar', 'Kestrel', 'AK74', 'weapon', 9.1, 'Zestafona'),
   ];
   const entry = (minutes, action, name, by, byName, reason, detail) => ({
     at: ago(minutes),
@@ -698,6 +713,7 @@ export const demoAdmin = (days, now) => {
           gameBans: 2,
           lastBanAt: now - 3 * 365 * DAY,
           createdAt: now - 9 * 365 * DAY,
+          inGame: true,
         }),
       ],
     },

@@ -264,10 +264,15 @@ the keyboard.
   the kill feed for team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk, and only
   the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed here,
   riskiest first. An alert is a reason to look, not proof.
-- **Tiles:** risky Steam accounts, players flagged for griefing, team kills and vehicle suicides in the period.
+- **Tiles:** risky Steam accounts, players flagged for griefing, team kills and vehicle suicides in the period. The first
+  two say how many of them are in game now.
+- **In game first.** Risky Steam accounts and possible griefers are each in two lists: **In game now** first, as the
+  players staff can still warn, kick or move, its count in yellow when there is anyone in it; then **Not in game**, for
+  everyone else seen in the period, still shown in full. While the server is not answering, nobody is known to be in
+  game, so each is one list. The bot lists those in game first too, so its limit of 100 never leaves one out.
 - **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
   or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
-  or one never set up), how old the account is and when the bot checked, whether they are in game or banned, and their
+  or one never set up), how old the account is and when the bot checked, whether they are banned, and their
   matches, K/D, headshots and time played for scale. "How accounts are scored" lists each flag's points, as the bot
   sends them, and the note says from how many points an account is posted to the moderation log by itself. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page says the checks
   are off.
