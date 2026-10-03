@@ -75,6 +75,7 @@ import {
   filterPlayers,
   alertCount,
   discordParts,
+  defaultLabel,
   optionLabel,
   READ_ONLY_TOOLS,
   toolsFrom,
@@ -709,13 +710,22 @@ describe('admin tools', () => {
     assert.equal(tools[1].description, 'Remove a player from the server; they can rejoin');
     assert.deepEqual(tools[2].options.map((o) => o.name), ['steam_id', 'days']);
     assert.ok(READ_ONLY_TOOLS.has('player'));
+    assert.ok(READ_ONLY_TOOLS.has('rotations:show'));
     assert.ok(!READ_ONLY_TOOLS.has('kick'));
+    assert.ok(!READ_ONLY_TOOLS.has('rotations:use'));
   });
 
   it('labels options', () => {
     assert.equal(optionLabel('steam_id'), 'Player');
     assert.equal(optionLabel('player'), 'Player');
     assert.equal(optionLabel('infantry_only'), 'Infantry only');
+  });
+
+  it('says what leaving an option out means, from its description', () => {
+    assert.equal(defaultLabel('Infantry only (default: as in the rotation)'), 'As in the rotation');
+    assert.equal(defaultLabel('Hardcore (default: off)'), 'Off (default)');
+    assert.equal(defaultLabel('Hardcore'), 'Default');
+    assert.equal(defaultLabel(undefined), 'Default');
   });
 
   it('reads Discord’s markdown in a reply', () => {
