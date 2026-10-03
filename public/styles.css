@@ -1249,6 +1249,11 @@ tbody tr:last-child td {
   background: var(--team, var(--series));
 }
 
+/* A team with no wins has no bar, only the track. */
+.team-bar-none::before {
+  display: none;
+}
+
 .team-key {
   display: flex;
   flex-wrap: wrap;
@@ -1291,9 +1296,11 @@ tbody tr:last-child td {
   margin: 10px 0 6px;
 }
 
+/* A zero basis, so the parts share the bar by their counts alone, not by their labels' width. */
 .map-bar-part {
   display: grid;
   place-items: center;
+  flex-basis: 0;
   min-width: 4px;
   border-radius: 4px;
   background: var(--team);

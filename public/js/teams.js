@@ -59,7 +59,7 @@ const renderStandings = (board) => {
         'tbody',
         {},
         ...board.teams.map((t, i) => {
-          const bar = el('span', { className: 'team-bar', ariaHidden: 'true' });
+          const bar = el('span', { className: t.wins > 0 ? 'team-bar' : 'team-bar team-bar-none', ariaHidden: 'true' });
           bar.style.setProperty('--share', String(t.wins / most));
           bar.style.setProperty('--team', colourOf(t.name));
           return el(
