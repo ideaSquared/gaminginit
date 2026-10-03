@@ -38,6 +38,9 @@ const SCROLL_EDGE_PX = 72;
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// The day after `day` (YYYY-MM-DD).
+const nextDay = (day) => new Date(Date.parse(`${day}T00:00:00Z`) + 24 * 60 * 60_000).toISOString().slice(0, 10);
+
 // "06:00", the hour each rotation day starts, in the reader's own time on `day` (summer time included).
 const localHour = (hour, day) => {
   const [y, m, d] = String(day ?? '').split('-').map(Number);
@@ -133,10 +136,30 @@ export const createRotations = ({ root, load, send }) => {
 
   // --- Talking to the bot ---
 
+  // Bumped by reset (signing out), so an answer that arrives after it is dropped.
+  let generation = 0;
+
+  // Takes the page the bot sent. The rotation open in the editor follows it, unless staff had changed it: whether they
+  // had is asked of the page they were editing, before it is replaced.
+  const adopt = (next) => {
+    const edited = dirty();
+    page = next;
+    loadedAt = Date.now();
+    if (draft && edited) return;
+    const current = draft?.from ? saved(draft.from) : null;
+    // The same rotation, as it was: kept as it is, so open options stay open.
+    if (current && draft && current.name === draft.name && sameEntries(draft.entries, current.entries)) return;
+    const pick = current ?? saved(defaultName()) ?? page.rotations[0] ?? null;
+    if (pick) edit(pick);
+    else draft = { name: defaultName(), from: null, entries: [] };
+  };
+
   const refresh = async () => {
+    const mine = generation;
     loading ??= (async () => {
       const answer = await load().catch(() => ({ ok: false, status: 0, json: null }));
       loading = null;
+      if (mine !== generation) return;
       if (!answer.ok) {
         problem =
           answer.status === 404
@@ -147,38 +170,44 @@ export const createRotations = ({ root, load, send }) => {
         return;
       }
       problem = null;
-      page = answer.json;
-      loadedAt = Date.now();
-      // Picks up the latest of what is open, unless staff are changing it.
-      const current = draft && !dirty() ? (saved(draft.from) ?? null) : null;
-      if (!draft || (!dirty() && current === null)) {
-        const first = saved(defaultName()) ?? page.rotations[0];
-        if (first) edit(first);
-        else draft = { name: defaultName(), from: null, entries: [] };
-      } else if (current) edit(current);
+      adopt(answer.json);
       render();
     })();
     return loading;
   };
 
-  // Sends a change; on success the bot sends the page as it is now. Returns the answer, or null when it failed.
+  // While a change is on its way, nothing on the tab can be changed (it is inert), so no edit is lost when the answer
+  // comes back. Focus goes back where it was afterwards.
+  const lock = (on) => {
+    content.classList.toggle('rot-busy', on);
+    for (const part of content.querySelectorAll('.rot-today, .rot-week, .rot-workspace')) part.inert = on;
+    const save = content.querySelector('[data-role="save"]');
+    if (save && on) save.textContent = 'Working…';
+  };
+
+  // Sends a change; on success the bot sends the page as it is now. Returns the answer, or null when it failed (or
+  // staff signed out meanwhile).
   const change = async (body, { quiet = false } = {}) => {
     if (busy) return null;
+    const mine = generation;
+    const focused = document.activeElement?.dataset?.focus ?? null;
     busy = true;
-    render();
+    lock(true);
     try {
       const answer = await send(body).catch(() => ({ ok: false, json: null }));
+      if (mine !== generation) return null;
       if (!answer.ok) {
         toast(answer.json?.error ?? "Couldn't reach the bot. If it was a change, check before trying again.", 'error');
         return null;
       }
-      page = answer.json;
-      loadedAt = Date.now();
+      adopt(answer.json);
       if (!quiet && answer.json?.outcome?.outcome === 'failed') toast(outcomeText(answer.json.outcome, ''), 'warn');
       return answer;
     } finally {
-      busy = false;
-      render();
+      if (mine === generation) {
+        busy = false;
+        render(focused);
+      }
     }
   };
 
@@ -233,7 +262,7 @@ export const createRotations = ({ root, load, send }) => {
   const tomorrowNote = () => {
     if (!page) return '';
     const tomorrow = page.plan[(page.today.weekday + 1) % 7];
-    return tomorrow ? ` Tomorrow's, ${tomorrow}, goes on at ${localHour(page.hour, page.today.day)}.` : '';
+    return tomorrow ? ` Tomorrow's, ${tomorrow}, goes on at ${localHour(page.hour, nextDay(page.today.day))}.` : '';
   };
 
   const putOn = async (name) => {
@@ -245,8 +274,10 @@ export const createRotations = ({ root, load, send }) => {
     } else if (!window.confirm(`Put ${name} on the server for the rest of today? It plays from the next map.${tomorrowNote()}`)) {
       return;
     }
-    const answer = await change({ action: 'use', name: tidyName(editing ? draft.name : name) }, { quiet: true });
-    if (answer) toast(outcomeText(answer.json.outcome, name) || `${name} is on for today.`, answer.json.outcome?.outcome === 'failed' ? 'warn' : 'ok');
+    // Saving may have renamed it.
+    const target = tidyName(editing ? draft.name : name);
+    const answer = await change({ action: 'use', name: target }, { quiet: true });
+    if (answer) toast(outcomeText(answer.json.outcome, target) || `${target} is on for today.`, answer.json.outcome?.outcome === 'failed' ? 'warn' : 'ok');
   };
 
   const remove = async () => {
@@ -624,8 +655,10 @@ export const createRotations = ({ root, load, send }) => {
     });
     const lightings = catalog()?.lightings ?? [];
     const zones = map?.zones ?? [];
-    const duplicate = button('Duplicate', { className: 'btn btn-ghost btn-small' });
+    const room = draft.entries.length < (page?.limits.maps ?? 100);
+    const duplicate = button('Duplicate', { className: 'btn btn-ghost btn-small', disabled: !room, title: room ? '' : `A rotation can have at most ${page?.limits.maps ?? 100} maps` });
     duplicate.addEventListener('click', () => {
+      if (draft.entries.length >= (page?.limits.maps ?? 100)) return;
       const copy = copyDraft(entry);
       dropped = copy.key;
       open.add(copy.key);
@@ -713,7 +746,8 @@ export const createRotations = ({ root, load, send }) => {
     const input = el('input', { className: 'rot-name-input', type: 'text', value: draft.name, maxLength: page.limits.name, disabled: locked, spellcheck: false, autocomplete: 'off', ariaLabel: 'Rotation name' });
     input.dataset.focus = 'name';
     const nameNote = el('p', { className: `rot-name-note${why ? ' rot-name-bad' : ''}`, textContent: locked ? `${defaultName()} keeps its name: it plays on every day without a rotation of its own.` : (why ?? '') });
-    const saveButton = button(busy ? 'Saving…' : 'Save', { className: 'btn btn-small rot-btn-primary', disabled: busy || !changed || draft.entries.length === 0 || Boolean(why) });
+    const saveButton = button('Save', { className: 'btn btn-small rot-btn-primary', disabled: busy || !changed || draft.entries.length === 0 || Boolean(why) });
+    saveButton.dataset.role = 'save';
     const discard = button('Discard changes', { className: 'btn btn-ghost btn-small', disabled: busy || !changed || draft.from === null });
     const status = el('span', { className: `rot-status${changed ? ' rot-status-dirty' : ''}`, textContent: changed ? (draft.from === null ? 'Not saved yet' : 'Unsaved changes') : 'Saved' });
     input.addEventListener('input', () => {
@@ -795,9 +829,9 @@ export const createRotations = ({ root, load, send }) => {
     );
   };
 
-  const render = () => {
+  const render = (keep = null) => {
     if (drag) return;
-    const focused = document.activeElement?.dataset?.focus ?? null;
+    const focused = document.activeElement?.dataset?.focus ?? keep;
     if (problem && !page) {
       content.replaceChildren(el('div', { className: 'card panel' }, el('p', { textContent: problem })));
       return;
@@ -807,7 +841,7 @@ export const createRotations = ({ root, load, send }) => {
       return;
     }
     content.replaceChildren(todayCard(), weekCard(), el('div', { className: 'rot-workspace' }, sideCard(), editorCard()));
-    content.classList.toggle('rot-busy', busy);
+    content.classList.toggle('rot-busy', false);
     if (focused) content.querySelector(`[data-focus="${CSS.escape(focused)}"]`)?.focus({ preventScroll: true });
     dropped = null;
   };
@@ -822,8 +856,11 @@ export const createRotations = ({ root, load, send }) => {
     ensure() {
       if (!page && !problem) refresh();
     },
-    // Signing out forgets everything.
+    // Signing out forgets everything, and any answer still on its way.
     reset() {
+      generation += 1;
+      busy = false;
+      loading = null;
       page = null;
       draft = null;
       problem = null;
