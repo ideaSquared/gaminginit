@@ -10,8 +10,8 @@ import {
   headshotShare,
   kd,
   metres,
-  MOD_ACTIONS,
   modActionCounts,
+  modActionLabel,
   needsLook,
   PLAYER_SORTS,
   RISK_LABELS,
@@ -53,6 +53,20 @@ const SESSION_KEY = 'gaminginit-staff-session';
 const EXPIRY_MARGIN_MS = 60_000;
 
 const $ = (id) => document.getElementById(id);
+
+// Sets a status line only when its words change, so a refresh does not make a screen reader say them again.
+const setStatus = (node, text) => {
+  if (node.textContent !== text) node.textContent = text;
+};
+
+// A row of filter buttons drawn in place of the last, keeping keyboard focus on the button for the same choice
+// (`data-key`) when one of the old ones had it, without scrolling to it: a refresh redraws the row while staff may have
+// scrolled away from it.
+const replaceButtons = (row, buttons) => {
+  const focused = row.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
+  row.replaceChildren(...buttons);
+  if (focused !== undefined) buttons.find((b) => b.dataset.key === focused)?.focus({ preventScroll: true });
+};
 
 // Storage can be off (a private window, blocked site data): then the sign-in lasts until the page is closed.
 let memoryToken = null;
@@ -424,8 +438,8 @@ const renderTeamFilter = (players, colours) => {
   const teams = teamCounts(players);
   // A team picked before that is no longer in game falls back to everyone.
   if (filters.team && !teams.some((t) => (t.name === null ? 'none' : sideKey(t.name)) === filters.team)) filters.team = '';
-  const button = (value, text, count, colour) =>
-    el(
+  const button = (value, text, count, colour) => {
+    const b = el(
       'button',
       {
         type: 'button',
@@ -439,10 +453,13 @@ const renderTeamFilter = (players, colours) => {
       `${text} `,
       el('span', { className: 'filter-count', textContent: String(count) }),
     );
-  $('team-filter').replaceChildren(
+    b.dataset.key = value;
+    return b;
+  };
+  replaceButtons($('team-filter'), [
     button('', 'All', players.length),
     ...teams.map((t) => (t.name === null ? button('none', 'No team', t.count) : button(sideKey(t.name), t.name, t.count, colours.get(sideKey(t.name)) ?? null))),
-  );
+  ]);
 };
 
 // Everyone in game, as staff searched, filtered and sorted it.
@@ -455,8 +472,10 @@ const renderPlayers = (overview) => {
   renderTeamFilter(players, colours);
   const shown = filterPlayers(players, filters, today);
   const query = filters.query.trim();
-  $('players-count').textContent =
-    online === null ? '' : shown.length === players.length ? `${players.length} in game` : `Showing ${shown.length} of ${players.length} in game`;
+  setStatus(
+    $('players-count'),
+    online === null ? '' : shown.length === players.length ? `${players.length} in game` : `Showing ${shown.length} of ${players.length} in game`,
+  );
   // On a phone each cell says what it is, as the table's headings are hidden there.
   const labelled = (label, td) => {
     td.dataset.label = label;
@@ -622,8 +641,8 @@ const renderSteam = (overview) => {
 
 // The moderation log, without the kinds of action staff hid. Each kind is a toggle: pressed is shown.
 const renderModeration = (overview) => {
-  const button = ({ action, count }) =>
-    el(
+  const button = ({ action, count }) => {
+    const b = el(
       'button',
       {
         type: 'button',
@@ -634,19 +653,22 @@ const renderModeration = (overview) => {
           renderModeration(data);
         },
       },
-      `${MOD_ACTIONS[action] ?? action} `,
+      `${modActionLabel(action)} `,
       el('span', { className: 'filter-count', textContent: String(count) }),
     );
-  $('modlog-filter').replaceChildren(...modActionCounts(overview.moderation).map(button));
+    b.dataset.key = action;
+    return b;
+  };
+  replaceButtons($('modlog-filter'), modActionCounts(overview.moderation).map(button));
   const shown = overview.moderation.filter((e) => !modHidden.has(e.action));
   const all = overview.moderation.length;
-  $('modlog-count').textContent = shown.length === all ? '' : `Showing ${shown.length} of ${all}`;
+  setStatus($('modlog-count'), shown.length === all ? '' : `Showing ${shown.length} of ${all}`);
   const rows = shown.map((e) =>
     el(
       'tr',
       {},
       el('td', { className: 'when', textContent: when.format(e.at) }),
-      cell(badge(MOD_ACTIONS[e.action] ?? e.action, e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : '')),
+      cell(badge(modActionLabel(e.action), e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : '')),
       el('td', { className: 'player' }, who(e.player)),
       el('td', { className: 'reason', textContent: e.reason ?? '–' }),
       staffCell(e, overview.staff),

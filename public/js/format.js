@@ -596,6 +596,10 @@ export const MOD_ACTIONS = {
   switchteam: 'Team move',
 };
 
+// An action as the moderation log names it, or as the bot sent it when the page has no name for it (only MOD_ACTIONS'
+// own names, so an action called "toString" is not named by what every object has).
+export const modActionLabel = (action) => (Object.hasOwn(MOD_ACTIONS, action) ? MOD_ACTIONS[action] : action);
+
 // The moderation log's filter: each kind of action with how many of `entries` are that kind, every kind MOD_ACTIONS
 // names (none yet is 0) in its order, then any other the bot sends.
 export const modActionCounts = (entries) => {
