@@ -39,6 +39,7 @@ What it shows:
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us". Shown only
   when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - What seeding is: the empty, seeding and live states with the bot's player thresholds, and how to help.
+- A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
@@ -55,6 +56,8 @@ You need:
   The weapons need a bot with the kill feed set up (its README, "Weapon stats"), which sends `weapons` in
   `/api/stats` and on player pages; without it, they are not shown. The live page needs a bot that serves
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
+  The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
+  README, "Staff page").
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.
@@ -71,13 +74,13 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and `public/matches.html`, `public/live.html`, `public/players.html` and `public/player.html` where it says so:
+Edit `public/index.html`, and `public/matches.html`, `public/live.html`, `public/players.html`, `public/player.html` and `public/admin.html` where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all five pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 each in `matches.html`, `live.html`, `players.html` and `player.html`. If the invite changes, change all 8. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html`, `live.html`, `players.html` and `player.html` have their own `<title>`, metas and wordmarks. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all six pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html`, 1 each in `matches.html`, `live.html`, `players.html`, `player.html` and `admin.html`. If the invite changes, change all 9. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. `matches.html`, `live.html`, `players.html`, `player.html` and `admin.html` have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
 Commit and push the change to `main` if you will use option B or C below.
@@ -199,6 +202,29 @@ npm start                      # serves public/ on http://localhost:3000
 
 Until the stats URL is set, the page says live stats are not connected and links to the demo.
 
+## Staff page
+
+`/admin` is for staff: Discord Administrators and members with a staff role in our Discord server (the bot's
+`DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. It is linked from every page's footer
+("Staff sign-in") and kept out of search results.
+
+- **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
+  sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
+  browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
+- **Possible griefers.** From the bot's kill feed: everyone who team killed, was team killed or killed themselves, with
+  flags for a day with 3 or more team kills, killing the same teammate twice or more, 2 or more suicides in a vehicle
+  (crashing it, or blowing it up), or 10 or more suicides. Most flagged days first, with their matches, kills and time
+  played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides.
+- **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
+- **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
+  and bans made or lifted outside the bot (in game, or in the server's settings).
+- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
+- Pick today, 7 days or 30 days (UTC days). It refreshes every minute while the tab is visible.
+- It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
+- `http://localhost:3000/admin?demo` shows sample data without signing in.
+- The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
+  lets that site read the staff data.
+
 ## How it behaves
 
 - Fetches the stats every 60 seconds, and only while the tab is visible. The bot's numbers change once a minute.
@@ -221,5 +247,5 @@ npm test    # Node's built-in test runner; no dependencies to install
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` the
 matches page, `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+`demo.js` makes the sample data. `admin.js` renders the staff page. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

@@ -51,6 +51,14 @@ import {
   liveState,
   multiKill,
   shortAgo,
+  flagLabel,
+  flagRule,
+  MOD_ACTIONS,
+  sessionExpiry,
+  signInResult,
+  SIGN_IN_ERRORS,
+  staffBy,
+  withVehicle,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -530,5 +538,49 @@ describe('live page', () => {
     assert.equal(liveState(snapshot({ server: { ...server, seenAt: NOW - 10 * 60_000 } }), NOW), 'offline');
     assert.equal(liveState(snapshot({ server: null }), NOW), 'offline');
     assert.equal(liveState(snapshot({ server: null, match: { kills: 3 } }), NOW), 'match');
+  });
+});
+
+describe('staff page', () => {
+  // A session token as the bot signs it: base64url JSON, a dot, a base64url signature.
+  const token = (payload) => `${Buffer.from(JSON.stringify(payload)).toString('base64url')}.c2lnbmF0dXJl`;
+
+  it('reads the session or the problem the bot sent back after #', () => {
+    const session = token({ userId: '42', name: 'Paragon', expiresAt: NOW });
+
+    assert.deepEqual(signInResult(`#session=${session}`), { session });
+    assert.deepEqual(signInResult('#error=not-staff'), { error: SIGN_IN_ERRORS['not-staff'] });
+    assert.deepEqual(signInResult('#error=something-new'), { error: SIGN_IN_ERRORS.failed });
+    assert.equal(signInResult('#session=<script>'), null);
+    assert.equal(signInResult(''), null);
+    assert.equal(signInResult('#weapons'), null);
+  });
+
+  it('reads when a session runs out, and null from anything else', () => {
+    assert.equal(sessionExpiry(token({ userId: '42', name: 'Paragon', expiresAt: NOW })), NOW);
+    assert.equal(sessionExpiry(token({ userId: '42' })), null);
+    assert.equal(sessionExpiry('not a token'), null);
+  });
+
+  it('words the flags with the bot’s marks', () => {
+    const marks = { teamKills: 3, sameTeammate: 2, vehicleSuicides: 2, suicides: 10 };
+
+    assert.equal(flagLabel('sameTeammate'), 'Same teammate');
+    assert.equal(flagRule('teamKills', marks), '3 or more team kills in a day');
+    assert.equal(flagRule('vehicleSuicides', marks), '2 or more suicides in a vehicle in a day (crashing it, or blowing it up)');
+    assert.equal(flagLabel('newFlag'), 'newFlag');
+  });
+
+  it('says who did what', () => {
+    assert.equal(MOD_ACTIONS.ban, 'Ban');
+    assert.equal(staffBy({ by: 'bot' }), 'The bot');
+    assert.equal(staffBy({ by: 'server' }), 'Outside the bot');
+    assert.equal(staffBy({ by: '42', byName: 'Paragon' }), 'Paragon');
+    assert.equal(staffBy({ by: '42' }), 'Discord user 42');
+  });
+
+  it('adds how many were with a vehicle, when any were', () => {
+    assert.equal(withVehicle(5, 2), '5 (2 vehicle)');
+    assert.equal(withVehicle(5, 0), '5');
   });
 });

@@ -7,9 +7,9 @@ const REFRESH_MS = 60_000;
 
 // ?demo shows sample numbers; ?stats=<url> reads another bot, e.g. one running locally with `wrangler dev`.
 const params = new URLSearchParams(location.search);
-const demo = params.has('demo');
+export const demo = params.has('demo');
 const statsUrl = params.get('stats') ?? document.querySelector('meta[name="stats-url"]')?.content ?? '';
-const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
+export const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
 
 // The bot's other endpoints sit next to /api/stats: apiUrl('players') is its /api/players.
 export const apiUrl = (path) => (configured ? new URL(path, statsUrl).href : '');
@@ -24,13 +24,13 @@ export const keepQuery = (href) => {
 for (const a of document.querySelectorAll('a[data-keep-query]')) a.href = keepQuery(a.getAttribute('href'));
 
 // This page's own address with a query parameter changed, so a page that shows one player keeps its id.
-const thisPage = (change) => {
+export const thisPage = (change) => {
   const url = new URL(location.href);
   change(url.searchParams);
   return url.pathname + url.search;
 };
 
-const showNotice = (...content) => {
+export const showNotice = (...content) => {
   const notice = document.getElementById('notice');
   notice.replaceChildren(...content);
   notice.hidden = content.length === 0;

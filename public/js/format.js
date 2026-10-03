@@ -528,3 +528,70 @@ export const liveState = (snapshot, now) => {
   if (server.phase === 'empty' || !snapshot.currentMatch) return 'empty';
   return snapshot.feed ? 'waiting' : 'scoreboard';
 };
+
+// The staff page. Staff sign in with Discord through the bot, which sends them back here with a session token after
+// `#session=`, or what went wrong after `#error=`. The page keeps the token and sends it with each request for the
+// page's data (GET /api/admin/overview).
+
+// What a sign-in that did not work says.
+export const SIGN_IN_ERRORS = {
+  cancelled: 'Sign-in was cancelled.',
+  expired: 'That sign-in took too long or was started in another browser. Try again.',
+  'not-member': 'That Discord account is not in our Discord server.',
+  'not-staff': 'This page is for staff only: Discord Administrators and members with a staff role.',
+  failed: 'Discord sign-in did not work. Try again in a minute.',
+};
+
+// What the bot sent back after `#`: { session } or { error }, or null for anything else.
+export const signInResult = (hash) => {
+  const params = new URLSearchParams(hash.replace(/^#/, ''));
+  const session = params.get('session');
+  if (session && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(session)) return { session };
+  const error = params.get('error');
+  if (error) return { error: SIGN_IN_ERRORS[error] ?? SIGN_IN_ERRORS.failed };
+  return null;
+};
+
+// When a session token runs out, read from the token itself: only to stop using one that has, as the bot checks it. Null
+// when it cannot be read.
+export const sessionExpiry = (token) => {
+  try {
+    const body = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    const expiresAt = JSON.parse(atob(body)).expiresAt;
+    return typeof expiresAt === 'number' ? expiresAt : null;
+  } catch {
+    return null;
+  }
+};
+
+// The flags the bot puts on a player's day, worded with its marks (`flags` in its answer).
+export const flagLabel = (flag) =>
+  ({ teamKills: 'Team kills', sameTeammate: 'Same teammate', vehicleSuicides: 'Vehicle suicides', suicides: 'Suicides' })[flag] ?? flag;
+
+export const flagRule = (flag, marks) =>
+  ({
+    teamKills: `${marks.teamKills} or more team kills in a day`,
+    sameTeammate: `killed the same teammate ${marks.sameTeammate} or more times in a day`,
+    vehicleSuicides: `${marks.vehicleSuicides} or more suicides in a vehicle in a day (crashing it, or blowing it up)`,
+    suicides: `${marks.suicides} or more suicides of any kind in a day`,
+  })[flag] ?? flag;
+
+// What staff did, as the moderation log names it.
+export const MOD_ACTIONS = {
+  warn: 'Warning',
+  kick: 'Kick',
+  ban: 'Ban',
+  unban: 'Unban',
+  switchteam: 'Team move',
+};
+
+// Who did it: a staff member by name (or Discord user ID, for entries from before names were kept), the bot itself,
+// or someone outside the bot (in game, or in the server's settings), which the bot found on the server's ban list.
+export const staffBy = (entry) => {
+  if (entry.by === 'bot') return 'The bot';
+  if (entry.by === 'server') return 'Outside the bot';
+  return entry.byName ?? `Discord user ${entry.by}`;
+};
+
+// "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were.
+export const withVehicle = (count, vehicle) => (vehicle > 0 ? `${count} (${vehicle} vehicle)` : String(count));

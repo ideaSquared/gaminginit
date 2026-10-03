@@ -437,3 +437,132 @@ export const demoLive = (now) => {
           },
   };
 };
+
+// The staff page (GET /api/admin/overview) over the last `days` days, with made-up Steam IDs. Longer periods have more
+// of everything, like the real thing.
+export const demoAdmin = (days, now) => {
+  const steamId = (name) => `7656119800000${String(NAMES.indexOf(name)).padStart(4, '0')}`;
+  const ref = (name) => ({ steamId: steamId(name), name, id: idOf(name) });
+  const scale = days === 1 ? 1 : days === 7 ? 3 : 8;
+  const ago = (minutes) => now - minutes * MINUTE;
+  const row = (name, t) => ({
+    ...ref(name),
+    teamKills: 0,
+    vehicleTeamKills: 0,
+    teamKilled: 0,
+    suicides: 0,
+    vehicleSuicides: 0,
+    mostKilledTeammate: null,
+    flags: [],
+    flaggedDays: 0,
+    matches: 3 * scale,
+    kills: 41 * scale,
+    deaths: 33 * scale,
+    minutes: 160 * scale,
+    banned: false,
+    ...t,
+  });
+  const players = [
+    row('Vex', {
+      teamKills: 7 * scale,
+      vehicleTeamKills: 4 * scale,
+      suicides: 3 * scale,
+      vehicleSuicides: 2 * scale,
+      mostKilledTeammate: { ...ref('Moth'), kills: 3 * scale },
+      flags: ['teamKills', 'sameTeammate', 'vehicleSuicides'],
+      flaggedDays: Math.min(days, 2 * scale - 1),
+      banned: days > 1,
+    }),
+    row('Tusk', { teamKills: 3 * scale, teamKilled: 1, suicides: 12, flags: ['teamKills', 'suicides'], flaggedDays: Math.min(days, scale) }),
+    row('Pike', { teamKills: 2, vehicleTeamKills: 2, vehicleSuicides: 1, suicides: 4, teamKilled: 2 }),
+    row('Moth', { teamKilled: 3 * scale + 1, suicides: 1 }),
+    row('Rook', { teamKills: 1, teamKilled: 2, suicides: 2 }),
+    row('Sable', { suicides: 3, teamKilled: 1 }),
+  ];
+  const incident = (minutes, kind, by, victim, weapon, weaponKind, distance, map, tags = []) => ({
+    at: ago(minutes),
+    kind,
+    map,
+    player: ref(by),
+    victim: victim === null ? null : ref(victim),
+    faction: 'Valkyra',
+    weapon,
+    weaponKind,
+    distance,
+    tags,
+  });
+  const incidents = [
+    incident(6, 'team-kill', 'Vex', 'Moth', 'Humvee', 'vehicle', 4.2, 'Ozeti', ['RoadKill']),
+    incident(9, 'vehicle-suicide', 'Vex', null, 'MH-6', 'vehicle', null, 'Ozeti', ['VehicleExplosion']),
+    incident(11, 'team-kill', 'Vex', 'Moth', 'MH-6', 'vehicle', null, 'Ozeti', ['VehicleExplosion']),
+    incident(11, 'team-kill', 'Vex', 'Rook', 'MH-6', 'vehicle', null, 'Ozeti', ['VehicleExplosion']),
+    incident(24, 'team-kill', 'Tusk', 'Sable', 'M67 frag grenade', 'weapon', 6.8, 'Ozeti'),
+    incident(31, 'team-kill', 'Tusk', 'Pike', 'AK74', 'weapon', 18.3, 'Ozeti'),
+    incident(52, 'team-kill', 'Pike', 'Moth', 'Kodiak (M249)', 'vehicle', 2.1, 'Bakurani', ['RoadKill']),
+    incident(58, 'vehicle-suicide', 'Vex', null, 'Humvee', 'vehicle', null, 'Bakurani', ['VehicleExplosion']),
+    incident(75, 'team-kill', 'Vex', 'Moth', 'C4 charge', 'weapon', 3.5, 'Bakurani'),
+    incident(96, 'team-kill', 'Tusk', 'Rook', 'M249 SAW', 'weapon', 41.6, 'Bakurani'),
+  ];
+  const entry = (minutes, action, name, by, byName, reason, detail) => ({
+    at: ago(minutes),
+    action,
+    player: ref(name),
+    by,
+    ...(byName ? { byName } : {}),
+    ...(reason ? { reason } : {}),
+    ...(detail ? { detail } : {}),
+  });
+  const moderation = [
+    entry(4, 'warn', 'Vex', '100000000000000001', 'Sarge', 'Stop team killing with vehicles'),
+    entry(13, 'kick', 'Vex', '100000000000000001', 'Sarge', 'Crashed a full heli into the base'),
+    ...(days > 1
+      ? [
+          entry(26 * 60, 'ban', 'Vex', '100000000000000002', 'Kestrel', 'Repeated team killing', '3 days'),
+          entry(30 * 60, 'ban', 'Nightjar', 'server', null, 'Racism', 'By Admin'),
+          entry(2 * 24 * 60, 'unban', 'Ash', 'bot', null, 'The ban ran out'),
+          entry(3 * 24 * 60, 'switchteam', 'Rook', '100000000000000001', 'Sarge', null, 'Valkyra to Kharr'),
+        ]
+      : []),
+  ];
+  const bans = [
+    { player: ref('Nightjar'), reason: 'Racism', bannedBy: 'Admin', onServer: true, bot: null },
+    ...(days > 1
+      ? [
+          {
+            player: ref('Vex'),
+            reason: 'Repeated team killing (ends …)',
+            bannedBy: null,
+            onServer: true,
+            bot: { by: '100000000000000002', at: ago(26 * 60), until: ago(26 * 60) + 3 * DAY, reason: 'Repeated team killing' },
+          },
+        ]
+      : []),
+    {
+      player: ref('Bravo_Six'),
+      reason: 'Cheating',
+      bannedBy: null,
+      onServer: false,
+      bot: { by: '100000000000000001', at: ago(200), until: null, reason: 'Cheating' },
+    },
+  ];
+  const flagged = players.filter((p) => p.flags.length > 0);
+  const sum = (key) => players.reduce((n, p) => n + p[key], 0);
+  return {
+    generatedAt: now,
+    days,
+    feedSince: new Date(now - 40 * DAY).toISOString().slice(0, 10),
+    flags: { teamKills: 3, sameTeammate: 2, vehicleSuicides: 2, suicides: 10 },
+    totals: {
+      teamKills: sum('teamKills'),
+      vehicleTeamKills: sum('vehicleTeamKills'),
+      suicides: sum('suicides'),
+      vehicleSuicides: sum('vehicleSuicides'),
+      flaggedPlayers: flagged.length,
+    },
+    players,
+    incidents,
+    moderation,
+    bans,
+    user: { id: '100000000000000001', name: 'Sarge' },
+  };
+};
