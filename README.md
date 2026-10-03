@@ -19,7 +19,8 @@ What it shows:
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
   It also has the busy times of day: average players in each hour, with the busy hours highlighted. An hour is busy
   when the server had 97+ players (the bot's `thresholds.busy`) at least half the time. Over the last 14 days when the
-  bot sends `hourly` with `busy`, otherwise over the last 24 hours.
+  bot sends `hourly` with `busy`, otherwise over the last 24 hours. The bot takes each hour from its median day of the
+  14, so one bad day, like a crash or a quiet evening, does not take an hour off the busy times.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
   the latest winner's streak; each team's wins, win rate and matches played; each map's matches split by the team
