@@ -657,7 +657,7 @@ export const demoAdmin = (days, now) => {
     steam: {
       flags: { vacBan: 3, gameBan: 3, recentBan: 1, communityBan: 2, tradeBan: 1, newAccount: 3, youngAccount: 1, hidden: 1 },
       marks: { recentBanDays: 365, newAccountDays: 30, youngAccountDays: 180 },
-      risk: { high: 4, medium: 2 },
+      risk: { alert: 7, high: 4, medium: 2 },
       players: 14 * scale,
       checked: 14 * scale - 1,
       high: 2,
