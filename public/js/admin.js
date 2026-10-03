@@ -312,6 +312,9 @@ const render = (overview) => {
   renderBans(overview);
 };
 
+// A refusal the bot explained, such as staff sign-in not being set up on it.
+class BotSaid extends Error {}
+
 const load = async () => {
   clearTimeout(timer);
   lastLoad = Date.now();
@@ -342,7 +345,13 @@ const load = async () => {
       showNotice('The bot does not have the staff page yet. Deploy the latest bot.');
       return;
     }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      const said = await response.json().then(
+        (body) => (typeof body?.error === 'string' ? body.error : null),
+        () => null,
+      );
+      throw said ? new BotSaid(said) : new Error(`HTTP ${response.status}`);
+    }
     const overview = await response.json();
     if (!current()) return;
     showNotice();
@@ -350,8 +359,9 @@ const load = async () => {
   } catch (error) {
     if (!current()) return;
     console.error('Could not load the staff page', error);
+    const why = error instanceof BotSaid ? ` The bot says: ${error.message}` : '';
     showNotice(
-      data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.',
+      (data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.') + why,
     );
   } finally {
     if (current()) {
