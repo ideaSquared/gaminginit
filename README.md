@@ -272,12 +272,13 @@ the keyboard.
 ### Admin: commands, bans, VIP and the log
 
 - **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
-  give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, and
-  remove a wrongly recorded match. The forms come from the bot's own command list, and the pick-lists (players in game
-  and seen lately, teams, maps, modes, lighting, zones, bans, the reserved list, recent matches) from the same
-  suggestions Discord shows. Anything that changes the game or the records asks first. Each runs on the bot as you,
-  exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
-  moderation log.
+  give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
+  map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
+  rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
+  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
+  first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
+  player's staff history and the moderation log.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,

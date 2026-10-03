@@ -761,11 +761,23 @@ export const TOOL_GROUPS = [
       ['seednow', 'Call for seeders in Discord'],
     ],
   },
+  {
+    name: 'Map rotations',
+    tools: [
+      ['rotations:show', 'See the rotations and the week'],
+      ['rotations:use', 'Swap the rotation now'],
+      ['rotations:schedule', 'Pick the rotation for a day'],
+      ['rotations:add', 'Add a map to a rotation'],
+      ['rotations:remove', 'Take a map out of a rotation'],
+      ['rotations:save', "Save the server's rotation"],
+      ['rotations:delete', 'Delete a rotation'],
+    ],
+  },
   { name: 'Records', tools: [['removematch', 'Remove a wrongly recorded match']] },
 ];
 
 // Tools that only read, so they run without asking first.
-export const READ_ONLY_TOOLS = new Set(['player', 'seeders']);
+export const READ_ONLY_TOOLS = new Set(['player', 'seeders', 'rotations:show']);
 
 const SUBCOMMAND = 1;
 
@@ -799,6 +811,15 @@ export const toolsFrom = (definitions) => {
 // An option's label: "steam_id" and "player" are both the player; "infantry_only" is "Infantry only".
 export const optionLabel = (name) =>
   name === 'steam_id' || name === 'player' ? 'Player' : name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ');
+
+// What leaving an optional option out means, from its description's "(default: …)": "As in the rotation", or
+// "Off (default)" beside the On and Off it matches.
+export const defaultLabel = (description) => {
+  const said = /\(default: ([^)]+)\)/i.exec(description ?? '')?.[1]?.trim();
+  if (!said) return 'Default';
+  const label = said.charAt(0).toUpperCase() + said.slice(1);
+  return /^(on|off)$/i.test(said) ? `${label} (default)` : label;
+};
 
 // Discord's markdown in a reply, as pieces to show: plain text, **bold**, `code`, [links](https://…), <t:…> times,
 // <@…> users and <@&…> roles. Backslash escapes are undone.

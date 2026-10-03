@@ -1,4 +1,4 @@
-import { discordParts, optionLabel, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
+import { defaultLabel, discordParts, optionLabel, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
@@ -113,7 +113,7 @@ export const createTools = ({ root, call, onChanged, staff }) => {
       input = el(
         'select',
         { id, name: o.name, required: Boolean(o.required) },
-        el('option', { value: '', textContent: o.required ? 'Pick one' : 'As in the rotation' }),
+        el('option', { value: '', textContent: o.required ? 'Pick one' : defaultLabel(o.description) }),
         el('option', { value: 'true', textContent: 'On' }),
         el('option', { value: 'false', textContent: 'Off' }),
       );
