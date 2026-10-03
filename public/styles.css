@@ -2272,3 +2272,146 @@ body.refreshing .tile-value {
     animation: none;
   }
 }
+
+/* Staff page */
+
+.admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.admin-panel {
+  margin-top: 16px;
+}
+
+.admin-panel > .section-note {
+  margin-bottom: 12px;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+/* Buttons drawn like the ghost links, not the browser's grey. */
+.admin button.btn {
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.admin button.btn:hover {
+  background: var(--surface-2);
+}
+
+.tile-note {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Wide tables scroll sideways inside their card on a phone, not the page. */
+.admin-scroll {
+  overflow-x: auto;
+}
+
+.admin-table {
+  min-width: 680px;
+}
+
+.admin-table td {
+  vertical-align: top;
+}
+
+.admin-table th,
+.admin-table .num,
+.admin-table .when {
+  white-space: nowrap;
+}
+
+.admin-table .num {
+  text-align: right;
+}
+
+.admin-table .when {
+  color: var(--text-2);
+}
+
+.admin-table .reason {
+  min-width: 12em;
+  overflow-wrap: anywhere;
+}
+
+.admin-table tr.focused td {
+  background: var(--surface-2);
+}
+
+.staff-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.steam-id {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.steam-id:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.admin .badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.flag-rules {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.signin {
+  max-width: 600px;
+}
+
+.signin > p {
+  margin-bottom: 16px;
+}
+
+.signin .signin-note {
+  margin: 16px 0 0;
+  font-size: 0.85rem;
+}
+
+.signin-error {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  font-weight: 700;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
