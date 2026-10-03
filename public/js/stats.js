@@ -60,14 +60,6 @@ const renderCharts = (now) => {
   const averages = hourly ? toLocalHours(hourly.players, offset) : hourlyAverages(recent);
   const shares = hourly ? toLocalHours(hourly.busy, offset) : busyShares(recent, threshold);
   busiestView.update({ averages, busy: shares.map(isBusy), period });
-  setText(
-    $('busiest-sub'),
-    (hourly
-      ? `Average players in each hour on a typical day of ${period}, your local time. Crashes are left out, and one ` +
-        `bad day does not pull it down. `
-      : `Average players in each hour of the day over ${period}, your local time. `) +
-      `Busy hours have ${threshold}+ players at least half the time.`,
-  );
   tableOf(
     $('busiest-table'),
     ['Hour', 'Average players', `Time at ${threshold}+`],
