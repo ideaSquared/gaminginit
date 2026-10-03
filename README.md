@@ -269,7 +269,7 @@ the keyboard.
 - Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers look up and
   ban, as the game can only warn, kick or move players who are on.
 
-### Admin: commands, bans, VIP and the log
+### Admin: commands, the log, bans and VIP
 
 - **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
   give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
@@ -279,12 +279,12 @@ the keyboard.
   list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log.
+- **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
+  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
-- **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
-  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
 
 ### Rotations: the maps for each day
 

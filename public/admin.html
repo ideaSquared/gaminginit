@@ -81,7 +81,7 @@
               </button>
               <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
                 <span class="tab-name">Admin</span>
-                <span class="tab-hint">Commands, bans, VIP and the log</span>
+                <span class="tab-hint">Commands, the log, bans and VIP</span>
               </button>
               <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
                 <span class="tab-name">Rotations</span>
@@ -227,6 +227,21 @@
                 <div id="tools"></div>
               </article>
 
+              <article class="card panel admin-panel" aria-labelledby="modlog-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="modlog-title">Moderation log</h2>
+                  <div class="period" role="group" aria-label="Period">
+                    <button type="button" data-days="1" aria-pressed="false">Today</button>
+                    <button type="button" data-days="7" aria-pressed="true">7 days</button>
+                    <button type="button" data-days="30" aria-pressed="false">30 days</button>
+                  </div>
+                </div>
+                <p class="section-note">Warnings, kicks, bans, unbans and team moves through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="modlog"></table>
+                </div>
+              </article>
+
               <article class="card panel admin-panel" aria-labelledby="bans-title">
                 <h2 class="panel-title" id="bans-title">Bans</h2>
                 <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
@@ -240,21 +255,6 @@
                 <p class="section-note" id="reserved-note"></p>
                 <div class="admin-scroll">
                   <table class="admin-table" id="reserved"></table>
-                </div>
-              </article>
-
-              <article class="card panel admin-panel" aria-labelledby="modlog-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="modlog-title">Moderation log</h2>
-                  <div class="period" role="group" aria-label="Period">
-                    <button type="button" data-days="1" aria-pressed="false">Today</button>
-                    <button type="button" data-days="7" aria-pressed="true">7 days</button>
-                    <button type="button" data-days="30" aria-pressed="false">30 days</button>
-                  </div>
-                </div>
-                <p class="section-note">Warnings, kicks, bans, unbans and team moves through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
-                <div class="admin-scroll">
-                  <table class="admin-table" id="modlog"></table>
                 </div>
               </article>
             </div>
