@@ -220,8 +220,9 @@ Until the stats URL is set, the page says live stats are not connected and links
   and bans made or lifted outside the bot (in game, or in the server's settings).
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
-  sign in and use its commands, and asks Discord for the rest when it has its bot token. Anyone it has no name for yet
-  shows as "Discord user" and their ID.
+  sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
+  someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
+  "Discord user" and their ID, linked to their Discord profile.
 - Pick today, 7 days or 30 days (UTC days). It refreshes every minute while the tab is visible.
 - It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
 - `http://localhost:3000/admin?demo` shows sample data without signing in.

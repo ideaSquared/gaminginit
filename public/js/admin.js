@@ -262,6 +262,9 @@ const renderBans = (overview) => {
     return;
   }
   $('bans-note').textContent = 'Everyone banned on the server now, with the reason. Bans made outside the bot are permanent.';
+  // A ban keeps only who made it by Discord user ID, so a name kept with their log entries stands in when the bot sends
+  // none.
+  const logged = new Map(overview.moderation.filter((e) => e.byName).map((e) => [e.by, e.byName]));
   const rows = overview.bans.map((b) =>
     el(
       'tr',
@@ -273,7 +276,7 @@ const renderBans = (overview) => {
         b.onServer ? null : el('span', { className: 'badges' }, badge('Waiting: banned when they next join', 'hot')),
       ),
       el('td', { className: 'reason', textContent: b.bot?.reason ?? b.reason ?? '–' }),
-      b.bot ? staffCell({ by: b.bot.by }, overview.staff) : cell(b.bannedBy ?? 'Outside the bot'),
+      b.bot ? staffCell({ by: b.bot.by, byName: logged.get(b.bot.by) }, overview.staff) : cell(b.bannedBy ?? 'Outside the bot'),
       el('td', { className: 'when', textContent: b.bot ? when.format(b.bot.at) : '–' }),
       el('td', { className: 'when', textContent: b.bot?.until ? when.format(b.bot.until) : 'Never' }),
     ),
