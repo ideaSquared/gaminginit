@@ -11,6 +11,7 @@ import {
   isOnline,
   kd,
   latestMatches,
+  mapSegments,
   mapKey,
   niceScale,
   peak,
@@ -668,5 +669,25 @@ describe('admin tools', () => {
       { type: 'link', text: 'Steam profile', href: 'https://steamcommunity.com/profiles/1' },
     ]);
     assert.deepEqual(discordParts('[bad](javascript:alert(1))'), [{ type: 'text', text: '[bad](javascript:alert(1))' }]);
+  });
+});
+
+describe('mapSegments', () => {
+  const teams = [{ name: 'Valkyra' }, { name: 'Kharr' }, { name: 'Haldor' }];
+
+  it('keeps the overall order of the teams on every map, then the draws', () => {
+    const map = { map: 'Ozeti', matches: 10, draws: 2, teams: [{ name: 'KHARR', wins: 5 }, { name: 'Valkyra', wins: 3 }, { name: 'Haldor', wins: 0 }] };
+
+    assert.deepEqual(mapSegments(map, teams), [
+      { name: 'Valkyra', count: 3, share: 0.3 },
+      { name: 'Kharr', count: 5, share: 0.5 },
+      { name: null, count: 2, share: 0.2 },
+    ]);
+  });
+
+  it('leaves out teams with no wins there, and draws when there were none', () => {
+    const map = { map: 'Bakurani', matches: 1, draws: 0, teams: [{ name: 'Haldor', wins: 1 }] };
+
+    assert.deepEqual(mapSegments(map, teams), [{ name: 'Haldor', count: 1, share: 1 }]);
   });
 });

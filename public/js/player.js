@@ -28,7 +28,7 @@ import {
 } from './format.js';
 import { demoProfile } from './demo.js';
 import { apiUrl, startLive } from './live.js';
-import { el, mapTag, setText } from './views.js';
+import { el, mapTag, setText, sideName } from './views.js';
 
 // A player's page: their numbers over the last 30 or 90 days, their days on the server, and their matches.
 
@@ -292,14 +292,6 @@ const renderSeeding = () => {
     ...Array.from({ length: rule.seedDays }, (_, i) => el('span', { className: i < seedDays ? 'pip pip-on' : 'pip' })),
   );
   setText($('seed-progress'), seedProgress(seeding, profile.vip !== null));
-};
-
-// A side's name in its colour in game, when the server reported one.
-const sideName = (name, colours, className = 'side') => {
-  const node = el('span', { className, textContent: name });
-  const colour = colours.get(sideKey(name));
-  if (colour) node.style.color = colour;
-  return node;
 };
 
 // Every side's score, highest first, each name in its own colour: "Valkyra 100 · Lonestar 72 · Manticore 41". Their own
