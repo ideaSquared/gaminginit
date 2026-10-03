@@ -10,6 +10,8 @@ import {
   HEAT_STEPS,
   inPeriod,
   kd,
+  longestKill,
+  metres,
   ordinal,
   percent,
   played,
@@ -21,6 +23,8 @@ import {
   sumDays,
   topRanks,
   utcDay,
+  WEAPON_KINDS,
+  weaponTotals,
 } from './format.js';
 import { demoProfile } from './demo.js';
 import { apiUrl, startLive } from './live.js';
@@ -34,6 +38,8 @@ const CALENDAR_WEEKS = 13;
 const FORM_MATCHES = 20;
 // The match list shows this many at first, and this many more each time "Show more" is pressed.
 const MATCHES_SHOWN = 10;
+// Their weapons with the most kills, this many.
+const WEAPONS_SHOWN = 8;
 
 const $ = (id) => document.getElementById(id);
 
@@ -129,6 +135,9 @@ const renderStats = (now) => {
   const totals = sumDays(activity);
   const record = results(matches);
   const best = bests(matches, activity);
+  const first = utcDay(now - (period - 1) * DAY);
+  const weapons = profile.weapons ? weaponTotals(profile.weapons.used, first) : [];
+  const longest = longestKill(weapons);
   setText(
     $('period-note'),
     period === profile.ranks?.days
@@ -154,6 +163,7 @@ const renderStats = (now) => {
     best.kills && ['Most kills in a match', String(best.kills.kills), `${best.kills.map} · ${dateLong.format(best.kills.endedAt)}`],
     best.kd && ['Best K/D in a match', kd(best.kd.kills, best.kd.deaths), `${best.kd.kills} kills, ${plural(best.kd.deaths, 'death')} · ${best.kd.map}`],
     best.day && ['Most kills in a day', String(best.day.kills), `${ofDay(best.day.day)} (UTC) · ${plural(best.day.matches, 'match', 'matches')}`],
+    longest && ['Longest kill', metres(longest.distance), `With the ${longest.weapon}`],
     ['MVP', plural(best.mvps, 'time'), 'Most kills in the match'],
     ['Top 3 finishes', String(best.podiums), matches.length > 0 ? `of ${plural(matches.length, 'match', 'matches')}` : 'No matches yet'],
   ].filter(Boolean);
@@ -163,6 +173,8 @@ const renderStats = (now) => {
       el('dd', {}, el('strong', { textContent: value }), el('span', { className: 'muted', textContent: note })),
     ]),
   );
+
+  renderWeapons(weapons, first);
 
   const maps = byMap(matches);
   $('player-maps').replaceChildren(
@@ -214,6 +226,54 @@ const renderStats = (now) => {
             ),
           ),
         ),
+  );
+};
+
+// Their weapons over the period, from the game's kill feed. Only when the bot has the feed.
+const renderWeapons = (weapons, first) => {
+  $('weapons-panel').hidden = !profile.weapons;
+  if (!profile.weapons) return;
+  const since = profile.weapons.since;
+  $('weapons-since').hidden = since <= first;
+  setText($('weapons-since'), `Since ${ofDay(since)}, when our bot started reading the game’s kill feed.`);
+  if (weapons.length === 0) {
+    $('player-weapons').replaceChildren(el('p', { className: 'muted', textContent: 'No kills recorded in this time.' }));
+    return;
+  }
+  const most = weapons[0].kills;
+  const shown = weapons.slice(0, WEAPONS_SHOWN);
+  $('player-weapons').replaceChildren(
+    ...[
+      el(
+      'table',
+      { className: 'players-table stat-table' },
+      el('thead', {}, el('tr', {}, ...['Weapon', 'Kills', 'Headshots', 'Longest'].map((h) => el('th', { scope: 'col', textContent: h })))),
+      el(
+        'tbody',
+        {},
+        ...shown.map((w) => {
+          const bar = el('span', { className: 'weapon-bar', ariaHidden: 'true' });
+          bar.style.setProperty('--share', String(w.kills / most));
+          return el(
+            'tr',
+            {},
+            el(
+              'td',
+              {},
+              el('span', { className: 'weapon-name' }, w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null),
+              bar,
+            ),
+            el('td', { textContent: String(w.kills) }),
+            el('td', { textContent: percent(w.headshots / w.kills) }),
+            el('td', { textContent: w.longest === null ? '–' : metres(w.longest) }),
+          );
+        }),
+      ),
+    ),
+      weapons.length > shown.length
+        ? el('p', { className: 'weapons-more', textContent: `And ${plural(weapons.length - shown.length, 'more weapon')}.` })
+        : null,
+    ].filter(Boolean),
   );
 };
 

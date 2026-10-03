@@ -43,6 +43,14 @@ import {
   streaks,
   sumDays,
   topRanks,
+  longestKill,
+  metres,
+  WEAPON_KINDS,
+  weaponTotals,
+  DEATH_TAGS,
+  liveState,
+  multiKill,
+  shortAgo,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -456,5 +464,71 @@ describe('player pages', () => {
     assert.deepEqual(searchPlayers(players, ' EBE ').map((p) => p.name), ['Ébène']);
     assert.deepEqual(searchPlayers(players, ''), players);
     assert.deepEqual(searchPlayers(players, 'zz'), []);
+  });
+});
+
+describe('weapons', () => {
+  const used = [
+    { day: '2026-09-01', name: 'AK74', kind: 'weapon', kills: 30, headshots: 9, longest: 900 },
+    { day: '2026-09-20', name: 'AK74', kind: 'weapon', kills: 4, headshots: 1, longest: 61.2 },
+    { day: '2026-09-20', name: 'Humvee', kind: 'vehicle', kills: 5, headshots: 0, longest: null },
+    { day: '2026-09-29', name: 'AK74', kind: 'weapon', kills: 2, headshots: 2, longest: 140.5 },
+    { day: '2026-09-29', name: 'SVD', kind: 'weapon', kills: 6, headshots: 3, longest: null },
+  ];
+
+  it('writes distances in metres, to a tenth under 10 m', () => {
+    assert.equal(metres(4.53), '4.5 m');
+    assert.equal(metres(4), '4 m');
+    assert.equal(metres(612.3), '612 m');
+    assert.equal(metres(1204.6), '1,205 m');
+  });
+
+  it('adds up a player’s weapons over the days from the first one asked for, most kills first', () => {
+    assert.deepEqual(weaponTotals(used, '2026-09-10'), [
+      { name: 'AK74', kind: 'weapon', kills: 6, headshots: 3, longest: 140.5 },
+      { name: 'SVD', kind: 'weapon', kills: 6, headshots: 3, longest: null },
+      { name: 'Humvee', kind: 'vehicle', kills: 5, headshots: 0, longest: null },
+    ]);
+    assert.equal(weaponTotals(used, '2026-08-01')[0].kills, 36);
+    assert.deepEqual(weaponTotals(undefined, '2026-09-10'), []);
+  });
+
+  it('finds their longest kill, and what with', () => {
+    assert.deepEqual(longestKill(weaponTotals(used, '2026-09-10')), { distance: 140.5, weapon: 'AK74' });
+    assert.equal(longestKill(weaponTotals(used.slice(2, 3), '2026-09-10')), null);
+  });
+
+  it('labels the weapons that are not carried by hand', () => {
+    assert.equal(WEAPON_KINDS.weapon, undefined);
+    assert.equal(WEAPON_KINDS['vehicle-weapon'], 'Vehicle gun');
+  });
+});
+
+describe('live page', () => {
+  const server = { name: 'UK #1', players: 40, maxPlayers: 100, map: 'Ozeti', phase: 'live', factionScores: [], seenAt: NOW - 20_000 };
+  const snapshot = (overrides) => ({ generatedAt: NOW, feed: true, server, currentMatch: { map: 'Ozeti', top: [] }, match: null, ...overrides });
+
+  it('names kills close together', () => {
+    assert.deepEqual([1, 2, 3, 4, 6].map(multiKill), [null, 'Double kill', 'Triple kill', 'Quad kill', '6× multi-kill']);
+  });
+
+  it('says how long ago a death was, short', () => {
+    assert.deepEqual([2_000, 12_400, 185_000, 2 * 3_600_000].map(shortAgo), ['now', '12s', '3m', '2h']);
+  });
+
+  it('labels what the game says about a death', () => {
+    assert.equal(DEATH_TAGS.Penetration, 'Wallbang');
+    assert.equal(DEATH_TAGS.Headshot, undefined);
+  });
+
+  it('shows the kill feed’s match, or says why there is none', () => {
+    assert.equal(liveState(null, NOW), 'loading');
+    assert.equal(liveState(snapshot({ match: { kills: 3 } }), NOW), 'match');
+    assert.equal(liveState(snapshot(), NOW), 'waiting');
+    assert.equal(liveState(snapshot({ feed: false }), NOW), 'scoreboard');
+    assert.equal(liveState(snapshot({ server: { ...server, phase: 'empty' }, currentMatch: null }), NOW), 'empty');
+    assert.equal(liveState(snapshot({ server: { ...server, seenAt: NOW - 10 * 60_000 } }), NOW), 'offline');
+    assert.equal(liveState(snapshot({ server: null }), NOW), 'offline');
+    assert.equal(liveState(snapshot({ server: null, match: { kills: 3 } }), NOW), 'match');
   });
 });

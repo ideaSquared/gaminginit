@@ -70,6 +70,7 @@
           <ul class="nav-links">
             <li><a href="#server">Server</a></li>
             <li><a href="#stats">Stats</a></li>
+            <li><a href="live" data-keep-query>Live</a></li>
             <li><a href="#matches">Matches</a></li>
             <li><a href="#leaderboard">Leaderboard</a></li>
             <li><a href="players" data-keep-query>Players</a></li>
@@ -243,6 +244,7 @@
             <article class="card current-match" aria-labelledby="current-title">
               <h3 id="current-title">On now</h3>
               <div id="current-match"><p class="muted">Loading…</p></div>
+              <a class="more-link" href="live" data-keep-query>Watch it live: kill feed, streaks and rivalries <span aria-hidden="true">→</span></a>
             </article>
             <article class="card recent" aria-labelledby="recent-title">
               <h3 id="recent-title">Recent matches</h3>
@@ -261,6 +263,39 @@
           </div>
           <div class="boards" id="boards"><p class="muted">Loading…</p></div>
           <a class="more-link" href="players" data-keep-query>Find your stats: every player has a page <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <!-- Shown when the bot has the game's kill feed. -->
+      <section class="section" id="weapons" aria-labelledby="weapons-title" hidden>
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="weapons-title">Weapons</h2>
+            <p class="section-note" id="weapons-note">The last 30 days on our server, from the game’s kill feed.</p>
+          </div>
+          <div class="weapons">
+            <div class="tiles weapon-tiles">
+              <div class="tile">
+                <p class="tile-label">Kills recorded</p>
+                <p class="tile-value" id="weapons-kills">–</p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Headshots</p>
+                <p class="tile-value" id="weapons-headshots">–</p>
+                <p class="tile-sub" id="weapons-headshots-sub"></p>
+              </div>
+              <div class="tile tile-wide">
+                <p class="tile-label">Longest kill</p>
+                <p class="tile-value" id="weapons-longest">–</p>
+                <p class="tile-sub" id="weapons-longest-sub"></p>
+              </div>
+            </div>
+            <article class="card board weapons-card" aria-labelledby="weapons-top-title">
+              <h3 id="weapons-top-title">Most kills</h3>
+              <p class="board-sub">Each weapon’s share of headshots, how far away its kills were on average, and its longest kill.</p>
+              <div id="weapons-list"><p class="muted">Loading…</p></div>
+            </article>
+          </div>
         </div>
       </section>
 

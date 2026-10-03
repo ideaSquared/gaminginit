@@ -47,6 +47,7 @@
           <ul class="nav-links">
             <li><a href="./#server" data-keep-query>Server</a></li>
             <li><a href="./#stats" data-keep-query>Stats</a></li>
+            <li><a href="live" data-keep-query>Live</a></li>
             <li><a href="matches" data-keep-query>Matches</a></li>
             <li><a href="./#leaderboard" data-keep-query>Leaderboard</a></li>
             <li><a href="players" data-keep-query>Players</a></li>
@@ -112,6 +113,12 @@
                 <article class="card panel" aria-labelledby="bests-title">
                   <h3 id="bests-title">Personal bests</h3>
                   <dl class="bests" id="player-bests"></dl>
+                </article>
+                <!-- Shown when the bot has the game's kill feed. -->
+                <article class="card panel" id="weapons-panel" aria-labelledby="weapons-title" hidden>
+                  <h3 id="weapons-title">Weapons</h3>
+                  <p class="board-sub weapons-since" id="weapons-since" hidden></p>
+                  <div id="player-weapons"></div>
                 </article>
                 <article class="card panel" aria-labelledby="maps-title">
                   <h3 id="maps-title">Maps</h3>

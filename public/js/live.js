@@ -100,3 +100,117 @@ export const startLive = (render, { url = statsUrl, sample = demoStats, missing 
 
   load();
 };
+
+// While the bot's WebSocket is down, a page that updates as things happen loads its endpoint this often instead.
+const PUSH_POLL_MS = 15_000;
+// Waits before trying the WebSocket again: twice as long each time, up to the last.
+const RECONNECT_MS = [2_000, 4_000, 8_000, 16_000, 32_000, 60_000];
+// Keeps the WebSocket open through quiet spells. The bot answers without waking up.
+const PING_MS = 30_000;
+// How often ?demo moves its sample on.
+const DEMO_MS = 3_000;
+
+// The bot's WebSocket next to /api/stats: socketUrl('live/socket') is its wss://…/api/live/socket.
+const socketUrl = (path) => {
+  const url = new URL(path, statsUrl);
+  url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:';
+  return url.href;
+};
+
+// Calls render(data) with what the bot pushes over its WebSocket at `socket`, as it happens, and onState(state) as
+// the connection changes: 'live' while pushed, 'connecting', 'polling' while it loads `url` every 15 seconds instead
+// (only while the tab is visible), and 'demo'. data is null until the first update. ?demo renders sample(now) every 3
+// seconds. When `url` answers 404 (a bot without it), it calls missing() and stops.
+export const startPush = (render, { url, socket, sample, onState = () => {}, missing = () => {} }) => {
+  if (demo) {
+    onState('demo');
+    showNotice('Showing a sample match, not the real server. ', link(thisPage((p) => p.delete('demo')), 'See the live match'));
+    const tick = () => render(sample(Date.now()));
+    tick();
+    setInterval(() => {
+      if (!document.hidden) tick();
+    }, DEMO_MS);
+    return;
+  }
+  if (!configured) {
+    onState('off');
+    showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with a sample match'));
+    render(null);
+    return;
+  }
+
+  let data = null;
+  let attempt = 0;
+  let pollTimer = 0;
+  let pingTimer = 0;
+  let stopped = false;
+
+  const poll = async () => {
+    clearTimeout(pollTimer);
+    if (stopped) return;
+    pollTimer = setTimeout(poll, PUSH_POLL_MS);
+    if (document.hidden) return;
+    try {
+      const response = await fetch(url, { headers: { accept: 'application/json' } });
+      if (response.status === 404) {
+        stopped = true;
+        clearTimeout(pollTimer);
+        onState('off');
+        showNotice();
+        missing();
+        return;
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      data = await response.json();
+      showNotice();
+      render(data);
+    } catch (error) {
+      console.error('Could not load the live match', error);
+      showNotice(data ? 'Could not refresh the live match. Showing the last we had; trying again.' : 'Could not load the live match. Trying again.');
+      if (!data) render(null);
+    }
+  };
+
+  const connect = () => {
+    if (stopped) return;
+    onState('connecting');
+    let ws;
+    try {
+      ws = new WebSocket(socketUrl(socket));
+    } catch {
+      dropped();
+      return;
+    }
+    ws.onopen = () => {
+      attempt = 0;
+      clearTimeout(pollTimer);
+      onState('live');
+      clearInterval(pingTimer);
+      pingTimer = setInterval(() => ws.readyState === WebSocket.OPEN && ws.send('ping'), PING_MS);
+    };
+    ws.onmessage = (event) => {
+      if (event.data === 'pong') return;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      showNotice();
+      render(data);
+    };
+    // Every failure ends in close, so it is handled once, there.
+    ws.onclose = () => dropped();
+  };
+
+  const dropped = () => {
+    clearInterval(pingTimer);
+    if (stopped) return;
+    onState('polling');
+    poll();
+    const wait = RECONNECT_MS[Math.min(attempt, RECONNECT_MS.length - 1)];
+    attempt += 1;
+    setTimeout(connect, wait + Math.random() * 1_000);
+  };
+
+  connect();
+};
