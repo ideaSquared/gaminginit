@@ -14,7 +14,10 @@ import {
   nameProblem,
   newDraft,
   outcomeText,
+  playingRotation,
   sameEntries,
+  sameOrder,
+  serverSpot,
   tidyName,
   toDraft,
 } from './rotationmodel.js';
@@ -114,13 +117,21 @@ export const createRotations = ({ root, load, send }) => {
       { id: 'NorthAmerica', name: 'Zestafona', modes: [], modifiers: [], zones: [] },
     ];
 
-  // A thin bar in the maps' colours, one piece per map, in order.
-  const strip = (entries, className = 'rot-strip') =>
+  // Where the server is in these maps, or null when they are not the server's.
+  const spotIn = (entries) => (sameOrder(entries, page?.server) ? serverSpot(page.server) : null);
+  // Whether the server plays its maps in order, so the ones before the map being played come round again last.
+  const inOrder = () => Boolean(page?.server?.enabled) && page.server.mode !== 'random';
+
+  // A thin bar in the maps' colours, one piece per map, in order. With `spot`, the map being played is ringed, with a
+  // caret under it, and in ordered play the maps before it are dimmed.
+  const strip = (entries, className = 'rot-strip', spot = null) =>
     el(
       'div',
-      { className, ariaHidden: 'true' },
-      ...entries.map((e) => {
+      { className: `${className}${spot?.now != null ? ' rot-strip-spot' : ''}`, ariaHidden: 'true' },
+      ...entries.map((e, i) => {
         const piece = el('span', { className: 'rot-strip-piece' });
+        if (spot?.now === i) piece.classList.add('rot-strip-now');
+        else if (spot?.now != null && i < spot.now && inOrder()) piece.classList.add('rot-strip-played');
         const key = mapColour(e.map, catalog());
         if (key) piece.dataset.map = key;
         return piece;
@@ -149,7 +160,9 @@ export const createRotations = ({ root, load, send }) => {
     const current = draft?.from ? saved(draft.from) : null;
     // The same rotation, as it was: kept as it is, so open options stay open.
     if (current && draft && current.name === draft.name && sameEntries(draft.entries, current.entries)) return;
-    const pick = current ?? saved(defaultName()) ?? page.rotations[0] ?? null;
+    // The first time, the rotation the server is playing, to show where it is.
+    const playing = draft ? null : playingRotation(page.rotations, page.server, page.current?.name ?? null);
+    const pick = current ?? playing ?? saved(defaultName()) ?? page.rotations[0] ?? null;
     if (pick) edit(pick);
     else draft = { name: defaultName(), from: null, entries: [] };
   };
@@ -505,10 +518,13 @@ export const createRotations = ({ root, load, send }) => {
     const current = page.current;
     const planned = page.plan[page.today.weekday];
     const server = page.server;
-    const now = server?.entries.find((e) => e.status === 'now');
-    const next = server?.entries.find((e) => e.status === 'next');
+    const spot = serverSpot(server);
+    const now = spot.now === null ? null : server.entries[spot.now];
+    const next = spot.next === null ? null : server.entries[spot.next];
     const name = current?.name ?? planned;
     const rotation = name ? saved(name) : null;
+    // "2 of 6": the map's place in the server's rotation.
+    const place = (at) => el('span', { className: 'rot-nn-at', textContent: `${at + 1} of ${spot.total}` });
     const swap = el(
       'select',
       { className: 'finder-input rot-swap-select', ariaLabel: 'Rotation to put on now' },
@@ -532,13 +548,18 @@ export const createRotations = ({ root, load, send }) => {
           rotation ? ` · ${rotation.entries.length} map${rotation.entries.length === 1 ? '' : 's'}` : '',
           current?.pending ? el('span', { className: 'badge badge-hot rot-pending', textContent: 'Not on the server yet' }) : null,
         ),
-        rotation ? strip(rotation.entries, 'rot-strip rot-strip-today') : null,
+        rotation ? strip(rotation.entries, 'rot-strip rot-strip-today', spotIn(rotation.entries)) : null,
       ),
       el(
         'div',
         { className: 'rot-nownext' },
-        el('div', { className: 'rot-nn' }, el('span', { className: 'rot-nn-label', textContent: 'Now' }), now ? mapChip(now.map) : el('span', { className: 'muted', textContent: server ? '–' : 'Server not answering' })),
-        el('div', { className: 'rot-nn' }, el('span', { className: 'rot-nn-label', textContent: 'Next' }), next ? mapChip(next.map) : el('span', { className: 'muted', textContent: '–' })),
+        el(
+          'div',
+          { className: 'rot-nn' },
+          el('span', { className: 'rot-nn-label', textContent: 'Now' }),
+          ...(now ? [mapChip(now.map), place(spot.now)] : [el('span', { className: 'muted', textContent: server ? '–' : 'Server not answering' })]),
+        ),
+        el('div', { className: 'rot-nn' }, el('span', { className: 'rot-nn-label', textContent: 'Next' }), ...(next ? [mapChip(next.map), place(spot.next)] : [el('span', { className: 'muted', textContent: '–' })])),
         server && !server.enabled ? el('p', { className: 'rot-note', textContent: 'The rotation is off on the server, so the map repeats.' }) : null,
         server?.enabled && server.mode === 'random' ? el('p', { className: 'rot-note', textContent: 'The server plays its rotation in random order.' }) : null,
       ),
@@ -685,8 +706,10 @@ export const createRotations = ({ root, load, send }) => {
     );
   };
 
-  const row = (entry, index) => {
+  // `spot`: where the server is, when the editor holds its maps.
+  const row = (entry, index, spot) => {
     const isOpen = open.has(entry.key);
+    const here = spot?.now === index ? 'now' : spot?.next === index ? 'next' : null;
     const name = mapLabel(entry.map, catalog());
     const handle = button('', { className: 'rot-handle', ariaLabel: `Move ${name}, number ${index + 1} of ${draft.entries.length}. Drag it, or use the up and down arrow keys.` });
     handle.dataset.focus = `handle-${entry.key}`;
@@ -697,7 +720,7 @@ export const createRotations = ({ root, load, send }) => {
       event.preventDefault();
       moveMap(index, to, true);
     });
-    const item = el('li', { className: `rot-item${isOpen ? ' rot-item-open' : ''}${dropped === entry.key ? ' rot-dropped' : ''}` });
+    const item = el('li', { className: `rot-item${isOpen ? ' rot-item-open' : ''}${here === 'now' ? ' rot-item-now' : ''}${dropped === entry.key ? ' rot-dropped' : ''}` });
     pressable(handle, () => ({ kind: 'move', index, source: item }));
     const chips = draftChips(entry, catalog());
     const toggle = button('', { className: 'rot-icon-btn rot-options-btn', ariaLabel: `Options for ${name}`, ariaExpanded: String(isOpen), title: 'Mode, lighting and zones' });
@@ -725,7 +748,12 @@ export const createRotations = ({ root, load, send }) => {
       handle,
       el('span', { className: 'rot-num', textContent: String(index + 1) }),
       mapChip(entry.map, { className: 'rot-map rot-map-big' }),
-      el('span', { className: 'rot-chips' }, ...(chips.length > 0 ? chips.map((c) => el('span', { className: `rot-chip rot-chip-${c.kind}`, textContent: c.text })) : [el('span', { className: 'rot-chip rot-chip-plain', textContent: "The map's own setup" })])),
+      el(
+        'span',
+        { className: 'rot-chips' },
+        here ? el('span', { className: `rot-here rot-here-${here}`, textContent: here === 'now' ? 'Playing now' : 'Next' }) : null,
+        ...(chips.length > 0 ? chips.map((c) => el('span', { className: `rot-chip rot-chip-${c.kind}`, textContent: c.text })) : [el('span', { className: 'rot-chip rot-chip-plain', textContent: "The map's own setup" })]),
+      ),
       el('span', { className: 'rot-row-actions' }, toggle, drop),
     );
     summary.addEventListener('click', (event) => {
@@ -803,7 +831,8 @@ export const createRotations = ({ root, load, send }) => {
       }),
     );
 
-    const list = el('ol', { className: `rot-list${draft.entries.length === 0 ? ' rot-list-empty' : ''}` }, ...draft.entries.map(row));
+    const spot = spotIn(draft.entries);
+    const list = el('ol', { className: `rot-list${draft.entries.length === 0 ? ' rot-list-empty' : ''}` }, ...draft.entries.map((entry, i) => row(entry, i, spot)));
     if (draft.entries.length === 0) list.append(el('li', { className: 'rot-empty', textContent: 'Drag a map here, or tap one above.' }));
 
     return el(
@@ -818,8 +847,14 @@ export const createRotations = ({ root, load, send }) => {
       el(
         'div',
         { className: 'rot-preview' },
-        strip(draft.entries.map(fromDraft), 'rot-strip rot-strip-big'),
-        el('p', { className: 'rot-note', textContent: draft.entries.length === 0 ? 'No maps yet' : `${draft.entries.length} map${draft.entries.length === 1 ? '' : 's'}, played in this order and then round again` }),
+        strip(draft.entries.map(fromDraft), 'rot-strip rot-strip-big', spot),
+        el('p', {
+          className: 'rot-note',
+          textContent:
+            draft.entries.length === 0
+              ? 'No maps yet'
+              : `${draft.entries.length} map${draft.entries.length === 1 ? '' : 's'}, played in this order and then round again${spot?.now != null ? `. The server is on number ${spot.now + 1}.` : ''}`,
+        }),
       ),
       el('p', { className: 'rot-field-label rot-palette-label', textContent: 'Add a map: drag it into the list, or tap it to add it at the end' }),
       palette,

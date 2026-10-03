@@ -307,7 +307,13 @@ the keyboard.
 ### Rotations: the maps for each day
 
 - **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
-  being played and the next; and a quick swap to another rotation for the rest of the day.
+  being played and the next, with their place in the rotation ("2 of 6"); and a quick swap to another rotation for the
+  rest of the day.
+- **Where the server is.** When a rotation's maps are the server's, in its order, its colour bar rings the map being
+  played with a caret under it (in ordered play, the maps before it are dimmed), and the editor's list marks it
+  **Playing now** and the one after it **Next**. The tab opens on the rotation the server is playing. Only the maps and
+  their order are compared, so a map's setup (lighting, say) being reported differently doesn't hide the marks; moving
+  maps around in the editor does, until it is saved and on the server.
 - **The week.** A rotation for each day, Monday to Sunday. Days left on Default play **Default**, which starts as the
   rotation the server had. Changing today's pick puts it on the server straight away (after asking).
 - **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
