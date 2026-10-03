@@ -57,6 +57,7 @@ import {
   flagRule,
   MOD_ACTIONS,
   modActionCounts,
+  modActionLabel,
   sessionExpiry,
   signInResult,
   SIGN_IN_ERRORS,
@@ -631,6 +632,13 @@ describe('staff page', () => {
       { action: 'newAction', count: 1 },
     ]);
     assert.equal(modActionCounts([]).length, Object.keys(MOD_ACTIONS).length);
+  });
+
+  it('names an action, or shows it as sent when the page has no name for it', () => {
+    assert.equal(modActionLabel('switchteam'), 'Team move');
+    assert.equal(modActionLabel('newAction'), 'newAction');
+    assert.equal(modActionLabel('toString'), 'toString');
+    assert.equal(modActionLabel('constructor'), 'constructor');
   });
 
   it('adds how many were with a vehicle, when any were', () => {
