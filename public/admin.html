@@ -168,6 +168,7 @@
                 <div class="tile">
                   <p class="tile-label">Players flagged for griefing</p>
                   <p class="tile-value" id="tile-flagged">–</p>
+                  <p class="tile-note" id="tile-flagged-note"></p>
                 </div>
                 <div class="tile">
                   <p class="tile-label">Team kills</p>
@@ -188,9 +189,7 @@
                   <summary>How accounts are scored</summary>
                   <ul class="flag-rules" id="steam-rules"></ul>
                 </details>
-                <div class="admin-scroll">
-                  <table class="admin-table" id="steam-accounts"></table>
-                </div>
+                <div id="steam-accounts"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="griefers-title">
@@ -200,9 +199,7 @@
                   <summary>What gets a player flagged</summary>
                   <ul class="flag-rules" id="flag-rules"></ul>
                 </details>
-                <div class="admin-scroll">
-                  <table class="admin-table griefers-table" id="griefers"></table>
-                </div>
+                <div id="griefers"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="incidents-title">

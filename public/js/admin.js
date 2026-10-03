@@ -321,6 +321,34 @@ const table = (node, headers, rows, empty) => {
   );
 };
 
+// An alert list in two parts, each under its own heading: players in game now first, as the ones staff can still warn,
+// kick or move, then everyone else seen in the period. While the server is not answering nobody is known to be in game,
+// so it is one list.
+const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }) => {
+  const grid = (labelId, rows, text) => {
+    const t = el('table', { className: 'admin-table' });
+    if (labelId) t.setAttribute('aria-labelledby', labelId);
+    table(t, headers, rows, text);
+    return el('div', { className: 'admin-scroll' }, t);
+  };
+  if (overview.online === null) {
+    node.replaceChildren(grid(null, items.map(row), empty));
+    return;
+  }
+  // The count is in the alert colour when someone in game has an alert.
+  const group = (key, heading, list, text, alert) => {
+    const id = `${node.id}-${key}`;
+    const count = el('span', { className: `tab-count${alert && list.length > 0 ? ' tab-count-alert' : ''}`, textContent: String(list.length) });
+    return el('section', { className: 'alert-group' }, el('h3', { className: 'group-title', id }, ...heading, count), grid(id, list.map(row), text));
+  };
+  const here = items.filter((p) => onlineIds.has(p.steamId));
+  const away = items.filter((p) => !onlineIds.has(p.steamId));
+  node.replaceChildren(
+    group('ingame', [el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now'], here, items.length === 0 ? empty : emptyInGame, true),
+    ...(away.length === 0 ? [] : [group('away', ['Not in game'], away, '', false)]),
+  );
+};
+
 const cell = (...children) => el('td', {}, ...children);
 
 // Who did something, by name. Someone the bot has no name for yet links to their Discord profile, which opens in
@@ -341,7 +369,7 @@ const renderGriefers = (overview) => {
     ? 'Everyone who team killed, was team killed or killed themselves, most flagged days first. ' +
       'A flag is a reason to look, not proof: check the incidents and ask around first.'
     : 'The bot has not had the game’s kill feed yet, so there are no team kills or suicides to show. See the bot’s README, “Weapon stats”.';
-  const rows = overview.players.map((p) =>
+  const row = (p) =>
     el(
       'tr',
       { className: focus === p.steamId ? 'focused' : '' },
@@ -380,11 +408,9 @@ const renderGriefers = (overview) => {
           : null,
         actMenu(p),
       ),
-    ),
-  );
-  table(
-    $('griefers'),
-    [
+    );
+  inGameFirst($('griefers'), overview, {
+    headers: [
       'Player',
       ['Team kills', 'num'],
       'Killed most',
@@ -394,9 +420,11 @@ const renderGriefers = (overview) => {
       ['Played', 'num'],
       '',
     ],
-    rows,
-    'Nobody team killed or killed themselves in this period.',
-  );
+    items: overview.players,
+    row,
+    empty: 'Nobody team killed or killed themselves in this period.',
+    emptyInGame: 'Nobody in game team killed or killed themselves in this period.',
+  });
 };
 
 const swatch = (colour) => {
@@ -610,7 +638,7 @@ const renderSteam = (overview) => {
       el('li', {}, badge(steamFlagLabel(flag)), ` ${steamFlagRule(flag, steam.marks)}: ${points(count)}`),
     ),
   );
-  const rows = steam.accounts.map((a) =>
+  const row = (a) =>
     el(
       'tr',
       {},
@@ -622,7 +650,6 @@ const renderSteam = (overview) => {
           'span',
           { className: 'badges' },
           badge(`${RISK_LABELS[a.risk] ?? a.risk} · ${points(a.score)}`, RISK_KIND[a.risk]),
-          a.inGame ? badge('In game', 'accent') : null,
           a.banned ? badge('Banned', 'accent') : null,
         ),
       ),
@@ -632,14 +659,14 @@ const renderSteam = (overview) => {
       el('td', { className: 'num', textContent: headshotShare(a.feedKills, a.headshots) ?? '–' }),
       el('td', { className: 'num', textContent: a.minutes > 0 ? formatHours(a.minutes) : '–' }),
       el('td', { className: 'row-actions' }, actMenu(a)),
-    ),
-  );
-  table(
-    $('steam-accounts'),
-    ['Player', 'Why', 'Account', ['Matches', 'num'], ['Headshots', 'num'], ['Played', 'num'], ''],
-    rows,
-    'No risky accounts among the players in this period.',
-  );
+    );
+  inGameFirst($('steam-accounts'), overview, {
+    headers: ['Player', 'Why', 'Account', ['Matches', 'num'], ['Headshots', 'num'], ['Played', 'num'], ''],
+    items: steam.accounts,
+    row,
+    empty: 'No risky accounts among the players in this period.',
+    emptyInGame: 'Nobody in game has a risky Steam account.',
+  });
 };
 
 // The moderation log, without the kinds of action staff hid. Each kind is a toggle: pressed is shown.
@@ -835,8 +862,14 @@ const render = (overview) => {
   $('tile-risky-ingame').textContent = overview.steam ? String(players.filter((p) => p.steam && p.steam.risk !== 'low').length) : 'Off';
   $('tile-new').textContent = String(players.filter((p) => p.firstSeen === today).length);
   $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';
-  $('tile-risky-note').textContent = overview.steam ? `${overview.steam.high} high risk` : 'Needs STEAM_API_KEY';
+  // How many of the alerts are for players in game now, when the server is answering.
+  const inGameNote = (count) => (overview.online ? `${count} in game` : null);
+  const riskyInGame = inGameNote((overview.steam?.accounts ?? []).filter((a) => onlineIds.has(a.steamId)).length);
+  $('tile-risky-note').textContent = overview.steam
+    ? [riskyInGame, `${overview.steam.high} high risk`].filter(Boolean).join(' · ')
+    : 'Needs STEAM_API_KEY';
   $('tile-flagged').textContent = String(overview.totals.flaggedPlayers);
+  $('tile-flagged-note').textContent = inGameNote(overview.players.filter((p) => p.flags.length > 0 && onlineIds.has(p.steamId)).length) ?? '';
   $('tile-teamkills').textContent = String(overview.totals.teamKills);
   $('tile-teamkills-note').textContent = overview.totals.vehicleTeamKills > 0 ? `${overview.totals.vehicleTeamKills} with a vehicle` : '';
   $('tile-vehicle').textContent = String(overview.totals.vehicleSuicides);
