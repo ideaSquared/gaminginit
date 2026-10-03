@@ -331,7 +331,7 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
     table(t, headers, rows, text);
     return el('div', { className: 'admin-scroll' }, t);
   };
-  if (overview.online === null || items.length === 0) {
+  if (overview.online === null) {
     node.replaceChildren(grid(null, items.map(row), empty));
     return;
   }
@@ -344,8 +344,8 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
   const here = items.filter((p) => onlineIds.has(p.steamId));
   const away = items.filter((p) => !onlineIds.has(p.steamId));
   node.replaceChildren(
-    group('ingame', [el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now'], here, emptyInGame, true),
-    away.length === 0 ? null : group('away', ['Not in game'], away, '', false),
+    group('ingame', [el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now'], here, items.length === 0 ? empty : emptyInGame, true),
+    ...(away.length === 0 ? [] : [group('away', ['Not in game'], away, '', false)]),
   );
 };
 

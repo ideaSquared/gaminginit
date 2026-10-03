@@ -516,7 +516,7 @@ export const demoAdmin = (days, now) => {
       banned: days > 1,
     }),
     row('Tusk', { teamKills: 3 * scale, teamKilled: 1, suicides: 12, flags: ['teamKills', 'suicides'], flaggedDays: Math.min(days, scale) }),
-    // Flagged, but not in game now.
+    // Flagged, but not in game now: banned since.
     row('Nightjar', {
       teamKills: 3,
       suicides: 2,
@@ -527,6 +527,7 @@ export const demoAdmin = (days, now) => {
       kills: 9,
       deaths: 14,
       minutes: 52,
+      banned: true,
     }),
     row('Pike', { teamKills: 2, vehicleTeamKills: 2, vehicleSuicides: 1, suicides: 4, teamKilled: 2 }),
     row('Moth', { teamKilled: 3 * scale + 1, suicides: 1 }),

@@ -268,8 +268,8 @@ the keyboard.
   two say how many of them are in game now.
 - **In game first.** Risky Steam accounts and possible griefers are each in two lists: **In game now** first, as the
   players staff can still warn, kick or move, its count in yellow when there is anyone in it; then **Not in game**, for
-  everyone else seen in the period, still shown in full. While the server is not answering, nobody is known to be in
-  game, so each is one list. The bot lists those in game first too, so its limit of 100 never leaves one out.
+  everyone else seen in the period, still shown in full, and left out when there is nobody in it. While the server is
+  not answering, nobody is known to be in game, so each is one list. The bot lists those in game first too, so its limit of 100 never leaves one out.
 - **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
   or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
   or one never set up), how old the account is and when the bot checked, whether they are banned, and their
