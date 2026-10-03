@@ -99,6 +99,7 @@ export const demoStats = (now) => {
     weapons: weapons(now),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
     seederVip: seederVip(now),
+    teams: teamBoard(now),
     // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
     hourly: {
       days: 14,
@@ -134,6 +135,42 @@ const leaderboard = () => {
 // Who has VIP from seeding: the regulars with 3 seed days or more, each with some of their week left.
 const seederVip = (now) =>
   [6, 0, 2, 4, 8].map((i, k) => ({ id: demoId(i), name: NAMES[i], until: now + (6 - k) * DAY + 3 * HOUR }));
+
+// Thirty days of made-up results: each map's matches, wins by team (in SIDES order), draws and average minutes.
+const TEAM_MAPS = [
+  ['Ozeti', [28, 21, 13], 2, 41],
+  ['Bakurani', [15, 22, 14], 1, 38],
+  ['Zestafona', [12, 9, 9], 1, 46],
+];
+
+const teamBoard = (now) => {
+  const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
+  const maps = TEAM_MAPS.map(([map, wins, draws, minutes]) => ({
+    map,
+    matches: wins.reduce((a, b) => a + b, 0) + draws,
+    draws,
+    averageMs: minutes * MINUTE,
+    teams: SIDES.map((name, i) => ({ name, wins: wins[i] })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
+  }));
+  const matches = maps.reduce((sum, m) => sum + m.matches, 0);
+  const scores = (list) => list.map(([name, score]) => ({ name, score, colorHex: SIDE_COLOURS[name] }));
+  return {
+    days: 30,
+    matches,
+    draws: maps.reduce((sum, m) => sum + m.draws, 0),
+    averageMs: Math.round(maps.reduce((sum, m) => sum + m.averageMs * m.matches, 0) / matches),
+    teams: SIDES.map((name, i) => ({
+      name,
+      colorHex: SIDE_COLOURS[name],
+      matches,
+      wins: TEAM_MAPS.reduce((sum, [, wins]) => sum + wins[i], 0),
+    })).sort((a, b) => b.wins - a.wins),
+    maps,
+    streak: { name: 'Valkyra', wins: 4 },
+    closest: { map: 'Ozeti', endedAt: now - 2 * DAY, durationMs: 52 * MINUTE, factionScores: scores([['Valkyra', 300], ['Lonestar', 299], ['Manticore', 210]]) },
+    biggest: { map: 'Bakurani', endedAt: now - 9 * DAY, durationMs: 24 * MINUTE, factionScores: scores([['Lonestar', 300], ['Valkyra', 64], ['Manticore', 41]]) },
+  };
+};
 
 // The sample's weapons: name, kind, kills over 30 days, share of headshots, average and longest distance in metres.
 const WEAPONS = [

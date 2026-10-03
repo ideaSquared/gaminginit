@@ -313,6 +313,14 @@ export const readableColour = (hex, background = '#13161b') => {
   return '#ffffff';
 };
 
+// A map's matches as one bar: each team's wins, in the order of `teams` (the overall standings, so a team keeps its
+// place and colour on every map), then the draws. Each share is of the map's matches; teams with no wins are left out.
+export const mapSegments = (map, teams) => {
+  const wins = new Map(map.teams.map((t) => [sideKey(t.name), t.wins]));
+  const segments = [...teams.map((t) => ({ name: t.name, count: wins.get(sideKey(t.name)) ?? 0 })), { name: null, count: map.draws }];
+  return segments.filter((s) => s.count > 0).map((s) => ({ ...s, share: s.count / map.matches }));
+};
+
 // Each side's colour from the latest match that had one, by sideKey. Matches come newest first.
 export const sideColours = (matches) => {
   const colours = new Map();

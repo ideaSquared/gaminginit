@@ -40,7 +40,7 @@ html {
   scroll-padding-top: 72px;
 }
 
-@media (max-width: 839px) {
+@media (max-width: 919px) {
   html {
     scroll-padding-top: 112px;
   }
@@ -276,8 +276,8 @@ a {
   background: var(--surface-2);
 }
 
-/* From 840px the six links fit next to the brand and the Discord button, with more room around them from 900px. */
-@media (min-width: 840px) {
+/* From 920px the seven links fit next to the brand and the Discord button, with more room around them from 1000px. */
+@media (min-width: 920px) {
   .nav-inner {
     flex-wrap: nowrap;
   }
@@ -301,7 +301,7 @@ a {
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .nav-links {
     gap: 4px;
   }
@@ -1189,6 +1189,137 @@ tbody tr:last-child td {
 
 .mvp .player {
   color: var(--text);
+}
+
+/* Teams */
+
+/* Team names can be long, so the tiles get three columns only once there is room, and smaller type. */
+.team-tiles {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+  .team-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.team-tiles .tile-value {
+  font-size: 1.6rem;
+  overflow-wrap: anywhere;
+}
+
+.team-grid,
+.finishes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 900px) {
+  .team-grid {
+    grid-template-columns: 2fr 3fr;
+    align-items: start;
+  }
+}
+
+@media (min-width: 760px) {
+  .finishes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Each team's wins against the leader's, in the team's colour. */
+.team-bar {
+  display: block;
+  height: 6px;
+  margin: 6px 0 2px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.team-bar::before {
+  content: '';
+  display: block;
+  width: calc(var(--share, 0) * 100%);
+  min-width: 6px;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--team, var(--series));
+}
+
+/* A team with no wins has no bar, only the track. */
+.team-bar-none::before {
+  display: none;
+}
+
+.team-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.team-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--team);
+}
+
+.map-wins {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.map-wins-row + .map-wins-row {
+  margin-top: 14px;
+}
+
+/* One map's matches split by the team that won them: a 2px gap between the parts, rounded ends. */
+.map-bar {
+  display: flex;
+  gap: 2px;
+  height: 22px;
+  margin: 10px 0 6px;
+}
+
+/* A zero basis, so the parts share the bar by their counts alone, not by their labels' width. */
+.map-bar-part {
+  display: grid;
+  place-items: center;
+  flex-basis: 0;
+  min-width: 4px;
+  border-radius: 4px;
+  background: var(--team);
+  color: var(--page);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-bar-draw {
+  color: var(--text);
+}
+
+.finishes .board-sub {
+  margin-bottom: 12px;
+}
+
+.finish-scores {
+  margin-top: 10px;
 }
 
 /* Leaderboard */

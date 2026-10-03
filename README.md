@@ -21,6 +21,10 @@ What it shows:
   when the server had 97+ players (the bot's `thresholds.busy`) at least half the time. Over the last 14 days when the
   bot sends `hourly` with `busy`, otherwise over the last 24 hours.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
+- A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
+  the latest winner's streak; each team's wins, win rate and matches played; each map's matches split by the team
+  that won them, with draws and the average length (also as a table); and the closest finish and the biggest win.
+  Teams are in their colour in game; teams without one get colours checked to tell apart for colour-blind readers.
 - A live page (`/live`) for the match on now, updated as it happens: the score, the kill feed (who killed whom, with
   what, from how far, headshots, team kills, double and triple kills, kill streaks), each player's kills, deaths and
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
@@ -69,7 +73,7 @@ You need:
   The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
   README, "Staff page").
   The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
-  list is not shown.
+  list is not shown. The teams page needs a bot that sends `teams` (same section); without it, the page says so.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.
@@ -86,12 +90,12 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all nine pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html` and 1 in each other page. If the invite changes, change all 12. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html` and 1 in each other page. If the invite changes, change all 13. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
@@ -275,7 +279,7 @@ npm test    # Node's built-in test runner; no dependencies to install
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
-stats page, `matches.js` the matches page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
+stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `admin.js` renders the staff page and `tools.js` its admin tools. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

@@ -1,4 +1,4 @@
-import { kd, mapKey, result } from './format.js';
+import { kd, mapKey, result, sideKey } from './format.js';
 
 // DOM building blocks shared by the pages.
 
@@ -88,6 +88,14 @@ export const boardTable = (board, rows) =>
       ),
     ),
   );
+
+// A side's name in its colour in game, when the server reported one.
+export const sideName = (name, colours, className = 'side') => {
+  const node = el('span', { className, textContent: name });
+  const colour = colours.get(sideKey(name));
+  if (colour) node.style.color = colour;
+  return node;
+};
 
 // A finished match's map and result: "OZETI  Valkyra won 300–255".
 export const matchHeadline = (match) =>
