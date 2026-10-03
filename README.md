@@ -282,7 +282,7 @@ the keyboard.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or added by hand, and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
 - **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
   and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
 
