@@ -92,6 +92,28 @@ const entryKey = (entry) => JSON.stringify([entry.map, [...(entry.experiences ??
 export const sameEntries = (drafts, entries) =>
   drafts.length === entries.length && drafts.every((draft, i) => entryKey(fromDraft(draft)) === entryKey(entries[i]));
 
+// Where the server is in its rotation: the place (from 0) of the map being played and of the next, null when the server
+// did not say, and how many maps it has.
+export const serverSpot = (server) => {
+  const entries = server?.entries ?? [];
+  const at = (status) => {
+    const i = entries.findIndex((e) => e.status === status);
+    return i === -1 ? null : i;
+  };
+  return { now: at('now'), next: at('next'), total: entries.length };
+};
+
+// Whether these maps (saved, or in the editor) are the server's, in its order. Only the maps count, as the server may
+// report a map's setup differently from how it was saved.
+export const sameOrder = (entries, server) =>
+  Boolean(server) && entries.length > 0 && entries.length === server.entries.length && entries.every((e, i) => e.map === server.entries[i].map);
+
+// The saved rotation the server is playing, or null. When two have its maps, today's.
+export const playingRotation = (rotations, server, today = null) => {
+  const matches = rotations.filter((r) => sameOrder(r.entries, server));
+  return matches.find((r) => today !== null && r.name.toLowerCase() === today.toLowerCase()) ?? matches[0] ?? null;
+};
+
 // Moves the item at `from` so it ends up at `to` (both from 0), as drag and drop or the arrow keys do.
 export const move = (list, from, to) => {
   if (from === to || from < 0 || from >= list.length) return list;

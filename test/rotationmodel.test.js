@@ -15,7 +15,10 @@ import {
   nameProblem,
   newDraft,
   outcomeText,
+  playingRotation,
   sameEntries,
+  sameOrder,
+  serverSpot,
   toDraft,
 } from '../public/js/rotationmodel.js';
 
@@ -116,6 +119,47 @@ describe('changes', () => {
     assert.equal(sameEntries(drafts, saved), true);
     assert.equal(sameEntries(move(drafts, 0, 1), saved), false);
     assert.equal(sameEntries([{ ...drafts[0], lighting: 'DayEndClear' }, drafts[1]], saved), false);
+  });
+});
+
+describe('where the server is', () => {
+  const server = {
+    enabled: true,
+    mode: 'ordered',
+    entries: [
+      { map: 'Europe', status: null },
+      { map: 'Kavkazi', experiences: ['Kavkazi_KOTH_01'], lighting: 'DayStartClear', status: 'now' },
+      { map: 'NorthAmerica', status: 'next' },
+    ],
+  };
+
+  it('finds the map being played and the next in the server\'s rotation', () => {
+    assert.deepEqual(serverSpot(server), { now: 1, next: 2, total: 3 });
+    assert.deepEqual(serverSpot({ ...server, entries: server.entries.map((e) => ({ ...e, status: null })) }), { now: null, next: null, total: 3 });
+    assert.deepEqual(serverSpot(null), { now: null, next: null, total: 0 });
+  });
+
+  it('matches maps to the server\'s by the maps and their order, not their setup', () => {
+    const saved = [{ map: 'Europe' }, { map: 'Kavkazi' }, { map: 'NorthAmerica', lighting: 'DayEndClear' }];
+    assert.equal(sameOrder(saved, server), true);
+    assert.equal(sameOrder(saved.map((e) => toDraft(e, catalog)), server), true);
+    assert.equal(sameOrder(move(saved, 0, 2), server), false);
+    assert.equal(sameOrder(saved.slice(0, 2), server), false);
+    assert.equal(sameOrder(saved, null), false);
+    assert.equal(sameOrder([], { ...server, entries: [] }), false);
+  });
+
+  it('finds the saved rotation the server is playing, today\'s first when two have its maps', () => {
+    const maps = [{ map: 'Europe' }, { map: 'Kavkazi' }, { map: 'NorthAmerica' }];
+    const rotations = [
+      { name: 'Default', entries: [{ map: 'Kavkazi' }] },
+      { name: 'Weekend', entries: maps },
+      { name: 'Weekend dusk', entries: maps },
+    ];
+    assert.equal(playingRotation(rotations, server)?.name, 'Weekend');
+    assert.equal(playingRotation(rotations, server, 'weekend dusk')?.name, 'Weekend dusk');
+    assert.equal(playingRotation(rotations.slice(0, 1), server), null);
+    assert.equal(playingRotation(rotations, null), null);
   });
 });
 
