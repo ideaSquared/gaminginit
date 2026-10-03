@@ -751,12 +751,14 @@ const ghostButton = (text, onclick) => el('button', { type: 'button', className:
 
 // Staff who linked their Steam account, so the bot never counts them as seeders. Anyone can unlink anyone, for staff
 // who have left.
+const STAFF_STEAM_NOTE = $('staff-steam-note').textContent;
 const renderStaffSteam = (overview) => {
   const profiles = overview.staffProfiles;
   const mineButton = $('staff-steam-mine');
   mineButton.hidden = profiles === undefined;
+  const note = profiles === undefined ? 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.' : STAFF_STEAM_NOTE;
+  setStatus($('staff-steam-note'), note);
   if (profiles === undefined) {
-    $('staff-steam-note').textContent = 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.';
     $('staff-steam').replaceChildren();
     return;
   }
@@ -951,6 +953,8 @@ $('steam-form').addEventListener('submit', async (event) => {
   save.disabled = true;
   try {
     const { ok, json } = await call('admin/profile', { action: 'link', steamId });
+    // Saved even when the dialog was closed while it went, so the page shows it either way.
+    if (ok) load();
     if (!steamDialog.open) return;
     if (!ok) {
       steamError(json?.error ?? 'Couldn’t save that just now. Try again in a minute.');
@@ -961,7 +965,6 @@ $('steam-form').addEventListener('submit', async (event) => {
     $('steam-done').hidden = false;
     steamDialog.setAttribute('aria-labelledby', 'steam-done-title');
     $('steam-done-close').focus();
-    load();
   } catch (error) {
     console.error('Could not link a Steam account', error);
     steamError('Couldn’t reach the bot. Try again in a minute.');
