@@ -264,12 +264,55 @@
                   <table class="admin-table" id="reserved"></table>
                 </div>
               </article>
+
+              <article class="card panel admin-panel" aria-labelledby="staff-steam-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
+                  <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
+                </div>
+                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Unlink anyone who is no longer staff.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="staff-steam"></table>
+                </div>
+              </article>
             </div>
 
             <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
               <div id="rotations"></div>
             </div>
           </div>
+
+          <dialog class="card steam-dialog" id="steam-dialog" aria-labelledby="steam-dialog-title">
+            <form class="steam-form" id="steam-form" novalidate>
+              <h2 class="panel-title" id="steam-dialog-title">Link your Steam account</h2>
+              <p>Seeder VIP and the top seeders are for the players who seed, so staff are not counted. Link the Steam account you play on, and the bot counts your time on the server as playing, not seeding. You won’t earn seeder VIP or show as a top seeder. Your kills, matches and time played show as before.</p>
+              <div class="tool-field">
+                <label class="tool-label" for="steam-input">Your Steam64 ID</label>
+                <input class="finder-input tool-input" id="steam-input" name="steamId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="7656119…" aria-describedby="steam-input-note steam-error" />
+                <p class="muted tool-note" id="steam-input-note">17 digits, starting 7656119. Or paste your Steam profile’s link, if it has that number in it.</p>
+                <p class="tool-error" id="steam-error" role="alert" hidden></p>
+              </div>
+              <details class="steam-guide" open>
+                <summary>How to find it</summary>
+                <ol>
+                  <li>In the Steam app, click your name at the top right, then <strong>Account details</strong>. Your Steam ID is the 17-digit number under your account name. Copy it and paste it above.</li>
+                  <li>Or open your Steam profile, right-click anywhere on it and pick <strong>Copy Page URL</strong>. If the link has <code>/profiles/</code> and a number in it, paste the whole link above.</li>
+                  <li>If your link is <code>steamcommunity.com/id/</code> and a name, you set a custom URL, so the number is not in it. Use <strong>Account details</strong>, or paste your link into <a href="https://steamid.io/" rel="noopener noreferrer" target="_blank">steamid.io</a> and copy the <strong>steamID64</strong>.</li>
+                </ol>
+              </details>
+              <div class="steam-actions">
+                <button type="submit" class="btn btn-small tool-run" id="steam-save">Link account</button>
+                <button type="button" class="btn btn-ghost btn-small" id="steam-cancel">Later</button>
+              </div>
+            </form>
+            <div class="steam-done" id="steam-done" hidden>
+              <h2 class="panel-title" id="steam-done-title">Steam account linked</h2>
+              <p id="steam-done-text"></p>
+              <div class="steam-actions">
+                <button type="button" class="btn btn-small tool-run" id="steam-done-close">Done</button>
+              </div>
+            </div>
+          </dialog>
         </div>
       </section>
     </main>

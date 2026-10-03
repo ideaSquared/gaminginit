@@ -58,7 +58,9 @@ import {
   MOD_ACTIONS,
   modActionCounts,
   modActionLabel,
+  readSteamId,
   sessionExpiry,
+  steamLinkedText,
   signInResult,
   SIGN_IN_ERRORS,
   staffBy,
@@ -590,6 +592,27 @@ describe('staff page', () => {
     assert.equal(sessionExpiry(token({ userId: '42', name: 'Paragon', expiresAt: NOW })), NOW);
     assert.equal(sessionExpiry(token({ userId: '42' })), null);
     assert.equal(sessionExpiry('not a token'), null);
+  });
+
+  it('reads a Steam64 ID to link, or the profile link it is in, as the bot does', () => {
+    const id = '76561198000000001';
+
+    assert.equal(readSteamId(` ${id} `), id);
+    assert.equal(readSteamId(`https://steamcommunity.com/profiles/${id}/`), id);
+    assert.equal(readSteamId(`steamcommunity.com/profiles/${id}?l=english`), id);
+    assert.equal(readSteamId('https://steamcommunity.com/id/sarge'), null);
+    assert.equal(readSteamId('STEAM_0:1:19999'), null);
+    assert.equal(readSteamId('7656119800000000'), null);
+    assert.equal(readSteamId(`https://example.com/profiles/${id}`), null);
+    assert.equal(readSteamId(undefined), null);
+  });
+
+  it('says whose Steam account was linked, and warns when the bot has not seen it in game', () => {
+    const id = '76561198000000001';
+
+    assert.match(steamLinkedText({ steamId: id, player: 'Sarge' }), /^Linked to Sarge \(76561198000000001\)\. From now on/);
+    assert.match(steamLinkedText({ steamId: id, player: null }), /hasn’t seen this account on our server in the last 90 days/);
+    assert.match(steamLinkedText({ steamId: id, player: null, sample: true }), /^Sample only/);
   });
 
   it('words the flags with the bot’s marks', () => {

@@ -632,6 +632,8 @@ export const demoAdmin = (days, now) => {
       '100000000000000002': { name: 'Kestrel', username: 'kestrel' },
     },
     user: { id: '100000000000000001', name: 'Sarge' },
+    // Staff who linked their Steam account. Sarge has not, so the page asks.
+    staffProfiles: [{ userId: '100000000000000002', name: 'Kestrel', linkedAt: now - 9 * DAY, player: ref('Kestrel'), seen: true }],
     reserved: {
       players: [
         { player: ref('Kestrel'), bot: { since: now - 2 * DAY, until: now + 5 * DAY } },
@@ -756,7 +758,10 @@ const DEMO_ROTATIONS = [
 ];
 
 // What the bot answers the admin tools in ?demo: sample players and maps to pick from, and nothing done.
-export const demoCall = async (path, { name, options, focused }) => {
+export const demoCall = async (path, body) => {
+  // Linking or unlinking a Steam account: nothing is saved.
+  if (path === 'admin/profile') return { ok: true, json: { steamId: body.action === 'link' ? body.steamId : null, player: null, sample: true } };
+  const { name, options, focused } = body;
   if (path === 'admin/suggest') {
     const typed = (options[focused] ?? '').toLowerCase();
     const choices =

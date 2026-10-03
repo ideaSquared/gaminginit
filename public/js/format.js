@@ -563,6 +563,24 @@ export const signInResult = (hash) => {
   return null;
 };
 
+// The Steam64 ID staff typed or pasted to link their account, as the bot reads it: the 17-digit ID (starting 7656119), or
+// their profile's link with it in (steamcommunity.com/profiles/<ID>). Null for anything else, such as a custom link
+// (steamcommunity.com/id/<name>), which does not have the ID in it.
+export const readSteamId = (input) => {
+  const text = String(input ?? '').trim();
+  const id = /^(?:https?:\/\/)?(?:www\.)?steamcommunity\.com\/profiles\/(\d+)\/?(?:[?#].*)?$/i.exec(text)?.[1] ?? text;
+  return /^7656119\d{10}$/.test(id) ? id : null;
+};
+
+// What the staff page says once a staff member has linked their Steam account: whose it is in game (`player`, null when
+// the bot has not seen it there lately), or, in ?demo, that nothing was saved.
+export const steamLinkedText = ({ steamId, player, sample }) => {
+  if (sample) return 'Sample only: nothing was saved. Signed in, this links the account to you on the bot.';
+  const counts = 'From now on, your time on the server counts as playing, not seeding.';
+  if (player) return `Linked to ${player} (${steamId}). ${counts}`;
+  return `Linked to ${steamId}. The bot hasn’t seen this account on our server in the last 90 days. If you play on it, that’s fine; if not, check the number and change it. ${counts}`;
+};
+
 // When a session token runs out, read from the token itself: only to stop using one that has, as the bot checks it. Null
 // when it cannot be read.
 export const sessionExpiry = (token) => {
