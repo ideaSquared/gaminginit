@@ -2353,7 +2353,7 @@ body.refreshing .tile-value {
   background: var(--surface-2);
 }
 
-.who {
+.staff-player {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2371,7 +2371,7 @@ body.refreshing .tile-value {
   text-decoration: underline;
 }
 
-.badges {
+.admin .badges {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;

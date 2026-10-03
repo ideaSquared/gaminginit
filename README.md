@@ -222,6 +222,8 @@ Until the stats URL is set, the page says live stats are not connected and links
 - Pick today, 7 days or 30 days (UTC days). It refreshes every minute while the tab is visible.
 - It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
 - `http://localhost:3000/admin?demo` shows sample data without signing in.
+- It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
+  member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
   lets that site read the staff data.
 

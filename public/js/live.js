@@ -9,7 +9,7 @@ const REFRESH_MS = 60_000;
 const params = new URLSearchParams(location.search);
 export const demo = params.has('demo');
 const statsUrl = params.get('stats') ?? document.querySelector('meta[name="stats-url"]')?.content ?? '';
-export const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
+const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
 
 // The bot's other endpoints sit next to /api/stats: apiUrl('players') is its /api/players.
 export const apiUrl = (path) => (configured ? new URL(path, statsUrl).href : '');

@@ -11,13 +11,19 @@ import {
   staffBy,
   withVehicle,
 } from './format.js';
-import { apiUrl, configured, demo, showNotice, thisPage } from './live.js';
+import { demo, showNotice, thisPage } from './live.js';
 import { el, link, mapTag, playerName } from './views.js';
 
 // The staff page: possible griefers from the bot's kill feed (team kills and suicides), the incidents behind them,
 // everything staff did through the bot, and the bans on the server. Staff sign in with Discord through the bot; the
 // bot checks they are staff and sends them back with a session token, which this page keeps for this browser and
 // sends with each request. ?demo shows sample data without signing in.
+
+// The bot named in this page's own settings, never one named in the address (?stats=): a link could otherwise send a
+// signed-in staff member's session to another site. To try a local bot, edit the meta tag in a local copy.
+const botBase = document.querySelector('meta[name="stats-url"]')?.content ?? '';
+const configured = botBase !== '' && !botBase.includes('YOUR-SUBDOMAIN');
+const botUrl = (path) => new URL(path, botBase).href;
 
 const REFRESH_MS = 60_000;
 const SESSION_KEY = 'gaminginit-staff-session';
@@ -61,18 +67,23 @@ let data = null;
 let focus = null;
 let timer = 0;
 let lastLoad = 0;
+// Bumped by each load and by signing out, so an answer that comes back after a newer load started, or after signing
+// out, is dropped.
+let generation = 0;
 
 // In the reader's own time: "Fri 3 Oct, 21:40".
 const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 const signInHref = () => {
-  const url = new URL(apiUrl('/auth/login'));
+  const url = new URL(botUrl('/auth/login'));
   url.searchParams.set('return', location.origin + location.pathname + location.search);
   return url.href;
 };
 
 const signedOut = (message) => {
+  generation += 1;
   clearTimeout(timer);
+  document.body.classList.remove('refreshing');
   data = null;
   $('admin-body').hidden = true;
   $('admin-user').hidden = true;
@@ -91,7 +102,7 @@ const signOut = () => {
 const who = (player) =>
   el(
     'span',
-    { className: 'who' },
+    { className: 'staff-player' },
     playerName(player),
     el('a', {
       className: 'steam-id',
@@ -153,7 +164,7 @@ const renderGriefers = (overview) => {
       el('td', { className: 'num', textContent: p.matches > 0 ? `${p.matches} · ${p.kills} kills` : '–' }),
       el('td', { className: 'num', textContent: p.minutes > 0 ? formatHours(p.minutes) : '–' }),
       cell(
-        p.teamKills + p.vehicleSuicides > 0
+        p.teamKills + p.teamKilled + p.vehicleSuicides > 0
           ? el('button', {
               type: 'button',
               className: 'btn btn-ghost btn-small',
@@ -297,6 +308,8 @@ const render = (overview) => {
 const load = async () => {
   clearTimeout(timer);
   lastLoad = Date.now();
+  const mine = ++generation;
+  const current = () => mine === generation;
   if (demo) {
     render(demoAdmin(period, Date.now()));
     return;
@@ -308,9 +321,10 @@ const load = async () => {
   }
   document.body.classList.add('refreshing');
   try {
-    const response = await fetch(apiUrl(`admin/overview?days=${period}`), {
+    const response = await fetch(botUrl(`admin/overview?days=${period}`), {
       headers: { accept: 'application/json', authorization: `Bearer ${token}` },
     });
+    if (!current()) return;
     if (response.status === 401) {
       forgetToken();
       signedOut('Your sign-in has run out. Sign in again.');
@@ -323,16 +337,20 @@ const load = async () => {
     }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const overview = await response.json();
+    if (!current()) return;
     showNotice();
     render(overview);
   } catch (error) {
+    if (!current()) return;
     console.error('Could not load the staff page', error);
     showNotice(
       data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.',
     );
   } finally {
-    document.body.classList.remove('refreshing');
-    if (!document.hidden && loadToken()) timer = setTimeout(load, REFRESH_MS);
+    if (current()) {
+      document.body.classList.remove('refreshing');
+      if (!document.hidden && loadToken()) timer = setTimeout(load, REFRESH_MS);
+    }
   }
 };
 
@@ -349,11 +367,11 @@ $('incidents-all').addEventListener('click', () => {
   render(data);
 });
 
-// Only refresh while someone is looking; catch up straight away when they come back.
+// Only refresh while someone is looking; catch up straight away when they come back, or when nothing has loaded yet.
 document.addEventListener('visibilitychange', () => {
-  if (demo || !data) return;
+  if (demo || !configured || !loadToken()) return;
   if (document.hidden) clearTimeout(timer);
-  else if (Date.now() - lastLoad >= REFRESH_MS) load();
+  else if (!data || Date.now() - lastLoad >= REFRESH_MS) load();
   else timer = setTimeout(load, REFRESH_MS - (Date.now() - lastLoad));
 });
 
