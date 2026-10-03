@@ -58,6 +58,7 @@ import {
   signInResult,
   SIGN_IN_ERRORS,
   staffBy,
+  staffLabel,
   withVehicle,
 } from '../public/js/format.js';
 
@@ -577,6 +578,17 @@ describe('staff page', () => {
     assert.equal(staffBy({ by: 'server' }), 'Outside the bot');
     assert.equal(staffBy({ by: '42', byName: 'Paragon' }), 'Paragon');
     assert.equal(staffBy({ by: '42' }), 'Discord user 42');
+  });
+
+  it('names staff by who the bot knows them as, before the name kept with an entry', () => {
+    const staff = { 42: { name: 'Sarge', username: 'paragon' }, 43: { name: 'kestrel', username: 'Kestrel' }, 44: { name: 'Moth', username: null } };
+
+    assert.equal(staffBy({ by: '42', byName: 'Old name' }, staff), 'Sarge (@paragon)');
+    assert.equal(staffBy({ by: '43' }, staff), 'kestrel');
+    assert.equal(staffBy({ by: '44' }, staff), 'Moth');
+    assert.equal(staffBy({ by: '45', byName: 'Pike' }, staff), 'Pike');
+    assert.equal(staffBy({ by: 'bot' }, staff), 'The bot');
+    assert.equal(staffLabel({ name: 'Sarge', username: 'paragon' }), 'Sarge (@paragon)');
   });
 
   it('adds how many were with a vehicle, when any were', () => {
