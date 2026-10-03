@@ -513,7 +513,7 @@ export const demoAdmin = (days, now) => {
     ...(detail ? { detail } : {}),
   });
   const moderation = [
-    entry(4, 'warn', 'Vex', '100000000000000001', 'Sarge', 'Stop team killing with vehicles'),
+    entry(4, 'warn', 'Vex', '100000000000000001', null, 'Stop team killing with vehicles'),
     entry(13, 'kick', 'Vex', '100000000000000001', 'Sarge', 'Crashed a full heli into the base'),
     ...(days > 1
       ? [
@@ -563,6 +563,11 @@ export const demoAdmin = (days, now) => {
     incidents,
     moderation,
     bans,
+    // Who the staff are, by Discord user ID.
+    staff: {
+      '100000000000000001': { name: 'Sarge', username: 'sarge_gi' },
+      '100000000000000002': { name: 'Kestrel', username: 'kestrel' },
+    },
     user: { id: '100000000000000001', name: 'Sarge' },
   };
 };

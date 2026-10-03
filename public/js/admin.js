@@ -231,9 +231,6 @@ const renderIncidents = (overview) => {
   );
 };
 
-// Staff by name, from the moderation log, for bans whose record only has a Discord user ID.
-const staffNames = (overview) => new Map(overview.moderation.filter((e) => e.byName).map((e) => [e.by, e.byName]));
-
 const renderModeration = (overview) => {
   const rows = overview.moderation.map((e) =>
     el(
@@ -243,7 +240,7 @@ const renderModeration = (overview) => {
       cell(badge(MOD_ACTIONS[e.action] ?? e.action, e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : '')),
       el('td', { className: 'player' }, who(e.player)),
       el('td', { className: 'reason', textContent: e.reason ?? '–' }),
-      cell(staffBy(e)),
+      cell(staffBy(e, overview.staff)),
       cell(e.detail ?? ''),
     ),
   );
@@ -257,7 +254,6 @@ const renderBans = (overview) => {
     return;
   }
   $('bans-note').textContent = 'Everyone banned on the server now, with the reason. Bans made outside the bot are permanent.';
-  const names = staffNames(overview);
   const rows = overview.bans.map((b) =>
     el(
       'tr',
@@ -269,7 +265,7 @@ const renderBans = (overview) => {
         b.onServer ? null : el('span', { className: 'badges' }, badge('Waiting: banned when they next join', 'hot')),
       ),
       el('td', { className: 'reason', textContent: b.bot?.reason ?? b.reason ?? '–' }),
-      cell(b.bot ? (names.get(b.bot.by) ?? `Discord user ${b.bot.by}`) : (b.bannedBy ?? 'Outside the bot')),
+      cell(b.bot ? staffBy({ by: b.bot.by }, overview.staff) : (b.bannedBy ?? 'Outside the bot')),
       el('td', { className: 'when', textContent: b.bot ? when.format(b.bot.at) : '–' }),
       el('td', { className: 'when', textContent: b.bot?.until ? when.format(b.bot.until) : 'Never' }),
     ),

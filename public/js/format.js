@@ -585,11 +585,18 @@ export const MOD_ACTIONS = {
   switchteam: 'Team move',
 };
 
-// Who did it: a staff member by name (or Discord user ID, for entries from before names were kept), the bot itself,
-// or someone outside the bot (in game, or in the server's settings), which the bot found on the server's ban list.
-export const staffBy = (entry) => {
+// A staff member as the page names them: "Sarge (@paragon)", or just the name when their username is the same.
+export const staffLabel = ({ name, username }) =>
+  username && username.toLowerCase() !== name.toLowerCase() ? `${name} (@${username})` : name;
+
+// Who did it: a staff member by their name on Discord, from the bot's `staff` (by Discord user ID), else the name kept
+// with the entry, else their Discord user ID; the bot itself; or someone outside the bot (in game, or in the server's
+// settings), which the bot found on the server's ban list.
+export const staffBy = (entry, staff = {}) => {
   if (entry.by === 'bot') return 'The bot';
   if (entry.by === 'server') return 'Outside the bot';
+  const known = staff[entry.by];
+  if (known) return staffLabel(known);
   return entry.byName ?? `Discord user ${entry.by}`;
 };
 
