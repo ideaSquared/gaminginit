@@ -614,6 +614,61 @@ export const staffBy = (entry, staff = {}) => {
 // "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were.
 export const withVehicle = (count, vehicle) => (vehicle > 0 ? `${count} (${vehicle} vehicle)` : String(count));
 
+// Risky Steam accounts: the flags the bot puts on an account, worded with its marks (`steam.flags` in its answer has
+// each flag's points, `steam.marks` the days).
+export const steamFlagLabel = (flag) =>
+  ({
+    vacBan: 'VAC ban',
+    gameBan: 'Game ban',
+    recentBan: 'Recent ban',
+    communityBan: 'Community ban',
+    tradeBan: 'Trade ban',
+    newAccount: 'New account',
+    youngAccount: 'Young account',
+    hidden: 'Hidden profile',
+  })[flag] ?? flag;
+
+export const steamFlagRule = (flag, marks) =>
+  ({
+    vacBan: 'VAC bans on the account, in any game',
+    gameBan: 'game bans: another game’s anti-cheat or developer banned them',
+    recentBan: `the latest VAC or game ban was in the last ${marks.recentBanDays} days`,
+    communityBan: 'banned from the Steam Community',
+    tradeBan: 'banned from trading on Steam',
+    newAccount: `made in the last ${marks.newAccountDays} days`,
+    youngAccount: `made in the last ${marks.youngAccountDays} days, but not new`,
+    hidden: 'the profile is private, or was never set up: Steam shows nothing about it, not even its age',
+  })[flag] ?? flag;
+
+export const RISK_LABELS = { high: 'High risk', medium: 'Worth a look' };
+
+// "today", "12 days ago", "4 months ago", "9 years ago", as the bot words it in Discord.
+export const longAgo = (at, now) => {
+  const days = Math.max(0, Math.floor((now - at) / DAY));
+  if (days === 0) return 'today';
+  if (days < 60) return `${plural(days, 'day')} ago`;
+  if (days < 730) return `${plural(Math.floor(days / 30), 'month')} ago`;
+  return `${plural(Math.floor(days / 365), 'year')} ago`;
+};
+
+// What Steam says about a risky account: its bans and its profile. How old it is goes in a column of its own.
+export const steamWhy = (account, now) => {
+  const bans = [...(account.vacBans > 0 ? [plural(account.vacBans, 'VAC ban')] : []), ...(account.gameBans > 0 ? [plural(account.gameBans, 'game ban')] : [])];
+  const last = account.lastBanAt === null ? '' : `, ${account.vacBans + account.gameBans > 1 ? 'the last ' : ''}${longAgo(account.lastBanAt, now)}`;
+  return [
+    ...(bans.length > 0 ? [`${bans.join(' and ')}${last}`] : []),
+    ...(account.communityBanned ? ['Banned from the Steam Community'] : []),
+    ...(account.tradeBan === 'banned' ? ['Banned from trading'] : []),
+    ...(!account.setUp ? ['Profile never set up'] : !account.public ? ['Private profile'] : []),
+  ];
+};
+
+// How old the account is, or that Steam hides it.
+export const accountAge = (account, now) => (account.createdAt === null ? 'Hidden' : `Made ${longAgo(account.createdAt, now)}`);
+
+// "62% of 230 kills", from the kill feed, or null without kills.
+export const headshotShare = (kills, headshots) => (kills > 0 ? `${Math.round((headshots / kills) * 100)}% of ${kills} kills` : null);
+
 // Admin tools: the bot's staff commands, run from the staff page. The bot sends their definitions as Discord has them
 // (GET /api/admin/commands); the page builds a form for each. A command with subcommands, such as /vip, is one tool per
 // subcommand, keyed "vip:add".

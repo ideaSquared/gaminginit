@@ -234,6 +234,12 @@ Until the stats URL is set, the page says live stats are not connected and links
   (crashing it, or blowing it up), or 10 or more suicides. Most flagged days first, with their matches, kills and time
   played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
+- **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
+  or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
+  or one never set up), how old the account is and when the bot checked, whether they are in game or banned, and their
+  matches, K/D, headshots and time played for scale. The page lists how each flag is scored, as the bot sends it. A
+  reason to look, not proof. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page
+  says the checks are off.
 - **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
   and bans made or lifted outside the bot (in game, or in the server's settings).
 - **Admin tools.** Every staff command from Discord, from the page: look up a player, warn, kick, move to another
@@ -242,8 +248,8 @@ Until the stats URL is set, the page says live stats are not connected and links
   (players in game and seen lately, teams, maps, modes, lighting, zones, bans, the reserved list, recent matches) from
   the same suggestions Discord shows. Anything that changes the game or the records asks first. Each runs on the bot
   as you, exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
-  moderation log. "Act" on a possible griefer, "Unban" on a ban and "Remove VIP" on a reserved slot open the tool
-  with that player picked.
+  moderation log. "Act" on a possible griefer or a risky Steam account, "Look up" on a risky Steam account, "Unban" on
+  a ban and "Remove VIP" on a reserved slot open the tool with that player picked.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
   or added by hand, and how many slots are held back for them.

@@ -620,8 +620,76 @@ export const demoAdmin = (days, now) => {
       ],
       maxSlots: 2,
     },
+    steam: {
+      flags: { vacBan: 3, gameBan: 3, recentBan: 1, communityBan: 2, tradeBan: 1, newAccount: 3, youngAccount: 1, hidden: 1 },
+      marks: { recentBanDays: 365, newAccountDays: 30, youngAccountDays: 180 },
+      risk: { high: 4, medium: 2 },
+      players: 14 * scale,
+      checked: 14 * scale - 1,
+      high: 2,
+      medium: 1,
+      accounts: [
+        account(ref('Pike'), now, {
+          risk: 'high',
+          score: 5,
+          flags: ['vacBan', 'recentBan', 'hidden'],
+          vacBans: 1,
+          lastBanAt: now - 41 * DAY,
+          public: false,
+          createdAt: null,
+          inGame: true,
+          feedKills: 34 * scale,
+          headshots: 23 * scale,
+        }),
+        account(ref('Bravo_Six'), now, {
+          risk: 'high',
+          score: 4,
+          flags: ['newAccount', 'hidden'],
+          setUp: false,
+          createdAt: now - 6 * DAY,
+          banned: true,
+          matches: 1,
+          kills: 31,
+          deaths: 4,
+          minutes: 48,
+          feedKills: 29,
+          headshots: 17,
+        }),
+        account(ref('Sable'), now, {
+          risk: 'medium',
+          score: 3,
+          flags: ['gameBan'],
+          gameBans: 2,
+          lastBanAt: now - 3 * 365 * DAY,
+          createdAt: now - 9 * 365 * DAY,
+        }),
+      ],
+    },
   };
 };
+
+// A risky account in the sample staff page, as the bot sends it, checked 3 hours before `now`.
+const account = (player, now, t) => ({
+  ...player,
+  vacBans: 0,
+  gameBans: 0,
+  lastBanAt: null,
+  communityBanned: false,
+  tradeBan: 'none',
+  public: true,
+  setUp: true,
+  createdAt: null,
+  checkedAt: now - 3 * HOUR,
+  inGame: false,
+  banned: false,
+  matches: 4,
+  kills: 52,
+  deaths: 30,
+  minutes: 190,
+  feedKills: 48,
+  headshots: 9,
+  ...t,
+});
 
 // The bot's staff commands, as GET /api/admin/commands sends them, for the admin tools in ?demo. Copied from the bot;
 // the real page always gets them from the bot.

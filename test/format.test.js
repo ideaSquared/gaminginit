@@ -62,6 +62,13 @@ import {
   staffBy,
   staffLabel,
   withVehicle,
+  steamFlagLabel,
+  steamFlagRule,
+  RISK_LABELS,
+  longAgo,
+  steamWhy,
+  accountAge,
+  headshotShare,
   discordParts,
   optionLabel,
   READ_ONLY_TOOLS,
@@ -608,6 +615,61 @@ describe('staff page', () => {
   it('adds how many were with a vehicle, when any were', () => {
     assert.equal(withVehicle(5, 2), '5 (2 vehicle)');
     assert.equal(withVehicle(5, 0), '5');
+  });
+});
+
+describe('risky Steam accounts', () => {
+  const HOUR = 3_600_000;
+  const DAY = 24 * HOUR;
+  const account = (overrides = {}) => ({
+    vacBans: 0,
+    gameBans: 0,
+    lastBanAt: null,
+    communityBanned: false,
+    tradeBan: 'none',
+    public: true,
+    setUp: true,
+    createdAt: NOW - 3000 * DAY,
+    ...overrides,
+  });
+
+  it('words the flags with the bot’s marks', () => {
+    const marks = { recentBanDays: 365, newAccountDays: 30, youngAccountDays: 180 };
+
+    assert.equal(steamFlagLabel('vacBan'), 'VAC ban');
+    assert.equal(steamFlagLabel('hidden'), 'Hidden profile');
+    assert.equal(steamFlagRule('recentBan', marks), 'the latest VAC or game ban was in the last 365 days');
+    assert.equal(steamFlagRule('newAccount', marks), 'made in the last 30 days');
+    assert.equal(steamFlagLabel('newFlag'), 'newFlag');
+    assert.equal(RISK_LABELS.medium, 'Worth a look');
+  });
+
+  it('says how long ago in days, months or years, as the bot does', () => {
+    assert.equal(longAgo(NOW - HOUR, NOW), 'today');
+    assert.equal(longAgo(NOW - DAY, NOW), '1 day ago');
+    assert.equal(longAgo(NOW - 400 * DAY, NOW), '13 months ago');
+    assert.equal(longAgo(NOW - 800 * DAY, NOW), '2 years ago');
+  });
+
+  it('says why an account is risky, and how old it is', () => {
+    assert.deepEqual(steamWhy(account({ vacBans: 2, gameBans: 1, lastBanAt: NOW - 10 * DAY, public: false }), NOW), [
+      '2 VAC bans and 1 game ban, the last 10 days ago',
+      'Private profile',
+    ]);
+    assert.deepEqual(steamWhy(account({ vacBans: 1, lastBanAt: NOW - 45 * DAY, communityBanned: true, tradeBan: 'banned', setUp: false }), NOW), [
+      '1 VAC ban, 45 days ago',
+      'Banned from the Steam Community',
+      'Banned from trading',
+      'Profile never set up',
+    ]);
+    assert.deepEqual(steamWhy(account({ tradeBan: 'probation' }), NOW), []);
+    assert.equal(accountAge(account({ createdAt: NOW - 3 * DAY }), NOW), 'Made 3 days ago');
+    assert.equal(accountAge(account({ createdAt: null }), NOW), 'Hidden');
+  });
+
+  it('gives the share of kills that were headshots', () => {
+    assert.equal(headshotShare(30, 21), '70% of 30 kills');
+    assert.equal(headshotShare(0, 0), null);
   });
 });
 

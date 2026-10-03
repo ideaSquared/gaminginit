@@ -1,14 +1,21 @@
 import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import {
+  accountAge,
   DEATH_TAGS,
   flagLabel,
   flagRule,
   formatHours,
+  headshotShare,
+  kd,
   metres,
   MOD_ACTIONS,
+  RISK_LABELS,
   sessionExpiry,
   signInResult,
   staffBy,
+  steamFlagLabel,
+  steamFlagRule,
+  steamWhy,
   withVehicle,
 } from './format.js';
 import { demo, showNotice, thisPage } from './live.js';
@@ -16,8 +23,8 @@ import { createTools } from './tools.js';
 import { el, link, mapTag, playerName } from './views.js';
 
 // The staff page: the admin tools (every staff command), possible griefers from the bot's kill feed (team kills and
-// suicides), the incidents behind them, everything staff did through the bot, the bans on the server and the reserved
-// slots. Staff sign in with Discord through the bot; the
+// suicides), the incidents behind them, risky Steam accounts, everything staff did through the bot, the bans on the server
+// and the reserved slots. Staff sign in with Discord through the bot; the
 // bot checks they are staff and sends them back with a session token, which this page keeps for this browser and
 // sends with each request. ?demo shows sample data without signing in.
 
@@ -249,6 +256,63 @@ const renderIncidents = (overview) => {
   );
 };
 
+const RISK_KIND = { high: 'bad', medium: 'hot' };
+const points = (count) => `${count} point${count === 1 ? '' : 's'}`;
+
+const renderSteam = (overview) => {
+  const steam = overview.steam;
+  // An older bot sends nothing; a bot without a Steam key sends null.
+  if (!steam) {
+    $('steam-note').textContent =
+      steam === undefined
+        ? 'The bot does not check Steam accounts yet. Deploy the latest bot.'
+        : 'Steam checks are off: the bot has no STEAM_API_KEY. See the bot’s README, “Risky Steam accounts”.';
+    $('steam-rules').replaceChildren();
+    $('steam-accounts').replaceChildren();
+    return;
+  }
+  const now = overview.generatedAt;
+  $('steam-note').textContent =
+    `The bot has checked ${steam.checked} of the ${steam.players} players seen in this period or in game now: ` +
+    `${steam.high} high risk (${points(steam.risk.high)} or more) and ${steam.medium} worth a look (${steam.risk.medium} or more), riskiest first. ` +
+    'A reason to look, not proof: a ban may be years old and from another game, and honest players have new and private accounts too.';
+  $('steam-rules').replaceChildren(
+    ...Object.entries(steam.flags).map(([flag, count]) =>
+      el('li', {}, badge(steamFlagLabel(flag)), ` ${steamFlagRule(flag, steam.marks)}: ${points(count)}`),
+    ),
+  );
+  const rows = steam.accounts.map((a) =>
+    el(
+      'tr',
+      {},
+      el(
+        'td',
+        { className: 'player' },
+        who(a),
+        el(
+          'span',
+          { className: 'badges' },
+          badge(`${RISK_LABELS[a.risk] ?? a.risk} · ${points(a.score)}`, RISK_KIND[a.risk]),
+          a.inGame ? badge('In game', 'accent') : null,
+          a.banned ? badge('Banned', 'accent') : null,
+        ),
+      ),
+      el('td', { className: 'reason' }, steamWhy(a, now).join(' · ') || '–', el('span', { className: 'badges' }, ...a.flags.map((f) => badge(steamFlagLabel(f))))),
+      el('td', { className: 'when' }, accountAge(a, now), el('span', { className: 'muted checked', textContent: `Checked ${when.format(a.checkedAt)}` })),
+      el('td', { className: 'num', textContent: a.matches > 0 ? `${a.matches} · ${kd(a.kills, a.deaths)} K/D` : '–' }),
+      el('td', { className: 'num', textContent: headshotShare(a.feedKills, a.headshots) ?? '–' }),
+      el('td', { className: 'num', textContent: a.minutes > 0 ? formatHours(a.minutes) : '–' }),
+      el('td', { className: 'row-actions' }, actButton('Look up', 'player', a), actButton('Act', null, a)),
+    ),
+  );
+  table(
+    $('steam-accounts'),
+    ['Player', 'Why', 'Account', ['Matches', 'num'], ['Headshots', 'num'], ['Played', 'num'], ''],
+    rows,
+    'No risky accounts among the players in this period.',
+  );
+};
+
 const renderModeration = (overview) => {
   const rows = overview.moderation.map((e) =>
     el(
@@ -353,6 +417,7 @@ const render = (overview) => {
   $('tile-suicides').textContent = String(overview.totals.suicides);
   renderGriefers(overview);
   renderIncidents(overview);
+  renderSteam(overview);
   renderModeration(overview);
   renderBans(overview);
   renderReserved(overview);

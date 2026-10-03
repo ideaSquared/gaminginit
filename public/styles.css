@@ -2567,6 +2567,12 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
+/* When the bot last asked Steam, under how old the account is. */
+.admin-table .checked {
+  display: block;
+  font-size: 0.8rem;
+}
+
 .flag-rules {
   display: grid;
   gap: 4px;
