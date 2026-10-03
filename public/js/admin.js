@@ -668,7 +668,7 @@ const renderReserved = (overview) => {
       'tr',
       {},
       el('td', { className: 'player' }, who(r.player)),
-      cell(r.bot ? badge('From the bot', 'accent') : badge('Added by hand')),
+      cell(r.bot ? badge('From the bot', 'accent') : badge('Permanent')),
       el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.since) : '–' }),
       el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.until) : 'Never' }),
       el('td', { className: 'row-actions' }, actButton('Remove VIP', 'vip:remove', r.player)),
