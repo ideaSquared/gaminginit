@@ -98,6 +98,7 @@ export const demoStats = (now) => {
     leaderboard: leaderboard(),
     weapons: weapons(now),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
+    seederVip: seederVip(now),
     // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
     hourly: {
       days: 14,
@@ -129,6 +130,10 @@ const leaderboard = () => {
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
   };
 };
+
+// Who has VIP from seeding: the regulars with 3 seed days or more, each with some of their week left.
+const seederVip = (now) =>
+  [6, 0, 2, 4, 8].map((i, k) => ({ id: demoId(i), name: NAMES[i], until: now + (6 - k) * DAY + 3 * HOUR }));
 
 // The sample's weapons: name, kind, kills over 30 days, share of headshots, average and longest distance in metres.
 const WEAPONS = [

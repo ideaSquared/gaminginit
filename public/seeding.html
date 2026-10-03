@@ -116,11 +116,33 @@
               <li>Bring friends. A squad fills the server faster than one player.</li>
             </ul>
             <p class="seed-note">
-              When the server goes live, the bot names the 3 players who seeded longest in Discord. The
-              <a href="leaderboard" data-keep-query>leaderboard</a> lists the top seeders.
+              When the server goes live, the bot names the 3 players who seeded longest in Discord.
+              <a href="#seeders">Our top seeders</a> are below.
             </p>
             <!-- Shown when the bot gives seeders VIP. -->
             <p class="seed-vip" id="seed-vip" hidden>Seeding also earns a reserved slot. <a href="./#vip" data-keep-query>How seeder VIP works</a></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="seeders" aria-labelledby="seeders-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="seeders-title">Our seeders</h2>
+            <p class="section-note">Who seeds most, and who has earned VIP for it.</p>
+          </div>
+          <div class="boards">
+            <article class="card board" aria-labelledby="top-seeders-title">
+              <h3 id="top-seeders-title">Top seeders</h3>
+              <p class="board-sub" id="top-seeders-sub">Time on the server before it went live, over the last 30 days.</p>
+              <div id="top-seeders"><p class="muted">Loading…</p></div>
+            </article>
+            <!-- Shown when the bot gives seeders VIP. -->
+            <article class="card board" id="vip-holders" aria-labelledby="vip-holders-title" hidden>
+              <h3 id="vip-holders-title">Seeder VIP now</h3>
+              <p class="board-sub" id="vip-holders-sub"></p>
+              <div id="vip-holders-list"></div>
+            </article>
           </div>
         </div>
       </section>

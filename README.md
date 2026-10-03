@@ -42,7 +42,8 @@ What it shows:
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
-  and how to help.
+  and how to help. Then our seeders: the top seeders over the last 30 days, and who has seeder VIP now and until when
+  (only VIP from seeding, not from staff).
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).
@@ -67,6 +68,8 @@ You need:
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
   The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
   README, "Staff page").
+  The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
+  list is not shown.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
   hour (0 to 23) over those days the average players and the share of readings (0 to 1) with `thresholds.busy`
   players or more, `null` for an hour with no readings.

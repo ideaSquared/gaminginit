@@ -975,6 +975,13 @@ tbody tr:last-child td {
   width: 2em;
 }
 
+/* Who has seeder VIP: the name, then when it ends. */
+.vip-table td:last-child,
+.vip-table th:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .player {
   font-weight: 600;
   overflow-wrap: break-word;
