@@ -559,6 +559,8 @@ const renderSteam = (overview) => {
   $('steam-note').textContent =
     `The bot has checked ${steam.checked} of the ${steam.players} players seen in this period or in game now: ` +
     `${steam.high} high risk (${points(steam.risk.high)} or more) and ${steam.medium} worth a look (${steam.risk.medium} or more), riskiest first. ` +
+    // An older bot posts every high-risk account, and sends no alert mark.
+    (steam.risk.alert === undefined ? '' : `Only accounts on ${points(steam.risk.alert)} or more are posted to the moderation log by themselves. `) +
     'A reason to look, not proof: a ban may be years old and from another game, and honest players have new and private accounts too.';
   $('steam-rules').replaceChildren(
     ...Object.entries(steam.flags).map(([flag, count]) =>

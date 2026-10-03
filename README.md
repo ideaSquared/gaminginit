@@ -252,14 +252,15 @@ the keyboard.
 ### Alerts: what the bot found by itself
 
 - **How alerts work**, in three steps: the bot checks every player's Steam account as they join, and every death in
-  the kill feed for team kills and vehicle suicides; the serious ones go to the Discord moderation log channel as they
-  happen; everything is listed here, riskiest first. An alert is a reason to look, not proof.
+  the kill feed for team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk, and only
+  the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed here,
+  riskiest first. An alert is a reason to look, not proof.
 - **Tiles:** risky Steam accounts, players flagged for griefing, team kills and vehicle suicides in the period.
 - **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
   or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
   or one never set up), how old the account is and when the bot checked, whether they are in game or banned, and their
   matches, K/D, headshots and time played for scale. "How accounts are scored" lists each flag's points, as the bot
-  sends them. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page says the checks
+  sends them, and the note says from how many points an account is posted to the moderation log by itself. Needs the bot's `STEAM_API_KEY` (its README, "Risky Steam accounts"); without it the page says the checks
   are off.
 - **Possible griefers.** From the bot's kill feed: everyone who team killed, was team killed or killed themselves, with
   flags for a day with 3 or more team kills, killing the same teammate twice or more, 2 or more suicides in a vehicle
