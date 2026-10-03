@@ -5,11 +5,16 @@ live status and stats for our WARDOGS server. The live numbers come from
 [wardogs-discord-bot](https://github.com/ParagonJenko/wardogs-discord-bot), which reads the game server's RCON once
 a minute and serves them at `GET /api/stats`.
 
-What it shows, one page each:
+What it shows:
 
-- The home page (`/`): server status (live, seeding, empty or offline), players online, map and score, Discord
-  member and online counts, and a link to each of the other pages. While seeding it says how many more players are
-  needed to go live.
+- The home page (`/`):
+  - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
+    more players are needed to go live.
+  - Discord member and online counts.
+  - A first look at the other pages, each linking to its page: the match on now with its top 3, the 2 latest matches
+    with winner, length, peak players and top player, the top 5 by kills over the last 30 days, and players over the
+    last 24 hours with the peak, matches and time live.
+  - "Play with us": the steps to find us in game.
 - A stats page (`/stats`): players now, the peak and the matches in the last 24 hours and time live today; players
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
   It also has the busy times of day: average players in each hour, with the busy hours highlighted. An hour is busy
@@ -36,13 +41,14 @@ What it shows, one page each:
   bot's match records, lightened where needed so they read on the dark cards.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
-- A join page (`/join`): "Play with us", the steps to find us in game, then what seeding is: the empty, seeding and
-  live states with the bot's player thresholds, and how to help.
-- Seeder VIP: what seeding earns (a reserved slot), under the intro on the home page and as step 4 on the join page.
+- A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
+  and how to help.
+- Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).
 
-These used to be sections of the home page. Old links to them, like `/#leaderboard` or `/#seeding`, go to their pages.
+The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
+`/#leaderboard` or `/#seeding`, go to their pages.
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
@@ -77,12 +83,12 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `join.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all nine pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 3 places in `index.html`, 2 in `join.html` and 1 in each other page. If the invite changes, change all 12. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html` and 1 in each other page. If the invite changes, change all 12. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
@@ -266,7 +272,7 @@ npm test    # Node's built-in test runner; no dependencies to install
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
-stats page, `matches.js` the matches page, `leaderboard.js` the leaderboard page, `join.js` the join page,
+stats page, `matches.js` the matches page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `admin.js` renders the staff page and `tools.js` its admin tools. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

@@ -1,6 +1,6 @@
 import { BOARDS, compact, metres, percent, utcDay, WEAPON_KINDS } from './format.js';
 import { startLive } from './live.js';
-import { el, playerName, setText } from './views.js';
+import { boardTable, el, playerName, setText } from './views.js';
 
 // The leaderboard page: the top players over the last 30 days, and the weapons with the most kills.
 
@@ -9,30 +9,6 @@ const DAY = 86_400_000;
 const $ = (id) => document.getElementById(id);
 
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-
-const boardTable = (board, rows) =>
-  el(
-    'table',
-    { className: 'players-table' },
-    el(
-      'thead',
-      {},
-      el('tr', {}, ...['#', 'Player', ...board.headings].map((h) => el('th', { scope: 'col', textContent: h }))),
-    ),
-    el(
-      'tbody',
-      {},
-      ...rows.map((p, i) =>
-        el(
-          'tr',
-          {},
-          el('td', { className: 'rank', textContent: String(i + 1) }),
-          el('td', { className: 'player' }, playerName(p)),
-          ...board.cells(p).map((cell) => el('td', { textContent: cell })),
-        ),
-      ),
-    ),
-  );
 
 const renderLeaderboard = (stats) => {
   const root = $('boards');

@@ -40,7 +40,7 @@ html {
   scroll-padding-top: 72px;
 }
 
-@media (max-width: 819px) {
+@media (max-width: 839px) {
   html {
     scroll-padding-top: 112px;
   }
@@ -276,8 +276,8 @@ a {
   background: var(--surface-2);
 }
 
-/* From 820px the six links fit next to the brand and the Discord button, with more room around them from 900px. */
-@media (min-width: 820px) {
+/* From 840px the six links fit next to the brand and the Discord button, with more room around them from 900px. */
+@media (min-width: 840px) {
   .nav-inner {
     flex-wrap: nowrap;
   }
@@ -644,77 +644,6 @@ h1 {
   font-size: 0.9rem;
 }
 
-/* The home page's links to the other pages. The whole card is the link. */
-
-.explore {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-}
-
-@media (min-width: 640px) {
-  .explore {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 900px) {
-  .explore {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.explore-card {
-  position: relative;
-  padding: 20px;
-  transition: border-color 0.15s;
-}
-
-.explore-card:hover {
-  border-color: var(--accent);
-}
-
-.explore-card h3 {
-  font-size: 1.05rem;
-}
-
-.explore-card h3::after {
-  content: '→';
-  content: '→' / '';
-  margin-left: 8px;
-  color: var(--accent);
-}
-
-.explore-card a {
-  color: var(--text);
-  text-decoration: none;
-}
-
-.explore-card a::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-}
-
-.explore-card a:focus-visible {
-  outline: none;
-}
-
-.explore-card a:focus-visible::after {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.explore-card p {
-  margin-top: 6px;
-  color: var(--text-2);
-  font-size: 0.92rem;
-}
-
 /* Stat tiles */
 
 .tiles {
@@ -1070,8 +999,50 @@ tbody tr:last-child td {
   }
 }
 
+/* The home page's first look at the other pages: a card each, two to a row on wide screens. */
+
+.peeks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .peeks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.peek {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  min-width: 0;
+}
+
+.peek h3,
+.seed-card h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+/* The link to the page sits at the bottom of each card, so they line up across a row. */
+.peek .more-link {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.peek .chart {
+  margin-top: 8px;
+}
+
 /* Matches */
 
+.peek .players-table,
 .match .players-table,
 .match-empty {
   margin-top: 12px;
@@ -1188,6 +1159,28 @@ tbody tr:last-child td {
 }
 
 .back a:hover {
+  color: var(--text);
+}
+
+.mvp {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.mvp-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.mvp .player {
   color: var(--text);
 }
 
@@ -1440,14 +1433,6 @@ tbody tr:last-child td {
   padding: 24px;
 }
 
-.seed-card h3 {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.85rem;
-  color: var(--text-2);
-  margin-bottom: 12px;
-}
-
 .seed-list {
   margin: 0;
   padding-left: 1.2em;
@@ -1479,6 +1464,11 @@ tbody tr:last-child td {
 }
 
 /* Join */
+
+.join {
+  border-top: 1px solid var(--hairline);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--page) 100%);
+}
 
 .steps {
   list-style: none;

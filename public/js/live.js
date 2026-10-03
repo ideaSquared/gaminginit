@@ -38,19 +38,22 @@ export const thisPage = (change) => {
   return url.pathname + url.search;
 };
 
-// A link to part of a page that the bot's numbers reveal, like join#vip or leaderboard#weapons, finds it hidden while
-// the page loads, so the browser cannot scroll to it. Scroll there once the first numbers are in, if they show it.
-const shown = (node) => node.getClientRects().length > 0;
-let hiddenTarget = null;
+// A link to part of a page, like /#join or leaderboard#weapons, can miss: the part is hidden until the bot's numbers
+// arrive, or they fill in what is above it and push it down. So once the first numbers are in, scroll there again,
+// unless the reader has started scrolling themselves.
+let hashTarget = null;
 try {
-  hiddenTarget = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+  hashTarget = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
 } catch {
   // A malformed #fragment: nothing to scroll to.
 }
-if (hiddenTarget && shown(hiddenTarget)) hiddenTarget = null;
+const readerMoved = () => {
+  hashTarget = null;
+};
+for (const type of ['wheel', 'touchmove', 'keydown', 'mousedown']) addEventListener(type, readerMoved, { once: true, passive: true });
 const scrollToRevealed = () => {
-  if (hiddenTarget && shown(hiddenTarget)) hiddenTarget.scrollIntoView();
-  hiddenTarget = null;
+  if (hashTarget && hashTarget.getClientRects().length > 0) hashTarget.scrollIntoView();
+  hashTarget = null;
 };
 
 export const showNotice = (...content) => {

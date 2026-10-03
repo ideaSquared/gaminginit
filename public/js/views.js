@@ -64,6 +64,31 @@ export const playersTable = (top) =>
     ),
   );
 
+// One leaderboard board's table, from BOARDS: its top players, ranked.
+export const boardTable = (board, rows) =>
+  el(
+    'table',
+    { className: 'players-table' },
+    el(
+      'thead',
+      {},
+      el('tr', {}, ...['#', 'Player', ...board.headings].map((h) => el('th', { scope: 'col', textContent: h }))),
+    ),
+    el(
+      'tbody',
+      {},
+      ...rows.map((p, i) =>
+        el(
+          'tr',
+          {},
+          el('td', { className: 'rank', textContent: String(i + 1) }),
+          el('td', { className: 'player' }, playerName(p)),
+          ...board.cells(p).map((cell) => el('td', { textContent: cell })),
+        ),
+      ),
+    ),
+  );
+
 // A finished match's map and result: "OZETI  Valkyra won 300–255".
 export const matchHeadline = (match) =>
   el(

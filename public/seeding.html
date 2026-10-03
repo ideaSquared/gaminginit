@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Play with us | gaminginit WARDOGS server</title>
-    <meta name="description" content="How to join the gaminginit WARDOGS server: our Discord, the seeding alerts, seeder VIP and how an empty server becomes a full match." />
-    <link rel="canonical" href="https://gaminginit.com/join" />
+    <title>Seeding | gaminginit WARDOGS server</title>
+    <meta name="description" content="Seeding the gaminginit WARDOGS server: how an empty server becomes a full match, and how to help." />
+    <link rel="canonical" href="https://gaminginit.com/seeding" />
     <meta property="og:site_name" content="gaminginit" />
-    <meta property="og:title" content="Play with us | gaminginit WARDOGS server" />
-    <meta property="og:description" content="How to join the gaminginit WARDOGS server, and how seeding fills it." />
-    <meta property="og:url" content="https://gaminginit.com/join" />
+    <meta property="og:title" content="Seeding | gaminginit WARDOGS server" />
+    <meta property="og:description" content="How an empty gaminginit WARDOGS server becomes a full match, and how to help." />
+    <meta property="og:url" content="https://gaminginit.com/seeding" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://gaminginit.com/og-image.png" />
     <meta property="og:image:type" content="image/png" />
@@ -18,8 +18,8 @@
     <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Play with us | gaminginit WARDOGS server" />
-    <meta name="twitter:description" content="How to join the gaminginit WARDOGS server, and how seeding fills it." />
+    <meta name="twitter:title" content="Seeding | gaminginit WARDOGS server" />
+    <meta name="twitter:description" content="How an empty gaminginit WARDOGS server becomes a full match, and how to help." />
     <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
     <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta name="theme-color" content="#0b0d10" />
@@ -28,7 +28,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
-    <script type="module" src="js/join.js"></script>
+    <script type="module" src="js/seeding.js"></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -49,7 +49,7 @@
             <li><a href="matches" data-keep-query>Matches</a></li>
             <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
             <li><a href="players" data-keep-query>Players</a></li>
-            <li><a href="join" data-keep-query aria-current="page">Join</a></li>
+            <li><a href="seeding" data-keep-query aria-current="page">Seeding</a></li>
           </ul>
         </nav>
         <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
@@ -62,49 +62,11 @@
     <main id="main">
       <div class="notice wrap" id="notice" role="status" hidden></div>
 
-      <section class="section" aria-labelledby="join-title">
+      <section class="section" aria-labelledby="seeding-title">
         <div class="wrap">
           <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Back to the server</a></p>
           <div class="section-head">
-            <h1 class="page-title" id="join-title">Play with us</h1>
-          </div>
-          <ol class="steps">
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">1</span>
-              <h3>Join the gaminginit Discord</h3>
-              <p>Meet the regulars, find a squad and hear about events first.</p>
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                <span>Join our Discord</span>
-              </a>
-            </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">2</span>
-              <h3>Watch for the alerts</h3>
-              <p>
-                The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
-                going.
-              </p>
-            </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">3</span>
-              <h3>Find the server</h3>
-              <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
-            </li>
-            <li class="card step step-vip" id="vip" hidden>
-              <span class="step-n" aria-hidden="true">4</span>
-              <h3>Seed and get VIP</h3>
-              <p><strong id="vip-step-offer"></strong></p>
-              <p id="vip-step-detail"></p>
-            </li>
-          </ol>
-        </div>
-      </section>
-
-      <section class="section seeding" id="seeding" aria-labelledby="seeding-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="seeding-title">Seeding</h2>
+            <h1 class="page-title" id="seeding-title">Seeding</h1>
             <p class="section-note">How an empty server becomes a full match.</p>
           </div>
           <p class="seeding-lede">
@@ -158,7 +120,7 @@
               <a href="leaderboard" data-keep-query>leaderboard</a> lists the top seeders.
             </p>
             <!-- Shown when the bot gives seeders VIP. -->
-            <p class="seed-vip" id="seed-vip" hidden>Seeding also earns a reserved slot. <a href="#vip">How seeder VIP works</a></p>
+            <p class="seed-vip" id="seed-vip" hidden>Seeding also earns a reserved slot. <a href="./#vip" data-keep-query>How seeder VIP works</a></p>
           </div>
         </div>
       </section>
