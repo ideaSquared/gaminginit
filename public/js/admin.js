@@ -11,6 +11,7 @@ import {
   kd,
   metres,
   MOD_ACTIONS,
+  modActionCounts,
   needsLook,
   PLAYER_SORTS,
   RISK_LABELS,
@@ -82,6 +83,24 @@ const forgetToken = () => {
   }
 };
 
+// The kinds of action staff hid from the moderation log (MOD_ACTIONS keys), kept for this browser when storage is on.
+const MODLOG_HIDDEN_KEY = 'gaminginit-modlog-hidden';
+const loadHidden = () => {
+  try {
+    const kept = JSON.parse(localStorage.getItem(MODLOG_HIDDEN_KEY) ?? '[]');
+    return new Set(Array.isArray(kept) ? kept.filter((a) => typeof a === 'string') : []);
+  } catch {
+    return new Set();
+  }
+};
+const saveHidden = (hidden) => {
+  try {
+    localStorage.setItem(MODLOG_HIDDEN_KEY, JSON.stringify([...hidden]));
+  } catch {
+    // Kept until the page is closed.
+  }
+};
+
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
@@ -90,6 +109,8 @@ const TAB_NAMES = { players: 'Players', alerts: 'Alerts', admin: 'Admin', rotati
 let tab = 'players';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order.
 const filters = { query: '', team: '', watch: false, sort: 'team' };
+// The moderation log's hidden kinds of action, such as team moves.
+const modHidden = loadHidden();
 // Who is in game now, by Steam ID, so a menu only offers what works on them.
 let onlineIds = new Set();
 // New data that came while a player's Act menu was open: it is drawn once the menu closes, so a refresh never closes a
@@ -599,8 +620,28 @@ const renderSteam = (overview) => {
   );
 };
 
+// The moderation log, without the kinds of action staff hid. Each kind is a toggle: pressed is shown.
 const renderModeration = (overview) => {
-  const rows = overview.moderation.map((e) =>
+  const button = ({ action, count }) =>
+    el(
+      'button',
+      {
+        type: 'button',
+        ariaPressed: String(!modHidden.has(action)),
+        onclick: () => {
+          if (!modHidden.delete(action)) modHidden.add(action);
+          saveHidden(modHidden);
+          renderModeration(data);
+        },
+      },
+      `${MOD_ACTIONS[action] ?? action} `,
+      el('span', { className: 'filter-count', textContent: String(count) }),
+    );
+  $('modlog-filter').replaceChildren(...modActionCounts(overview.moderation).map(button));
+  const shown = overview.moderation.filter((e) => !modHidden.has(e.action));
+  const all = overview.moderation.length;
+  $('modlog-count').textContent = shown.length === all ? '' : `Showing ${shown.length} of ${all}`;
+  const rows = shown.map((e) =>
     el(
       'tr',
       {},
@@ -612,7 +653,7 @@ const renderModeration = (overview) => {
       cell(e.detail ?? ''),
     ),
   );
-  table($('modlog'), ['When', 'What', 'Player', 'Reason', 'By', 'Details'], rows, 'Nothing in this period.');
+  table($('modlog'), ['When', 'What', 'Player', 'Reason', 'By', 'Details'], rows, all > 0 ? 'Nothing shown: pick what to show above.' : 'Nothing in this period.');
 };
 
 const renderBans = (overview) => {
