@@ -1,25 +1,43 @@
 import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import {
+  accountAge,
+  alertCount,
   DEATH_TAGS,
+  filterPlayers,
   flagLabel,
   flagRule,
   formatHours,
+  headshotShare,
+  kd,
   metres,
   MOD_ACTIONS,
+  needsLook,
+  PLAYER_SORTS,
+  RISK_LABELS,
   sessionExpiry,
+  sideColours,
+  sideKey,
   signInResult,
   staffBy,
+  steamFlagLabel,
+  steamFlagRule,
+  steamWhy,
+  teamCounts,
+  timeAgo,
+  utcDay,
+  watchList,
   withVehicle,
 } from './format.js';
 import { demo, showNotice, thisPage } from './live.js';
 import { createTools } from './tools.js';
 import { el, link, mapTag, playerName } from './views.js';
 
-// The staff page: the admin tools (every staff command), possible griefers from the bot's kill feed (team kills and
-// suicides), the incidents behind them, everything staff did through the bot, the bans on the server and the reserved
-// slots. Staff sign in with Discord through the bot; the
-// bot checks they are staff and sends them back with a session token, which this page keeps for this browser and
-// sends with each request. ?demo shows sample data without signing in.
+// The staff page, in three tabs. Players: everyone in game now, to search and act on. Alerts: what the bot found by
+// itself: risky Steam accounts, possible griefers from the kill feed (team kills and suicides) and the incidents behind
+// them. Admin: the admin tools (every staff command), the bans on the server, the reserved slots and everything staff did
+// through the bot. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
+// session token, which this page keeps for this browser and sends with each request. ?demo shows sample data without
+// signing in.
 
 // The bot named in this page's own settings, never one named in the address (?stats=): a link could otherwise send a
 // signed-in staff member's session to another site. To try a local bot, edit the meta tag in a local copy.
@@ -65,6 +83,17 @@ const forgetToken = () => {
 
 let period = 7;
 let data = null;
+// The tab shown, which the address keeps after the # for all but the first.
+const TABS = ['players', 'alerts', 'admin'];
+const TAB_NAMES = { players: 'Players', alerts: 'Alerts', admin: 'Admin' };
+let tab = 'players';
+// The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order.
+const filters = { query: '', team: '', watch: false, sort: 'team' };
+// Who is in game now, by Steam ID, so a menu only offers what works on them.
+let onlineIds = new Set();
+// New data that came while a player's Act menu was open: it is drawn once the menu closes, so a refresh never closes a
+// menu under staff's pointer.
+let waiting = null;
 // The player whose incidents are shown, by Steam ID; null for everyone.
 let focus = null;
 let timer = 0;
@@ -117,10 +146,124 @@ const who = (player) =>
 
 const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
 
-// A row's button that opens an admin tool with that player picked. `key` null keeps the tool open now when it takes a
-// player.
+const selectTab = (name, { focus = false } = {}) => {
+  tab = TABS.includes(name) ? name : 'players';
+  for (const t of TABS) {
+    const on = t === tab;
+    $(`tab-${t}`).setAttribute('aria-selected', String(on));
+    $(`tab-${t}`).tabIndex = on ? 0 : -1;
+    $(`panel-${t}`).hidden = !on;
+  }
+  if (focus) $(`tab-${tab}`).focus();
+  const hash = tab === 'players' ? '' : `#${tab}`;
+  if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+};
+
+// Opens an admin tool with the player picked, on the Admin tab, with a way back to where staff were. `key` null keeps
+// the tool open now when it takes a player.
+const act = (key, player) => {
+  const from = tab;
+  selectTab('admin');
+  tools.use(key, player.steamId, player.name);
+  const back = $('tools-back');
+  back.hidden = from === 'admin';
+  back.textContent = `← Back to ${TAB_NAMES[from]}`;
+  back.onclick = () => {
+    back.hidden = true;
+    selectTab(from);
+  };
+  // The tool scrolls itself into view; the card's top, with the way back, goes there instead.
+  $('tools-title').closest('article').scrollIntoView({ block: 'start' });
+};
+
+// A row's button that opens an admin tool with that player picked.
 const actButton = (text, key, player) =>
-  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => tools.use(key, player.steamId, player.name) });
+  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => act(key, player) });
+
+// What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game.
+const ACTIONS = [
+  { key: 'player', label: 'Look up', note: 'Steam ID, Steam account, time played, bans and staff history', inGame: false },
+  { key: 'warn', label: 'Warn', note: 'A private message in game', inGame: true },
+  { key: 'kick', label: 'Kick', note: 'They see the reason, and can rejoin', inGame: true },
+  { key: 'switchteam', label: 'Move to another team', note: 'They respawn on the new side', inGame: true },
+  { key: 'ban', label: 'Ban', note: 'For a set time or for good', inGame: false },
+];
+
+const closeMenus = (except = null) => {
+  for (const menu of document.querySelectorAll('.act-menu[open]')) if (menu !== except) menu.open = false;
+};
+
+// Puts an open menu's list by its button: below it, or above when there is more room there.
+const placeMenu = (menu) => {
+  const list = menu.querySelector('.act-list');
+  const box = menu.querySelector('summary').getBoundingClientRect();
+  const below = window.innerHeight - box.bottom;
+  list.style.right = `${Math.max(8, window.innerWidth - box.right)}px`;
+  if (below < 260 && box.top > below) {
+    list.style.top = '';
+    list.style.bottom = `${window.innerHeight - box.top + 4}px`;
+  } else {
+    list.style.bottom = '';
+    list.style.top = `${box.bottom + 4}px`;
+  }
+};
+
+// An "Act" menu for a player. It opens over the page, so a table that scrolls sideways never cuts it off.
+const actMenu = (player) => {
+  const inGame = onlineIds.has(player.steamId);
+  const list = el(
+    'div',
+    { className: 'act-list' },
+    ...ACTIONS.filter((a) => inGame || !a.inGame).map((a) =>
+      el(
+        'button',
+        {
+          type: 'button',
+          className: 'act-item',
+          onclick: () => {
+            menu.open = false;
+            act(a.key, player);
+          },
+        },
+        el('span', { className: 'act-label', textContent: a.label }),
+        el('span', { className: 'act-note', textContent: a.note }),
+      ),
+    ),
+    inGame ? null : el('p', { className: 'act-note act-off', textContent: 'Not in game, so they can’t be warned, kicked or moved.' }),
+  );
+  const menu = el('details', { className: 'act-menu' }, el('summary', { className: 'btn btn-ghost btn-small', textContent: 'Act' }), list);
+  menu.addEventListener('toggle', () => {
+    if (!menu.open) {
+      // Once every menu has closed: another may have opened as this one closed.
+      if (waiting && !document.querySelector('.act-menu[open]')) {
+        const next = waiting;
+        waiting = null;
+        render(next);
+      }
+      return;
+    }
+    closeMenus(menu);
+    placeMenu(menu);
+  });
+  return menu;
+};
+
+// Menus close on a click elsewhere or Escape, and follow their button when the page or a table scrolls.
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.act-menu')) closeMenus();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  const open = document.querySelector('.act-menu[open]');
+  if (!open) return;
+  open.open = false;
+  open.querySelector('summary').focus();
+});
+const placeOpenMenus = () => {
+  for (const menu of document.querySelectorAll('.act-menu[open]')) placeMenu(menu);
+};
+document.addEventListener('scroll', placeOpenMenus, { capture: true, passive: true });
+window.addEventListener('resize', placeOpenMenus);
 
 const FLAG_KIND = { teamKills: 'bad', sameTeammate: 'bad', vehicleSuicides: 'hot', suicides: 'hot' };
 
@@ -193,7 +336,7 @@ const renderGriefers = (overview) => {
               },
             })
           : null,
-        actButton('Act', null, p),
+        actMenu(p),
       ),
     ),
   );
@@ -202,7 +345,7 @@ const renderGriefers = (overview) => {
     [
       'Player',
       ['Team kills', 'num'],
-      'Teammate killed most',
+      'Killed most',
       ['Killed by team', 'num'],
       ['Suicides', 'num'],
       ['Matches', 'num'],
@@ -211,6 +354,150 @@ const renderGriefers = (overview) => {
     ],
     rows,
     'Nobody team killed or killed themselves in this period.',
+  );
+};
+
+const swatch = (colour) => {
+  const node = el('span', { className: 'team-swatch', ariaHidden: 'true' });
+  if (colour) node.style.setProperty('--team', colour);
+  return node;
+};
+
+const PHASES = { live: ['Live', 'accent'], seeding: ['Seeding', 'hot'], empty: ['Empty', ''] };
+
+// The server at a glance: whether the bot can reach it, its map, phase, players and score.
+const renderServer = (overview) => {
+  const { server, online } = overview;
+  const strip = $('server-strip');
+  if (!server) {
+    strip.replaceChildren(el('p', { className: 'muted', textContent: 'The bot has not reached the game server yet.' }));
+    return;
+  }
+  const colours = sideColours([{ factionScores: server.factionScores }]);
+  if (online === null) {
+    strip.replaceChildren(
+      badge('Not answering', 'bad'),
+      el('strong', { textContent: server.name }),
+      el('span', { className: 'muted', textContent: `The bot last reached it ${timeAgo(overview.generatedAt - server.seenAt)}. The list comes back with it.` }),
+    );
+    return;
+  }
+  const [label, kind] = PHASES[server.phase] ?? [server.phase, ''];
+  strip.replaceChildren(
+    badge(label, kind),
+    el('strong', { className: 'server-name', textContent: server.name }),
+    mapTag(online.map),
+    el('span', { textContent: `${online.players.length} / ${server.maxPlayers} players` }),
+    server.factionScores.length > 0
+      ? el('span', { className: 'server-score' }, ...server.factionScores.flatMap((f, i) => [i > 0 ? ' · ' : '', swatch(colours.get(sideKey(f.name))), ` ${f.name} ${f.score}`]))
+      : null,
+    el('span', { className: 'muted server-seen', textContent: `Checked ${timeAgo(overview.generatedAt - online.at)}` }),
+  );
+};
+
+const renderTeamFilter = (players, colours) => {
+  const teams = teamCounts(players);
+  // A team picked before that is no longer in game falls back to everyone.
+  if (filters.team && !teams.some((t) => (t.name === null ? 'none' : sideKey(t.name)) === filters.team)) filters.team = '';
+  const button = (value, text, count, colour) =>
+    el(
+      'button',
+      {
+        type: 'button',
+        ariaPressed: String(filters.team === value),
+        onclick: () => {
+          filters.team = value;
+          renderPlayers(data);
+        },
+      },
+      colour === undefined ? null : swatch(colour),
+      `${text} `,
+      el('span', { className: 'filter-count', textContent: String(count) }),
+    );
+  $('team-filter').replaceChildren(
+    button('', 'All', players.length),
+    ...teams.map((t) => (t.name === null ? button('none', 'No team', t.count) : button(sideKey(t.name), t.name, t.count, colours.get(sideKey(t.name)) ?? null))),
+  );
+};
+
+// Everyone in game, as staff searched, filtered and sorted it.
+const renderPlayers = (overview) => {
+  if (!overview) return;
+  const online = overview.online;
+  const players = online?.players ?? [];
+  const today = utcDay(overview.generatedAt);
+  const colours = sideColours([{ factionScores: overview.server?.factionScores ?? [] }]);
+  renderTeamFilter(players, colours);
+  const shown = filterPlayers(players, filters, today);
+  const query = filters.query.trim();
+  $('players-count').textContent =
+    online === null ? '' : shown.length === players.length ? `${players.length} in game` : `Showing ${shown.length} of ${players.length} in game`;
+  // On a phone each cell says what it is, as the table's headings are hidden there.
+  const labelled = (label, td) => {
+    td.dataset.label = label;
+    return td;
+  };
+  const rows = shown.map((p) => {
+    const watch = watchList(p, today);
+    return el(
+      'tr',
+      { className: needsLook(p, today) ? 'watch' : '' },
+      el('td', { className: 'player' }, who(p)),
+      labelled('Team', cell(...(p.faction === null ? ['–'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`]))),
+      labelled('Kills / deaths', el('td', { className: 'num', textContent: p.kills === null ? '–' : `${p.kills} / ${p.deaths ?? 0}` })),
+      labelled('Today', el('td', { className: 'num', textContent: p.minutesToday > 0 ? formatHours(p.minutesToday) : '–' })),
+      watch.length === 0
+        ? el('td', { className: 'no-watch' }, el('span', { className: 'muted', textContent: '–' }))
+        : el(
+            'td',
+            {},
+            el(
+              'span',
+              { className: 'badges' },
+              ...watch.map((w) => {
+                const b = badge(w.text, w.kind);
+                if (w.title) b.title = w.title;
+                return b;
+              }),
+            ),
+          ),
+      el('td', { className: 'row-actions' }, actMenu(p)),
+    );
+  });
+  const node = $('server-players');
+  if (online === null) {
+    table(node, ['Player'], [], 'The server isn’t answering, so there is no list. It comes back with the server.');
+    return;
+  }
+  if (rows.length === 0 && query !== '') {
+    node.replaceChildren(
+      el(
+        'tbody',
+        {},
+        el(
+          'tr',
+          {},
+          el(
+            'td',
+            { className: 'muted', colSpan: 6 },
+            `Nobody in game matches “${query}”. `,
+            el('button', {
+              type: 'button',
+              className: 'link-button',
+              textContent: `Look up “${query}” in everyone the bot knows`,
+              onclick: () => act('player', { steamId: query, name: query }),
+            }),
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+  table(
+    node,
+    ['Player', 'Team', ['Kills / deaths', 'num'], ['Today', 'num'], 'Worth knowing', ''],
+    rows,
+    players.length === 0 ? 'Nobody is in game.' : 'Nobody in game matches. Try another team, or show everyone.',
   );
 };
 
@@ -246,6 +533,63 @@ const renderIncidents = (overview) => {
     ['When', 'What', 'Player', 'Teammate killed', 'With', ['Distance', 'num'], 'Map'],
     rows,
     focused === null ? 'No team kills or vehicle suicides in this period.' : `None involving ${focused.name} in this period.`,
+  );
+};
+
+const RISK_KIND = { high: 'bad', medium: 'hot' };
+const points = (count) => `${count} point${count === 1 ? '' : 's'}`;
+
+const renderSteam = (overview) => {
+  const steam = overview.steam;
+  // An older bot sends nothing; a bot without a Steam key sends null.
+  if (!steam) {
+    $('steam-note').textContent =
+      steam === undefined
+        ? 'The bot does not check Steam accounts yet. Deploy the latest bot.'
+        : 'Steam checks are off: the bot has no STEAM_API_KEY. See the bot’s README, “Risky Steam accounts”.';
+    $('steam-rules').replaceChildren();
+    $('steam-accounts').replaceChildren();
+    return;
+  }
+  const now = overview.generatedAt;
+  $('steam-note').textContent =
+    `The bot has checked ${steam.checked} of the ${steam.players} players seen in this period or in game now: ` +
+    `${steam.high} high risk (${points(steam.risk.high)} or more) and ${steam.medium} worth a look (${steam.risk.medium} or more), riskiest first. ` +
+    'A reason to look, not proof: a ban may be years old and from another game, and honest players have new and private accounts too.';
+  $('steam-rules').replaceChildren(
+    ...Object.entries(steam.flags).map(([flag, count]) =>
+      el('li', {}, badge(steamFlagLabel(flag)), ` ${steamFlagRule(flag, steam.marks)}: ${points(count)}`),
+    ),
+  );
+  const rows = steam.accounts.map((a) =>
+    el(
+      'tr',
+      {},
+      el(
+        'td',
+        { className: 'player' },
+        who(a),
+        el(
+          'span',
+          { className: 'badges' },
+          badge(`${RISK_LABELS[a.risk] ?? a.risk} · ${points(a.score)}`, RISK_KIND[a.risk]),
+          a.inGame ? badge('In game', 'accent') : null,
+          a.banned ? badge('Banned', 'accent') : null,
+        ),
+      ),
+      el('td', { className: 'reason' }, steamWhy(a, now).join(' · ') || '–', el('span', { className: 'badges' }, ...a.flags.map((f) => badge(steamFlagLabel(f))))),
+      el('td', { className: 'when' }, accountAge(a, now), el('span', { className: 'muted checked', textContent: `Checked ${when.format(a.checkedAt)}` })),
+      el('td', { className: 'num', textContent: a.matches > 0 ? `${a.matches} · ${kd(a.kills, a.deaths)} K/D` : '–' }),
+      el('td', { className: 'num', textContent: headshotShare(a.feedKills, a.headshots) ?? '–' }),
+      el('td', { className: 'num', textContent: a.minutes > 0 ? formatHours(a.minutes) : '–' }),
+      el('td', { className: 'row-actions' }, actMenu(a)),
+    ),
+  );
+  table(
+    $('steam-accounts'),
+    ['Player', 'Why', 'Account', ['Matches', 'num'], ['Headshots', 'num'], ['Played', 'num'], ''],
+    rows,
+    'No risky accounts among the players in this period.',
   );
 };
 
@@ -329,7 +673,14 @@ const renderReserved = (overview) => {
   table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
 };
 
+// Draws new data, or keeps it until an open Act menu closes.
+const show = (overview) => {
+  if (document.querySelector('.act-menu[open]')) waiting = overview;
+  else render(overview);
+};
+
 const render = (overview) => {
+  waiting = null;
   data = overview;
   $('signin').hidden = true;
   $('admin-body').hidden = false;
@@ -339,20 +690,37 @@ const render = (overview) => {
     `Signed in as ${overview.user?.name ?? 'staff'}`,
     ...(demo ? [] : [' · ', el('button', { type: 'button', className: 'link-button', textContent: 'Sign out', onclick: signOut })]),
   );
-  for (const button of document.querySelectorAll('.period button')) {
+  for (const button of document.querySelectorAll('.period button[data-days]')) {
     button.setAttribute('aria-pressed', String(Number(button.dataset.days) === period));
   }
   const span = period === 1 ? 'Today' : `The last ${period} days`;
   $('period-note').textContent = overview.feedSince
     ? `${span} (UTC days). Team kills and suicides come from the kill feed, which the bot has had since ${overview.feedSince}.`
     : `${span} (UTC days).`;
+  const players = overview.online?.players ?? [];
+  const today = utcDay(overview.generatedAt);
+  onlineIds = new Set(players.map((p) => p.steamId));
+  $('count-players').textContent = overview.online ? String(players.length) : '–';
+  const alerts = alertCount(overview);
+  $('count-alerts').textContent = String(alerts);
+  $('count-alerts').classList.toggle('tab-count-alert', alerts > 0);
+  $('tile-ingame').textContent = overview.online ? String(players.length) : '–';
+  $('tile-ingame-note').textContent = overview.server ? `of ${overview.server.maxPlayers} slots` : '';
+  $('tile-watch').textContent = String(players.filter((p) => needsLook(p, today)).length);
+  $('tile-risky-ingame').textContent = overview.steam ? String(players.filter((p) => p.steam && p.steam.risk !== 'low').length) : 'Off';
+  $('tile-new').textContent = String(players.filter((p) => p.firstSeen === today).length);
+  $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';
+  $('tile-risky-note').textContent = overview.steam ? `${overview.steam.high} high risk` : 'Needs STEAM_API_KEY';
   $('tile-flagged').textContent = String(overview.totals.flaggedPlayers);
   $('tile-teamkills').textContent = String(overview.totals.teamKills);
   $('tile-teamkills-note').textContent = overview.totals.vehicleTeamKills > 0 ? `${overview.totals.vehicleTeamKills} with a vehicle` : '';
   $('tile-vehicle').textContent = String(overview.totals.vehicleSuicides);
-  $('tile-suicides').textContent = String(overview.totals.suicides);
+  $('tile-suicides-note').textContent = `${overview.totals.suicides} suicides of any kind`;
+  renderServer(overview);
+  renderPlayers(overview);
   renderGriefers(overview);
   renderIncidents(overview);
+  renderSteam(overview);
   renderModeration(overview);
   renderBans(overview);
   renderReserved(overview);
@@ -414,7 +782,7 @@ const load = async () => {
   const mine = ++generation;
   const current = () => mine === generation;
   if (demo) {
-    render(demoAdmin(period, Date.now()));
+    show(demoAdmin(period, Date.now()));
     return;
   }
   const token = loadToken();
@@ -448,7 +816,7 @@ const load = async () => {
     const overview = await response.json();
     if (!current()) return;
     showNotice();
-    render(overview);
+    show(overview);
   } catch (error) {
     if (!current()) return;
     console.error('Could not load the staff page', error);
@@ -464,13 +832,44 @@ const load = async () => {
   }
 };
 
-for (const button of document.querySelectorAll('.period button')) {
+for (const button of document.querySelectorAll('.period button[data-days]')) {
   button.addEventListener('click', () => {
     period = Number(button.dataset.days);
     focus = null;
     load();
   });
 }
+
+// Tabs: click, or ← → Home End from the tab bar.
+for (const t of TABS) {
+  $(`tab-${t}`).addEventListener('click', () => {
+    $('tools-back').hidden = true;
+    selectTab(t);
+  });
+}
+document.querySelector('.admin-tabs').addEventListener('keydown', (event) => {
+  const i = TABS.indexOf(tab);
+  const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[event.key];
+  if (next === undefined) return;
+  event.preventDefault();
+  $('tools-back').hidden = true;
+  selectTab(TABS[(next + TABS.length) % TABS.length], { focus: true });
+});
+
+// The server list's search, sort and "worth a look".
+$('player-sort').replaceChildren(...Object.entries(PLAYER_SORTS).map(([value, text]) => el('option', { value, textContent: text })));
+$('player-search').addEventListener('input', (event) => {
+  filters.query = event.target.value;
+  renderPlayers(data);
+});
+$('player-sort').addEventListener('change', (event) => {
+  filters.sort = event.target.value;
+  renderPlayers(data);
+});
+$('player-watch').addEventListener('change', (event) => {
+  filters.watch = event.target.checked;
+  renderPlayers(data);
+});
 
 $('incidents-all').addEventListener('click', () => {
   focus = null;
@@ -500,8 +899,15 @@ const arrive = () => {
 };
 
 window.addEventListener('hashchange', () => {
+  // A link to a tab, or back and forward between them.
+  if (TABS.includes(location.hash.slice(1)) || location.hash === '') {
+    selectTab(location.hash.slice(1));
+    return;
+  }
   if (!demo && configured) arrive();
 });
+
+selectTab(location.hash.slice(1));
 
 if (demo) {
   showNotice('Showing sample data, not the real server. ', link(thisPage((p) => p.delete('demo')), 'Sign in for the real page'));

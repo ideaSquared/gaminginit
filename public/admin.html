@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: possible griefers, bans and kicks on our WARDOGS server." />
+    <meta name="description" content="For gaminginit staff: possible griefers, risky Steam accounts, bans and kicks on our WARDOGS server." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -60,7 +60,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The admin tools, possible griefers from the kill feed, every ban, kick and warning with its reason, and the reserved slots. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The admin tools, possible griefers from the kill feed, risky Steam accounts, every ban, kick and warning with its reason, and the reserved slots. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -70,84 +70,190 @@
           </div>
 
           <div id="admin-body" hidden>
-            <div class="admin-bar">
-              <div class="period" role="group" aria-label="Period">
-                <button type="button" data-days="1" aria-pressed="false">Today</button>
-                <button type="button" data-days="7" aria-pressed="true">7 days</button>
-                <button type="button" data-days="30" aria-pressed="false">30 days</button>
-              </div>
-              <p class="section-note" id="period-note"></p>
+            <div class="admin-tabs" role="tablist" aria-label="Staff page">
+              <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="true" data-tab="players">
+                <span class="tab-name">Players <span class="tab-count" id="count-players"></span></span>
+                <span class="tab-hint">Who is on the server now</span>
+              </button>
+              <button type="button" role="tab" id="tab-alerts" aria-controls="panel-alerts" aria-selected="false" tabindex="-1" data-tab="alerts">
+                <span class="tab-name">Alerts <span class="tab-count" id="count-alerts"></span></span>
+                <span class="tab-hint">Accounts and behaviour worth a look</span>
+              </button>
+              <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
+                <span class="tab-name">Admin</span>
+                <span class="tab-hint">Commands, bans, VIP and the log</span>
+              </button>
             </div>
 
-            <div class="tiles">
-              <div class="tile">
-                <p class="tile-label">Players flagged</p>
-                <p class="tile-value" id="tile-flagged">–</p>
+            <div class="tab-panel" role="tabpanel" id="panel-players" aria-labelledby="tab-players">
+              <div class="card server-strip" id="server-strip"></div>
+
+              <div class="tiles">
+                <div class="tile">
+                  <p class="tile-label">In game</p>
+                  <p class="tile-value" id="tile-ingame">–</p>
+                  <p class="tile-note" id="tile-ingame-note"></p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Worth a look now</p>
+                  <p class="tile-value" id="tile-watch">–</p>
+                  <p class="tile-note">Risky account, griefing or new</p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Risky Steam accounts</p>
+                  <p class="tile-value" id="tile-risky-ingame">–</p>
+                  <p class="tile-note">In game now</p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">New today</p>
+                  <p class="tile-value" id="tile-new">–</p>
+                  <p class="tile-note">First time in 90 days</p>
+                </div>
               </div>
-              <div class="tile">
-                <p class="tile-label">Team kills</p>
-                <p class="tile-value" id="tile-teamkills">–</p>
-                <p class="tile-note" id="tile-teamkills-note"></p>
-              </div>
-              <div class="tile">
-                <p class="tile-label">Vehicle suicides</p>
-                <p class="tile-value" id="tile-vehicle">–</p>
-              </div>
-              <div class="tile">
-                <p class="tile-label">Suicides</p>
-                <p class="tile-value" id="tile-suicides">–</p>
-              </div>
+
+              <article class="card panel admin-panel" aria-labelledby="players-title">
+                <h2 class="panel-title" id="players-title">Server list</h2>
+                <p class="section-note">Everyone in game, from the bot’s check each minute. Use <strong>Act</strong> on a player to warn, kick, move them to another team, ban or look them up.</p>
+                <div class="list-tools">
+                  <div class="list-search">
+                    <label class="finder-label" for="player-search">Search</label>
+                    <input class="finder-input" id="player-search" type="search" placeholder="Name or Steam ID" autocomplete="off" spellcheck="false" />
+                  </div>
+                  <div class="list-filter">
+                    <p class="finder-label" id="team-filter-label">Team</p>
+                    <div class="period team-filter" id="team-filter" role="group" aria-labelledby="team-filter-label"></div>
+                  </div>
+                  <div class="list-filter">
+                    <label class="finder-label" for="player-sort">Sort by</label>
+                    <select class="finder-input" id="player-sort"></select>
+                  </div>
+                  <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only players worth a look</label>
+                </div>
+                <p class="finder-count" id="players-count" role="status"></p>
+                <div class="admin-scroll">
+                  <table class="admin-table server-table" id="server-players"></table>
+                </div>
+              </article>
             </div>
 
-            <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
-              <h2 class="panel-title" id="tools-title">Admin tools</h2>
-              <p class="section-note" id="tools-note">Every staff command from Discord. Each runs on the bot as you, exactly as the slash command: it goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
-              <div id="tools"></div>
-            </article>
+            <div class="tab-panel" role="tabpanel" id="panel-alerts" aria-labelledby="tab-alerts" hidden>
+              <div class="admin-bar">
+                <div class="period" role="group" aria-label="Period">
+                  <button type="button" data-days="1" aria-pressed="false">Today</button>
+                  <button type="button" data-days="7" aria-pressed="true">7 days</button>
+                  <button type="button" data-days="30" aria-pressed="false">30 days</button>
+                </div>
+                <p class="section-note" id="period-note"></p>
+              </div>
 
-            <article class="card panel admin-panel" aria-labelledby="griefers-title">
-              <h2 class="panel-title" id="griefers-title">Possible griefers</h2>
-              <p class="section-note" id="griefers-note"></p>
-              <ul class="flag-rules" id="flag-rules"></ul>
-              <div class="admin-scroll">
-                <table class="admin-table griefers-table" id="griefers"></table>
+              <div class="card panel how-alerts">
+                <h2 class="panel-title">How alerts work</h2>
+                <ol class="alert-steps">
+                  <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every death in the kill feed is checked for team kills and vehicle suicides.</li>
+                  <li><strong>Serious ones go to Discord.</strong> High-risk Steam accounts and players passing a griefing mark are posted in the moderation log channel as they happen.</li>
+                  <li><strong>Everything is listed here,</strong> riskiest first. An alert is a reason to look, not proof: check the player before you act.</li>
+                </ol>
               </div>
-            </article>
 
-            <article class="card panel admin-panel" aria-labelledby="incidents-title">
-              <div class="panel-head">
-                <h2 class="panel-title" id="incidents-title">Team kills and vehicle suicides</h2>
-                <button type="button" class="btn btn-ghost btn-small" id="incidents-all" hidden>Show everyone</button>
+              <div class="tiles">
+                <div class="tile">
+                  <p class="tile-label">Risky Steam accounts</p>
+                  <p class="tile-value" id="tile-risky">–</p>
+                  <p class="tile-note" id="tile-risky-note"></p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Players flagged for griefing</p>
+                  <p class="tile-value" id="tile-flagged">–</p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Team kills</p>
+                  <p class="tile-value" id="tile-teamkills">–</p>
+                  <p class="tile-note" id="tile-teamkills-note"></p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Vehicle suicides</p>
+                  <p class="tile-value" id="tile-vehicle">–</p>
+                  <p class="tile-note" id="tile-suicides-note"></p>
+                </div>
               </div>
-              <p class="section-note" id="incidents-note"></p>
-              <div class="admin-scroll">
-                <table class="admin-table" id="incidents"></table>
-              </div>
-            </article>
 
-            <article class="card panel admin-panel" aria-labelledby="modlog-title">
-              <h2 class="panel-title" id="modlog-title">Moderation log</h2>
-              <p class="section-note">Warnings, kicks, bans, unbans and team moves through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
-              <div class="admin-scroll">
-                <table class="admin-table" id="modlog"></table>
-              </div>
-            </article>
+              <article class="card panel admin-panel" aria-labelledby="steam-title">
+                <h2 class="panel-title" id="steam-title">Risky Steam accounts</h2>
+                <p class="section-note" id="steam-note"></p>
+                <details class="rules">
+                  <summary>How accounts are scored</summary>
+                  <ul class="flag-rules" id="steam-rules"></ul>
+                </details>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="steam-accounts"></table>
+                </div>
+              </article>
 
-            <article class="card panel admin-panel" aria-labelledby="bans-title">
-              <h2 class="panel-title" id="bans-title">Bans</h2>
-              <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
-              <div class="admin-scroll">
-                <table class="admin-table" id="bans"></table>
-              </div>
-            </article>
+              <article class="card panel admin-panel" aria-labelledby="griefers-title">
+                <h2 class="panel-title" id="griefers-title">Possible griefers</h2>
+                <p class="section-note" id="griefers-note"></p>
+                <details class="rules">
+                  <summary>What gets a player flagged</summary>
+                  <ul class="flag-rules" id="flag-rules"></ul>
+                </details>
+                <div class="admin-scroll">
+                  <table class="admin-table griefers-table" id="griefers"></table>
+                </div>
+              </article>
 
-            <article class="card panel admin-panel" aria-labelledby="reserved-title">
-              <h2 class="panel-title" id="reserved-title">Reserved slots</h2>
-              <p class="section-note" id="reserved-note"></p>
-              <div class="admin-scroll">
-                <table class="admin-table" id="reserved"></table>
-              </div>
-            </article>
+              <article class="card panel admin-panel" aria-labelledby="incidents-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="incidents-title">Team kills and vehicle suicides</h2>
+                  <button type="button" class="btn btn-ghost btn-small" id="incidents-all" hidden>Show everyone</button>
+                </div>
+                <p class="section-note" id="incidents-note"></p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="incidents"></table>
+                </div>
+              </article>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
+              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="tools-title">Admin tools</h2>
+                  <button type="button" class="btn btn-ghost btn-small" id="tools-back" hidden></button>
+                </div>
+                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
+                <div id="tools"></div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="bans-title">
+                <h2 class="panel-title" id="bans-title">Bans</h2>
+                <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="bans"></table>
+                </div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="reserved-title">
+                <h2 class="panel-title" id="reserved-title">Reserved slots</h2>
+                <p class="section-note" id="reserved-note"></p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="reserved"></table>
+                </div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="modlog-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="modlog-title">Moderation log</h2>
+                  <div class="period" role="group" aria-label="Period">
+                    <button type="button" data-days="1" aria-pressed="false">Today</button>
+                    <button type="button" data-days="7" aria-pressed="true">7 days</button>
+                    <button type="button" data-days="30" aria-pressed="false">30 days</button>
+                  </div>
+                </div>
+                <p class="section-note">Warnings, kicks, bans, unbans and team moves through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="modlog"></table>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
       </section>

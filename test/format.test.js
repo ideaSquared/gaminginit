@@ -62,6 +62,18 @@ import {
   staffBy,
   staffLabel,
   withVehicle,
+  steamFlagLabel,
+  steamFlagRule,
+  RISK_LABELS,
+  longAgo,
+  steamWhy,
+  accountAge,
+  headshotShare,
+  watchList,
+  needsLook,
+  teamCounts,
+  filterPlayers,
+  alertCount,
   discordParts,
   optionLabel,
   READ_ONLY_TOOLS,
@@ -611,6 +623,61 @@ describe('staff page', () => {
   });
 });
 
+describe('risky Steam accounts', () => {
+  const HOUR = 3_600_000;
+  const DAY = 24 * HOUR;
+  const account = (overrides = {}) => ({
+    vacBans: 0,
+    gameBans: 0,
+    lastBanAt: null,
+    communityBanned: false,
+    tradeBan: 'none',
+    public: true,
+    setUp: true,
+    createdAt: NOW - 3000 * DAY,
+    ...overrides,
+  });
+
+  it('words the flags with the bot’s marks', () => {
+    const marks = { recentBanDays: 365, newAccountDays: 30, youngAccountDays: 180 };
+
+    assert.equal(steamFlagLabel('vacBan'), 'VAC ban');
+    assert.equal(steamFlagLabel('hidden'), 'Hidden profile');
+    assert.equal(steamFlagRule('recentBan', marks), 'the latest VAC or game ban was in the last 365 days');
+    assert.equal(steamFlagRule('newAccount', marks), 'made in the last 30 days');
+    assert.equal(steamFlagLabel('newFlag'), 'newFlag');
+    assert.equal(RISK_LABELS.medium, 'Worth a look');
+  });
+
+  it('says how long ago in days, months or years, as the bot does', () => {
+    assert.equal(longAgo(NOW - HOUR, NOW), 'today');
+    assert.equal(longAgo(NOW - DAY, NOW), '1 day ago');
+    assert.equal(longAgo(NOW - 400 * DAY, NOW), '13 months ago');
+    assert.equal(longAgo(NOW - 800 * DAY, NOW), '2 years ago');
+  });
+
+  it('says why an account is risky, and how old it is', () => {
+    assert.deepEqual(steamWhy(account({ vacBans: 2, gameBans: 1, lastBanAt: NOW - 10 * DAY, public: false }), NOW), [
+      '2 VAC bans and 1 game ban, the last 10 days ago',
+      'Private profile',
+    ]);
+    assert.deepEqual(steamWhy(account({ vacBans: 1, lastBanAt: NOW - 45 * DAY, communityBanned: true, tradeBan: 'banned', setUp: false }), NOW), [
+      '1 VAC ban, 45 days ago',
+      'Banned from the Steam Community',
+      'Banned from trading',
+      'Profile never set up',
+    ]);
+    assert.deepEqual(steamWhy(account({ tradeBan: 'probation' }), NOW), []);
+    assert.equal(accountAge(account({ createdAt: NOW - 3 * DAY }), NOW), 'Made 3 days ago');
+    assert.equal(accountAge(account({ createdAt: null }), NOW), 'Hidden');
+  });
+
+  it('gives the share of kills that were headshots', () => {
+    assert.equal(headshotShare(30, 21), '70% of 30 kills');
+    assert.equal(headshotShare(0, 0), null);
+  });
+});
+
 describe('admin tools', () => {
   const definitions = [
     { name: 'kick', description: 'Remove a player from the server; they can rejoin (staff only)', options: [{ type: 3, name: 'player', required: true }] },
@@ -689,5 +756,72 @@ describe('mapSegments', () => {
     const map = { map: 'Bakurani', matches: 1, draws: 0, teams: [{ name: 'Haldor', wins: 1 }] };
 
     assert.deepEqual(mapSegments(map, teams), [{ name: 'Haldor', count: 1, share: 1 }]);
+  });
+});
+
+describe('the staff page server list', () => {
+  const TODAY = '2026-10-03';
+  const player = (name, overrides = {}) => ({
+    steamId: `7656119800000${name.length}${name.charCodeAt(0)}`,
+    name,
+    faction: 'Valkyra',
+    kills: 0,
+    deaths: 0,
+    minutesToday: 30,
+    firstSeen: '2026-08-01',
+    steam: null,
+    griefFlags: [],
+    teamKillsToday: 0,
+    vehicleSuicidesToday: 0,
+    banned: false,
+    reserved: false,
+    ...overrides,
+  });
+  const ash = player('Ash', { kills: 12, deaths: 3, minutesToday: 90, steam: { risk: 'high', score: 5, flags: ['vacBan', 'hidden'] } });
+  const bo = player('Bo', { faction: 'Manticore', kills: 4, firstSeen: TODAY });
+  const cy = player('Cy', { faction: null, kills: null, deaths: null, teamKillsToday: 3, griefFlags: ['teamKills'] });
+  const dee = player('Dee', { kills: 4, deaths: 1, reserved: true, teamKillsToday: 1, steam: { risk: 'low', score: 1, flags: ['hidden'] } });
+  const all = [dee, cy, bo, ash];
+
+  it('shows what is worth watching about a player', () => {
+    assert.deepEqual(watchList(ash, TODAY), [{ text: 'High-risk Steam account', kind: 'bad', title: 'VAC ban, Hidden profile' }]);
+    assert.deepEqual(watchList(cy, TODAY), [{ text: '3 team kills today', kind: 'bad' }]);
+    assert.deepEqual(watchList(dee, TODAY), [{ text: '1 team kill today', kind: '' }, { text: 'VIP', kind: '' }]);
+    assert.deepEqual(watchList(bo, TODAY).map((b) => b.text), ['New today']);
+    assert.deepEqual(watchList(player('Eve', { banned: true, vehicleSuicidesToday: 2, griefFlags: ['vehicleSuicides'] }), TODAY), [
+      { text: 'Banned', kind: 'bad' },
+      { text: '2 vehicle suicides today', kind: 'hot' },
+    ]);
+  });
+
+  it('knows who is worth a look', () => {
+    assert.deepEqual(all.filter((p) => needsLook(p, TODAY)).map((p) => p.name), ['Cy', 'Bo', 'Ash']);
+  });
+
+  it('counts each team, biggest first, with no team last', () => {
+    assert.deepEqual(teamCounts(all), [
+      { name: 'Valkyra', count: 2 },
+      { name: 'Manticore', count: 1 },
+      { name: null, count: 1 },
+    ]);
+  });
+
+  it('searches, filters and sorts the list', () => {
+    const names = (options) => filterPlayers(all, options, TODAY).map((p) => p.name);
+
+    assert.deepEqual(names({}), ['Bo', 'Ash', 'Dee', 'Cy']);
+    assert.deepEqual(names({ query: ' a' }), ['Ash']);
+    assert.deepEqual(names({ query: ash.steamId.slice(-4) }), ['Ash']);
+    assert.deepEqual(names({ team: 'valkyra' }), ['Ash', 'Dee']);
+    assert.deepEqual(names({ team: 'none' }), ['Cy']);
+    assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Bo', 'Cy']);
+    // Most kills, then fewest deaths; Cy has no kills reported.
+    assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
+    assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
+  });
+
+  it('counts the alerts worth a look', () => {
+    assert.equal(alertCount({ steam: { accounts: [{}, {}] }, totals: { flaggedPlayers: 3 } }), 5);
+    assert.equal(alertCount({ steam: null, totals: { flaggedPlayers: 0 } }), 0);
   });
 });

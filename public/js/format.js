@@ -614,6 +614,125 @@ export const staffBy = (entry, staff = {}) => {
 // "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were.
 export const withVehicle = (count, vehicle) => (vehicle > 0 ? `${count} (${vehicle} vehicle)` : String(count));
 
+// Risky Steam accounts: the flags the bot puts on an account, worded with its marks (`steam.flags` in its answer has
+// each flag's points, `steam.marks` the days).
+export const steamFlagLabel = (flag) =>
+  ({
+    vacBan: 'VAC ban',
+    gameBan: 'Game ban',
+    recentBan: 'Recent ban',
+    communityBan: 'Community ban',
+    tradeBan: 'Trade ban',
+    newAccount: 'New account',
+    youngAccount: 'Young account',
+    hidden: 'Hidden profile',
+  })[flag] ?? flag;
+
+export const steamFlagRule = (flag, marks) =>
+  ({
+    vacBan: 'VAC bans on the account, in any game',
+    gameBan: 'game bans: another game’s anti-cheat or developer banned them',
+    recentBan: `the latest VAC or game ban was in the last ${marks.recentBanDays} days`,
+    communityBan: 'banned from the Steam Community',
+    tradeBan: 'banned from trading on Steam',
+    newAccount: `made in the last ${marks.newAccountDays} days`,
+    youngAccount: `made in the last ${marks.youngAccountDays} days, but not new`,
+    hidden: 'the profile is private, or was never set up: Steam shows nothing about it, not even its age',
+  })[flag] ?? flag;
+
+export const RISK_LABELS = { high: 'High risk', medium: 'Worth a look' };
+
+// "today", "12 days ago", "4 months ago", "9 years ago", as the bot words it in Discord.
+export const longAgo = (at, now) => {
+  const days = Math.max(0, Math.floor((now - at) / DAY));
+  if (days === 0) return 'today';
+  if (days < 60) return `${plural(days, 'day')} ago`;
+  if (days < 730) return `${plural(Math.floor(days / 30), 'month')} ago`;
+  return `${plural(Math.floor(days / 365), 'year')} ago`;
+};
+
+// What Steam says about a risky account: its bans and its profile. How old it is goes in a column of its own.
+export const steamWhy = (account, now) => {
+  const bans = [...(account.vacBans > 0 ? [plural(account.vacBans, 'VAC ban')] : []), ...(account.gameBans > 0 ? [plural(account.gameBans, 'game ban')] : [])];
+  const last = account.lastBanAt === null ? '' : `, ${account.vacBans + account.gameBans > 1 ? 'the last ' : ''}${longAgo(account.lastBanAt, now)}`;
+  return [
+    ...(bans.length > 0 ? [`${bans.join(' and ')}${last}`] : []),
+    ...(account.communityBanned ? ['Banned from the Steam Community'] : []),
+    ...(account.tradeBan === 'banned' ? ['Banned from trading'] : []),
+    ...(!account.setUp ? ['Profile never set up'] : !account.public ? ['Private profile'] : []),
+  ];
+};
+
+// How old the account is, or that Steam hides it.
+export const accountAge = (account, now) => (account.createdAt === null ? 'Hidden' : `Made ${longAgo(account.createdAt, now)}`);
+
+// "62% of 230 kills", from the kill feed, or null without kills.
+export const headshotShare = (kills, headshots) => (kills > 0 ? `${Math.round((headshots / kills) * 100)}% of ${kills} kills` : null);
+
+// The staff page's server list (`online.players` in the bot's answer).
+
+const STEAM_BADGES = { high: 'High-risk Steam account', medium: 'Steam account worth a look' };
+
+// What is worth watching about a player in game, as badges: `kind` is 'bad', 'hot' or 'accent', or '' for a quiet one.
+// `today` is the UTC day, to tell who is new.
+export const watchList = (player, today) => [
+  ...(player.banned ? [{ text: 'Banned', kind: 'bad' }] : []),
+  ...(player.steam && player.steam.risk !== 'low'
+    ? [{ text: STEAM_BADGES[player.steam.risk], kind: player.steam.risk === 'high' ? 'bad' : 'hot', title: player.steam.flags.map(steamFlagLabel).join(', ') }]
+    : []),
+  ...(player.teamKillsToday > 0
+    ? [{ text: `${plural(player.teamKillsToday, 'team kill')} today`, kind: player.griefFlags.length > 0 ? 'bad' : '' }]
+    : []),
+  ...(player.vehicleSuicidesToday > 0
+    ? [{ text: `${plural(player.vehicleSuicidesToday, 'vehicle suicide')} today`, kind: player.griefFlags.includes('vehicleSuicides') ? 'hot' : '' }]
+    : []),
+  ...(player.firstSeen === today ? [{ text: 'New today', kind: 'accent', title: 'First time on the server in 90 days' }] : []),
+  ...(player.reserved ? [{ text: 'VIP', kind: '' }] : []),
+];
+
+// Whether a player in game is worth a look now: banned, a risky Steam account, flagged for griefing today, or new.
+export const needsLook = (player, today) =>
+  player.banned || (player.steam !== null && player.steam.risk !== 'low') || player.griefFlags.length > 0 || player.firstSeen === today;
+
+// Each team in game with how many are on it, biggest first, and players without a team (`name` null) last.
+export const teamCounts = (players) => {
+  const counts = new Map();
+  for (const p of players) {
+    const key = p.faction === null ? null : sideKey(p.faction);
+    const known = counts.get(key) ?? { name: p.faction, count: 0 };
+    counts.set(key, { ...known, count: known.count + 1 });
+  }
+  return [...counts.values()].sort((a, b) => Number(a.name === null) - Number(b.name === null) || b.count - a.count || a.name.localeCompare(b.name));
+};
+
+export const PLAYER_SORTS = {
+  team: 'Team',
+  kills: 'Most kills',
+  today: 'Longest on today',
+  name: 'Name',
+};
+
+// The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
+// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order.
+export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'team' }, today) => {
+  const q = query.trim().toLowerCase();
+  const byName = (a, b) => a.name.localeCompare(b.name);
+  const order = {
+    team: (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b),
+    kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
+    today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),
+    name: byName,
+  };
+  return players
+    .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
+    .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
+    .filter((p) => !watch || needsLook(p, today))
+    .sort(order[sort] ?? order.team);
+};
+
+// How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
+export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);
+
 // Admin tools: the bot's staff commands, run from the staff page. The bot sends their definitions as Discord has them
 // (GET /api/admin/commands); the page builds a form for each. A command with subcommands, such as /vip, is one tool per
 // subcommand, keyed "vip:add".
