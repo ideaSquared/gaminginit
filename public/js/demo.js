@@ -636,10 +636,10 @@ export const demoAdmin = (days, now) => {
     staffProfiles: [{ userId: '100000000000000002', name: 'Kestrel', linkedAt: now - 9 * DAY, player: ref('Kestrel'), seen: true }],
     reserved: {
       players: [
-        { player: ref('Kestrel'), bot: { since: now - 2 * DAY, until: now + 5 * DAY } },
-        { player: ref('Moth'), bot: { since: now - 6 * DAY, until: now + DAY } },
-        { player: ref('Rook'), bot: null },
-        { player: ref('Sable'), bot: null },
+        { player: ref('Kestrel'), bot: null, staff: { since: now - 9 * DAY } },
+        { player: ref('Moth'), bot: { since: now - 6 * DAY, until: now + DAY }, staff: null },
+        { player: ref('Rook'), bot: null, staff: null },
+        { player: ref('Sable'), bot: null, staff: null },
       ],
       maxSlots: 2,
     },

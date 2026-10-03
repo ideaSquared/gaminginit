@@ -234,7 +234,9 @@ browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for 
 sign in without a Steam account linked, the page asks for your Steam64 ID (17 digits, starting 7656119), with how to find
 it: Steam's **Account details**, your profile's link when it has `/profiles/` and the number in it, or steamid.io for a
 custom link. Once linked, the bot counts your time on the server as playing, not seeding: you don't earn seeder VIP or
-show as a top seeder, and your player page shows no seed days. Your kills, matches and time played show as before.
+show as a top seeder, and your player page shows no seed days. Your kills, matches and time played show as before. You
+get a staff spot instead: the bot keeps you on the server's reserved list for as long as you're linked, in place of a
+slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
 
 The page has four tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
@@ -294,9 +296,12 @@ the keyboard.
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+  Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
+  unlinking them takes it away.
 - **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
   linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
-  who linked the wrong account or is no longer staff: their time counts as seeding again. Needs the bot's staff Steam
+  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
+  counts as seeding again. Needs the bot's staff Steam
   accounts (its README, "Staff Steam accounts").
 
 ### Rotations: the maps for each day

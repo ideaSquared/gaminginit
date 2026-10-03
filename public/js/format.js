@@ -572,6 +572,13 @@ export const readSteamId = (input) => {
   return /^7656119\d{10}$/.test(id) ? id : null;
 };
 
+// How many on the reserved list have staff spots, for its note. Nothing when none do.
+export const staffNote = (staffCount, count) => {
+  if (staffCount === 0) return '';
+  if (staffCount === count) return count === 1 ? 'They are staff.' : 'All of them are staff.';
+  return `${staffCount} of them ${staffCount === 1 ? 'is' : 'are'} staff.`;
+};
+
 // What the staff page says once a staff member has linked their Steam account: whose it is in game (`player`, null when
 // the bot has not seen it there lately), or, in ?demo, that nothing was saved.
 export const steamLinkedText = ({ steamId, player, sample }) => {
