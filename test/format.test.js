@@ -56,6 +56,7 @@ import {
   flagLabel,
   flagRule,
   MOD_ACTIONS,
+  modActionCounts,
   sessionExpiry,
   signInResult,
   SIGN_IN_ERRORS,
@@ -616,6 +617,20 @@ describe('staff page', () => {
     assert.equal(staffBy({ by: '45', byName: 'Pike' }, staff), 'Pike');
     assert.equal(staffBy({ by: 'bot' }, staff), 'The bot');
     assert.equal(staffLabel({ name: 'Sarge', username: 'paragon' }), 'Sarge (@paragon)');
+  });
+
+  it('counts the moderation log by kind of action, for its filter', () => {
+    const log = [{ action: 'switchteam' }, { action: 'ban' }, { action: 'switchteam' }, { action: 'newAction' }];
+
+    assert.deepEqual(modActionCounts(log), [
+      { action: 'warn', count: 0 },
+      { action: 'kick', count: 0 },
+      { action: 'ban', count: 1 },
+      { action: 'unban', count: 0 },
+      { action: 'switchteam', count: 2 },
+      { action: 'newAction', count: 1 },
+    ]);
+    assert.equal(modActionCounts([]).length, Object.keys(MOD_ACTIONS).length);
   });
 
   it('adds how many were with a vehicle, when any were', () => {

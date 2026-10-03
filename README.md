@@ -281,7 +281,8 @@ the keyboard.
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log.
 - **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
-  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days.
+  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days. Each
+  kind of action can be hidden (team moves, say); the page remembers what you hid in this browser.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,

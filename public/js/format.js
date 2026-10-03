@@ -596,6 +596,14 @@ export const MOD_ACTIONS = {
   switchteam: 'Team move',
 };
 
+// The moderation log's filter: each kind of action with how many of `entries` are that kind, every kind MOD_ACTIONS
+// names (none yet is 0) in its order, then any other the bot sends.
+export const modActionCounts = (entries) => {
+  const counts = new Map(Object.keys(MOD_ACTIONS).map((action) => [action, 0]));
+  for (const e of entries) counts.set(e.action, (counts.get(e.action) ?? 0) + 1);
+  return [...counts].map(([action, count]) => ({ action, count }));
+};
+
 // A staff member as the page names them: "Sarge (@paragon)", or just the name when their username is the same.
 export const staffLabel = ({ name, username }) =>
   username && username.toLowerCase() !== name.toLowerCase() ? `${name} (@${username})` : name;
