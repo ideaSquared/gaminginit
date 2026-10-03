@@ -2937,6 +2937,69 @@ body.refreshing .tile-value {
   cursor: pointer;
 }
 
+/* Linking a staff member's Steam account */
+
+.steam-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  color: var(--text);
+}
+
+.steam-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.steam-form:not([hidden]),
+.steam-done:not([hidden]) {
+  display: grid;
+  gap: 14px;
+}
+
+.steam-form > p,
+.steam-done > p,
+.steam-form .tool-note,
+.steam-form .tool-error {
+  margin: 0;
+}
+
+.steam-form .tool-note {
+  color: var(--muted);
+}
+
+.steam-guide {
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.steam-guide summary {
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.steam-guide ol {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.steam-guide code {
+  overflow-wrap: anywhere;
+}
+
+.steam-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Admin tools */
 
 .tools-panel .tool-picker {

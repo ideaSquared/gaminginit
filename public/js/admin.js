@@ -14,6 +14,7 @@ import {
   modActionLabel,
   needsLook,
   PLAYER_SORTS,
+  readSteamId,
   RISK_LABELS,
   sessionExpiry,
   sideColours,
@@ -22,6 +23,7 @@ import {
   staffBy,
   steamFlagLabel,
   steamFlagRule,
+  steamLinkedText,
   steamWhy,
   teamCounts,
   timeAgo,
@@ -38,8 +40,9 @@ import { el, link, mapTag, playerName } from './views.js';
 // itself: risky Steam accounts, possible griefers from the kill feed (team kills and suicides) and the incidents behind
 // them. Admin: the admin tools (every staff command), the bans on the server, the reserved slots and everything staff did
 // through the bot. Rotations: the map rotations, the week and what is on the server (see rotations.js). Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
-// session token, which this page keeps for this browser and sends with each request. ?demo shows sample data without
-// signing in.
+// session token, which this page keeps for this browser and sends with each request. Staff link the Steam account they
+// play on, so the bot never counts them as seeders: the page asks once each sign-in until they have. ?demo shows sample
+// data without signing in.
 
 // The bot named in this page's own settings, never one named in the address (?stats=): a link could otherwise send a
 // signed-in staff member's session to another site. To try a local bot, edit the meta tag in a local copy.
@@ -158,6 +161,7 @@ const signedOut = (message) => {
   $('signin-link').href = signInHref();
   $('signin-error').hidden = !message;
   $('signin-error').textContent = message ?? '';
+  if ($('steam-dialog').open) $('steam-dialog').close();
   rotations.reset();
 };
 
@@ -166,20 +170,18 @@ const signOut = () => {
   signedOut(null);
 };
 
+// A Steam ID, linking to its Steam profile.
+const steamLink = (steamId) =>
+  el('a', {
+    className: 'steam-id',
+    href: `https://steamcommunity.com/profiles/${steamId}`,
+    rel: 'noopener noreferrer',
+    target: '_blank',
+    textContent: steamId,
+  });
+
 // A player's name, linking to their public page, with their Steam ID linking to their Steam profile.
-const who = (player) =>
-  el(
-    'span',
-    { className: 'staff-player' },
-    playerName(player),
-    el('a', {
-      className: 'steam-id',
-      href: `https://steamcommunity.com/profiles/${player.steamId}`,
-      rel: 'noopener noreferrer',
-      target: '_blank',
-      textContent: player.steamId,
-    }),
-  );
+const who = (player) => el('span', { className: 'staff-player' }, playerName(player), steamLink(player.steamId));
 
 const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
 
@@ -742,6 +744,46 @@ const renderReserved = (overview) => {
   table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
 };
 
+// The signed-in staff member's linked Steam account, or null.
+const myProfile = (overview) => overview?.staffProfiles?.find((p) => p.userId === overview.user?.id) ?? null;
+
+const ghostButton = (text, onclick) => el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick });
+
+// Staff who linked their Steam account, so the bot never counts them as seeders. Anyone can unlink anyone, for staff
+// who have left.
+const STAFF_STEAM_NOTE = $('staff-steam-note').textContent;
+const renderStaffSteam = (overview) => {
+  const profiles = overview.staffProfiles;
+  const mineButton = $('staff-steam-mine');
+  mineButton.hidden = profiles === undefined;
+  const note = profiles === undefined ? 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.' : STAFF_STEAM_NOTE;
+  setStatus($('staff-steam-note'), note);
+  if (profiles === undefined) {
+    $('staff-steam').replaceChildren();
+    return;
+  }
+  mineButton.textContent = myProfile(overview) ? 'Change yours' : 'Link yours';
+  const rows = profiles.map((p) => {
+    const mine = p.userId === overview.user?.id;
+    // The bot names an account it has never seen by its Steam ID.
+    const account = p.player.name === p.player.steamId ? steamLink(p.player.steamId) : who(p.player);
+    return el(
+      'tr',
+      {},
+      cell(mine ? `${p.name} (you)` : p.name),
+      el('td', { className: 'player' }, account, ...(p.seen ? [] : [' ', badge('Not seen in 90 days', 'hot')])),
+      el('td', { className: 'when', textContent: when.format(p.linkedAt) }),
+      el(
+        'td',
+        { className: 'row-actions' },
+        ...(mine ? [ghostButton('Change', () => openSteam())] : []),
+        ghostButton('Unlink', () => unlinkSteam(p, mine)),
+      ),
+    );
+  });
+  table($('staff-steam'), ['Staff', 'Steam account', 'Linked', ''], rows, 'Nobody has linked theirs yet.');
+};
+
 // Draws new data, or keeps it until an open Act menu closes.
 const show = (overview) => {
   if (document.querySelector('.act-menu[open]')) waiting = overview;
@@ -755,8 +797,17 @@ const render = (overview) => {
   $('admin-body').hidden = false;
   const user = $('admin-user');
   user.hidden = false;
+  const mine = myProfile(overview);
+  const steamButton = el('button', {
+    type: 'button',
+    className: 'link-button',
+    textContent: mine ? `Steam: ${mine.player.name}` : 'Link your Steam account',
+    onclick: () => openSteam(),
+  });
+  if (mine) steamButton.setAttribute('aria-label', `Change your Steam account, linked to ${mine.player.name}`);
   user.replaceChildren(
     `Signed in as ${overview.user?.name ?? 'staff'}`,
+    ...(overview.staffProfiles === undefined ? [] : [' · ', steamButton]),
     ...(demo ? [] : [' · ', el('button', { type: 'button', className: 'link-button', textContent: 'Sign out', onclick: signOut })]),
   );
   for (const button of document.querySelectorAll('.period button[data-days]')) {
@@ -793,6 +844,11 @@ const render = (overview) => {
   renderModeration(overview);
   renderBans(overview);
   renderReserved(overview);
+  renderStaffSteam(overview);
+  if (overview.staffProfiles !== undefined && !mine && !askedThisSignIn()) {
+    noteAsked();
+    openSteam();
+  }
   if (!tools.ready) loadCommands();
   if (tab === 'rotations') rotations.ensure();
 };
@@ -818,6 +874,104 @@ const call = async (path, body) => {
 };
 
 const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: () => data?.staff ?? {} });
+
+// Linking the signed-in staff member's Steam account. Until they have, the page asks once each sign-in, told apart by
+// when it runs out; "Later" waits for the next one.
+const STEAM_ASKED_KEY = 'gaminginit-steam-asked';
+let steamAskedFor = null;
+const thisSignIn = () => String(sessionExpiry(loadToken() ?? '') ?? '');
+const askedThisSignIn = () => {
+  const signIn = thisSignIn();
+  try {
+    if (localStorage.getItem(STEAM_ASKED_KEY) === signIn) return true;
+  } catch {
+    // Kept in memory only.
+  }
+  return steamAskedFor === signIn;
+};
+const noteAsked = () => {
+  steamAskedFor = thisSignIn();
+  try {
+    localStorage.setItem(STEAM_ASKED_KEY, steamAskedFor);
+  } catch {
+    // Kept in memory only.
+  }
+};
+
+const steamDialog = $('steam-dialog');
+
+const steamError = (text) => {
+  $('steam-error').hidden = !text;
+  $('steam-error').textContent = text ?? '';
+  $('steam-input').setAttribute('aria-invalid', String(Boolean(text)));
+};
+
+const openSteam = () => {
+  if (steamDialog.open) return;
+  const mine = myProfile(data);
+  $('steam-form').hidden = false;
+  $('steam-done').hidden = true;
+  steamDialog.setAttribute('aria-labelledby', 'steam-dialog-title');
+  $('steam-dialog-title').textContent = mine ? 'Change your Steam account' : 'Link your Steam account';
+  $('steam-save').textContent = mine ? 'Save' : 'Link account';
+  $('steam-cancel').textContent = mine ? 'Cancel' : 'Later';
+  $('steam-input').value = mine?.player.steamId ?? '';
+  steamError(null);
+  steamDialog.showModal();
+};
+
+const unlinkSteam = async (profile, mine) => {
+  const question = mine
+    ? 'Unlink your Steam account? Your time on the server counts as seeding again.'
+    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their time on the server counts as seeding again.`;
+  if (!window.confirm(question)) return;
+  try {
+    const { ok, json } = await call('admin/profile', { action: 'unlink', ...(mine ? {} : { userId: profile.userId }) });
+    if (!ok) {
+      if (loadToken()) showNotice(json?.error ?? 'Couldn’t unlink that just now. Try again in a minute.');
+      return;
+    }
+    load();
+  } catch (error) {
+    console.error('Could not unlink a Steam account', error);
+    showNotice('Couldn’t reach the bot. Try again in a minute.');
+  }
+};
+
+$('steam-cancel').addEventListener('click', () => steamDialog.close());
+$('steam-done-close').addEventListener('click', () => steamDialog.close());
+$('staff-steam-mine').addEventListener('click', () => openSteam());
+$('steam-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const steamId = readSteamId($('steam-input').value);
+  if (steamId === null) {
+    steamError('That isn’t a Steam64 ID. It is 17 digits and starts with 7656119. See “How to find it” below.');
+    $('steam-input').focus();
+    return;
+  }
+  const save = $('steam-save');
+  save.disabled = true;
+  try {
+    const { ok, json } = await call('admin/profile', { action: 'link', steamId });
+    // Saved even when the dialog was closed while it went, so the page shows it either way.
+    if (ok) load();
+    if (!steamDialog.open) return;
+    if (!ok) {
+      steamError(json?.error ?? 'Couldn’t save that just now. Try again in a minute.');
+      return;
+    }
+    $('steam-done-text').textContent = steamLinkedText({ steamId, player: json?.player ?? null, sample: json?.sample === true });
+    $('steam-form').hidden = true;
+    $('steam-done').hidden = false;
+    steamDialog.setAttribute('aria-labelledby', 'steam-done-title');
+    $('steam-done-close').focus();
+  } catch (error) {
+    console.error('Could not link a Steam account', error);
+    steamError('Couldn’t reach the bot. Try again in a minute.');
+  } finally {
+    save.disabled = false;
+  }
+});
 
 // Reads from the bot's staff API as the signed-in staff member.
 const get = async (path) => {
@@ -977,8 +1131,7 @@ document.addEventListener('visibilitychange', () => {
 
 // Back from signing in: keep the session, and take it out of the address bar and history. The bot sends people back
 // with a new page load; a change to the # on this page is handled the same way.
-const arrive = () => {
-  const result = signInResult(location.hash);
+const arrive = (result = signInResult(location.hash)) => {
   if (result) history.replaceState(null, '', location.pathname + location.search);
   if (result?.session) saveToken(result.session);
   if (result?.error) {
@@ -998,6 +1151,8 @@ window.addEventListener('hashchange', () => {
   if (!demo && configured) arrive();
 });
 
+// Read before the tab is picked, as picking one tidies the # away.
+const returned = signInResult(location.hash);
 selectTab(location.hash.slice(1));
 
 if (demo) {
@@ -1006,5 +1161,5 @@ if (demo) {
 } else if (!configured) {
   showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with sample data'));
 } else {
-  arrive();
+  arrive(returned);
 }

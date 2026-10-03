@@ -230,6 +230,13 @@ Until the stats URL is set, the page says live stats are not connected and links
 sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
 browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
 
+**Your Steam account.** Seeder VIP and the top seeders are for the players who seed, not for staff. The first time you
+sign in without a Steam account linked, the page asks for your Steam64 ID (17 digits, starting 7656119), with how to find
+it: Steam's **Account details**, your profile's link when it has `/profiles/` and the number in it, or steamid.io for a
+custom link. Once linked, the bot counts your time on the server as playing, not seeding: you don't earn seeder VIP or
+show as a top seeder, and your player page shows no seed days. Your kills, matches and time played show as before.
+"Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
+
 The page has four tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
 The address keeps the tab (`/admin#alerts`, `/admin#admin`, `/admin#rotations`), so a link opens the right one. ← → move between tabs from
 the keyboard.
@@ -287,6 +294,10 @@ the keyboard.
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+- **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
+  linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
+  who linked the wrong account or is no longer staff: their time counts as seeding again. Needs the bot's staff Steam
+  accounts (its README, "Staff Steam accounts").
 
 ### Rotations: the maps for each day
 
