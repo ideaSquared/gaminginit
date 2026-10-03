@@ -906,7 +906,7 @@ export const demoRotationsChange = async (body) => {
     if (from && clash && clash !== from) return refuse(`There's already a rotation called **${clash.name}**.`);
     if (body.entries.length === 0) return refuse('A rotation needs at least one map.');
     const target = from ?? clash;
-    if (!target && state.rotations.length >= 10) return refuse('There are already 10 rotations. Delete one first.');
+    if (!target && state.rotations.filter((r) => r.name !== 'Default').length >= 10) return refuse('There are already 10 rotations. Delete one first.');
     if (target) {
       const old = target.name;
       target.name = name;

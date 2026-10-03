@@ -84,6 +84,8 @@ export const createRotations = ({ root, load, send }) => {
   const catalog = () => page?.catalog ?? null;
   const defaultName = () => page?.defaultName ?? 'Default';
   const isDefault = (name) => name !== null && name !== undefined && name.toLowerCase() === defaultName().toLowerCase();
+  // The rotations staff saved besides Default, which never counts against the limit.
+  const ownCount = () => (page?.rotations ?? []).filter((r) => !isDefault(r.name)).length;
   const saved = (name) => page?.rotations.find((r) => r.name.toLowerCase() === String(name ?? '').toLowerCase()) ?? null;
 
   const dirty = () => {
@@ -561,8 +563,8 @@ export const createRotations = ({ root, load, send }) => {
   };
 
   const sideCard = () => {
-    const full = page.rotations.length >= page.limits.rotations;
-    const newButton = button('+ New rotation', { className: 'btn btn-ghost btn-small rot-new', disabled: busy || full, title: full ? `At most ${page.limits.rotations} rotations` : '' });
+    const full = ownCount() >= page.limits.rotations;
+    const newButton = button('+ New rotation', { className: 'btn btn-ghost btn-small rot-new', disabled: busy || full, title: full ? `At most ${page.limits.rotations} rotations besides ${defaultName()}` : '' });
     newButton.addEventListener('click', () => startNew());
     const list = el(
       'ul',
@@ -590,7 +592,7 @@ export const createRotations = ({ root, load, send }) => {
     return el(
       'aside',
       { className: 'card panel rot-side', ariaLabel: 'Saved rotations' },
-      el('div', { className: 'panel-head' }, el('h3', { className: 'panel-title', textContent: 'Rotations' }), el('span', { className: 'rot-count', textContent: `${page.rotations.length} of ${page.limits.rotations}` })),
+      el('div', { className: 'panel-head' }, el('h3', { className: 'panel-title', textContent: 'Rotations' }), el('span', { className: 'rot-count', textContent: `${ownCount()} of ${page.limits.rotations}`, title: `Not counting ${defaultName()}` })),
       list,
       newButton,
     );
@@ -740,7 +742,7 @@ export const createRotations = ({ root, load, send }) => {
     });
     const putButton = button('Put on server', { className: 'btn btn-ghost btn-small', disabled: busy || draft.from === null || draft.entries.length === 0, title: draft.from === null ? 'Save it first' : '' });
     putButton.addEventListener('click', () => putOn(draft.from));
-    const full = page.rotations.length >= page.limits.rotations;
+    const full = ownCount() >= page.limits.rotations;
     const duplicate = button('Duplicate', { className: 'rot-menu-item', disabled: busy || full || draft.entries.length === 0 });
     duplicate.addEventListener('click', () => startNew(draft.entries.map(copyDraft), `${name || 'Rotation'} copy`));
     const fromServer = button("Copy the server's maps in", { className: 'rot-menu-item', disabled: busy || !(page.server?.entries.length > 0) });
