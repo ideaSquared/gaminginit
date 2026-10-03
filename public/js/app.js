@@ -14,8 +14,14 @@ const MOVED = {
   join: 'join',
   vip: 'join#vip',
 };
-const moved = MOVED[location.hash.slice(1)];
-if (moved) location.replace(keepQuery(moved));
+const redirect = () => {
+  const moved = MOVED[location.hash.slice(1)];
+  if (moved) location.replace(keepQuery(moved));
+  return Boolean(moved);
+};
+// Also when one is opened while the home page is already open.
+addEventListener('hashchange', redirect);
+const moved = redirect();
 
 const $ = (id) => document.getElementById(id);
 

@@ -38,6 +38,21 @@ export const thisPage = (change) => {
   return url.pathname + url.search;
 };
 
+// A link to part of a page that the bot's numbers reveal, like join#vip or leaderboard#weapons, finds it hidden while
+// the page loads, so the browser cannot scroll to it. Scroll there once the first numbers are in, if they show it.
+const shown = (node) => node.getClientRects().length > 0;
+let hiddenTarget = null;
+try {
+  hiddenTarget = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+} catch {
+  // A malformed #fragment: nothing to scroll to.
+}
+if (hiddenTarget && shown(hiddenTarget)) hiddenTarget = null;
+const scrollToRevealed = () => {
+  if (hiddenTarget && shown(hiddenTarget)) hiddenTarget.scrollIntoView();
+  hiddenTarget = null;
+};
+
 export const showNotice = (...content) => {
   const notice = document.getElementById('notice');
   notice.replaceChildren(...content);
@@ -65,6 +80,7 @@ export const startLive = (render, { url = statsUrl, sample = demoStats, missing 
         return;
       }
       render(data);
+      scrollToRevealed();
       return;
     }
     if (!configured) {
@@ -86,6 +102,7 @@ export const startLive = (render, { url = statsUrl, sample = demoStats, missing 
       data = await response.json();
       showNotice();
       render(data);
+      scrollToRevealed();
     } catch (error) {
       console.error('Could not load stats', error);
       showNotice(
