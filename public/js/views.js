@@ -1,6 +1,6 @@
 import { kd, mapKey, result } from './format.js';
 
-// DOM building blocks shared by the home page and the matches page.
+// DOM building blocks shared by the pages.
 
 // Only touches the DOM when the text changes, so screen readers are not told the same thing every 15 seconds.
 export const setText = (node, value) => {

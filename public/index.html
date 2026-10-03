@@ -66,16 +66,14 @@
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <nav aria-label="Sections">
+        <nav class="nav-sections" aria-label="Sections">
           <ul class="nav-links">
-            <li><a href="#server">Server</a></li>
-            <li><a href="#stats">Stats</a></li>
+            <li><a href="stats" data-keep-query>Stats</a></li>
             <li><a href="live" data-keep-query>Live</a></li>
-            <li><a href="#matches">Matches</a></li>
-            <li><a href="#leaderboard">Leaderboard</a></li>
+            <li><a href="matches" data-keep-query>Matches</a></li>
+            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
             <li><a href="players" data-keep-query>Players</a></li>
-            <li><a href="#seeding">Seeding</a></li>
-            <li><a href="#join">Join</a></li>
+            <li><a href="join" data-keep-query>Join</a></li>
           </ul>
         </nav>
         <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
@@ -93,14 +91,14 @@
             <h1 class="wordmark">gaming<span class="wordmark-accent">init</span></h1>
             <p class="lede">
               A gaming community built around playing together. Right now that means our WARDOGS server: squad up with
-              regulars, <a href="#seeding">help seed it</a> and play full matches. Everything is organised on our Discord, and the bot there tells
+              regulars, <a href="join#seeding" data-keep-query>help seed it</a> and play full matches. Everything is organised on our Discord, and the bot there tells
               you when the server is filling up.
             </p>
             <!-- Shown when the bot gives seeders VIP. -->
             <p class="vip-cta" id="vip-cta" hidden>
               <span class="vip-tag">Seeder VIP</span>
               <span id="vip-cta-text"></span>
-              <a href="#vip">How it works</a>
+              <a href="join#vip" data-keep-query>How it works</a>
             </p>
             <div class="hero-actions">
               <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
@@ -122,7 +120,7 @@
             </div>
             <h2 class="server-name" id="server-name">Game server</h2>
             <p class="server-detail" id="server-detail">Loading live status…</p>
-            <p class="server-help" id="server-help" hidden><a href="#seeding">What is seeding?</a></p>
+            <p class="server-help" id="server-help" hidden><a href="join#seeding" data-keep-query>What is seeding?</a></p>
             <div class="players">
               <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
               <div
@@ -154,245 +152,35 @@
 
       <div class="notice wrap" id="notice" role="status" hidden></div>
 
-      <section class="section" id="stats" aria-labelledby="stats-title">
+      <section class="section" aria-labelledby="explore-title">
         <div class="wrap">
-          <div class="section-head">
-            <h2 id="stats-title">Server stats</h2>
-            <p class="section-note">Our WARDOGS server, read once a minute by our Discord bot.</p>
-          </div>
-
-          <div class="tiles">
-            <div class="tile">
-              <p class="tile-label">Players now</p>
-              <p class="tile-value" id="tile-now">–</p>
-            </div>
-            <div class="tile">
-              <p class="tile-label">Peak, last 24 hours</p>
-              <p class="tile-value" id="tile-peak">–</p>
-            </div>
-            <div class="tile">
-              <p class="tile-label">Live today</p>
-              <p class="tile-value" id="tile-live">–</p>
-            </div>
-            <div class="tile">
-              <p class="tile-label">Matches, last 24 hours</p>
-              <p class="tile-value" id="tile-matches">–</p>
-            </div>
-          </div>
-
-          <div class="charts">
-            <figure class="card chart-card">
-              <figcaption>
-                <h3>Players, last 24 hours</h3>
-                <p class="chart-sub">Your local time. Gaps are when the server did not answer.</p>
-              </figcaption>
-              <div
-                class="chart"
-                id="population-chart"
-                tabindex="0"
-                role="img"
-                aria-label="Players online over the last 24 hours. Use the left and right arrow keys to read values."
-              ></div>
-              <details class="table-view">
-                <summary>Show as table</summary>
-                <div class="table-scroll"><table id="population-table"></table></div>
-              </details>
-              <div class="busiest">
-                <h4>Busy times</h4>
-                <p class="chart-sub" id="busiest-sub">Average players in each hour of the day, your local time.</p>
-                <p class="busiest-summary" id="busiest-summary" hidden>
-                  <span class="busiest-key" id="busiest-key" aria-hidden="true"></span>
-                  <strong id="busiest-when"></strong>
-                  <span id="busiest-players"></span>
-                </p>
-                <div
-                  class="chart chart-short"
-                  id="busiest-chart"
-                  tabindex="0"
-                  role="img"
-                  aria-label="Average players in each hour of the day. Use the left and right arrow keys to read values."
-                ></div>
-                <details class="table-view">
-                  <summary>Show as table</summary>
-                  <div class="table-scroll"><table id="busiest-table"></table></div>
-                </details>
-              </div>
-            </figure>
-
-            <figure class="card chart-card">
-              <figcaption>
-                <h3>Daily peak, last 14 days</h3>
-                <p class="chart-sub">Most players online at once each day (UTC days).</p>
-              </figcaption>
-              <div class="chart" id="daily-chart"></div>
-              <details class="table-view">
-                <summary>Show as table</summary>
-                <div class="table-scroll"><table id="daily-table"></table></div>
-              </details>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="matches" aria-labelledby="matches-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="matches-title">Matches</h2>
-            <p class="section-note">Top players by kills. A match counts once the server has gone live.</p>
-          </div>
-          <div class="matches">
-            <article class="card current-match" aria-labelledby="current-title">
-              <h3 id="current-title">On now</h3>
-              <div id="current-match"><p class="muted">Loading…</p></div>
-              <a class="more-link" href="live" data-keep-query>Watch it live: kill feed, streaks and rivalries <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="card recent" aria-labelledby="recent-title">
-              <h3 id="recent-title">Recent matches</h3>
-              <ol class="match-list" id="match-list"><li class="muted">Loading…</li></ol>
-              <a class="more-link" href="matches" data-keep-query>See all matches <span aria-hidden="true">→</span></a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="leaderboard" aria-labelledby="leaderboard-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="leaderboard-title">Leaderboard</h2>
-            <p class="section-note" id="leaderboard-note">The last 30 days on our server.</p>
-          </div>
-          <div class="boards" id="boards"><p class="muted">Loading…</p></div>
-          <a class="more-link" href="players" data-keep-query>Find your stats: every player has a page <span aria-hidden="true">→</span></a>
-        </div>
-      </section>
-
-      <!-- Shown when the bot has the game's kill feed. -->
-      <section class="section" id="weapons" aria-labelledby="weapons-title" hidden>
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="weapons-title">Weapons</h2>
-            <p class="section-note" id="weapons-note">The last 30 days on our server, from the game’s kill feed.</p>
-          </div>
-          <div class="weapons">
-            <div class="tiles weapon-tiles">
-              <div class="tile">
-                <p class="tile-label">Kills recorded</p>
-                <p class="tile-value" id="weapons-kills">–</p>
-              </div>
-              <div class="tile">
-                <p class="tile-label">Headshots</p>
-                <p class="tile-value" id="weapons-headshots">–</p>
-                <p class="tile-sub" id="weapons-headshots-sub"></p>
-              </div>
-              <div class="tile tile-wide">
-                <p class="tile-label">Longest kill</p>
-                <p class="tile-value" id="weapons-longest">–</p>
-                <p class="tile-sub" id="weapons-longest-sub"></p>
-              </div>
-            </div>
-            <article class="card board weapons-card" aria-labelledby="weapons-top-title">
-              <h3 id="weapons-top-title">Most kills</h3>
-              <p class="board-sub">Each weapon’s share of headshots, how far away its kills were on average, and its longest kill.</p>
-              <div id="weapons-list"><p class="muted">Loading…</p></div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section seeding" id="seeding" aria-labelledby="seeding-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="seeding-title">Seeding</h2>
-            <p class="section-note">How an empty server becomes a full match.</p>
-          </div>
-          <p class="seeding-lede">
-            Seeding is playing on the server while it has few or no players, so that it fills up. Most players skip a
-            server that looks empty, so it takes a few of us to get it going. Once it reaches
-            <strong><span id="seed-live">20</span> players</strong> it goes live and full matches start.
-          </p>
-
-          <ol class="phases">
-            <li class="card phase" data-kind="empty">
-              <span class="status" data-kind="empty">
-                <span class="status-icon" aria-hidden="true"></span>
-                <span class="status-label">Empty</span>
-              </span>
-              <p class="phase-range" id="range-empty">0 players</p>
-              <p id="note-empty">Nobody is on. The first player to join starts the seed.</p>
+          <h2 class="visually-hidden" id="explore-title">More on the site</h2>
+          <ul class="explore">
+            <li class="card explore-card">
+              <h3><a href="live" data-keep-query>Live match</a></h3>
+              <p>The match on now as it happens: the kill feed, streaks and rivalries.</p>
             </li>
-            <li class="card phase" data-kind="seeding">
-              <span class="status" data-kind="seeding">
-                <span class="status-icon" aria-hidden="true"></span>
-                <span class="status-label">Seeding</span>
-              </span>
-              <p class="phase-range" id="range-seeding">1–19 players</p>
-              <p>
-                The bot posts in Discord to bring more people in. You can’t play as normal yet: sit in the vendor or keep
-                running around so you don’t get kicked for being AFK.
-              </p>
+            <li class="card explore-card">
+              <h3><a href="stats" data-keep-query>Server stats</a></h3>
+              <p>Players over the last 24 hours, the busy times of day and the daily peak.</p>
             </li>
-            <li class="card phase" data-kind="live">
-              <span class="status" data-kind="live">
-                <span class="status-icon" aria-hidden="true"></span>
-                <span class="status-label">Live</span>
-              </span>
-              <p class="phase-range" id="range-live">20+ players</p>
-              <p>Full matches. If players leave and it stays low for a few minutes, the bot asks for help to keep it going.</p>
+            <li class="card explore-card">
+              <h3><a href="matches" data-keep-query>Matches</a></h3>
+              <p>The latest matches, with the result and the top players in each.</p>
             </li>
-          </ol>
-
-          <div class="card seed-card">
-            <h3>How to help</h3>
-            <ul class="seed-list">
-              <li>Join when the bot posts a seeding alert in our Discord, or when the server card above says Seeding.</li>
-              <li>Stay until it goes live. The server card shows how many more players it needs; the line on its bar marks the live point.</li>
-              <li>Bring friends. A squad fills the server faster than one player.</li>
-            </ul>
-            <p class="seed-note">
-              When the server goes live, the bot names the 3 players who seeded longest in Discord. The
-              <a href="#leaderboard">leaderboard</a> lists the top seeders.
-            </p>
-            <!-- Shown when the bot gives seeders VIP. -->
-            <p class="seed-vip" id="seed-vip" hidden>Seeding also earns a reserved slot. <a href="#vip">How seeder VIP works</a></p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section join" id="join" aria-labelledby="join-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="join-title">Play with us</h2>
-          </div>
-          <ol class="steps">
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">1</span>
-              <h3>Join the gaminginit Discord</h3>
-              <p>Meet the regulars, find a squad and hear about events first.</p>
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                <span>Join our Discord</span>
-              </a>
+            <li class="card explore-card">
+              <h3><a href="leaderboard" data-keep-query>Leaderboard</a></h3>
+              <p>The top players and weapons over the last 30 days.</p>
             </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">2</span>
-              <h3>Watch for the alerts</h3>
-              <p>
-                The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
-                going.
-              </p>
+            <li class="card explore-card">
+              <h3><a href="players" data-keep-query>Players</a></h3>
+              <p>Find anyone’s page: kills, K/D, maps and recent matches.</p>
             </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">3</span>
-              <h3>Find the server</h3>
-              <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
+            <li class="card explore-card">
+              <h3><a href="join" data-keep-query>Play with us</a></h3>
+              <p>How to join, and how seeding turns an empty server into a full match.</p>
             </li>
-            <li class="card step step-vip" id="vip" hidden>
-              <span class="step-n" aria-hidden="true">4</span>
-              <h3>Seed and get VIP</h3>
-              <p><strong id="vip-step-offer"></strong></p>
-              <p id="vip-step-detail"></p>
-            </li>
-          </ol>
+          </ul>
         </div>
       </section>
     </main>

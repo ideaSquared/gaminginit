@@ -85,6 +85,9 @@ export const serverState = (stats, now) => {
   return { kind: 'empty', label: 'Empty', detail: `Nobody on yet. Be the first in and start the seed.${vip}` };
 };
 
+// Whether the server is answering, so its players, map and score are worth showing.
+export const isOnline = (state) => state.kind === 'live' || state.kind === 'seeding' || state.kind === 'empty';
+
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 const span = (days) => (days === 7 ? 'a week' : plural(days, 'day'));
 

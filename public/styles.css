@@ -40,6 +40,12 @@ html {
   scroll-padding-top: 72px;
 }
 
+@media (max-width: 819px) {
+  html {
+    scroll-padding-top: 112px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -223,21 +229,40 @@ a {
   color: var(--accent);
 }
 
+/* On phones the links take a row of their own under the brand, and scroll sideways if they do not fit. */
+.nav-inner {
+  flex-wrap: wrap;
+}
+
+.nav-sections {
+  order: 1;
+  flex-basis: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: -6px -16px 0;
+  padding: 0 0 8px 16px;
+  /* Fades the right edge, so links cut off there read as more to scroll to. */
+  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+}
+
 .nav-links {
-  display: none;
+  display: flex;
+  width: max-content;
   list-style: none;
   margin: 0;
-  padding: 0;
-  gap: 4px;
+  /* Room to scroll the last link clear of the fade. */
+  padding: 0 32px 0 0;
+  gap: 2px;
 }
 
 .nav-links a {
   display: block;
-  padding: 8px 12px;
+  padding: 6px 10px;
   color: var(--text-2);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
+  white-space: nowrap;
   border-radius: 6px;
 }
 
@@ -248,22 +273,35 @@ a {
 
 .nav-links a[aria-current='page'] {
   color: var(--text);
+  background: var(--surface-2);
 }
 
-/* Eight links need about 900px next to the brand and the Discord button with tighter padding, so the padding grows
-   once there is room. */
-@media (min-width: 900px) {
+/* From 820px the six links fit next to the brand and the Discord button, with more room around them from 900px. */
+@media (min-width: 820px) {
+  .nav-inner {
+    flex-wrap: nowrap;
+  }
+
+  .nav-sections {
+    order: 0;
+    flex-basis: auto;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    mask-image: none;
+  }
+
   .nav-links {
-    display: flex;
-    gap: 2px;
+    width: auto;
+    padding: 0;
   }
 
   .nav-links a {
-    padding: 8px 6px;
+    padding: 8px 8px;
   }
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 900px) {
   .nav-links {
     gap: 4px;
   }
@@ -604,6 +642,77 @@ h1 {
 .section-note {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+/* The home page's links to the other pages. The whole card is the link. */
+
+.explore {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .explore {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .explore {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.explore-card {
+  position: relative;
+  padding: 20px;
+  transition: border-color 0.15s;
+}
+
+.explore-card:hover {
+  border-color: var(--accent);
+}
+
+.explore-card h3 {
+  font-size: 1.05rem;
+}
+
+.explore-card h3::after {
+  content: '→';
+  content: '→' / '';
+  margin-left: 8px;
+  color: var(--accent);
+}
+
+.explore-card a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.explore-card a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+}
+
+.explore-card a:focus-visible {
+  outline: none;
+}
+
+.explore-card a:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.explore-card p {
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 0.92rem;
 }
 
 /* Stat tiles */
@@ -963,35 +1072,6 @@ tbody tr:last-child td {
 
 /* Matches */
 
-.matches {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-}
-
-@media (min-width: 900px) {
-  .matches {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
-}
-
-.current-match,
-.recent {
-  padding: 20px;
-}
-
-.current-match h3,
-.recent h3,
-.seed-card h3 {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.85rem;
-  color: var(--text-2);
-  margin-bottom: 12px;
-}
-
-.current-match .players-table,
 .match .players-table,
 .match-empty {
   margin-top: 12px;
@@ -1108,28 +1188,6 @@ tbody tr:last-child td {
 }
 
 .back a:hover {
-  color: var(--text);
-}
-
-.mvp {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 8px;
-  color: var(--text-2);
-  font-size: 0.9rem;
-}
-
-.mvp-label {
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-}
-
-.mvp .player {
   color: var(--text);
 }
 
@@ -1382,6 +1440,14 @@ tbody tr:last-child td {
   padding: 24px;
 }
 
+.seed-card h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
 .seed-list {
   margin: 0;
   padding-left: 1.2em;
@@ -1413,11 +1479,6 @@ tbody tr:last-child td {
 }
 
 /* Join */
-
-.join {
-  border-top: 1px solid var(--hairline);
-  background: linear-gradient(180deg, var(--surface) 0%, var(--page) 100%);
-}
 
 .steps {
   list-style: none;

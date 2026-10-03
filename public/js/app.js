@@ -1,49 +1,25 @@
-import { busiestChart, dailyChart, hourLabel, populationChart } from './charts.js';
-import {
-  BOARDS,
-  BUSY_PLAYERS,
-  busyRuns,
-  busyShares,
-  compact,
-  emptyNote,
-  formatDuration,
-  formatHours,
-  hourlyAverages,
-  isBusy,
-  kd,
-  latestMatches,
-  metres,
-  peak,
-  percent,
-  phaseRanges,
-  scoreLine,
-  serverState,
-  timeAgo,
-  toLocalHours,
-  utcDay,
-  vipDetail,
-  vipOffer,
-  WEAPON_KINDS,
-} from './format.js';
-import { startLive } from './live.js';
-import { el, mapTag, matchHeadline, matchMeta, playerName, playersTable, setText } from './views.js';
+import { compact, isOnline, scoreLine, serverState, timeAgo, vipOffer } from './format.js';
+import { keepQuery, startLive } from './live.js';
+import { el, mapTag, setText } from './views.js';
 
-const DAY = 86_400_000;
-// The rest are on the matches page.
-const RECENT_MATCHES = 3;
+// The home page: the server card, the Discord count and links to the other pages.
+
+// The home page used to hold these sections. Old links to them, like /#leaderboard, go to their own pages now.
+const MOVED = {
+  stats: 'stats',
+  matches: 'matches',
+  leaderboard: 'leaderboard',
+  weapons: 'leaderboard#weapons',
+  seeding: 'join#seeding',
+  join: 'join',
+  vip: 'join#vip',
+};
+const moved = MOVED[location.hash.slice(1)];
+if (moved) location.replace(keepQuery(moved));
 
 const $ = (id) => document.getElementById(id);
 
-const hourClock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
-const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-
 let stats = null;
-
-const population = populationChart($('population-chart'));
-const daily = dailyChart($('daily-chart'));
-const busiestView = busiestChart($('busiest-chart'));
-
-const isOnline = (state) => state.kind === 'live' || state.kind === 'seeding' || state.kind === 'empty';
 
 const renderServer = (now) => {
   const state = serverState(stats, now);
@@ -62,7 +38,6 @@ const renderServer = (now) => {
   setText($('players-max'), server ? `/ ${server.maxPlayers} players` : '');
   $('server-map').replaceChildren(online && server.map ? mapTag(server.map) : '–');
   setText($('server-score'), (online && scoreLine(server.factionScores)) || '–');
-  setText($('join-server-name'), server?.name ?? 'our server');
 
   const meter = $('players-meter');
   const max = server?.maxPlayers || 1;
@@ -89,320 +64,23 @@ const renderDiscord = () => {
   );
 };
 
-const renderTiles = (now) => {
-  const state = serverState(stats, now);
-  const server = stats?.server;
-  const today = new Date(now).toISOString().slice(0, 10);
-  const todayStats = stats?.days.find((d) => d.day === today);
-  const history = (stats?.history ?? []).filter(([at]) => at >= now - DAY);
-  const matches = (stats?.matches ?? []).filter((m) => now - m.endedAt < DAY);
-
-  $('tile-now').textContent = server && isOnline(state) ? String(server.players) : '–';
-  $('tile-peak').textContent = history.length > 0 ? String(peak(history)) : '–';
-  $('tile-live').textContent = stats ? formatHours(todayStats?.liveMinutes ?? 0) : '–';
-  $('tile-matches').textContent = stats ? String(matches.length) : '–';
-};
-
-const tableOf = (table, headings, rows) => {
-  table.replaceChildren(
-    el('thead', {}, el('tr', {}, ...headings.map((h) => el('th', { scope: 'col', textContent: h })))),
-    el('tbody', {}, ...rows.map((row) => el('tr', {}, ...row.map((cell) => el('td', { textContent: String(cell) }))))),
-  );
-};
-
-const renderCharts = (now) => {
-  const history = stats?.history ?? [];
-  population.update({
-    history,
-    capacity: stats?.server?.maxPlayers ?? 0,
-    live: stats?.thresholds.live ?? 20,
-    now,
-  });
-  daily.update({ days: stats?.days ?? [], today: new Date(now).toISOString().slice(0, 10), count: 14 });
-
-  // When the server is busy: the hours with the busy threshold or more players at least half the time. Over the last
-  // 14 days when the bot sends hourly figures, otherwise over the last 24 hours of readings.
-  const recent = history.filter(([t]) => t >= now - DAY);
-  const threshold = stats?.thresholds?.busy ?? BUSY_PLAYERS;
-  const hourly = stats?.hourly?.busy ? stats.hourly : null;
-  const period = hourly ? `the last ${hourly.days} days` : 'the last 24 hours';
-  const offset = new Date(now).getTimezoneOffset();
-  const averages = hourly ? toLocalHours(hourly.players, offset) : hourlyAverages(recent);
-  const shares = hourly ? toLocalHours(hourly.busy, offset) : busyShares(recent, threshold);
-  busiestView.update({ averages, busy: shares.map(isBusy), period });
-  setText(
-    $('busiest-sub'),
-    `Average players in each hour of the day over ${period}, your local time. ` +
-      `Busy hours have ${threshold}+ players at least half the time.`,
-  );
-  tableOf(
-    $('busiest-table'),
-    ['Hour', 'Average players', `Time at ${threshold}+`],
-    averages.map((average, hour) => [
-      `${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`,
-      average === null ? '–' : Math.round(average),
-      shares[hour] === null ? '–' : `${Math.round(shares[hour] * 100)}%`,
-    ]),
-  );
-  const runs = busyRuns(shares);
-  const range = ({ start, length }) => (length === 24 ? 'All day' : `${hourLabel(start)}–${hourLabel((start + length) % 24)}`);
-  $('busiest-summary').hidden = averages.every((a) => a === null);
-  $('busiest-key').hidden = runs.length === 0;
-  setText($('busiest-when'), runs.length === 0 ? 'No busy hours' : runs.map(range).join(', '));
-  setText($('busiest-players'), runs.length === 0 ? `in ${period}` : `usually ${threshold}+ players`);
-
-  // Hourly summary of the 24-hour chart, newest first.
-  const hours = new Map();
-  for (const [at, players] of recent) {
-    const hour = Math.floor(at / 3_600_000) * 3_600_000;
-    const entry = hours.get(hour) ?? { high: 0, low: Infinity, total: 0, count: 0 };
-    hours.set(hour, {
-      high: Math.max(entry.high, players),
-      low: Math.min(entry.low, players),
-      total: entry.total + players,
-      count: entry.count + 1,
-    });
-  }
-  tableOf(
-    $('population-table'),
-    ['Hour', 'Average', 'Most players', 'Fewest players'],
-    [...hours.entries()]
-      .sort((a, b) => b[0] - a[0])
-      .map(([hour, e]) => [hourClock.format(hour), Math.round(e.total / e.count), e.high, e.low]),
-  );
-  tableOf(
-    $('daily-table'),
-    ['Day (UTC)', 'Peak players', 'Time live'],
-    [...(stats?.days ?? [])].reverse().map((d) => [dayLong.format(Date.parse(`${d.day}T00:00:00Z`)), d.peak, formatHours(d.liveMinutes)]),
-  );
-};
-
-const renderCurrentMatch = (now) => {
-  const root = $('current-match');
-  const state = serverState(stats, now);
-  const match = stats?.currentMatch;
-  if (!isOnline(state) || !match) {
-    const message =
-      state.kind === 'offline'
-        ? 'The server is not answering right now.'
-        : stats
-          ? 'No match running. Match stats appear once players are on.'
-          : 'Waiting for live stats.';
-    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
-    return;
-  }
-  const score = scoreLine(match.factionScores);
-  root.replaceChildren(
-    el(
-      'p',
-      { className: 'match-headline' },
-      mapTag(match.map),
-      score ? el('span', { className: 'match-score', textContent: score }) : null,
-    ),
-    matchMeta(
-      `Started ${timeAgo(now - match.startedAt)}`,
-      match.liveAt ? `live for ${formatDuration(now - match.liveAt)}` : 'not live yet',
-      `peak ${match.peakPlayers} players`,
-    ),
-    match.top.length > 0 ? playersTable(match.top) : el('p', { className: 'muted', textContent: 'No kills yet.' }),
-  );
-};
-
-// The latest few matches, one short row each. The matches page has the rest, with each match's top players.
-const renderMatches = (now) => {
-  const list = $('match-list');
-  const matches = latestMatches(stats?.matches, RECENT_MATCHES);
-  if (matches.length === 0) {
-    const message = stats ? 'No finished matches yet. They appear here after the server has been live.' : 'Waiting for live stats.';
-    list.replaceChildren(el('li', { className: 'muted', textContent: message }));
-    return;
-  }
-  list.replaceChildren(
-    ...matches.map((match) => {
-      const mvp = match.top[0];
-      return el(
-        'li',
-        { className: 'match-row' },
-        matchHeadline(match),
-        matchMeta(formatDuration(match.durationMs), `peak ${match.peakPlayers} players`, `ended ${timeAgo(now - match.endedAt)}`),
-        mvp
-          ? el(
-              'p',
-              { className: 'mvp' },
-              el('span', { className: 'mvp-label', textContent: 'Top player' }),
-              el('span', { className: 'player' }, playerName(mvp)),
-              ` ${mvp.kills} kills, ${kd(mvp.kills, mvp.deaths)} K/D`,
-            )
-          : null,
-      );
-    }),
-  );
-};
-
-// What seeding earns, when the bot gives seeders VIP.
+// What seeding earns, when the bot gives seeders VIP. The join page says how.
 const renderVip = () => {
   const vip = stats?.vip ?? null;
   $('vip-cta').hidden = !vip;
-  $('vip').hidden = !vip;
-  if (!vip) return;
-  setText($('vip-cta-text'), vipOffer(vip));
-  setText($('vip-step-offer'), vipOffer(vip));
-  setText($('vip-step-detail'), vipDetail(vip));
+  if (vip) setText($('vip-cta-text'), vipOffer(vip));
 };
 
-// Uses the bot's own thresholds, so the explanation stays right if they change. Until the stats load, the page shows
-// the bot's defaults.
-const renderSeeding = () => {
-  $('seed-vip').hidden = !stats?.vip;
-  if (!stats?.thresholds) return;
-  const ranges = phaseRanges(stats.thresholds);
-  for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);
-  setText($('note-empty'), emptyNote(stats.thresholds));
-  setText($('seed-live'), String(stats.thresholds.live));
-};
+if (!moved) {
+  startLive((latest) => {
+    stats = latest;
+    renderServer(Date.now());
+    renderDiscord();
+    renderVip();
+  });
 
-const boardTable = (board, rows) =>
-  el(
-    'table',
-    { className: 'players-table' },
-    el(
-      'thead',
-      {},
-      el('tr', {}, ...['#', 'Player', ...board.headings].map((h) => el('th', { scope: 'col', textContent: h }))),
-    ),
-    el(
-      'tbody',
-      {},
-      ...rows.map((p, i) =>
-        el(
-          'tr',
-          {},
-          el('td', { className: 'rank', textContent: String(i + 1) }),
-          el('td', { className: 'player' }, playerName(p)),
-          ...board.cells(p).map((cell) => el('td', { textContent: cell })),
-        ),
-      ),
-    ),
-  );
-
-const renderLeaderboard = () => {
-  const root = $('boards');
-  const leaderboard = stats?.leaderboard;
-  if (!leaderboard) {
-    const message = stats ? 'The leaderboard appears once the bot keeps player records.' : 'Waiting for live stats.';
-    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
-    return;
-  }
-  setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
-  root.replaceChildren(
-    ...BOARDS.map((board) => {
-      const rows = leaderboard[board.key] ?? [];
-      return el(
-        'article',
-        { className: 'card board' },
-        el('h3', { textContent: board.title }),
-        board.sub ? el('p', { className: 'board-sub', textContent: board.sub(leaderboard) }) : null,
-        rows.length > 0 ? boardTable(board, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }),
-      );
-    }),
-  );
-};
-
-// A weapon's name, with what it is when it is not carried by hand: "Humvee minigun  VEHICLE GUN".
-const weaponName = (w) =>
-  el('span', { className: 'weapon-name' }, w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null);
-
-const weaponBar = (kills, most) => {
-  const bar = el('span', { className: 'weapon-bar', ariaHidden: 'true' });
-  bar.style.setProperty('--share', String(most > 0 ? kills / most : 0));
-  return bar;
-};
-
-// Who made a longest kill, linking to their page when the bot sent their id.
-const killer = (holder) => (holder.name ? playerName(holder) : 'a player');
-
-// The top weapons over the last 30 days, from the game's kill feed. Only when the bot has the feed.
-const renderWeapons = (now) => {
-  const weapons = stats?.weapons ?? null;
-  $('weapons').hidden = !weapons;
-  if (!weapons) return;
-  const first = utcDay(now - (weapons.days - 1) * DAY);
-  setText(
-    $('weapons-note'),
-    `The last ${weapons.days} days on our server (UTC days), from the game’s kill feed.` +
-      (weapons.since > first ? ` Recorded since ${dayLong.format(Date.parse(`${weapons.since}T00:00:00Z`))}, when our bot started reading it.` : ''),
-  );
-  setText($('weapons-kills'), compact(weapons.kills));
-  setText($('weapons-headshots'), percent(weapons.kills > 0 ? weapons.headshots / weapons.kills : null));
-  setText($('weapons-headshots-sub'), weapons.kills > 0 ? `${compact(weapons.headshots)} of ${compact(weapons.kills)} kills` : '');
-  const longest = weapons.longest;
-  setText($('weapons-longest'), longest ? metres(longest.distance) : '–');
-  $('weapons-longest-sub').replaceChildren(...(longest ? [killer(longest), ` with the ${longest.weapon}`] : []));
-
-  const root = $('weapons-list');
-  if (weapons.top.length === 0) {
-    root.replaceChildren(el('p', { className: 'muted board-empty', textContent: `No kills recorded in the last ${weapons.days} days.` }));
-    return;
-  }
-  const most = weapons.top[0].kills;
-  root.replaceChildren(
-    el(
-      'table',
-      { className: 'players-table weapons-table' },
-      el('thead', {}, el('tr', {}, ...['#', 'Weapon', 'Kills'].map((h) => el('th', { scope: 'col', textContent: h })))),
-      el(
-        'tbody',
-        {},
-        ...weapons.top.map((w, i) =>
-          el(
-            'tr',
-            {},
-            el('td', { className: 'rank', textContent: String(i + 1) }),
-            el(
-              'td',
-              { className: 'weapon' },
-              weaponName(w),
-              weaponBar(w.kills, most),
-              el(
-                'p',
-                { className: 'weapon-detail' },
-                ...[
-                  el('span', { className: 'weapon-stat', textContent: `${percent(w.headshots / w.kills)} headshots` }),
-                  w.averageDistance === null ? null : el('span', { className: 'weapon-stat', textContent: `${metres(w.averageDistance)} on average` }),
-                  w.longest
-                    ? el('span', {}, el('span', { className: 'weapon-stat', textContent: `longest ${metres(w.longest.distance)}` }), ' by ', killer(w.longest))
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .flatMap((part, i) => (i === 0 ? [part] : [' · ', part])),
-              ),
-            ),
-            el('td', { textContent: w.kills.toLocaleString('en-GB') }),
-          ),
-        ),
-      ),
-    ),
-  );
-};
-
-const render = (latest) => {
-  stats = latest;
-  const now = Date.now();
-  renderServer(now);
-  renderDiscord();
-  renderVip();
-  renderTiles(now);
-  renderCharts(now);
-  renderCurrentMatch(now);
-  renderMatches(now);
-  renderLeaderboard();
-  renderWeapons(now);
-  renderSeeding();
-};
-
-startLive(render);
-
-// Keep "updated 2 min ago" honest between fetches.
-setInterval(() => {
-  if (!document.hidden) renderServer(Date.now());
-}, 15_000);
+  // Keep "updated 2 min ago" honest between fetches.
+  setInterval(() => {
+    if (!document.hidden) renderServer(Date.now());
+  }, 15_000);
+}
