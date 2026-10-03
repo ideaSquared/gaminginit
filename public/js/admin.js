@@ -60,11 +60,12 @@ const setStatus = (node, text) => {
 };
 
 // A row of filter buttons drawn in place of the last, keeping keyboard focus on the button for the same choice
-// (`data-key`) when one of the old ones had it.
+// (`data-key`) when one of the old ones had it, without scrolling to it: a refresh redraws the row while staff may have
+// scrolled away from it.
 const replaceButtons = (row, buttons) => {
   const focused = row.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
   row.replaceChildren(...buttons);
-  if (focused !== undefined) buttons.find((b) => b.dataset.key === focused)?.focus();
+  if (focused !== undefined) buttons.find((b) => b.dataset.key === focused)?.focus({ preventScroll: true });
 };
 
 // Storage can be off (a private window, blocked site data): then the sign-in lasts until the page is closed.
