@@ -1,0 +1,67 @@
+import { BOARDS, emptyNote, phaseRanges, vipOffer } from './format.js';
+import { startLive } from './live.js';
+import { boardTable, el, playerName, setText } from './views.js';
+
+// The seeding page: what seeding is, in the bot's own numbers, then our top seeders and who has seeder VIP.
+
+const $ = (id) => document.getElementById(id);
+
+const SEEDERS = BOARDS.find((board) => board.key === 'seeding');
+
+// When a player's VIP ends, in the reader's own time: "Fri 10 Oct".
+const until = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
+// Uses the bot's own thresholds, so the explanation stays right if they change. Until the stats load, the page shows
+// the bot's defaults.
+const renderSeeding = (stats) => {
+  $('seed-vip').hidden = !stats?.vip;
+  if (!stats?.thresholds) return;
+  const ranges = phaseRanges(stats.thresholds);
+  for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);
+  setText($('note-empty'), emptyNote(stats.thresholds));
+  setText($('seed-live'), String(stats.thresholds.live));
+};
+
+// The leaderboard's top seeders board.
+const renderTopSeeders = (stats) => {
+  const root = $('top-seeders');
+  const leaderboard = stats?.leaderboard;
+  if (!leaderboard) {
+    const message = stats ? 'The top seeders appear once the bot keeps player records.' : 'Waiting for live stats.';
+    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
+    return;
+  }
+  setText($('top-seeders-sub'), `Time on the server before it went live, over the last ${leaderboard.days} days (UTC days).`);
+  const rows = leaderboard[SEEDERS.key] ?? [];
+  root.replaceChildren(rows.length > 0 ? boardTable(SEEDERS, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }));
+};
+
+// Who has VIP from seeding now, when the bot gives seeders VIP and says who has it.
+const renderVipHolders = (stats) => {
+  const holders = stats?.vip && Array.isArray(stats.seederVip) ? stats.seederVip : null;
+  $('vip-holders').hidden = holders === null;
+  if (holders === null) return;
+  setText($('vip-holders-sub'), vipOffer(stats.vip));
+  $('vip-holders-list').replaceChildren(
+    holders.length === 0
+      ? el('p', { className: 'muted board-empty', textContent: 'Nobody has it right now. Be the first.' })
+      : el(
+          'table',
+          { className: 'players-table vip-table' },
+          el('thead', {}, el('tr', {}, ...['Player', 'VIP until'].map((h) => el('th', { scope: 'col', textContent: h })))),
+          el(
+            'tbody',
+            {},
+            ...holders.map((p) =>
+              el('tr', {}, el('td', { className: 'player' }, playerName(p)), el('td', { textContent: until.format(p.until) })),
+            ),
+          ),
+        ),
+  );
+};
+
+startLive((stats) => {
+  renderSeeding(stats);
+  renderTopSeeders(stats);
+  renderVipHolders(stats);
+});

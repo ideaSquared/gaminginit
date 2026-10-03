@@ -1,6 +1,6 @@
 import { kd, mapKey, result } from './format.js';
 
-// DOM building blocks shared by the home page and the matches page.
+// DOM building blocks shared by the pages.
 
 // Only touches the DOM when the text changes, so screen readers are not told the same thing every 15 seconds.
 export const setText = (node, value) => {
@@ -59,6 +59,31 @@ export const playersTable = (top) =>
           el('td', { textContent: String(p.kills) }),
           el('td', { textContent: String(p.deaths) }),
           el('td', { textContent: kd(p.kills, p.deaths) }),
+        ),
+      ),
+    ),
+  );
+
+// One leaderboard board's table, from BOARDS: its top players, ranked.
+export const boardTable = (board, rows) =>
+  el(
+    'table',
+    { className: 'players-table' },
+    el(
+      'thead',
+      {},
+      el('tr', {}, ...['#', 'Player', ...board.headings].map((h) => el('th', { scope: 'col', textContent: h }))),
+    ),
+    el(
+      'tbody',
+      {},
+      ...rows.map((p, i) =>
+        el(
+          'tr',
+          {},
+          el('td', { className: 'rank', textContent: String(i + 1) }),
+          el('td', { className: 'player' }, playerName(p)),
+          ...board.cells(p).map((cell) => el('td', { textContent: cell })),
         ),
       ),
     ),

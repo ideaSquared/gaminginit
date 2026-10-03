@@ -8,6 +8,7 @@ import {
   formatDuration,
   formatHours,
   hourlyAverages,
+  isOnline,
   kd,
   latestMatches,
   mapKey,
@@ -94,6 +95,14 @@ describe('serverState', () => {
   it('waits when the bot has not read the server yet', () => {
     assert.equal(serverState(stats(null), NOW).kind, 'waiting');
     assert.equal(serverState(null, NOW).kind, 'waiting');
+  });
+
+  it('counts the server as online unless it is waiting or offline', () => {
+    assert.equal(isOnline(serverState(stats(server(40, 'live')), NOW)), true);
+    assert.equal(isOnline(serverState(stats(server(14, 'seeding')), NOW)), true);
+    assert.equal(isOnline(serverState(stats(server(0, 'empty')), NOW)), true);
+    assert.equal(isOnline(serverState(stats(server(40, 'live', NOW - STALE_MS - 60_000)), NOW)), false);
+    assert.equal(isOnline(serverState(null, NOW)), false);
   });
 });
 

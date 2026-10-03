@@ -23,11 +23,37 @@ export const keepQuery = (href) => {
 
 for (const a of document.querySelectorAll('a[data-keep-query]')) a.href = keepQuery(a.getAttribute('href'));
 
+// On phones the page links scroll sideways in one row. Bring this page's link into view.
+const sections = document.querySelector('.nav-sections');
+const current = sections?.querySelector('[aria-current="page"]');
+if (current) {
+  const hidden = current.getBoundingClientRect().right - sections.getBoundingClientRect().right;
+  if (hidden > 0) sections.scrollLeft += hidden + 32;
+}
+
 // This page's own address with a query parameter changed, so a page that shows one player keeps its id.
 export const thisPage = (change) => {
   const url = new URL(location.href);
   change(url.searchParams);
   return url.pathname + url.search;
+};
+
+// A link to part of a page, like /#join or leaderboard#weapons, can miss: the part is hidden until the bot's numbers
+// arrive, or they fill in what is above it and push it down. So once the first numbers are in, scroll there again,
+// unless the reader has started scrolling themselves.
+let hashTarget = null;
+try {
+  hashTarget = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+} catch {
+  // A malformed #fragment: nothing to scroll to.
+}
+const readerMoved = () => {
+  hashTarget = null;
+};
+for (const type of ['wheel', 'touchmove', 'keydown', 'mousedown']) addEventListener(type, readerMoved, { once: true, passive: true });
+const scrollToRevealed = () => {
+  if (hashTarget && hashTarget.getClientRects().length > 0) hashTarget.scrollIntoView();
+  hashTarget = null;
 };
 
 export const showNotice = (...content) => {
@@ -57,6 +83,7 @@ export const startLive = (render, { url = statsUrl, sample = demoStats, missing 
         return;
       }
       render(data);
+      scrollToRevealed();
       return;
     }
     if (!configured) {
@@ -78,6 +105,7 @@ export const startLive = (render, { url = statsUrl, sample = demoStats, missing 
       data = await response.json();
       showNotice();
       render(data);
+      scrollToRevealed();
     } catch (error) {
       console.error('Could not load stats', error);
       showNotice(

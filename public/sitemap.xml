@@ -4,12 +4,21 @@
     <loc>https://gaminginit.com/</loc>
   </url>
   <url>
+    <loc>https://gaminginit.com/stats</loc>
+  </url>
+  <url>
     <loc>https://gaminginit.com/live</loc>
   </url>
   <url>
     <loc>https://gaminginit.com/matches</loc>
   </url>
   <url>
+    <loc>https://gaminginit.com/leaderboard</loc>
+  </url>
+  <url>
     <loc>https://gaminginit.com/players</loc>
+  </url>
+  <url>
+    <loc>https://gaminginit.com/seeding</loc>
   </url>
 </urlset>
