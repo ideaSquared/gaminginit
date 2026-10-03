@@ -60,7 +60,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The admin tools, possible griefers from the kill feed, risky Steam accounts, every ban, kick and warning with its reason, and the reserved slots. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The admin tools, possible griefers from the kill feed, risky Steam accounts, every ban, kick and warning with its reason, the reserved slots and the map rotations. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -82,6 +82,10 @@
               <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
                 <span class="tab-name">Admin</span>
                 <span class="tab-hint">Commands, bans, VIP and the log</span>
+              </button>
+              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
+                <span class="tab-name">Rotations</span>
+                <span class="tab-hint">The maps for each day</span>
               </button>
             </div>
 
@@ -253,6 +257,10 @@
                   <table class="admin-table" id="modlog"></table>
                 </div>
               </article>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
+              <div id="rotations"></div>
             </div>
           </div>
         </div>
