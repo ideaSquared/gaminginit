@@ -1,14 +1,17 @@
 import { demoStats } from './demo.js';
+import { isPreviewHost, keptParams } from './format.js';
 import { link } from './views.js';
 
 // Loads the bot's numbers for each page, and keeps them fresh.
 
 const REFRESH_MS = 60_000;
 
-// ?demo shows sample numbers; ?stats=<url> reads another bot, e.g. one running locally with `wrangler dev`.
+// ?demo shows sample numbers; ?stats=<url> reads another bot, e.g. one running locally with `wrangler dev`, but only
+// on a preview address: on a community's own domain the page always shows that community's numbers.
 const params = new URLSearchParams(location.search);
 const demo = params.has('demo');
-const statsUrl = params.get('stats') ?? document.querySelector('meta[name="stats-url"]')?.content ?? '';
+const statsUrl =
+  (isPreviewHost(location.hostname) ? params.get('stats') : null) ?? document.querySelector('meta[name="stats-url"]')?.content ?? '';
 const configured = statsUrl !== '' && !statsUrl.includes('YOUR-SUBDOMAIN');
 
 // The bot's other endpoints sit next to /api/stats: apiUrl('players') is its /api/players.
@@ -17,7 +20,7 @@ export const apiUrl = (path) => (configured ? new URL(path, statsUrl).href : '')
 // Links between the pages keep ?demo or ?stats, so a preview stays a preview.
 export const keepQuery = (href) => {
   const url = new URL(href, location.href);
-  for (const key of ['demo', 'stats']) if (params.has(key)) url.searchParams.set(key, params.get(key));
+  for (const key of keptParams(location.hostname)) if (params.has(key)) url.searchParams.set(key, params.get(key));
   return url.href;
 };
 

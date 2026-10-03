@@ -453,3 +453,11 @@ export const searchPlayers = (players, query) => {
   const matching = players.filter((p) => fold(p.name).includes(q));
   return [...matching.filter((p) => fold(p.name).startsWith(q)), ...matching.filter((p) => !fold(p.name).startsWith(q))];
 };
+
+// Addresses for trying the site out: the workers.dev copies (production and branch previews) and this computer. Only
+// these take ?community= to pick a community and ?stats= to read another bot, so a link to a community's own domain
+// always shows that community's own numbers.
+export const isPreviewHost = (hostname) => /^(localhost|127\.0\.0\.1|\[::1\])$|\.workers\.dev$/i.test(hostname);
+
+// What links between the pages keep, so a preview stays a preview.
+export const keptParams = (hostname) => (isPreviewHost(hostname) ? ['demo', 'stats', 'community'] : ['demo']);

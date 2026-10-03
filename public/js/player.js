@@ -37,6 +37,9 @@ const MATCHES_SHOWN = 10;
 
 const $ = (id) => document.getElementById(id);
 
+// "<community> WARDOGS server", from the page's own title, which the site puts each community's name in.
+const SITE_TITLE = document.title.replace(/^Player \| /, '');
+
 const id = new URLSearchParams(location.search).get('id') ?? '';
 
 // The reader's own time for matches; UTC for days, like the bot's records.
@@ -75,7 +78,7 @@ const showMissing = (title, text) => {
 const renderHead = (now) => {
   const today = utcDay(now);
   const last = profile.activity.at(-1);
-  document.title = `${profile.name} | Players | gaminginit WARDOGS server`;
+  document.title = `${profile.name} | Players | ${SITE_TITLE}`;
   setText($('player-name'), profile.name);
   // The first letter or number in their name, for the badge beside it.
   setText($('player-avatar'), (profile.name.match(/[\p{L}\p{N}]/u)?.[0] ?? '?').toUpperCase());
