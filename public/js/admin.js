@@ -1,4 +1,4 @@
-import { demoAdmin } from './demo.js';
+import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import {
   DEATH_TAGS,
   flagLabel,
@@ -12,10 +12,12 @@ import {
   withVehicle,
 } from './format.js';
 import { demo, showNotice, thisPage } from './live.js';
+import { createTools } from './tools.js';
 import { el, link, mapTag, playerName } from './views.js';
 
-// The staff page: possible griefers from the bot's kill feed (team kills and suicides), the incidents behind them,
-// everything staff did through the bot, and the bans on the server. Staff sign in with Discord through the bot; the
+// The staff page: the admin tools (every staff command), possible griefers from the bot's kill feed (team kills and
+// suicides), the incidents behind them, everything staff did through the bot, the bans on the server and the reserved
+// slots. Staff sign in with Discord through the bot; the
 // bot checks they are staff and sends them back with a session token, which this page keeps for this browser and
 // sends with each request. ?demo shows sample data without signing in.
 
@@ -115,6 +117,11 @@ const who = (player) =>
 
 const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
 
+// A row's button that opens an admin tool with that player picked. `key` null keeps the tool open now when it takes a
+// player.
+const actButton = (text, key, player) =>
+  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => tools.use(key, player.steamId, player.name) });
+
 const FLAG_KIND = { teamKills: 'bad', sameTeammate: 'bad', vehicleSuicides: 'hot', suicides: 'hot' };
 
 const table = (node, headers, rows, empty) => {
@@ -171,7 +178,9 @@ const renderGriefers = (overview) => {
       number(withVehicle(p.suicides, p.vehicleSuicides)),
       el('td', { className: 'num', textContent: p.matches > 0 ? `${p.matches} · ${p.kills} kills` : '–' }),
       el('td', { className: 'num', textContent: p.minutes > 0 ? formatHours(p.minutes) : '–' }),
-      cell(
+      el(
+        'td',
+        { className: 'row-actions' },
         p.teamKills + p.teamKilled + p.vehicleSuicides > 0
           ? el('button', {
               type: 'button',
@@ -183,7 +192,8 @@ const renderGriefers = (overview) => {
                 $('incidents-title').scrollIntoView({ block: 'start' });
               },
             })
-          : '',
+          : null,
+        actButton('Act', null, p),
       ),
     ),
   );
@@ -279,9 +289,57 @@ const renderBans = (overview) => {
       b.bot ? staffCell({ by: b.bot.by, byName: logged.get(b.bot.by) }, overview.staff) : cell(b.bannedBy ?? 'Outside the bot'),
       el('td', { className: 'when', textContent: b.bot ? when.format(b.bot.at) : '–' }),
       el('td', { className: 'when', textContent: b.bot?.until ? when.format(b.bot.until) : 'Never' }),
+      el('td', { className: 'row-actions' }, actButton('Unban', 'unban', b.player)),
     ),
   );
-  table($('bans'), ['Player', 'Reason', 'Banned by', 'Since', 'Ends'], rows, 'Nobody is banned.');
+  table($('bans'), ['Player', 'Reason', 'Banned by', 'Since', 'Ends', ''], rows, 'Nobody is banned.');
+};
+
+const renderReserved = (overview) => {
+  const reserved = overview.reserved;
+  if (reserved === undefined) {
+    $('reserved-note').textContent = 'The bot does not send the reserved list yet. Deploy the latest bot.';
+    $('reserved-problems').hidden = true;
+    $('reserved').replaceChildren();
+    return;
+  }
+  if (reserved === null) {
+    $('reserved-note').textContent = 'Couldn’t read ServerSettings.ini just now. Trying again in a minute.';
+    $('reserved-problems').hidden = true;
+    $('reserved').replaceChildren();
+    return;
+  }
+  const count = reserved.players.length;
+  $('reserved-note').textContent = [
+    `${count} ${count === 1 ? 'player is' : 'players are'} on the reserved list in ServerSettings.ini, so they skip the queue when the server is full.`,
+    reserved.maxSlots === null ? '' : `MaxReservedSlots holds ${reserved.maxSlots} of the server’s slots back for them.`,
+    'Changes take effect when the server next restarts.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const problems = $('reserved-problems');
+  problems.hidden = reserved.removals.length === 0;
+  problems.replaceChildren(
+    el(
+      'p',
+      {},
+      el('strong', { textContent: 'Automatic VIP is stopped. ' }),
+      'These lines in ServerSettings.ini remove players from the list, and the bot won’t guess what they leave. Delete them by hand. To take a player’s slot away, delete their +DefaultReservedPlayerIds= line too, or use Remove VIP below.',
+    ),
+    el('ul', {}, ...reserved.removals.map((line) => el('li', {}, el('code', { textContent: line })))),
+  );
+  const rows = reserved.players.map((r) =>
+    el(
+      'tr',
+      {},
+      el('td', { className: 'player' }, who(r.player)),
+      cell(r.bot ? badge('From the bot', 'accent') : badge('Added by hand')),
+      el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.since) : '–' }),
+      el('td', { className: 'when', textContent: r.bot ? when.format(r.bot.until) : 'Never' }),
+      el('td', { className: 'row-actions' }, actButton('Remove VIP', 'vip:remove', r.player)),
+    ),
+  );
+  table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
 };
 
 const render = (overview) => {
@@ -310,7 +368,58 @@ const render = (overview) => {
   renderIncidents(overview);
   renderModeration(overview);
   renderBans(overview);
+  renderReserved(overview);
+  if (!tools.ready) loadCommands();
 };
+
+// Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.
+const call = async (path, body) => {
+  if (demo) return demoCall(path, body);
+  const token = loadToken();
+  if (!token) {
+    signedOut('Your sign-in has run out. Sign in again.');
+    return { ok: false, json: { error: 'Your sign-in has run out. Sign in again.' } };
+  }
+  const response = await fetch(botUrl(path), {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json', authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  if (response.status === 401) {
+    forgetToken();
+    signedOut('Your sign-in has run out. Sign in again.');
+  }
+  return { ok: response.ok, json: await response.json().catch(() => null) };
+};
+
+const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: () => data?.staff ?? {} });
+
+// The bot's staff commands, once, for the admin tools' forms.
+let commandsAsked = false;
+const loadCommands = async () => {
+  if (commandsAsked) return;
+  commandsAsked = true;
+  if (demo) {
+    tools.setCommands(demoCommands);
+    return;
+  }
+  try {
+    const response = await fetch(botUrl('admin/commands'), { headers: { accept: 'application/json', authorization: `Bearer ${loadToken()}` } });
+    if (response.status === 404) {
+      $('tools-note').textContent = 'The bot does not have the admin tools yet. Deploy the latest bot.';
+      return;
+    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    tools.setCommands((await response.json()).commands ?? []);
+  } catch (error) {
+    console.error('Could not load the admin tools', error);
+    // Asked again with the next refresh.
+    commandsAsked = false;
+  }
+};
+
+// A refusal the bot explained, such as staff sign-in not being set up on it.
+class BotSaid extends Error {}
 
 const load = async () => {
   clearTimeout(timer);
@@ -342,7 +451,13 @@ const load = async () => {
       showNotice('The bot does not have the staff page yet. Deploy the latest bot.');
       return;
     }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      const said = await response.json().then(
+        (body) => (typeof body?.error === 'string' ? body.error : null),
+        () => null,
+      );
+      throw said ? new BotSaid(said) : new Error(`HTTP ${response.status}`);
+    }
     const overview = await response.json();
     if (!current()) return;
     showNotice();
@@ -350,8 +465,9 @@ const load = async () => {
   } catch (error) {
     if (!current()) return;
     console.error('Could not load the staff page', error);
+    const why = error instanceof BotSaid ? ` The bot says: ${error.message}` : '';
     showNotice(
-      data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.',
+      (data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.') + why,
     );
   } finally {
     if (current()) {

@@ -2415,3 +2415,135 @@ body.refreshing .tile-value {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Admin tools */
+
+.tools-panel .tool-picker {
+  max-width: 420px;
+  margin-top: 4px;
+}
+
+.tool-help {
+  margin: 8px 0 12px;
+}
+
+.tool-form {
+  display: grid;
+  gap: 12px;
+  max-width: 640px;
+}
+
+.tool-field {
+  display: grid;
+  gap: 4px;
+}
+
+.tool-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.tool-input {
+  margin-top: 0;
+  max-width: none;
+}
+
+textarea.tool-input {
+  resize: vertical;
+}
+
+.tool-note,
+.tool-hint {
+  font-size: 0.8rem;
+}
+
+.tool-hint {
+  color: var(--accent);
+  min-height: 1em;
+}
+
+.tool-hint:empty {
+  display: none;
+}
+
+.admin button.tool-run {
+  justify-self: start;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.admin button.tool-run:hover {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+}
+
+.admin button.tool-run:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.tool-output:not(:empty) {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--page);
+}
+
+.reply-text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.reply-text + .reply-embed,
+.reply-embed + .reply-embed {
+  margin-top: 12px;
+}
+
+.reply-embed {
+  display: grid;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+}
+
+.reply-field-name {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.reply-footer {
+  font-size: 0.8rem;
+}
+
+.tool-error {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  font-weight: 700;
+}
+
+.row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.row-actions .btn + .btn {
+  margin-left: 6px;
+}
+
+/* Lines in ServerSettings.ini that stop automatic VIP. */
+.reserved-problems {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  color: var(--text-2);
+}
+
+.reserved-problems ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.reserved-problems code {
+  overflow-wrap: anywhere;
+}

@@ -602,3 +602,94 @@ export const staffBy = (entry, staff = {}) => {
 
 // "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were.
 export const withVehicle = (count, vehicle) => (vehicle > 0 ? `${count} (${vehicle} vehicle)` : String(count));
+
+// Admin tools: the bot's staff commands, run from the staff page. The bot sends their definitions as Discord has them
+// (GET /api/admin/commands); the page builds a form for each. A command with subcommands, such as /vip, is one tool per
+// subcommand, keyed "vip:add".
+
+// The order and names the page gives the tools. A command the bot has that is not listed here goes last, under its
+// own description, so a new command shows up without a change here.
+export const TOOL_GROUPS = [
+  {
+    name: 'Players',
+    tools: [
+      ['player', 'Look up a player'],
+      ['warn', 'Warn in game'],
+      ['kick', 'Kick'],
+      ['switchteam', 'Move to another team'],
+      ['ban', 'Ban'],
+      ['unban', 'Unban'],
+    ],
+  },
+  { name: 'VIP', tools: [['vip:add', 'Give VIP'], ['vip:remove', 'Remove VIP'], ['seeders', 'Top seeders']] },
+  {
+    name: 'Server',
+    tools: [
+      ['broadcast', 'Message everyone in game'],
+      ['setnextmap', 'Set the next map'],
+      ['changemap', 'Change map now'],
+      ['seednow', 'Call for seeders in Discord'],
+    ],
+  },
+  { name: 'Records', tools: [['removematch', 'Remove a wrongly recorded match']] },
+];
+
+// Tools that only read, so they run without asking first.
+export const READ_ONLY_TOOLS = new Set(['player', 'seeders']);
+
+const SUBCOMMAND = 1;
+
+const describe = (text) => (text ?? '').replace(/\s*\(staff only\)\s*$/i, '');
+
+// One tool for each command, or each subcommand, in TOOL_GROUPS order: its key, the command and subcommand to send,
+// the label, what it does and its options.
+export const toolsFrom = (definitions) => {
+  const tools = definitions.flatMap((command) => {
+    const subcommands = (command.options ?? []).filter((o) => o.type === SUBCOMMAND);
+    if (subcommands.length === 0) {
+      return [{ key: command.name, name: command.name, subcommand: null, description: describe(command.description), options: command.options ?? [] }];
+    }
+    return subcommands.map((sub) => ({
+      key: `${command.name}:${sub.name}`,
+      name: command.name,
+      subcommand: sub.name,
+      description: describe(sub.description),
+      options: sub.options ?? [],
+    }));
+  });
+  const listed = TOOL_GROUPS.flatMap((g) => g.tools.map(([key, label]) => ({ key, label, group: g.name })));
+  const known = listed.flatMap(({ key, label, group }) => {
+    const tool = tools.find((t) => t.key === key);
+    return tool ? [{ ...tool, label, group }] : [];
+  });
+  const others = tools.filter((t) => !listed.some((l) => l.key === t.key)).map((t) => ({ ...t, label: t.description || `/${t.key}`, group: 'Other' }));
+  return [...known, ...others];
+};
+
+// An option's label: "steam_id" and "player" are both the player; "infantry_only" is "Infantry only".
+export const optionLabel = (name) =>
+  name === 'steam_id' || name === 'player' ? 'Player' : name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ');
+
+// Discord's markdown in a reply, as pieces to show: plain text, **bold**, `code`, [links](https://…), <t:…> times,
+// <@…> users and <@&…> roles. Backslash escapes are undone.
+// Escaped characters, such as \* in a player's name, never end bold or a link's text.
+const DISCORD_TOKEN =
+  /\*\*((?:\\.|[^*\\])+?)\*\*|`([^`]+)`|\[((?:\\.|[^\]\\])+)\]\((https?:\/\/[^)\s]+)\)|<t:(-?\d+)(?::[a-zA-Z])?>|<@!?(\d+)>|<@&(\d+)>/g;
+const unescape = (text) => text.replace(/\\([\\*_~`|>#[\]()-])/g, '$1');
+
+export const discordParts = (text) => {
+  const parts = [];
+  let last = 0;
+  for (const m of text.matchAll(DISCORD_TOKEN)) {
+    if (m.index > last) parts.push({ type: 'text', text: unescape(text.slice(last, m.index)) });
+    if (m[1] !== undefined) parts.push({ type: 'strong', text: unescape(m[1]) });
+    else if (m[2] !== undefined) parts.push({ type: 'code', text: m[2] });
+    else if (m[3] !== undefined) parts.push({ type: 'link', text: unescape(m[3]), href: m[4] });
+    else if (m[5] !== undefined) parts.push({ type: 'time', at: Number(m[5]) * 1000 });
+    else if (m[6] !== undefined) parts.push({ type: 'user', id: m[6] });
+    else parts.push({ type: 'role', id: m[7] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ type: 'text', text: unescape(text.slice(last)) });
+  return parts;
+};

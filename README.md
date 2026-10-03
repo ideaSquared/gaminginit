@@ -218,14 +218,26 @@ Until the stats URL is set, the page says live stats are not connected and links
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
 - **Moderation log.** Every warning, kick, ban, unban and team move through the bot, with the reason and who did it,
   and bans made or lifted outside the bot (in game, or in the server's settings).
+- **Admin tools.** Every staff command from Discord, from the page: look up a player, warn, kick, move to another
+  team, ban, unban, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call
+  for seeders, and remove a wrongly recorded match. The forms come from the bot's own command list, and the pick-lists
+  (players in game and seen lately, teams, maps, modes, lighting, zones, bans, the reserved list, recent matches) from
+  the same suggestions Discord shows. Anything that changes the game or the records asks first. Each runs on the bot
+  as you, exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
+  moderation log. "Act" on a possible griefer, "Unban" on a ban and "Remove VIP" on a reserved slot open the tool
+  with that player picked.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends.
+- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
+  or added by hand, and how many slots are held back for them. Any lines that stop the bot's automatic VIP are shown,
+  with what to do about them.
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
 - Pick today, 7 days or 30 days (UTC days). It refreshes every minute while the tab is visible.
 - It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
-- `http://localhost:3000/admin?demo` shows sample data without signing in.
+- `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
+  do.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
@@ -253,5 +265,5 @@ npm test    # Node's built-in test runner; no dependencies to install
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `matches.js` the
 matches page, `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `admin.js` renders the staff page. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+`demo.js` makes the sample data. `admin.js` renders the staff page and `tools.js` its admin tools. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.
