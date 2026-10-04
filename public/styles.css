@@ -2435,7 +2435,7 @@ body.refreshing .tile-value {
   font-variant-numeric: tabular-nums;
 }
 
-/* Who used a weapon the bot has no name for, one a line. */
+/* Who used a weapon the bot has no name for, one per line. */
 .unnamed-user {
   display: flex;
   flex-wrap: wrap;
