@@ -938,6 +938,13 @@ const odds = (chance, flag) => {
   return kind ? badge(luckOdds(chance), kind) : luckOdds(chance);
 };
 
+// A weapon the bot has no name for: the game's own kill feed has it (see renderUnnamed).
+const uncheckedName = () => {
+  const mark = badge('Check name', 'hot');
+  mark.title = 'The bot has no name for this weapon yet, so this is the game’s code for it. See Weapons to name on the Review tab.';
+  return mark;
+};
+
 // A kill's weapon, what sort it is when not carried by hand, what the game said about it, and whether it was a team
 // kill; then whether it was a headshot, how far, and where.
 const killCells = (k) => [
@@ -945,7 +952,15 @@ const killCells = (k) => [
     k.weapon,
     WEAPON_KINDS[k.weaponKind] ? el('span', { className: 'kill-distance', textContent: ` · ${WEAPON_KINDS[k.weaponKind]}` }) : null,
     ...k.tags.filter((t) => DEATH_TAGS[t] && t !== 'Suicide').map((t) => el('span', { className: 'kill-distance', textContent: ` · ${DEATH_TAGS[t]}` })),
-    k.teamKill ? el('span', { className: 'badges' }, badge('Team kill', 'bad')) : null,
+    k.teamKill || k.weaponNamed === false
+      ? el(
+          'span',
+          { className: 'badges' },
+          k.teamKill ? badge('Team kill', 'bad') : null,
+          // Older bots don't say, so only a weapon the bot says it has no name for is marked.
+          k.weaponNamed === false ? uncheckedName() : null,
+        )
+      : null,
   ),
   cell(k.headshot ? badge('Headshot', 'accent') : ''),
   el('td', { className: 'num', textContent: k.distance === null ? '–' : metres(k.distance) }),
@@ -1123,6 +1138,38 @@ const renderHeadshots = () => {
   });
 };
 
+// Review: the weapons the bot has no name for, so the page shows the game's code for them, with who used them most, those
+// in game first, as the ones to watch in game. Hidden when there are none, or the bot does not send them.
+const renderUnnamed = () => {
+  const weapons = kills.unnamedWeapons ?? [];
+  $('unnamed-panel').hidden = weapons.length === 0;
+  $('count-unnamed').textContent = weapons.length > 0 ? String(weapons.length) : '';
+  const users = (w) =>
+    cell(
+      ...w.players.map((p) =>
+        el(
+          'div',
+          { className: 'unnamed-user' },
+          who(p),
+          el('span', { className: 'kill-distance', textContent: plural(p.kills, 'kill') }),
+          p.inGame ? badge('In game', 'accent') : null,
+        ),
+      ),
+      w.users > w.players.length ? el('div', { className: 'muted', textContent: `and ${w.users - w.players.length} more` }) : null,
+    );
+  const row = (w) =>
+    el(
+      'tr',
+      {},
+      cell(w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kill-distance', textContent: ` · ${WEAPON_KINDS[w.kind]}` }) : null),
+      number(w.kills.toLocaleString('en-GB')),
+      el('td', { className: 'num', textContent: w.longest === null ? '–' : metres(w.longest) }),
+      el('td', { className: 'when', textContent: utcDate.format(Date.parse(w.lastDay)) }),
+      users(w),
+    );
+  table($('unnamed-weapons'), ['Weapon', ['Kills', 'num'], ['Longest', 'num'], 'Last used', 'Used most by'], weapons.map(row), '');
+};
+
 // The Review tab's count and headshot tile, which need the headshots list as well as the overview.
 const renderReviewCounts = () => {
   if (!data) return;
@@ -1138,7 +1185,10 @@ const renderReviewCounts = () => {
 const renderKills = () => {
   killsWaiting = false;
   renderReviewCounts();
-  if (kills !== null) renderHeadshots();
+  if (kills !== null) {
+    renderHeadshots();
+    renderUnnamed();
+  }
   if (tab === 'history') renderHistory();
 };
 

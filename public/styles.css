@@ -2435,6 +2435,14 @@ body.refreshing .tile-value {
   font-variant-numeric: tabular-nums;
 }
 
+/* Who used a weapon the bot has no name for, one a line. */
+.unnamed-user {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+
 /* A death that has just come in glows for a moment. */
 .kill-new {
   animation: kill-in 2.4s ease-out;

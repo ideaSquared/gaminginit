@@ -772,11 +772,14 @@ const KILLERS = [
   ['Rook', 30, 13, 8.2, 0.02, 0, [['M4', 'weapon', 0.8, 0.54, 0.31], ['RPG-7', 'weapon', 0.2, 0, 0.02]]],
   ['Sable', 40, 22, 19.5, 0.3, 0, [['SVD', 'weapon', 0.75, 0.62, 0.55], ['GGX 17', 'weapon', 0.25, 0.3, 0.3]]],
   ['Kestrel', 52, 16, 14.2, 0.3, 0, [['AK74', 'weapon', 0.7, 0.33, 0.27], ['Humvee minigun', 'vehicle-weapon', 0.3, 0.05, 0.05]]],
-  ['Moth', 26, 7, 6.9, 0.5, 0, [['PKM', 'weapon', 1, 0.27, 0.27]]],
+  ['Moth', 26, 7, 6.9, 0.5, 0, [['PKM', 'weapon', 0.8, 0.27, 0.27], ['WEPN 030', 'weapon', 0.2, 0.3, 0.3]]],
   ['Tusk', 18, 4, 4.4, 0.6, 0, [['M249 SAW', 'weapon', 1, 0.22, 0.24]]],
   ['Vex', 22, 3, 3.1, 0.6, 0, [['Humvee', 'vehicle', 0.5, 0, 0], ['AK74', 'weapon', 0.5, 0.27, 0.27]]],
-  ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 1, 0.27, 0.31]]],
+  ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 0.8, 0.27, 0.31], ['SMG 03', 'weapon', 0.2, 0.16, 0.16]]],
 ];
+
+// The weapons in the sample the bot has no name for, so it sends the game's code for them.
+const UNNAMED = ['WEPN 030', 'SMG 03'];
 
 // Bravo_Six and Nightjar are the sample's players not in game; Ghost_7 only played today.
 const OFFLINE = ['Bravo_Six', 'Nightjar'];
@@ -818,6 +821,7 @@ const demoKill = (killer, n, at) => {
     victim: victimRef(n + name.length),
     weapon: weaponName,
     weaponKind: kind,
+    weaponNamed: !UNNAMED.includes(weaponName),
     distance: near,
     headshot: chance(n, 7) < headshots,
     tags: kind === 'vehicle' ? ['RoadKill'] : KILL_TAGS[n % KILL_TAGS.length],
@@ -844,6 +848,18 @@ export const demoKills = (days, now) => {
     totals: { kills, headshots, players: 14 * Math.min(days, 3) + 10, flaggedPlayers: rows.filter((r) => r.flaggedDays > 0).length },
     players: [...rows.filter((r) => r.inGame), ...rows.filter((r) => !r.inGame)],
     feed,
+    unnamedWeapons: [
+      ['WEPN 030', 78, 341, 7, ['Moth', 'Sable', 'Bravo_Six']],
+      ['SMG 03', 51, 74, 12, ['Ash', 'Kestrel', 'Rook', 'Vex', 'Nightjar']],
+    ].map(([name, kills, longest, users, by]) => ({
+      name,
+      kind: 'weapon',
+      kills,
+      longest,
+      lastDay: new Date(now).toISOString().slice(0, 10),
+      users,
+      players: by.map((who, i) => ({ steamId: demoSteamId(who), name: who, kills: Math.round(kills / (i + 2)), inGame: !OFFLINE.includes(who) })),
+    })),
   };
 };
 
