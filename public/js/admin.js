@@ -14,6 +14,7 @@ import {
 import {
   accountAge,
   alertCount,
+  BUTTON_BACKGROUND,
   DEATH_TAGS,
   factionColours,
   filterPlayers,
@@ -572,7 +573,8 @@ const renderServer = (overview) => {
   );
 };
 
-const renderTeamFilter = (players, colours) => {
+// `scores` gives each team's colour in game.
+const renderTeamFilter = (players, scores) => {
   const teams = teamCounts(players);
   // A team picked before that is no longer in game falls back to everyone.
   if (filters.team && !teams.some((t) => (t.name === null ? 'none' : sideKey(t.name)) === filters.team)) filters.team = '';
@@ -597,7 +599,8 @@ const renderTeamFilter = (players, colours) => {
     b.dataset.key = value;
     return b;
   };
-  // The server's colour for a team, or the faction's own when the server sent none.
+  // The server's colour for a team, or the faction's own when the server sent none, readable on a pressed button.
+  const colours = sideColours([{ factionScores: scores }], BUTTON_BACKGROUND);
   const colourOf = (name) => colours.get(sideKey(name)) ?? factionColours.get(sideKey(name)) ?? null;
   replaceButtons($('team-filter'), [
     button('', 'All', players.length),
@@ -612,7 +615,7 @@ const renderPlayers = (overview) => {
   const players = online?.players ?? [];
   const today = utcDay(overview.generatedAt);
   const colours = sideColours([{ factionScores: overview.server?.factionScores ?? [] }]);
-  renderTeamFilter(players, colours);
+  renderTeamFilter(players, overview.server?.factionScores ?? []);
   const shown = filterPlayers(players, filters, today);
   const query = filters.query.trim();
   setStatus(

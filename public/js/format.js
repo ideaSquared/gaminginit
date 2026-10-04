@@ -321,12 +321,13 @@ export const mapSegments = (map, teams) => {
   return segments.filter((s) => s.count > 0).map((s) => ({ ...s, share: s.count / map.matches }));
 };
 
-// Each side's colour from the latest match that had one, by sideKey. Matches come newest first.
-export const sideColours = (matches) => {
+// Each side's colour from the latest match that had one, by sideKey, readable on `background` (the cards' by default).
+// Matches come newest first.
+export const sideColours = (matches, background) => {
   const colours = new Map();
   for (const m of matches) {
     for (const s of m.factionScores ?? []) {
-      const colour = readableColour(s.colorHex);
+      const colour = readableColour(s.colorHex, background);
       if (colour && !colours.has(sideKey(s.name))) colours.set(sideKey(s.name), colour);
     }
   }
@@ -336,9 +337,12 @@ export const sideColours = (matches) => {
 // The game's three factions in their colours in game: Lonestar blue, Manticore green, Valkyra red.
 export const FACTION_HEX = { Lonestar: '#3a7bd9', Manticore: '#3fa34d', Valkyra: '#d93a3a' };
 
-// Each faction's colour, by sideKey, readable as text on a button (--surface-2), for where the server's own colours
-// aren't to hand, such as the staff page's lists of lines.
-export const factionColours = new Map(Object.entries(FACTION_HEX).map(([name, hex]) => [sideKey(name), readableColour(hex, '#1a1e25')]));
+// A button's background (--surface-2), lighter than the cards, so text on one needs its own colours.
+export const BUTTON_BACKGROUND = '#1a1e25';
+
+// Each faction's colour, by sideKey, readable as text on a button, for where the server's own colours aren't to hand,
+// such as the staff page's lists of lines.
+export const factionColours = new Map(Object.entries(FACTION_HEX).map(([name, hex]) => [sideKey(name), readableColour(hex, BUTTON_BACKGROUND)]));
 
 const groupBy = (matches, key) => {
   const groups = new Map();

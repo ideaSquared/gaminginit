@@ -35,6 +35,7 @@ import {
   readableColour,
   sideColours,
   factionColours,
+  BUTTON_BACKGROUND,
   daysAgo,
   heatLevel,
   inPeriod,
@@ -490,7 +491,7 @@ describe('player pages', () => {
 
   it('has each faction’s colour, readable on a button', () => {
     const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    const button = rgb('#1a1e25');
+    const button = rgb(BUTTON_BACKGROUND);
     assert.deepEqual([...factionColours.keys()], ['lonestar', 'manticore', 'valkyra']);
     for (const [name, colour] of factionColours) assert.ok(contrast(rgb(colour), button) >= 4.5, name);
   });
@@ -503,6 +504,13 @@ describe('player pages', () => {
 
     assert.equal(colours.get('lonestar'), '#ff3333');
     assert.equal(colours.has('valkyra'), false);
+  });
+
+  it('makes each side’s colour readable on a button when asked', () => {
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const colours = sideColours([match(1, { factionScores: [{ name: 'Valkyra', score: 1, colorHex: '#3366ff' }] })], BUTTON_BACKGROUND);
+
+    assert.ok(contrast(rgb(colours.get('valkyra')), rgb(BUTTON_BACKGROUND)) >= 4.5);
   });
 
   it('lists the leaderboard places in the top 10, best first', () => {
