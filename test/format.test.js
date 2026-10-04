@@ -661,6 +661,8 @@ describe('staff page', () => {
       { action: 'ban', count: 1 },
       { action: 'unban', count: 0 },
       { action: 'switchteam', count: 2 },
+      { action: 'vip-add', count: 0 },
+      { action: 'vip-remove', count: 0 },
       { action: 'newAction', count: 1 },
     ]);
     assert.equal(modActionCounts([]).length, Object.keys(MOD_ACTIONS).length);
@@ -668,6 +670,8 @@ describe('staff page', () => {
 
   it('names an action, or shows it as sent when the page has no name for it', () => {
     assert.equal(modActionLabel('switchteam'), 'Team move');
+    assert.equal(modActionLabel('vip-add'), 'VIP added');
+    assert.equal(modActionLabel('vip-remove'), 'VIP removed');
     assert.equal(modActionLabel('newAction'), 'newAction');
     assert.equal(modActionLabel('toString'), 'toString');
     assert.equal(modActionLabel('constructor'), 'constructor');
