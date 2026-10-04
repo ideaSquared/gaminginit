@@ -619,6 +619,8 @@ export const MOD_ACTIONS = {
   ban: 'Ban',
   unban: 'Unban',
   switchteam: 'Team move',
+  'vip-add': 'VIP added',
+  'vip-remove': 'VIP removed',
 };
 
 // An action as the moderation log names it, or as the bot sent it when the page has no name for it (only MOD_ACTIONS'
