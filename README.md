@@ -99,7 +99,7 @@ Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `match
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 4 places in `index.html` and 1 in each other page. If the invite changes, change all 13. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 6 places in `index.html` (two are the invite as text under the Join buttons) and 1 in each other page. If the invite changes, change all 15. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 

@@ -389,6 +389,20 @@ h1 {
   color: var(--text);
 }
 
+/* The invite as text under the Join buttons, to paste into Discord when a button doesn't open it. One tap selects it. */
+.discord-fallback {
+  margin-top: 12px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.discord-fallback code {
+  color: var(--text);
+  user-select: all;
+  -webkit-user-select: all;
+  overflow-wrap: anywhere;
+}
+
 .online-dot {
   display: inline-block;
   width: 8px;
@@ -1662,6 +1676,10 @@ tbody tr:last-child td {
 
 .step .btn {
   margin-top: 6px;
+}
+
+.step .discord-fallback {
+  margin-top: 0;
 }
 
 /* Footer */
