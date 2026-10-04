@@ -197,7 +197,8 @@ const weapons = (now) => {
     longest: { distance: longest, name: NAMES[(i * 3) % NAMES.length], id: demoId((i * 3) % NAMES.length) },
   }));
   const kills = top.reduce((sum, w) => sum + w.kills, 0) + 412;
-  const longest = top.reduce((best, w) => (w.longest.distance > best.longest.distance ? w : best));
+  // Hand-held weapons only, as the bot does.
+  const longest = top.filter((w) => w.kind === 'weapon').reduce((best, w) => (w.longest.distance > best.longest.distance ? w : best));
   return {
     days: 30,
     since: new Date(now - 12 * DAY).toISOString().slice(0, 10),
@@ -391,7 +392,7 @@ export const demoLive = (now) => {
         killer.chain = killer.chainTime !== null && time - killer.chainTime <= MULTI_SECONDS ? killer.chain + 1 : 1;
         killer.chainTime = time;
         killer.bestChain = Math.max(killer.bestChain, killer.chain);
-        if (killer.longest === null || capped > killer.longest) {
+        if (kind === 'weapon' && (killer.longest === null || capped > killer.longest)) {
           killer.longest = capped;
           killer.longestWeapon = weapon;
         }

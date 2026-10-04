@@ -546,9 +546,20 @@ describe('weapons', () => {
     assert.equal(longestKill(weaponTotals(used.slice(2, 3), '2026-09-10')), null);
   });
 
+  it('takes their longest kill from hand-held weapons only', () => {
+    const others = [
+      { day: '2026-09-29', name: 'AT mine', kind: 'placed', kills: 1, headshots: 0, longest: 851.1 },
+      { day: '2026-09-29', name: 'STN 03 Main barrel', kind: 'vehicle-weapon', kills: 3, headshots: 0, longest: 706.8 },
+      { day: '2026-09-29', name: 'Barbed wire', kind: 'buildable', kills: 1, headshots: 0, longest: 2.1 },
+    ];
+    assert.deepEqual(longestKill(weaponTotals([...used, ...others], '2026-09-10')), { distance: 140.5, weapon: 'AK74' });
+    assert.equal(longestKill(weaponTotals(others, '2026-09-10')), null);
+  });
+
   it('labels the weapons that are not carried by hand', () => {
     assert.equal(WEAPON_KINDS.weapon, undefined);
     assert.equal(WEAPON_KINDS['vehicle-weapon'], 'Vehicle gun');
+    assert.equal(WEAPON_KINDS.placed, 'Placed');
   });
 });
 
