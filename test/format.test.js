@@ -549,6 +549,7 @@ describe('weapons', () => {
   it('labels the weapons that are not carried by hand', () => {
     assert.equal(WEAPON_KINDS.weapon, undefined);
     assert.equal(WEAPON_KINDS['vehicle-weapon'], 'Vehicle gun');
+    assert.equal(WEAPON_KINDS.emplacement, 'Emplacement');
   });
 });
 
