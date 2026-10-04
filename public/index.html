@@ -109,6 +109,8 @@
               <a class="btn btn-ghost" href="#server">Server status</a>
             </div>
             <p class="discord-count" id="discord-count" hidden></p>
+            <!-- The invite as text, for when the button doesn't open Discord. -->
+            <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code>discord.gg/qsJFYGhSJ4</code>.</p>
           </div>
 
           <article class="card server-card" id="server" aria-labelledby="server-name">
@@ -205,6 +207,7 @@
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
+              <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code>discord.gg/qsJFYGhSJ4</code>.</p>
             </li>
             <li class="card step">
               <span class="step-n" aria-hidden="true">2</span>
