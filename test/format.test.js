@@ -560,6 +560,7 @@ describe('weapons', () => {
     assert.equal(WEAPON_KINDS.weapon, undefined);
     assert.equal(WEAPON_KINDS['vehicle-weapon'], 'Vehicle gun');
     assert.equal(WEAPON_KINDS.placed, 'Placed');
+    assert.equal(WEAPON_KINDS.emplacement, 'Emplacement');
   });
 });
 

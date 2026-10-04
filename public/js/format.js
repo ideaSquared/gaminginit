@@ -468,8 +468,15 @@ export const searchPlayers = (players, query) => {
 // Weapons. The bot adds up the game's kill feed by weapon: the top weapons over the last 30 days (`weapons` in
 // /api/stats), and each player's weapons by day (`weapons` on their page).
 
-// What a weapon is, beside its name, when it is not carried by hand.
-export const WEAPON_KINDS = { placed: 'Placed', 'vehicle-weapon': 'Vehicle gun', vehicle: 'Vehicle', buildable: 'Built' };
+// What a weapon is, beside its name, when it is not carried by hand. An emplacement is a mortar or another fixed
+// weapon: the game counts them as vehicles, but nobody drives them.
+export const WEAPON_KINDS = {
+  placed: 'Placed',
+  'vehicle-weapon': 'Vehicle gun',
+  emplacement: 'Emplacement',
+  vehicle: 'Vehicle',
+  buildable: 'Built',
+};
 
 // "612 m", "1,204 m", and to a tenth under 10 m: "4.5 m".
 export const metres = (distance) =>
