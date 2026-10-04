@@ -470,7 +470,13 @@ export const searchPlayers = (players, query) => {
 
 // What a weapon is, beside its name, when it is not carried by hand. An emplacement is a mortar or another fixed
 // weapon: the game counts them as vehicles, but nobody drives them.
-export const WEAPON_KINDS = { 'vehicle-weapon': 'Vehicle gun', emplacement: 'Emplacement', vehicle: 'Vehicle', buildable: 'Built' };
+export const WEAPON_KINDS = {
+  placed: 'Placed',
+  'vehicle-weapon': 'Vehicle gun',
+  emplacement: 'Emplacement',
+  vehicle: 'Vehicle',
+  buildable: 'Built',
+};
 
 // "612 m", "1,204 m", and to a tenth under 10 m: "4.5 m".
 export const metres = (distance) =>
@@ -493,9 +499,14 @@ export const weaponTotals = (used, first) => {
   return [...weapons.values()].sort((a, b) => b.kills - a.kills || a.name.localeCompare(b.name));
 };
 
-// Their longest kill over those weapons, and what with. Null when the feed sent no distances.
+// Their longest kill over those weapons, and what with. Only hand-held weapons count, as on the bot's boards: how far a
+// mine was from whoever laid it, or an emplacement from its target, says nothing about their aim. Null when the feed
+// sent no distances for them.
 export const longestKill = (weapons) =>
-  weapons.reduce((best, w) => (w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best), null);
+  weapons.reduce(
+    (best, w) => (w.kind === 'weapon' && w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best),
+    null,
+  );
 
 // The live page. The bot pushes the match on now (GET /api/live, and its WebSocket): the kill feed, each player's
 // kills and streaks, and the match's highlights.
