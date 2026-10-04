@@ -294,7 +294,7 @@ opens their history.**
   more headshots than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
   Needs the bot's kill feed (its README, "Weapon stats" and "Kills and headshots").
 - **Weapons to name.** The game sends the bot a code for each weapon, not its name, and the bot names the ones it
-  knows. The rest show as their code, like "WEPN 030": over the last 30 days, most kills first, with their kills, longest
+  knows. The rest show as their code, like "WEPN 035": over the last 30 days, most kills first, with their kills, longest
   kill, the last day used and who used them most, those in game first. The game's own kill feed names them, so staff
   can watch one of those players, or match a kill marked Check name in the kill feed with the same kill in game, and
   tell whoever runs the bot. Left out when there are none, or the bot does not send them.
