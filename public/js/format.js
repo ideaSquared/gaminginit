@@ -708,6 +708,49 @@ export const accountAge = (account, now) => (account.createdAt === null ? 'Hidde
 // "62% of 230 kills", from the kill feed, or null without kills.
 export const headshotShare = (kills, headshots) => (kills > 0 ? `${Math.round((headshots / kills) * 100)}% of ${kills} kills` : null);
 
+// The staff page's Kills tab (GET /api/admin/kills).
+
+// "26 of 35 (74%)": headshots of kills.
+export const headshotCount = (kills, headshots) => (kills > 0 ? `${headshots} of ${kills} (${percent(headshots / kills)})` : '–');
+
+// The headshots a player with the server's usual aim would get with the same weapons: "9 (26%)". The bot sends null
+// while the server has too few kills to say.
+export const usualHeadshots = (expected, kills) =>
+  expected === null || expected === undefined || kills === 0 ? '–' : `${Math.round(expected)} (${percent(expected / kills)})`;
+
+// Less likely than this by luck is worth saying so.
+const ODDS_SHOWN = 0.05;
+
+// The chance of that many headshots by luck: "1 in 4,800", "1 in 2.3 million". Anything likelier than 1 in 20 is
+// "Ordinary"; null, when the bot can't say yet, is "–".
+export const luckOdds = (chance) => {
+  if (chance === null || chance === undefined) return '–';
+  if (chance >= ODDS_SHOWN) return 'Ordinary';
+  const n = 1 / chance;
+  if (n >= 1e9) return 'Under 1 in a billion';
+  if (n >= 1e6) return `1 in ${Number((n / 1e6).toPrecision(2))} million`;
+  return `1 in ${Number(n.toPrecision(2)).toLocaleString('en-GB')}`;
+};
+
+// Whether a chance is unlikely enough to colour: below the flag's mark is 'bad', below 1 in 20 'hot'.
+export const oddsKind = (chance, flag) => (chance === null || chance === undefined ? '' : chance * flag.odds < 1 ? 'bad' : chance < ODDS_SHOWN ? 'hot' : '');
+
+// What gets a player's day flagged for headshots, with the bot's marks.
+export const headshotRule = ({ kills, odds }) =>
+  `${kills} or more kills in a day, with so many headshots that a player with the server’s usual aim, using the same weapons, would get that many less than once in ${odds.toLocaleString('en-GB')} days`;
+
+export const flaggedDaysLabel = (days) => `Flagged ${plural(days, 'day')}`;
+
+// One player's headshots in words, above their kills.
+export const killerSummary = ({ kills, headshots, expected, chance }) => {
+  if (kills === 0) return 'No kills in this period.';
+  const got = `${plural(headshots, 'headshot')} in ${plural(kills, 'kill')} (${percent(headshots / kills)}).`;
+  if (expected === null || expected === undefined) return `${got} The server needs more kills before headshots can be judged.`;
+  const usual = ` A player with the server’s usual aim would get about ${Math.round(expected)} with the same weapons (${percent(expected / kills)}).`;
+  if (chance === null || chance >= ODDS_SHOWN) return `${got}${usual} Nothing unusual.`;
+  return `${got}${usual} The chance of ${headshots} or more by luck: ${luckOdds(chance)}.`;
+};
+
 // The staff page's server list (`online.players` in the bot's answer).
 
 const STEAM_BADGES = { high: 'High-risk Steam account', medium: 'Steam account worth a look' };

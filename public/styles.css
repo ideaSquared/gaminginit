@@ -2587,10 +2587,10 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
-/* Staff page tabs: Players, Alerts, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
+/* Staff page tabs: Players, Alerts, Kills, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -2653,6 +2653,12 @@ body.refreshing .tile-value {
   background: var(--warning);
   box-shadow: none;
   color: #1d1400;
+}
+
+@media (max-width: 899px) {
+  .admin-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 559px) {
@@ -2911,6 +2917,64 @@ body.refreshing .tile-value {
 
 .rules > summary:hover {
   color: var(--text);
+}
+
+/* Kills tab. A player's name opens their kills, so it is a button drawn as a name. */
+.link-button.player-kills {
+  color: inherit;
+  font-weight: 600;
+  text-align: left;
+  text-decoration-color: var(--axis);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.link-button.player-kills:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+.kills-status {
+  margin-bottom: 16px;
+}
+
+.killer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 16px;
+}
+
+.killer-head .badges {
+  margin-top: 2px;
+}
+
+.killer-head .row-actions {
+  margin-left: auto;
+}
+
+.killer-summary {
+  margin: 12px 0 20px;
+  max-width: 72ch;
+}
+
+.killer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.admin-table.killer-table {
+  min-width: 0;
+}
+
+.killer-list-head {
+  margin-bottom: 4px;
+}
+
+.killer-list-head .check {
+  padding-bottom: 0;
 }
 
 /* When the bot last asked Steam, under how old the account is. */

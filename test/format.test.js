@@ -73,7 +73,14 @@ import {
   longAgo,
   steamWhy,
   accountAge,
+  headshotCount,
+  headshotRule,
   headshotShare,
+  flaggedDaysLabel,
+  killerSummary,
+  luckOdds,
+  oddsKind,
+  usualHeadshots,
   watchList,
   needsLook,
   teamCounts,
@@ -892,5 +899,53 @@ describe('the staff page server list', () => {
   it('counts the alerts worth a look', () => {
     assert.equal(alertCount({ steam: { accounts: [{}, {}] }, totals: { flaggedPlayers: 3 } }), 5);
     assert.equal(alertCount({ steam: null, totals: { flaggedPlayers: 0 } }), 0);
+  });
+});
+
+describe('the staff page kills tab', () => {
+  const flag = { kills: 10, odds: 1000 };
+
+  it('counts headshots, and what the server’s usual aim gets with the same weapons', () => {
+    assert.equal(headshotCount(35, 26), '26 of 35 (74%)');
+    assert.equal(headshotCount(0, 0), '–');
+    assert.equal(usualHeadshots(9.4, 35), '9 (27%)');
+    assert.equal(usualHeadshots(null, 35), '–');
+    assert.equal(usualHeadshots(0, 0), '–');
+  });
+
+  it('gives the chance by luck as one in so many, and only when it is unlikely', () => {
+    assert.equal(luckOdds(0.3), 'Ordinary');
+    assert.equal(luckOdds(0.05), 'Ordinary');
+    assert.equal(luckOdds(0.02), '1 in 50');
+    assert.equal(luckOdds(1 / 4812), '1 in 4,800');
+    assert.equal(luckOdds(1 / 2_345_678), '1 in 2.3 million');
+    assert.equal(luckOdds(1e-12), 'Under 1 in a billion');
+    assert.equal(luckOdds(0), 'Under 1 in a billion');
+    assert.equal(luckOdds(null), '–');
+  });
+
+  it('colours a chance below the flag’s mark, and one below 1 in 20', () => {
+    assert.equal(oddsKind(0.0009, flag), 'bad');
+    assert.equal(oddsKind(0.001, flag), 'hot');
+    assert.equal(oddsKind(0.04, flag), 'hot');
+    assert.equal(oddsKind(0.3, flag), '');
+    assert.equal(oddsKind(null, flag), '');
+  });
+
+  it('words the flag with the bot’s marks', () => {
+    assert.match(headshotRule(flag), /^10 or more kills in a day, .* less than once in 1,000 days$/);
+    assert.equal(flaggedDaysLabel(1), 'Flagged 1 day');
+    assert.equal(flaggedDaysLabel(3), 'Flagged 3 days');
+  });
+
+  it('sums up a player’s headshots in words', () => {
+    assert.equal(
+      killerSummary({ kills: 35, headshots: 26, expected: 9.4, chance: 1 / 2_345_678 }),
+      '26 headshots in 35 kills (74%). A player with the server’s usual aim would get about 9 with the same weapons (27%). ' +
+        'The chance of 26 or more by luck: 1 in 2.3 million.',
+    );
+    assert.match(killerSummary({ kills: 20, headshots: 5, expected: 5.2, chance: 0.55 }), /\(26%\)\. Nothing unusual\.$/);
+    assert.match(killerSummary({ kills: 1, headshots: 1, expected: null, chance: null }), /^1 headshot in 1 kill \(100%\)\. The server needs more kills/);
+    assert.equal(killerSummary({ kills: 0, headshots: 0, expected: null, chance: null }), 'No kills in this period.');
   });
 });

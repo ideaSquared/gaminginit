@@ -73,7 +73,7 @@ You need:
   `/api/stats` and on player pages; without it, they are not shown. The live page needs a bot that serves
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
   The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
-  README, "Staff page").
+  README, "Staff page"), and its Kills tab `/api/admin/kills`.
   The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
   list is not shown. The teams page needs a bot that sends `teams` (same section); without it, the page says so.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
@@ -239,9 +239,10 @@ get a staff spot instead: the bot keeps you on the server's reserved list for as
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
 
-The page has four tabs. Each says what is in it, with a count: how many are in game, and how many alerts there are.
-The address keeps the tab (`/admin#alerts`, `/admin#admin`, `/admin#rotations`), so a link opens the right one. ← → move between tabs from
-the keyboard.
+The page has five tabs. Each says what is in it, with a count: how many are in game, how many alerts there are, and
+how many players are flagged for headshots. The address keeps the tab (`/admin#alerts`, `/admin#kills`, `/admin#admin`,
+`/admin#rotations`), and on the Kills tab the player shown (`/admin#kills/<Steam ID>`), so a link opens the right one.
+← → move between tabs from the keyboard.
 
 ### Players: who is on the server now
 
@@ -254,8 +255,9 @@ the keyboard.
   by their name.
 - **Search** by name or Steam ID, pick a **team**, **sort** by team, most kills, longest on today or name, and tick
   **Only players worth a look**. When nobody in game matches a search, "Look up" searches everyone the bot knows.
-- **Act** on a player opens a menu: look up, warn, kick, move to another team, or ban. Each opens that admin tool on the
-  Admin tab with the player picked, and "← Back to Players" goes back.
+- **Act** on a player opens a menu: look up, their kills, warn, kick, move to another team, or ban. Kills opens their
+  kills on the Kills tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Players"
+  goes back.
 - On a phone each player is a small card, with Act at the top.
 
 ### Alerts: what the bot found by itself
@@ -283,6 +285,28 @@ the keyboard.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
 - Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers look up and
   ban, as the game can only warn, kick or move players who are on.
+
+### Kills: the kill feed and headshots
+
+Many headshots, day after day, can be a sign of cheating. This tab shows who gets them, and every kill behind them.
+
+- **Tiles:** the kills in the period and how many players made them, the share that were headshots, how many players
+  were flagged for headshots (and how many of them are in game), and who got the most headshots.
+- **Headshots.** Everyone with a headshot in the period, in game first (as on the Alerts tab), then most flagged days
+  and least likely by luck: their headshots of their kills, **Usual** (how many a player with the server's usual aim
+  would get with the same weapons), **Chance by luck** (how often that player would get as many or more: "1 in 4,800",
+  or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. A day is flagged with 10 or more kills
+  and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets more headshots
+  than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
+- **Kill feed.** The server's latest 250 kills, newest first, to the second: who, whom, with what, headshot, team kill,
+  wallbangs and the like, how far and on which map. **Only headshots** hides the rest.
+- **A player's kills.** Click any name on the tab, or Act → Kills anywhere, for their kills in the period: their
+  headshots in words, against their usual and the chance by luck; by weapon; by day, with each flagged day marked; and
+  every kill, newest first (their latest 1,000 a day), with its own **Only headshots**. Names there open those players'
+  kills too. "← Everyone", or the browser's Back, goes back.
+- Pick today, 7 days or 30 days (UTC days). It loads when you open the tab, and refreshes with the page. Kills start
+  from when the bot first kept them for this tab, and it keeps 30 days. Needs the bot's kill feed (its README, "Weapon
+  stats" and "Headshots").
 
 ### Admin: commands, the log, bans and VIP
 
@@ -339,7 +363,8 @@ the keyboard.
   "Discord user" and their ID, linked to their Discord profile.
 - It refreshes every minute while the browser tab is visible, like the bot's checks. A player's Act menu stays open
   through a refresh.
-- It shows Steam IDs, linked to Steam profiles. Player names link to their public player page.
+- It shows Steam IDs, linked to Steam profiles. Player names link to their public player page, except on the Kills tab,
+  where they open that player's kills.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
   do, and its rotations change in the page only.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
@@ -370,6 +395,6 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `admin.js` renders the staff page, `tools.js` its admin tools, and `rotations.js` its
+`demo.js` makes the sample data. `admin.js` renders the staff page (its Kills tab too), `tools.js` its admin tools, and `rotations.js` its
 Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.
