@@ -267,7 +267,8 @@ opens their history.**
   tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has who, whom, with what,
-  headshot, team kill, wallbangs and the like, how far and on which map. **Only headshots** hides the rest. By its title:
+  headshot, team kill, wallbangs and the like, how far and on which map. A weapon the bot has no name for is marked
+  **Check name** (see Weapons to name, on Review). **Only headshots** hides the rest. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
   opens again with the latest kills.
@@ -292,6 +293,11 @@ opens their history.**
   10 or more kills and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets
   more headshots than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
   Needs the bot's kill feed (its README, "Weapon stats" and "Kills and headshots").
+- **Weapons to name.** The game sends the bot a code for each weapon, not its name, and the bot names the ones it
+  knows. The rest show as their code, like "WEPN 030": over the last 30 days, most kills first, with their kills, longest
+  kill, the last day used and who used them most, those in game first. The game's own kill feed names them, so staff
+  can watch one of those players, or match a kill marked Check name in the kill feed with the same kill in game, and
+  tell whoever runs the bot. Left out when there are none, or the bot does not send them.
 - **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
   or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
   or one never set up), how old the account is and when the bot checked, whether they are banned, and their
