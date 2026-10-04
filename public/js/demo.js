@@ -745,6 +745,141 @@ const account = (player, now, t) => ({
   ...t,
 });
 
+// The staff page's Kills tab (GET /api/admin/kills), with the same made-up Steam IDs as demoAdmin. Ghost_7, new today,
+// and Pike, with a high-risk Steam account, get far more headshots than their weapons do; Sable's are ordinary for a
+// sniper rifle. Bravo_Six, banned for cheating, is not in game.
+const demoSteamId = (name) => (name === 'Ghost_7' ? '76561198000010008' : `7656119800000${String(NAMES.indexOf(name)).padStart(4, '0')}`);
+
+// name, kills and headshots a day, the headshots their weapons usually get a day, the chance over a day, days flagged
+// of the last 7, and their weapons: name, kind, share of their kills, their share of headshots with it, and the
+// server's.
+const KILLERS = [
+  ['Ghost_7', 28, 21, 7.4, 2e-9, 1, [['AK74', 'weapon', 0.9, 0.84, 0.27], ['M67 frag grenade', 'weapon', 0.1, 0, 0]]],
+  ['Pike', 34, 23, 9.6, 4e-7, 3, [['M4', 'weapon', 0.85, 0.8, 0.31], ['MGL-40', 'weapon', 0.15, 0, 0.02]]],
+  ['Bravo_Six', 29, 22, 8.1, 1e-8, 1, [['AK74', 'weapon', 1, 0.76, 0.27]]],
+  ['Rook', 30, 13, 8.2, 0.02, 0, [['M4', 'weapon', 0.8, 0.54, 0.31], ['RPG-7', 'weapon', 0.2, 0, 0.02]]],
+  ['Sable', 40, 22, 19.5, 0.3, 0, [['SVD', 'weapon', 0.75, 0.62, 0.55], ['GGX 17', 'weapon', 0.25, 0.3, 0.3]]],
+  ['Kestrel', 52, 16, 14.2, 0.3, 0, [['AK74', 'weapon', 0.7, 0.33, 0.27], ['Humvee minigun', 'vehicle-weapon', 0.3, 0.05, 0.05]]],
+  ['Moth', 26, 7, 6.9, 0.5, 0, [['PKM', 'weapon', 1, 0.27, 0.27]]],
+  ['Tusk', 18, 4, 4.4, 0.6, 0, [['M249 SAW', 'weapon', 1, 0.22, 0.24]]],
+  ['Vex', 22, 3, 3.1, 0.6, 0, [['Humvee', 'vehicle', 0.5, 0, 0], ['AK74', 'weapon', 0.5, 0.27, 0.27]]],
+  ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 1, 0.27, 0.31]]],
+];
+
+// Bravo_Six and Nightjar are the sample's players not in game; Ghost_7 only played today.
+const OFFLINE = ['Bravo_Six', 'Nightjar'];
+const killerDays = (name, days) => (name === 'Ghost_7' ? 1 : name === 'Bravo_Six' ? Math.min(days, 2) : days);
+
+const killerRow = ([name, kills, headshots, expected, odds, flagged, weapons], days) => {
+  const played = killerDays(name, days);
+  return {
+    steamId: demoSteamId(name),
+    name,
+    kills: kills * played,
+    headshots: headshots * played,
+    expected: Math.round(expected * played * 10) / 10,
+    // A flagged player's days add up to something ever less likely.
+    chance: flagged > 0 ? odds ** played : odds,
+    days: played,
+    flaggedDays: Math.min(flagged, played),
+    weapon: weapons[0][0],
+    inGame: !OFFLINE.includes(name),
+  };
+};
+
+const VICTIMS = ['Hex', 'Juno', 'Kodiak', 'Lynx', 'Mako', 'Nova', 'Orca', 'Quill', 'Raven', 'Saber'];
+// As demoAdmin has them in game.
+const victimRef = (i) => ({ steamId: `7656119800001${String(10 + (i % VICTIMS.length)).padStart(4, '0')}`, name: VICTIMS[i % VICTIMS.length] });
+const KILL_TAGS = [[], [], [], ['Penetration'], [], ['Ricochet'], []];
+
+// The `n`th kill by a sample killer, `at` then: whom, with what, and a headshot as often as theirs are.
+const demoKill = (killer, n, at) => {
+  const [name, , , , , , weapons] = killer;
+  const pick = chance(n, name.length);
+  let share = 0;
+  const weapon = weapons.find(([, , kills]) => (share += kills) >= pick) ?? weapons[0];
+  const [weaponName, kind, , headshots] = weapon;
+  const near = kind === 'vehicle' ? null : Math.round((8 + chance(n, 3) * (weaponName === 'SVD' ? 600 : 160)) * 10) / 10;
+  return {
+    at,
+    map: 'Ozeti',
+    victim: victimRef(n + name.length),
+    weapon: weaponName,
+    weaponKind: kind,
+    distance: near,
+    headshot: chance(n, 7) < headshots,
+    tags: kind === 'vehicle' ? ['RoadKill'] : KILL_TAGS[n % KILL_TAGS.length],
+    teamKill: name === 'Vex' && n % 9 === 0,
+  };
+};
+
+export const demoKills = (days, now) => {
+  const rows = KILLERS.map((k) => killerRow(k, days)).sort(
+    (a, b) => b.flaggedDays - a.flaggedDays || a.chance - b.chance || b.headshots - a.headshots,
+  );
+  const inGame = KILLERS.filter(([name]) => !OFFLINE.includes(name));
+  const feed = Array.from({ length: 60 }, (_, i) => {
+    const killer = inGame[Math.floor(chance(i, 11) * inGame.length)];
+    return { ...demoKill(killer, i, now - 20_000 - i * 23_000), killer: { steamId: demoSteamId(killer[0]), name: killer[0] } };
+  });
+  const kills = rows.reduce((n, r) => n + r.kills, 0) + 180 * days;
+  const headshots = rows.reduce((n, r) => n + r.headshots, 0) + 41 * days;
+  return {
+    generatedAt: now,
+    days,
+    since: new Date(now - 12 * DAY).toISOString().slice(0, 10),
+    flag: { kills: 10, odds: 1000 },
+    totals: { kills, headshots, players: 14 * Math.min(days, 3) + 10, flaggedPlayers: rows.filter((r) => r.flaggedDays > 0).length },
+    players: [...rows.filter((r) => r.inGame), ...rows.filter((r) => !r.inGame)],
+    feed,
+  };
+};
+
+// One sample player's kills, as GET /api/admin/kills?player= sends them: everyone in the sample has some.
+export const demoPlayerKills = (steamId, days, now) => {
+  const killer = KILLERS.find(([name]) => demoSteamId(name) === steamId);
+  const row = killer === undefined ? null : killerRow(killer, days);
+  const name = killer?.[0] ?? (NAMES.find((n) => demoSteamId(n) === steamId) ?? VICTIMS.find((_, i) => victimRef(i).steamId === steamId) ?? steamId);
+  const today = Math.floor(now / DAY) * DAY;
+  const byDay = Array.from({ length: row?.days ?? 0 }, (_, i) => {
+    const flagged = i < (row?.flaggedDays ?? 0);
+    const [, kills, headshots, expected, odds] = killer;
+    return {
+      day: new Date(today - i * DAY).toISOString().slice(0, 10),
+      kills: kills + ((i * 3) % 5) - 2,
+      // Their other days are ordinary.
+      headshots: flagged ? headshots : Math.round(expected * 1.1),
+      expected,
+      chance: flagged ? odds : 0.3,
+      flagged,
+    };
+  });
+  // Today's kills, a few a minute this evening, and some on each earlier day.
+  const list = byDay.flatMap((d, i) =>
+    Array.from({ length: Math.min(d.kills, i === 0 ? 30 : 12) }, (_, n) => demoKill(killer, i * 50 + n, (i === 0 ? now - 4 * MINUTE : today - (i - 0.85) * DAY) - n * 97_000)),
+  );
+  const weapons = (killer?.[6] ?? []).map(([weapon, kind, kills, headshots, usual]) => {
+    const used = Math.round((row?.kills ?? 0) * kills);
+    return { name: weapon, kind, kills: used, headshots: Math.round(used * headshots), expected: Math.round(used * usual * 10) / 10 };
+  });
+  return {
+    generatedAt: now,
+    days,
+    since: new Date(now - 12 * DAY).toISOString().slice(0, 10),
+    flag: { kills: 10, odds: 1000 },
+    player: { steamId, name, ...(NAMES.includes(name) ? { id: idOf(name) } : {}), inGame: !OFFLINE.includes(name) },
+    kills: row?.kills ?? 0,
+    headshots: row?.headshots ?? 0,
+    expected: row?.expected ?? null,
+    chance: row?.chance ?? null,
+    flaggedDays: row?.flaggedDays ?? 0,
+    weapons,
+    byDay,
+    list,
+    kept: row?.kills ?? 0,
+  };
+};
+
 // The bot's staff commands, as GET /api/admin/commands sends them, for the admin tools in ?demo. Copied from the bot;
 // the real page always gets them from the bot.
 export const demoCommands = [
