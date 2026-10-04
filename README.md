@@ -241,10 +241,10 @@ get a staff spot instead: the bot keeps you on the server's reserved list for as
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
 
-The page has five tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
-staff did) and **History** (any player's record), then **Admin** and **Rotations**. Each tab says what is in it, with a
+The page has six tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
+staff did) and **History** (any player's record), then **Admin**, **Rotations** and **Lines**. Each tab says what is in it, with a
 count: how many are in game, and how many flags there are. The address keeps the tab (`/admin#review`,
-`/admin#history`, `/admin#admin`, `/admin#rotations`), and on History the player shown (`/admin#history/<Steam ID>`),
+`/admin#history`, `/admin#admin`, `/admin#rotations`, `/admin#lines`), and on History the player shown (`/admin#history/<Steam ID>`),
 so a link opens the right one, and the browser's Back goes back. Old links (`#alerts`, `#kills`) open Review, and
 `#kills/<Steam ID>` that player's history. ← → move between tabs from the keyboard. **Any player's name, on any tab,
 opens their history.**
@@ -375,6 +375,23 @@ opens their history.**
 - The bot keeps the rules (see its README, "Map rotations"): the server plays a new rotation from the next map, so a
   match is never cut short, and each day's rotation goes on at the hour shown, in your own time.
 
+### Lines: what the bot says in game
+
+- **The lists.** The bot's messages in game each pick a line at random from a list: seeding, 10 minutes in, and for
+  halfway and nearly won, one list for each faction plus level scores and any other team. Pick a list on the left; each
+  says how many lines it has and whether staff changed it or it is the bot's own.
+- **The editor.** Change a line, take it out (×), or add one (**+ Add a line**, or Enter in a line to add one after
+  it). The buttons under "Filled in by the bot" put a placeholder such as `{score}` where the cursor is, and show what
+  the bot fills it in with now.
+- **In game.** The message as it goes out, for the line you are on: what the bot adds before and after the line (such
+  as "Halfway there!" and the seeding call to action) is dimmed. Each line counts the whole message against the game's
+  200 characters. A line that is too long, or has a placeholder the bot can't fill in there, is marked and can't be
+  saved.
+- Nothing changes until **Save**; the next message of that kind uses the new lines. **Use the bot's lines** puts the
+  bot's own back. Each list says who changed it last and when. Leaving with unsaved changes asks first.
+- A list that is marked "too long or wrong" was fine when it was saved, but the bot's settings changed since (its
+  website, seeder VIP or the winning score). The bot cuts such a line short until it is changed.
+
 ### Everywhere
 
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
@@ -387,7 +404,7 @@ opens their history.**
   page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
-  do, and its rotations change in the page only.
+  do, and its rotations and lines change in the page only.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
@@ -417,5 +434,6 @@ numbers for every page, `views.js` has the DOM pieces they share, `app.js` rende
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `admin.js` renders the staff page (its live kill feed and History too), `tools.js` its admin tools, and `rotations.js` its
-Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
+Lines tab, with `linesmodel.js` holding its logic, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

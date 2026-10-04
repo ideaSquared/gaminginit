@@ -2616,7 +2616,7 @@ body.refreshing .tile-value {
 /* Staff page tabs: Players, Alerts, Kills, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -4464,5 +4464,172 @@ body.rot-grabbing * {
   .rot-ghost {
     rotate: none;
     scale: none;
+  }
+}
+
+/* The Lines tab: the lines the bot says in game. It shares the Rotations tab's layout, cards and messages. */
+
+.lines-group {
+  margin-top: 14px;
+}
+
+.lines-group + .rot-names {
+  margin-top: 8px;
+}
+
+.panel h3.lines-title {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.lines-when {
+  color: var(--text-2);
+}
+
+.lines-fills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.lines-fills .rot-field-label {
+  flex-basis: 100%;
+}
+
+.lines-fill-item {
+  font-size: 0.85rem;
+}
+
+.lines-fill {
+  padding: 2px 8px;
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--accent);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+}
+
+.lines-fill:hover {
+  border-color: var(--accent);
+}
+
+.lines-preview {
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--page);
+}
+
+.lines-message {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.lines-added {
+  color: var(--muted);
+}
+
+.lines-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lines-row {
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.lines-num {
+  padding-top: 11px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lines .lines-input {
+  max-width: none;
+  margin-top: 0;
+}
+
+.lines-row-bad .lines-input {
+  border-color: var(--critical);
+}
+
+.lines-problem {
+  margin-top: 4px;
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  font-size: 0.8rem;
+}
+
+.lines-problem:empty {
+  display: none;
+}
+
+.lines-count {
+  min-width: 4.5em;
+  padding-top: 11px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lines-count-over {
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  font-weight: 700;
+}
+
+.lines .lines-remove {
+  margin-top: 2px;
+  font-size: 1.3rem;
+}
+
+.lines-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.lines .lines-add {
+  width: auto;
+}
+
+.lines-foot .rot-note {
+  margin-top: 0;
+}
+
+@media (max-width: 559px) {
+  .lines-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .lines-num {
+    display: none;
+  }
+
+  .lines-count {
+    grid-column: 1;
+    grid-row: 2;
+    padding-top: 0;
+    text-align: left;
+  }
+
+  .lines .lines-remove {
+    grid-column: 2;
+    grid-row: 1;
   }
 }
