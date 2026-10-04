@@ -15,6 +15,7 @@ import {
   accountAge,
   alertCount,
   DEATH_TAGS,
+  factionColours,
   filterPlayers,
   flaggedDaysLabel,
   flagLabel,
@@ -576,6 +577,9 @@ const renderTeamFilter = (players, colours) => {
   // A team picked before that is no longer in game falls back to everyone.
   if (filters.team && !teams.some((t) => (t.name === null ? 'none' : sideKey(t.name)) === filters.team)) filters.team = '';
   const button = (value, text, count, colour) => {
+    // A team's name in its colour, to spot at a glance.
+    const name = el('span', { textContent: text });
+    if (colour) name.style.color = colour;
     const b = el(
       'button',
       {
@@ -587,15 +591,17 @@ const renderTeamFilter = (players, colours) => {
         },
       },
       colour === undefined ? null : swatch(colour),
-      `${text} `,
+      name,
       el('span', { className: 'filter-count', textContent: String(count) }),
     );
     b.dataset.key = value;
     return b;
   };
+  // The server's colour for a team, or the faction's own when the server sent none.
+  const colourOf = (name) => colours.get(sideKey(name)) ?? factionColours.get(sideKey(name)) ?? null;
   replaceButtons($('team-filter'), [
     button('', 'All', players.length),
-    ...teams.map((t) => (t.name === null ? button('none', 'No team', t.count) : button(sideKey(t.name), t.name, t.count, colours.get(sideKey(t.name)) ?? null))),
+    ...teams.map((t) => (t.name === null ? button('none', 'No team', t.count) : button(sideKey(t.name), t.name, t.count, colourOf(t.name)))),
   ]);
 };
 

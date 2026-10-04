@@ -333,6 +333,13 @@ export const sideColours = (matches) => {
   return colours;
 };
 
+// The game's three factions in their colours in game: Lonestar blue, Manticore green, Valkyra red.
+export const FACTION_HEX = { Lonestar: '#3a7bd9', Manticore: '#3fa34d', Valkyra: '#d93a3a' };
+
+// Each faction's colour, by sideKey, readable as text on a button (--surface-2), for where the server's own colours
+// aren't to hand, such as the staff page's lists of lines.
+export const factionColours = new Map(Object.entries(FACTION_HEX).map(([name, hex]) => [sideKey(name), readableColour(hex, '#1a1e25')]));
+
 const groupBy = (matches, key) => {
   const groups = new Map();
   for (const m of matches) {

@@ -1,5 +1,6 @@
 import { groupLists, lineProblem, linesToSave, listLabel, messageLength, messageParts, problemCount, sameLines, tidyLine } from './linesmodel.js';
-import { el } from './views.js';
+import { factionColours } from './format.js';
+import { el, sideName } from './views.js';
 
 // The staff page's Lines tab: the lines the bot says in game, list by list. Pick a list on the left, change its lines,
 // and Save; the next message of that kind uses them. Each line shows its whole message as it goes out, with what the
@@ -277,7 +278,8 @@ export const createLines = ({ root, load, send }) => {
               el(
                 'span',
                 { className: 'rot-name-top' },
-                el('span', { className: 'rot-name-text', textContent: group.lists.length > 1 ? l.name : listLabel(l) }),
+                // A faction's list in its colour, to spot at a glance.
+                sideName(group.lists.length > 1 ? l.name : listLabel(l), factionColours, 'rot-name-text'),
                 on && dirty() ? el('span', { className: 'rot-dot', title: 'Unsaved changes' }) : null,
               ),
               el('span', { className: 'rot-name-meta', textContent: `${plural(l.lines.length, 'line')} · ${l.changed ? 'changed by staff' : "the bot's own"}` }),

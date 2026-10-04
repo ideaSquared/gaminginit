@@ -92,7 +92,7 @@ export const createTools = ({ root, call, onChanged, staff }) => {
     showHint(option, input, hint);
   };
 
-  // Who or what a picked value is: "Vex · Valkyra · 7656…" under a Steam ID.
+  // Who or what a picked value is: "Vex · 🔴 Valkyra · 7656…" under a Steam ID.
   const showHint = (option, input, hint) => {
     const name = offered.get(option.name)?.get(input.value);
     hint.textContent = name && name !== input.value ? `→ ${name}` : '';

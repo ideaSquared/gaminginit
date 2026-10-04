@@ -34,6 +34,7 @@ import {
   contrast,
   readableColour,
   sideColours,
+  factionColours,
   daysAgo,
   heatLevel,
   inPeriod,
@@ -485,6 +486,13 @@ describe('player pages', () => {
     for (const hex of ['#3366ff', '#000000', '#5a1010']) assert.ok(contrast(rgb(readableColour(hex)), surface) >= 4.5, hex);
     assert.equal(readableColour(undefined), null);
     assert.equal(readableColour('blue'), null);
+  });
+
+  it('has each faction’s colour, readable on a button', () => {
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const button = rgb('#1a1e25');
+    assert.deepEqual([...factionColours.keys()], ['lonestar', 'manticore', 'valkyra']);
+    for (const [name, colour] of factionColours) assert.ok(contrast(rgb(colour), button) >= 4.5, name);
   });
 
   it('takes each side’s colour from its latest match, however the server spelled it', () => {
