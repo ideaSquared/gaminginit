@@ -385,7 +385,8 @@ opens their history.**
   the bot fills it in with now.
 - **In game.** The message as it goes out, for the line you are on: what the bot adds before and after the line (such
   as "Halfway there!" and the seeding call to action) is dimmed. Each line counts the whole message against the game's
-  200 characters. A line that is too long, or has a placeholder the bot can't fill in there, is marked and can't be
+  200 characters, with `{score}` and `{team}` at the longest they can be when it goes out (the halfway score up to the
+  winning score, a team name up to 16 characters), so the count can be more than the preview shows. A line that is too long, or has a placeholder the bot can't fill in there, is marked and can't be
   saved.
 - Nothing changes until **Save**; the next message of that kind uses the new lines. **Use the bot's lines** puts the
   bot's own back. Each list says who changed it last and when. Leaving with unsaved changes asks first.

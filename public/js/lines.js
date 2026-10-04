@@ -319,7 +319,7 @@ export const createLines = ({ root, load, send }) => {
     box.append(
       el('p', {
         className: 'rot-note',
-        textContent: `Line ${index + 1}. The dimmed parts are what the bot adds; placeholders are filled in as they would be now.`,
+        textContent: `Line ${index + 1}. The dimmed parts are what the bot adds. The count takes {score} and {team} at the longest they can be, so it can be more than this shows.`,
       }),
     );
     return box;
@@ -373,7 +373,7 @@ export const createLines = ({ root, load, send }) => {
         input,
         el('p', { className: 'lines-problem', id: noteId, textContent: why ?? '' }),
       ),
-      el('span', { className: `lines-count${count.over ? ' lines-count-over' : ''}`, textContent: count.text, title: 'Characters in the whole message, of the most the game shows' }),
+      el('span', { className: `lines-count${count.over ? ' lines-count-over' : ''}`, textContent: count.text, title: 'Characters in the whole message at its longest, with each placeholder as long as it can be, of the most the game shows' }),
       remove,
     );
     item.dataset.key = line.key;

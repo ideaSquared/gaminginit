@@ -8,12 +8,14 @@ const halfway = {
   group: 'Halfway',
   name: 'Valkyra',
   values: { team: 'Valkyra', score: '50' },
+  longest: { team: 'x'.repeat(16), score: '100' },
   before: 'Halfway there! ',
   after,
   lines: ['Valkyra leads on {score}. Not my points, OUR points, comrade.'],
 };
-const level = { id: 'halfwayLevel', group: 'Halfway', name: 'Level scores', values: {}, before: '', after, lines: ['Level!'] };
-const seeding = { id: 'seeding', group: 'Seeding', name: 'Seeding', values: { needed: '19 more players' }, before: '', after: '', lines: [] };
+const level = { id: 'halfwayLevel', group: 'Halfway', name: 'Level scores', values: {}, longest: {}, before: '', after, lines: ['Level!'] };
+const needed = { needed: '19 more players' };
+const seeding = { id: 'seeding', group: 'Seeding', name: 'Seeding', values: needed, longest: needed, before: '', after: '', lines: [] };
 
 describe('tidyLine', () => {
   it('puts a line on one line, without spare spaces', () => {
@@ -29,7 +31,10 @@ describe('the message in game', () => {
 
   it('puts what the bot adds around the line', () => {
     assert.deepEqual(messageParts(halfway, ' {team} on {score}. '), { before: 'Halfway there! ', line: 'Valkyra on 50.', after });
-    assert.equal(messageLength(halfway, '{team} on {score}.'), 'Halfway there! Valkyra on 50.'.length + after.length);
+  });
+
+  it('counts the message at its longest: each placeholder as long as it can be when it goes out', () => {
+    assert.equal(messageLength(halfway, '{team} on {score}.'), `Halfway there! ${'x'.repeat(16)} on 100.`.length + after.length);
   });
 });
 
@@ -44,6 +49,9 @@ describe('lineProblem', () => {
 
   it('says how much too long a line is, with what the bot adds', () => {
     assert.equal(lineProblem(halfway, 'x'.repeat(room + 3), 200), '3 characters too long for the game.');
+    // The preview shows 50, but the leader can be on 100 when it goes out.
+    assert.equal(lineProblem(halfway, `${'x'.repeat(room - 3)}{score}`, 200), null);
+    assert.equal(lineProblem(halfway, `${'x'.repeat(room - 2)}{score}`, 200), '1 character too long for the game.');
     assert.equal(lineProblem(halfway, 'x'.repeat(room + 1), 200), '1 character too long for the game.');
     // {needed} counts as "19 more players".
     assert.equal(lineProblem(seeding, `${'x'.repeat(185)}{needed}`, 200), null);

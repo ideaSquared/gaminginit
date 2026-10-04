@@ -1,6 +1,7 @@
 // The Lines tab's logic, apart from the page: each line as the game shows it, and what is wrong with one. The bot sends
-// each list with what it puts before and after its lines (`before`, `after`) and what it fills each placeholder in
-// with (`values`), and checks lines the same way when a list is saved.
+// each list with what it puts before and after its lines (`before`, `after`), what it fills each placeholder in with
+// now (`values`, for the preview), and the longest each can be when the message goes out (`longest`, for the count),
+// and checks lines the same way when a list is saved.
 
 // The game shows a message on one line.
 export const tidyLine = (text) => String(text ?? '').replace(/\s+/g, ' ').trim();
@@ -14,10 +15,8 @@ export const fillLine = (line, values) =>
 // the bot adds after it.
 export const messageParts = (list, line) => ({ before: list.before, line: fillLine(tidyLine(line), list.values), after: list.after });
 
-export const messageLength = (list, line) => {
-  const parts = messageParts(list, line);
-  return parts.before.length + parts.line.length + parts.after.length;
-};
+// The message's length at its longest, with each placeholder at the longest it can be.
+export const messageLength = (list, line) => list.before.length + fillLine(tidyLine(line), list.longest).length + list.after.length;
 
 const listOf = (items) => (items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 

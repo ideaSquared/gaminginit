@@ -1169,8 +1169,15 @@ const DEMO_HALFWAY_AFTER = ` Seed on 3 days in a week and get a reserved slot. H
 const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard, Discord and seeding at ${DEMO_SITE}`;
 const demoList = (id, group, name, note, frame, lines) => ({ id, group, name, note, off: null, ...frame, lines, changed: null });
 const demoFaction = (group, key, name, note, frame, lines) => demoList(`${group === 'Halfway' ? 'halfway' : 'nearly'}.${key}`, group, name, note, frame, lines);
-const halfwayFrame = (team) => ({ values: { team, score: '50' }, before: 'Halfway there! ', after: DEMO_HALFWAY_AFTER });
-const nearlyFrame = (team) => ({ values: { team, score: '90' }, before: '', after: DEMO_NEARLY_AFTER });
+const DEMO_TEAM_LONGEST = 'x'.repeat(16);
+const halfwayFrame = (team) => ({
+  values: { team, score: '50' },
+  longest: { team: DEMO_TEAM_LONGEST, score: '100' },
+  before: 'Halfway there! ',
+  after: DEMO_HALFWAY_AFTER,
+});
+const nearlyFrame = (team) => ({ values: { team, score: '90' }, longest: { team: DEMO_TEAM_LONGEST, score: '90' }, before: '', after: DEMO_NEARLY_AFTER });
+const exactFrame = (values, before, after) => ({ values, longest: values, before, after });
 
 const DEMO_LISTS = [
   demoList(
@@ -1178,7 +1185,7 @@ const DEMO_LISTS = [
     'Seeding',
     'Seeding',
     'Every few minutes while the server seeds, and 30 seconds after someone joins. What seeding earns goes after it.',
-    { values: { needed: '19 more players' }, before: '', after: ` Seed for over 10 min on 3 days in a week and get a reserved slot. How at ${DEMO_SITE}` },
+    exactFrame({ needed: '19 more players' }, '', ` Seed for over 10 min on 3 days in a week and get a reserved slot. How at ${DEMO_SITE}`),
     ["We're seeding! {needed} and we go live.", 'Seeding now: {needed} to go live. Stick around and bring a friend.', "Quiet, isn't it? {needed} and it won't be."],
   ),
   demoList(
@@ -1186,7 +1193,7 @@ const DEMO_LISTS = [
     '10 minutes in',
     '10 minutes in',
     '10 minutes after the match goes live. The line is the whole message, so say where the rules and the website are.',
-    { values: { site: DEMO_SITE }, before: '', after: '' },
+    exactFrame({ site: DEMO_SITE }, '', ''),
     ['10 minutes in and nobody has rage quit yet. Rules are in our Discord, leaderboard at {site}', 'Still alive? Impressive. Rules are in our Discord, and your K/D is on the leaderboard at {site}'],
   ),
   ...[
@@ -1201,7 +1208,7 @@ const DEMO_LISTS = [
     'Halfway',
     'Level scores',
     'At half the winning score when the top teams are level. These go in place of "Halfway there!", with seeding or the Discord after them.',
-    { values: {}, before: '', after: DEMO_HALFWAY_AFTER },
+    exactFrame({}, '', DEMO_HALFWAY_AFTER),
     ["Halfway there and it's neck and neck!", 'Halfway there and dead level. Somebody do something.'],
   ),
   demoList(
