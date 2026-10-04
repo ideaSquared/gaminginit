@@ -775,11 +775,11 @@ const KILLERS = [
   ['Moth', 26, 7, 6.9, 0.5, 0, [['PKM', 'weapon', 0.8, 0.27, 0.27], ['WEPN 099', 'weapon', 0.2, 0.3, 0.3]]],
   ['Tusk', 18, 4, 4.4, 0.6, 0, [['M249 SAW', 'weapon', 1, 0.22, 0.24]]],
   ['Vex', 22, 3, 3.1, 0.6, 0, [['Humvee', 'vehicle', 0.5, 0, 0], ['AK74', 'weapon', 0.5, 0.27, 0.27]]],
-  ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 0.8, 0.27, 0.31], ['SMG 03', 'weapon', 0.2, 0.16, 0.16]]],
+  ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 0.8, 0.27, 0.31], ['SMG 99', 'weapon', 0.2, 0.16, 0.16]]],
 ];
 
 // The weapons in the sample the bot has no name for, so it sends the game's code for them.
-const UNNAMED = ['WEPN 099', 'SMG 03'];
+const UNNAMED = ['WEPN 099', 'SMG 99'];
 
 // Bravo_Six and Nightjar are the sample's players not in game; Ghost_7 only played today.
 const OFFLINE = ['Bravo_Six', 'Nightjar'];
@@ -850,7 +850,7 @@ export const demoKills = (days, now) => {
     feed,
     unnamedWeapons: [
       ['WEPN 099', 78, 341, 7, ['Moth', 'Sable', 'Bravo_Six']],
-      ['SMG 03', 51, 74, 12, ['Ash', 'Kestrel', 'Rook', 'Vex', 'Nightjar']],
+      ['SMG 99', 51, 74, 12, ['Ash', 'Kestrel', 'Rook', 'Vex', 'Nightjar']],
     ].map(([name, kills, longest, users, by]) => ({
       name,
       kind: 'weapon',
