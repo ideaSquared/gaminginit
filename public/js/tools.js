@@ -28,7 +28,8 @@ const discordNodes = (text, staff) =>
     return part.text;
   });
 
-const replyNodes = (reply, staff) => [
+// A reply from the bot, as Discord would show it. The History tab shows a player's record with it too.
+export const replyNodes = (reply, staff) => [
   ...(reply.content ? [el('p', { className: 'reply-text' }, ...discordNodes(reply.content, staff))] : []),
   ...(reply.embeds ?? []).map((embed) =>
     el(

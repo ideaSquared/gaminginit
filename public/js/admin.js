@@ -1,4 +1,14 @@
-import { demoAdmin, demoCall, demoCommands, demoKills, demoPlayerKills, demoRotations, demoRotationsChange } from './demo.js';
+import {
+  demoAdmin,
+  demoCall,
+  demoCommands,
+  demoFeedKill,
+  demoKills,
+  demoPlayerKills,
+  demoPlayerRecord,
+  demoRotations,
+  demoRotationsChange,
+} from './demo.js';
 import {
   accountAge,
   alertCount,
@@ -21,6 +31,7 @@ import {
   oddsKind,
   percent,
   PLAYER_SORTS,
+  plural,
   readSteamId,
   RISK_LABELS,
   sessionExpiry,
@@ -43,14 +54,15 @@ import {
 } from './format.js';
 import { demo, showNotice, thisPage } from './live.js';
 import { createRotations } from './rotations.js';
-import { createTools } from './tools.js';
-import { el, link, mapTag, playerName } from './views.js';
+import { createTools, replyNodes } from './tools.js';
+import { el, link, mapTag, playerHref } from './views.js';
 
-// The staff page, in five tabs. Players: everyone in game now, to search and act on. Alerts: what the bot found by
-// itself: risky Steam accounts, possible griefers from the kill feed (team kills and suicides) and the incidents behind
-// them. Kills: the kill feed, who gets far more headshots than their weapons usually do, and any player's every kill.
-// Admin: the admin tools (every staff command), the bans on the server, the reserved slots and everything staff did
-// through the bot. Rotations: the map rotations, the week and what is on the server (see rotations.js). Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
+// The staff page, in five tabs. Live: the server now, everyone in game, to search and act on, and every kill as it
+// happens. Review: what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get,
+// risky Steam accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff
+// did. History: any player's record, kills and headshots, and team kills. Admin: the admin tools (every staff command),
+// the bans on the server and the reserved slots. Rotations: the map rotations, the week and what is on the server (see
+// rotations.js). Any player's name opens their history. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
 // session token, which this page keeps for this browser and sends with each request. Staff link the Steam account they
 // play on, so the bot never counts them as seeders: the page asks once each sign-in until they have. ?demo shows sample
 // data without signing in.
@@ -132,9 +144,11 @@ const saveHidden = (hidden) => {
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['players', 'alerts', 'kills', 'admin', 'rotations'];
-const TAB_NAMES = { players: 'Players', alerts: 'Alerts', kills: 'Kills', admin: 'Admin', rotations: 'Rotations' };
-let tab = 'players';
+const TABS = ['live', 'review', 'history', 'admin', 'rotations'];
+const TAB_NAMES = { live: 'Live', review: 'Review', history: 'History', admin: 'Admin', rotations: 'Rotations' };
+// The tabs the page had before, which old links name.
+const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review' };
+let tab = 'live';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order.
 const filters = { query: '', team: '', watch: false, sort: 'team' };
 // The moderation log's hidden kinds of action, such as team moves.
@@ -151,17 +165,22 @@ let lastLoad = 0;
 // Bumped by each load and by signing out, so an answer that comes back after a newer load started, or after signing
 // out, is dropped.
 let generation = 0;
-// The Kills tab (GET /api/admin/kills): the latest kills and the headshots list, or the kills of one player, `killer`
-// ({ steamId, name }), which the address keeps as #kills/<Steam ID>, so Back goes back to everyone. Loaded while the tab
-// is open; each has its own generation, as `generation` has for the rest.
+// The headshots list for the period (GET /api/admin/kills), loaded with each refresh, and the kill feed: the server's
+// latest kills, newest first, which the bot sends as they come in (see connectFeed).
 let kills = null;
-let killer = null;
-let killerKills = null;
+let feed = [];
 let killsGeneration = 0;
-// New kills that came while an Act menu was open, as for `waiting`.
+// The player on the History tab ({ steamId, name }), which the address keeps as #history/<Steam ID>, so Back goes back:
+// their kills (GET /api/admin/kills?player=) and their record ({ steamId, reply }: the /player command's reply, as Look
+// up shows it, or { steamId, error }). Each load has its own generation, as `generation` is for the rest.
+let historyPlayer = null;
+let historyKills = null;
+let historyRecord = null;
+let historyGeneration = 0;
+// New kills or history that came while an Act menu was open, as for `waiting`.
 let killsWaiting = false;
 // "Only headshots" on the kill feed and on a player's kills.
-const killFilters = { feed: false, killer: false };
+const killFilters = { feed: false, history: false };
 
 // In the reader's own time: "Fri 3 Oct, 21:40".
 const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -185,9 +204,12 @@ const signedOut = (message) => {
   $('signin-error').textContent = message ?? '';
   if ($('steam-dialog').open) $('steam-dialog').close();
   rotations.reset();
+  disconnectFeed();
   killsGeneration += 1;
+  historyGeneration += 1;
   kills = null;
-  killerKills = null;
+  historyKills = null;
+  historyRecord = null;
 };
 
 const signOut = () => {
@@ -205,16 +227,22 @@ const steamLink = (steamId) =>
     textContent: steamId,
   });
 
-// A player's name, linking to their public page, with their Steam ID linking to their Steam profile.
-const who = (player) => el('span', { className: 'staff-player' }, playerName(player), steamLink(player.steamId));
+// A player's name, opening their history, with their Steam ID linking to their Steam profile.
+const who = (player) =>
+  el(
+    'span',
+    { className: 'staff-player' },
+    el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, onclick: () => openHistory(player) }),
+    steamLink(player.steamId),
+  );
 
 const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
 
-// What the address keeps after the # for the tab shown, and on the Kills tab the player shown.
-const tabHash = () => (tab === 'players' ? '' : tab === 'kills' && killer ? `#kills/${killer.steamId}` : `#${tab}`);
+// What the address keeps after the # for the tab shown, and on the History tab the player shown.
+const tabHash = () => (tab === 'live' ? '' : tab === 'history' && historyPlayer ? `#history/${historyPlayer.steamId}` : `#${tab}`);
 
 const selectTab = (name, { focus = false } = {}) => {
-  tab = TABS.includes(name) ? name : 'players';
+  tab = TABS.includes(name) ? name : 'live';
   for (const t of TABS) {
     const on = t === tab;
     $(`tab-${t}`).setAttribute('aria-selected', String(on));
@@ -226,17 +254,20 @@ const selectTab = (name, { focus = false } = {}) => {
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
   // Loaded when first opened, as only staff working on rotations need them.
   if (tab === 'rotations' && data) rotations.show();
-  // Loaded each time it is opened, and with each refresh while it is open.
-  if (tab === 'kills' && data) {
-    renderKills();
-    loadKills();
+  // A player's history is drawn straight away with what the page knows, and loaded when it is not yet.
+  if (tab === 'history' && data) {
+    renderHistory();
+    if (historyPlayer !== null && !historyLoaded()) loadHistory();
   }
 };
 
-// The tab and player an address names after the #: '' for Players, '#alerts', '#kills', '#kills/<Steam ID>'.
+// The tab and player an address names after the #: '' for Live, '#review', '#history/<Steam ID>'. Old links to
+// '#players', '#alerts', '#kills' and '#kills/<Steam ID>' go where those are now.
 const fromHash = (hash) => {
-  const [name, steamId] = hash.slice(1).split('/');
-  return { name, steamId: name === 'kills' && /^\d{17}$/.test(steamId ?? '') ? steamId : null };
+  const [asked, id] = hash.slice(1).split('/');
+  const steamId = (asked === 'history' || asked === 'kills') && /^\d{17}$/.test(id ?? '') ? id : null;
+  if (steamId !== null) return { name: 'history', steamId };
+  return { name: Object.hasOwn(OLD_TABS, asked) ? OLD_TABS[asked] : asked, steamId: null };
 };
 const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash).name);
 
@@ -244,26 +275,27 @@ const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash).name);
 const knownName = (steamId) =>
   [
     ...(kills?.players ?? []),
-    ...(kills?.feed ?? []).flatMap((k) => [k.killer, k.victim]),
-    ...(killerKills ? [killerKills.player] : []),
+    ...feed.flatMap((k) => [k.killer, k.victim]),
+    ...(historyKills ? [historyKills.player] : []),
     ...(data?.online?.players ?? []),
   ].find((p) => p.steamId === steamId)?.name ?? steamId;
 
 // Shows the tab and player the address names.
 const route = () => {
   const { name, steamId } = fromHash(location.hash);
-  if (name === 'kills') killer = steamId === null ? null : { steamId, name: knownName(steamId) };
+  if (name === 'history') historyPlayer = steamId === null ? null : { steamId, name: knownName(steamId) };
   selectTab(name);
 };
 
-// Goes to a player's kills, from a name on the Kills tab or a row's Act menu. Back comes back.
-const openKiller = (player) => {
-  killer = { steamId: player.steamId, name: player.name };
-  const hash = `#kills/${player.steamId}`;
-  if (location.hash !== hash) history.pushState({ killer: player.steamId }, '', location.pathname + location.search + hash);
+// Goes to a player's history, from their name anywhere on the page or a row's Act menu. Back comes back.
+const openHistory = (player) => {
+  historyPlayer = { steamId: player.steamId, name: player.name };
+  const hash = `#history/${player.steamId}`;
+  if (location.hash !== hash) history.pushState({ player: player.steamId }, '', location.pathname + location.search + hash);
   $('tools-back').hidden = true;
-  selectTab('kills');
-  $('killer').scrollIntoView({ block: 'start' });
+  closeMenus();
+  selectTab('history');
+  $('history-player').scrollIntoView({ block: 'start' });
 };
 
 // Opens an admin tool with the player picked, on the Admin tab, with a way back to where staff were. `key` null keeps
@@ -287,11 +319,10 @@ const act = (key, player) => {
 const actButton = (text, key, player) =>
   el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => act(key, player) });
 
-// What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. Kills is not
-// an admin tool: it opens their kills on the Kills tab.
+// What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History is not
+// an admin tool: it opens the History tab.
 const ACTIONS = [
-  { key: 'player', label: 'Look up', note: 'Steam ID, Steam account, time played, bans and staff history', inGame: false },
-  { key: 'kills', label: 'Kills', note: 'Every kill with its weapon, and how their headshots compare', inGame: false },
+  { key: 'history', label: 'History', note: 'Kills and headshots, team kills, Steam account, bans and staff history', inGame: false },
   { key: 'warn', label: 'Warn', note: 'A private message in game', inGame: true },
   { key: 'kick', label: 'Kick', note: 'They see the reason, and can rejoin', inGame: true },
   { key: 'switchteam', label: 'Move to another team', note: 'They respawn on the new side', inGame: true },
@@ -331,7 +362,7 @@ const actMenu = (player) => {
           className: 'act-item',
           onclick: () => {
             menu.open = false;
-            if (a.key === 'kills') openKiller(player);
+            if (a.key === 'history') openHistory(player);
             else act(a.key, player);
           },
         },
@@ -629,8 +660,8 @@ const renderPlayers = (overview) => {
             el('button', {
               type: 'button',
               className: 'link-button',
-              textContent: `Look up “${query}” in everyone the bot knows`,
-              onclick: () => act('player', { steamId: query, name: query }),
+              textContent: `Find “${query}” among everyone the bot knows`,
+              onclick: () => findPlayer(query),
             }),
           ),
         ),
@@ -646,6 +677,27 @@ const renderPlayers = (overview) => {
   );
 };
 
+// A team kill or vehicle suicide, here and on the History tab. The bot sends the period's latest 300.
+const INCIDENTS_NOTE = '300 team kills and vehicle suicides';
+const INCIDENT_HEADERS = ['When', 'What', 'Player', 'Teammate killed', 'With', ['Distance', 'num'], 'Map'];
+const incidentRow = (i) =>
+  el(
+    'tr',
+    {},
+    el('td', { className: 'when', textContent: when.format(i.at) }),
+    cell(i.kind === 'team-kill' ? badge('Team kill', 'bad') : badge('Vehicle suicide', 'hot')),
+    el('td', { className: 'player' }, who(i.player)),
+    el('td', { className: 'player' }, i.victim ? who(i.victim) : '–'),
+    cell(
+      i.weapon ?? 'Unknown',
+      ...i.tags
+        .filter((t) => DEATH_TAGS[t] && t !== 'Suicide')
+        .map((t) => el('span', { className: 'kill-distance', textContent: ` · ${DEATH_TAGS[t]}` })),
+    ),
+    el('td', { className: 'num', textContent: i.distance === null ? '–' : metres(i.distance) }),
+    cell(i.map ? mapTag(i.map) : '–'),
+  );
+
 const renderIncidents = (overview) => {
   const shown = overview.incidents.filter((i) => focus === null || i.player.steamId === focus || i.victim?.steamId === focus);
   const focused = focus === null ? null : (overview.players.find((p) => p.steamId === focus) ?? null);
@@ -655,28 +707,10 @@ const renderIncidents = (overview) => {
       ? 'Newest first. Sides come from the bot’s check each minute, so a player who switched sides in the last minute can ' +
         'show wrongly. Other suicides are only counted.'
       : `Involving ${focused.name}, newest first.`;
-  const rows = shown.map((i) =>
-    el(
-      'tr',
-      {},
-      el('td', { className: 'when', textContent: when.format(i.at) }),
-      cell(i.kind === 'team-kill' ? badge('Team kill', 'bad') : badge('Vehicle suicide', 'hot')),
-      el('td', { className: 'player' }, who(i.player)),
-      el('td', { className: 'player' }, i.victim ? who(i.victim) : '–'),
-      cell(
-        i.weapon ?? 'Unknown',
-        ...i.tags
-          .filter((t) => DEATH_TAGS[t] && t !== 'Suicide')
-          .map((t) => el('span', { className: 'kill-distance', textContent: ` · ${DEATH_TAGS[t]}` })),
-      ),
-      el('td', { className: 'num', textContent: i.distance === null ? '–' : metres(i.distance) }),
-      cell(i.map ? mapTag(i.map) : '–'),
-    ),
-  );
   table(
     $('incidents'),
-    ['When', 'What', 'Player', 'Teammate killed', 'With', ['Distance', 'num'], 'Map'],
-    rows,
+    INCIDENT_HEADERS,
+    shown.map(incidentRow),
     focused === null ? 'No team kills or vehicle suicides in this period.' : `None involving ${focused.name} in this period.`,
   );
 };
@@ -886,21 +920,12 @@ const renderStaffSteam = (overview) => {
   table($('staff-steam'), ['Staff', 'Steam account', 'Linked', ''], rows, 'Nobody has linked theirs yet.');
 };
 
-// The Kills tab.
+// Kills: the live kill feed (Live), the headshots list (Review) and a player's kills (History).
 
 // In the reader's own time, to the second, as kills come seconds apart: "Fri 3 Oct, 21:40:12".
 const whenKill = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 // A UTC day: "Fri 3 Oct".
 const utcDate = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-
-// A player's name, opening their kills, with their Steam ID linking to their Steam profile.
-const killWho = (player) =>
-  el(
-    'span',
-    { className: 'staff-player' },
-    el('button', { type: 'button', className: 'link-button player-kills', textContent: player.name, onclick: () => openKiller(player) }),
-    steamLink(player.steamId),
-  );
 
 const killsStatus = (text) => {
   $('kills-status').hidden = !text;
@@ -927,22 +952,162 @@ const killCells = (k) => [
   cell(k.map ? mapTag(k.map) : '–'),
 ];
 
+// The kill feed shows the latest kills, up to as many as the bot keeps.
+const FEED_SHOWN = 250;
+const FEED_HEADERS = ['When', 'Killer', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'];
+const FEED_STATES = { live: 'Live', connecting: 'Connecting…', retrying: 'Reconnecting…', off: 'Every minute', sample: 'Sample' };
+
+const feedRow = (k) =>
+  el(
+    'tr',
+    {},
+    el('td', { className: 'when', textContent: whenKill.format(k.at) }),
+    el('td', { className: 'player' }, who(k.killer)),
+    el('td', { className: 'player' }, who(k.victim)),
+    ...killCells(k),
+  );
+
+const feedShown = (k) => !killFilters.feed || k.headshot;
+
+const feedNote = () =>
+  setStatus(
+    $('feed-note'),
+    `The server’s latest ${feed.length} kills, newest first${socketState === 'live' || socketState === 'sample' ? ', as they happen' : ''}. Click a name for their history.`,
+  );
+
+const renderFeed = () => {
+  feedNote();
+  table($('kill-feed'), FEED_HEADERS, feed.filter(feedShown).map(feedRow), feed.length === 0 ? 'No kills yet.' : 'No headshots among them.');
+};
+
+// New kills, newest first, added at the top without redrawing the rest, so a name staff are about to click stays put.
+const addFeed = (added) => {
+  feed = [...added, ...feed].slice(0, FEED_SHOWN);
+  const node = $('kill-feed');
+  const body = node.tBodies[0];
+  if (!node.tHead || !body) {
+    renderFeed();
+    return;
+  }
+  feedNote();
+  const rows = added.filter(feedShown).map((k) => {
+    const row = feedRow(k);
+    row.classList.add('kill-new');
+    return row;
+  });
+  body.prepend(...rows);
+  while (body.rows.length > feed.filter(feedShown).length) body.lastElementChild.remove();
+};
+
+// The live kill feed (GET /api/admin/live): a WebSocket the bot sends each batch of kills down as it comes in. The
+// session goes as its second subprotocol, as a browser can't send a header with one. While it is down, the feed comes
+// with each refresh instead, and the page tries again, waiting longer each time.
+const SOCKET_WAITS_MS = [2_000, 5_000, 15_000, 30_000];
+const PING_MS = 30_000;
+let socket = null;
+let socketState = 'off';
+let socketTries = 0;
+let socketTimer = 0;
+let pingTimer = 0;
+
+const feedState = (state) => {
+  socketState = state;
+  const node = $('feed-state');
+  node.dataset.state = state;
+  setStatus(node, FEED_STATES[state]);
+};
+
+const connectFeed = () => {
+  if (demo || !configured || socket || document.hidden) return;
+  const token = loadToken();
+  if (!token) return;
+  clearTimeout(socketTimer);
+  const url = new URL(botUrl('admin/live'));
+  url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:';
+  feedState(socketTries === 0 ? 'connecting' : 'retrying');
+  let ws;
+  try {
+    ws = new WebSocket(url, ['wardogs-staff', token]);
+  } catch (error) {
+    console.error('Could not open the live kill feed', error);
+    feedState('off');
+    return;
+  }
+  socket = ws;
+  ws.addEventListener('open', () => {
+    socketTries = 0;
+    feedState('live');
+    clearInterval(pingTimer);
+    pingTimer = setInterval(() => ws.readyState === WebSocket.OPEN && ws.send('ping'), PING_MS);
+  });
+  ws.addEventListener('message', (event) => {
+    if (event.data === 'pong') return;
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === 'feed') {
+        feed = message.feed.slice(0, FEED_SHOWN);
+        renderFeed();
+      } else if (message.type === 'kills') addFeed(message.kills);
+    } catch (error) {
+      console.error('Could not read the live kill feed', error);
+    }
+  });
+  ws.addEventListener('close', (event) => {
+    if (socket !== ws) return;
+    socket = null;
+    clearInterval(pingTimer);
+    // The session ran out: the next load asks to sign in again.
+    if (event.code === 4401 || !loadToken()) {
+      feedState('off');
+      if (event.code === 4401) load();
+      return;
+    }
+    const wait = SOCKET_WAITS_MS[Math.min(socketTries, SOCKET_WAITS_MS.length - 1)];
+    socketTries += 1;
+    feedState('retrying');
+    socketTimer = setTimeout(connectFeed, wait);
+  });
+};
+
+const disconnectFeed = () => {
+  clearTimeout(socketTimer);
+  clearInterval(pingTimer);
+  socketTries = 0;
+  const ws = socket;
+  socket = null;
+  ws?.close(1000);
+  if (!demo) feedState('off');
+};
+
+// ?demo: a sample kill every few seconds, as if the server were busy.
+const DEMO_FEED_MS = 4_000;
+let demoKillCount = 0;
+const startDemoFeed = () => {
+  feedState('sample');
+  setInterval(() => {
+    if (!document.hidden && data) addFeed([demoFeedKill(demoKillCount++, Date.now())]);
+  }, DEMO_FEED_MS);
+};
+
+// Review: who gets far more headshots than their weapons usually do.
 const renderHeadshots = () => {
   const flag = kills.flag;
+  const { totals } = kills;
   $('headshot-rules').replaceChildren(
     el('li', {}, el('strong', { textContent: 'Usual' }), ' is how many headshots a player would get with the same kills by weapon, at the share of headshots everyone else gets with each weapon over the last 30 days. A sniper rifle’s usual is high, a machine gun’s low, so snipers are not flagged for sniping.'),
     el('li', {}, el('strong', { textContent: 'Chance by luck' }), ' is how often a player with that usual aim would get as many headshots or more. “Ordinary” is 1 in 20 or likelier.'),
     el('li', {}, badge('Flagged', 'bad'), ` ${headshotRule(flag)}.`),
-    el('li', {}, 'An honest player has a lucky day now and then. Flagged day after day is the red flag. Check their kills, and watch them play, before you act.'),
+    el('li', {}, 'An honest player has a lucky day now and then. Flagged day after day is the red flag. Check their history, and watch them play, before you act.'),
   );
   $('headshots-note').textContent = kills.since
-    ? 'Everyone with a headshot in this period, most flagged days first, then least likely by luck. Click a name for all their kills.'
+    ? `${totals.kills.toLocaleString('en-GB')} kills in this period, ${percent(totals.kills > 0 ? totals.headshots / totals.kills : null)} of them headshots. ` +
+      'Everyone with a headshot, most flagged days first, then least likely by luck. Click a name for their history.'
     : 'No kills yet. They start with the first kill after the bot is updated.';
   const row = (p) =>
     el(
       'tr',
       {},
-      el('td', { className: 'player' }, killWho(p), p.flaggedDays > 0 ? el('span', { className: 'badges' }, badge(flaggedDaysLabel(p.flaggedDays), 'bad')) : null),
+      el('td', { className: 'player' }, who(p), p.flaggedDays > 0 ? el('span', { className: 'badges' }, badge(flaggedDaysLabel(p.flaggedDays), 'bad')) : null),
       number(headshotCount(p.kills, p.headshots)),
       number(usualHeadshots(p.expected, p.kills)),
       el('td', { className: 'num' }, odds(p.chance, flag)),
@@ -958,92 +1123,87 @@ const renderHeadshots = () => {
   });
 };
 
-const renderFeed = () => {
-  const shown = kills.feed.filter((k) => !killFilters.feed || k.headshot);
-  $('feed-note').textContent = `The server’s latest ${kills.feed.length} kills, newest first, whatever the period. Click a name for all their kills.`;
-  const rows = shown.map((k) =>
-    el(
-      'tr',
-      {},
-      el('td', { className: 'when', textContent: whenKill.format(k.at) }),
-      el('td', { className: 'player' }, killWho(k.killer)),
-      el('td', { className: 'player' }, killWho(k.victim)),
-      ...killCells(k),
-    ),
-  );
-  table(
-    $('kill-feed'),
-    ['When', 'Killer', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'],
-    rows,
-    kills.feed.length === 0 ? 'No kills yet.' : 'No headshots among them.',
-  );
+// The Review tab's count and headshot tile, which need the headshots list as well as the overview.
+const renderReviewCounts = () => {
+  if (!data) return;
+  const flagged = kills?.totals.flaggedPlayers ?? 0;
+  const alerts = alertCount(data) + flagged;
+  $('count-review').textContent = String(alerts);
+  $('count-review').classList.toggle('tab-count-alert', alerts > 0);
+  $('tile-headshot-flags').textContent = kills ? String(flagged) : '–';
+  $('tile-headshot-flags-note').textContent =
+    kills && data.online ? `${kills.players.filter((p) => p.flaggedDays > 0 && onlineIds.has(p.steamId)).length} in game` : '';
 };
 
-const renderKillList = () => {
-  const { totals } = kills;
-  const count = $('count-kills');
-  count.textContent = String(totals.flaggedPlayers);
-  count.classList.toggle('tab-count-alert', totals.flaggedPlayers > 0);
-  $('tile-kills').textContent = totals.kills.toLocaleString('en-GB');
-  $('tile-kills-note').textContent = `By ${totals.players} player${totals.players === 1 ? '' : 's'}`;
-  $('tile-headshots').textContent = percent(totals.kills > 0 ? totals.headshots / totals.kills : null);
-  $('tile-headshots-note').textContent = `${totals.headshots.toLocaleString('en-GB')} of the kills`;
-  $('tile-headshot-flags').textContent = String(totals.flaggedPlayers);
-  $('tile-headshot-flags-note').textContent = data?.online
-    ? `${kills.players.filter((p) => p.flaggedDays > 0 && onlineIds.has(p.steamId)).length} in game`
-    : '';
-  const top = kills.players.reduce((best, p) => (best === null || p.headshots > best.headshots ? p : best), null);
-  $('tile-top-headshots').textContent = top ? String(top.headshots) : '–';
-  $('tile-top-headshots-note').textContent = top ? `${top.name}, ${percent(top.headshots / top.kills)} of their kills` : '';
-  renderHeadshots();
-  renderFeed();
+const renderKills = () => {
+  killsWaiting = false;
+  renderReviewCounts();
+  if (kills !== null) renderHeadshots();
+  if (tab === 'history') renderHistory();
 };
 
-// A player's every kill in the period, newest first.
-const renderKillerList = () => {
-  const k = killerKills;
-  const shown = k.list.filter((kill) => !killFilters.killer || kill.headshot);
-  $('killer-note').textContent =
-    k.list.length < k.kills
-      ? `Their latest ${k.list.length} of ${k.kills} kills, newest first.`
-      : `Newest first.${k.kills > 0 ? ' Click a name for that player’s kills.' : ''}`;
-  const rows = shown.map((kill) =>
-    el('tr', {}, el('td', { className: 'when', textContent: whenKill.format(kill.at) }), el('td', { className: 'player' }, killWho(kill.victim)), ...killCells(kill)),
-  );
+// Draws new kills, or keeps them until an open Act menu closes.
+const showKills = () => {
+  if (document.querySelector('.act-menu[open]')) killsWaiting = true;
+  else renderKills();
+};
+
+// The headshots list for the period, with each refresh, and the feed with it while the live feed is down.
+const loadKills = async () => {
+  const mine = ++killsGeneration;
+  const days = period;
+  try {
+    const { ok, status, json } = demo ? { ok: true, status: 200, json: demoKills(days, Date.now()) } : await get(`admin/kills?days=${days}`);
+    if (mine !== killsGeneration || status === 401) return;
+    if (status === 404) {
+      killsStatus('The bot does not have the kill feed for staff yet. Deploy the latest bot.');
+      return;
+    }
+    if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
+    killsStatus(null);
+    kills = json;
+    // The live feed sends its own; until it has, or while it is down, the feed comes from here.
+    if ((socketState !== 'live' && socketState !== 'sample') || feed.length === 0) {
+      feed = json.feed.slice(0, FEED_SHOWN);
+      renderFeed();
+    }
+    showKills();
+  } catch (error) {
+    if (mine !== killsGeneration) return;
+    console.error('Could not load the kills', error);
+    killsStatus(kills ? 'Could not refresh the headshots. Showing the last we had; trying again in a minute.' : 'Could not load the headshots. Trying again in a minute.');
+  }
+};
+
+// History: one player's record, kills and team kills.
+
+const historyLoaded = () => historyKills !== null && historyKills.player.steamId === historyPlayer?.steamId && historyKills.days === period;
+
+const renderHistoryList = () => {
+  const k = historyKills;
+  const shown = k.list.filter((kill) => !killFilters.history || kill.headshot);
+  $('history-note').textContent =
+    k.list.length < k.kills ? `Their latest ${k.list.length} of ${k.kills} kills, newest first.` : `Newest first.${k.kills > 0 ? ' Click a name for that player’s history.' : ''}`;
   table(
-    $('killer-list'),
+    $('history-list'),
     ['When', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'],
-    rows,
+    shown.map((kill) => el('tr', {}, el('td', { className: 'when', textContent: whenKill.format(kill.at) }), el('td', { className: 'player' }, who(kill.victim)), ...killCells(kill))),
     k.list.length === 0 ? 'No kills in this period.' : 'No headshots among them.',
   );
 };
 
-const renderKiller = () => {
-  const loaded = killerKills !== null && killerKills.player.steamId === killer.steamId && killerKills.days === period;
-  const name = loaded ? killerKills.player.name : killer.name;
-  $('killer-title').textContent = `${name}’s kills`;
-  $('killer-body').hidden = !loaded;
-  $('killer-loading').hidden = loaded;
+const renderHistoryKills = () => {
+  const loaded = historyLoaded();
+  $('history-kills').hidden = !loaded;
+  $('history-loading').hidden = loaded;
   if (!loaded) {
-    $('killer-loading').textContent = `Loading ${name}’s kills…`;
+    $('history-loading').textContent = 'Loading their kills…';
     return;
   }
-  const k = killerKills;
-  const { player, flag } = k;
-  $('killer-head').replaceChildren(
-    el('span', { className: 'staff-player' }, playerName(player), steamLink(player.steamId)),
-    el(
-      'span',
-      { className: 'badges' },
-      player.inGame ? badge('In game', 'accent') : null,
-      k.flaggedDays > 0 ? badge(flaggedDaysLabel(k.flaggedDays), 'bad') : null,
-      oddsKind(k.chance, flag) ? badge(`Chance by luck: ${luckOdds(k.chance)}`, oddsKind(k.chance, flag)) : null,
-    ),
-    el('span', { className: 'row-actions' }, actMenu(player)),
-  );
-  $('killer-summary').textContent = killerSummary(k);
+  const k = historyKills;
+  $('history-summary').textContent = killerSummary(k);
   table(
-    $('killer-weapons'),
+    $('history-weapons'),
     ['Weapon', ['Headshots', 'num'], ['Usual', 'num']],
     k.weapons.map((w) =>
       el(
@@ -1057,7 +1217,7 @@ const renderKiller = () => {
     'No kills in this period.',
   );
   table(
-    $('killer-days'),
+    $('history-days'),
     ['Day (UTC)', ['Headshots', 'num'], ['Usual', 'num'], ['Chance by luck', 'num']],
     k.byDay.map((d) =>
       el(
@@ -1066,57 +1226,150 @@ const renderKiller = () => {
         el('td', { className: 'when' }, utcDate.format(Date.parse(d.day)), d.flagged ? el('span', { className: 'badges' }, badge('Flagged', 'bad')) : null),
         number(headshotCount(d.kills, d.headshots)),
         number(usualHeadshots(d.expected, d.kills)),
-        el('td', { className: 'num' }, odds(d.chance, flag)),
+        el('td', { className: 'num' }, odds(d.chance, k.flag)),
       ),
     ),
     'No kills in this period.',
   );
-  renderKillerList();
+  renderHistoryList();
 };
 
-const renderKills = () => {
-  killsWaiting = false;
-  $('killer').hidden = killer === null;
-  $('kills-all').hidden = killer !== null;
-  const since = kills?.since ?? killerKills?.since ?? null;
-  const span = period === 1 ? 'Today' : `The last ${period} days`;
-  setStatus($('kills-period-note'), since ? `${span} (UTC days). From the kill feed, which this tab has had since ${since}.` : `${span} (UTC days).`);
-  if (killer !== null) renderKiller();
-  if (kills !== null) renderKillList();
+// Their team kills and vehicle suicides, and team kills on them, from the Review tab's list.
+const renderHistoryGrief = (steamId) => {
+  const row = data?.players.find((p) => p.steamId === steamId) ?? null;
+  $('history-grief-note').textContent =
+    row === null
+      ? 'No team kills, team deaths or suicides in this period.'
+      : `${plural(row.teamKills, 'team kill')} (${row.vehicleTeamKills} with a vehicle), killed by a teammate ${plural(row.teamKilled, 'time')}, ` +
+        `${plural(row.suicides, 'suicide')} (${row.vehicleSuicides} in a vehicle). Newest first, from the latest ${INCIDENTS_NOTE} in the period.`;
+  const shown = (data?.incidents ?? []).filter((i) => i.player.steamId === steamId || i.victim?.steamId === steamId);
+  table($('history-incidents'), INCIDENT_HEADERS, shown.map(incidentRow), 'None in this period.');
 };
 
-// Draws new kills, or keeps them until an open Act menu closes.
-const showKills = () => {
-  if (document.querySelector('.act-menu[open]')) killsWaiting = true;
-  else renderKills();
+const renderHistory = () => {
+  $('history-player').hidden = historyPlayer === null;
+  const days = period === 1 ? 'Today' : `The last ${period} days`;
+  setStatus($('history-period-note'), `${days} (UTC days), for their kills and team kills. Their record covers the last 90 days.`);
+  if (historyPlayer === null) return;
+  const { steamId } = historyPlayer;
+  const loaded = historyLoaded();
+  const player = loaded ? historyKills.player : { ...historyPlayer, inGame: onlineIds.has(steamId) };
+  $('history-title').textContent = player.name;
+  const ban = data?.bans?.find((b) => b.player.steamId === steamId) ?? null;
+  const griefRow = data?.players.find((p) => p.steamId === steamId) ?? null;
+  $('history-head').replaceChildren(
+    el(
+      'span',
+      { className: 'staff-player' },
+      player.id ? el('a', { className: 'player-link', href: playerHref(player.id), textContent: 'Public player page' }) : null,
+      steamLink(steamId),
+    ),
+    el(
+      'span',
+      { className: 'badges' },
+      onlineIds.has(steamId) ? badge('In game', 'accent') : null,
+      ban ? badge(ban.onServer ? 'Banned' : 'Ban waiting', 'bad') : null,
+      loaded && historyKills.flaggedDays > 0 ? badge(`Headshots: ${flaggedDaysLabel(historyKills.flaggedDays).toLowerCase()}`, 'bad') : null,
+      ...(griefRow?.flags ?? []).map((f) => badge(flagLabel(f), FLAG_KIND[f])),
+    ),
+  );
+  $('history-act').replaceChildren(actMenu({ steamId, name: player.name }));
+  const record = historyRecord?.steamId === steamId ? historyRecord : null;
+  $('history-record').replaceChildren(
+    ...(record === null
+      ? [el('p', { className: 'muted', textContent: 'Loading their record…' })]
+      : record.reply
+        ? replyNodes(record.reply, data?.staff ?? {})
+        : [el('p', { className: 'tool-error', textContent: record.error })]),
+  );
+  renderHistoryKills();
+  renderHistoryGrief(steamId);
 };
 
-// The Kills tab's data for the period: one player's kills while one is shown, or else the latest kills and headshots.
-const loadKills = async () => {
-  const mine = ++killsGeneration;
-  const shown = killer;
+// Their kills for the period, with each refresh while History is open, and their record once each time they are opened.
+const loadHistory = async () => {
+  if (historyPlayer === null) return;
+  const mine = ++historyGeneration;
+  const shown = historyPlayer;
   const days = period;
+  const wantRecord = historyRecord?.steamId !== shown.steamId;
+  const recordCall = !wantRecord
+    ? null
+    : demo
+      ? Promise.resolve({ ok: true, json: demoPlayerRecord(shown.steamId, Date.now()) })
+      : call('admin/command', { name: 'player', options: { player: shown.steamId } });
   try {
-    const { ok, status, json } = demo
-      ? { ok: true, status: 200, json: shown ? demoPlayerKills(shown.steamId, days, Date.now()) : demoKills(days, Date.now()) }
-      : await get(`admin/kills?days=${days}${shown ? `&player=${shown.steamId}` : ''}`);
-    if (mine !== killsGeneration || status === 401) return;
-    if (status === 404) {
-      killsStatus('The bot does not have the kill feed for staff yet. Deploy the latest bot.');
-      return;
+    const [killsAnswer, recordAnswer] = await Promise.all([
+      demo ? { ok: true, status: 200, json: demoPlayerKills(shown.steamId, days, Date.now()) } : get(`admin/kills?days=${days}&player=${shown.steamId}`),
+      recordCall,
+    ]);
+    if (mine !== historyGeneration || killsAnswer.status === 401) return;
+    if (recordAnswer) {
+      historyRecord = recordAnswer.ok
+        ? { steamId: shown.steamId, reply: recordAnswer.json }
+        : { steamId: shown.steamId, error: recordAnswer.json?.error ?? 'Couldn’t load their record just now.' };
     }
-    if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
-    killsStatus(null);
-    if (shown) killerKills = json;
-    else kills = json;
+    if (killsAnswer.status === 404) {
+      killsStatus('The bot does not have the kill feed for staff yet. Deploy the latest bot.');
+    } else if (!killsAnswer.ok) {
+      throw new Error(killsAnswer.json?.error ?? `HTTP ${killsAnswer.status}`);
+    } else {
+      historyKills = killsAnswer.json;
+      if (historyPlayer?.steamId === shown.steamId) historyPlayer = { steamId: shown.steamId, name: historyKills.player.name };
+    }
     showKills();
   } catch (error) {
-    if (mine !== killsGeneration) return;
-    console.error('Could not load the kills', error);
-    killsStatus(
-      (shown ? killerKills : kills) ? 'Could not refresh the kills. Showing the last we had; trying again in a minute.' : 'Could not load the kills. Trying again in a minute.',
-    );
+    if (mine !== historyGeneration) return;
+    console.error('Could not load the player’s history', error);
+    $('history-loading').textContent = 'Couldn’t load their kills. Trying again in a minute.';
   }
+};
+
+// The History tab's search: everyone the bot's suggestions know (in game, seen in the last 30 days, banned or with
+// VIP), as the admin tools' player pick-lists do. A Steam ID can always be opened, known or not.
+const SEARCH_DELAY_MS = 250;
+let searchTimer = 0;
+let searchGeneration = 0;
+
+const searchPlayers = async (typed) => {
+  const mine = ++searchGeneration;
+  const query = typed.trim();
+  const results = $('history-results');
+  if (query === '') {
+    results.replaceChildren();
+    setStatus($('history-search-note'), 'Or click any player’s name on this page.');
+    return;
+  }
+  const direct = /^\d{17}$/.test(query) ? [{ name: `Steam ID ${query}`, value: query }] : [];
+  try {
+    const { ok, json } = await call('admin/suggest', { name: 'player', options: { player: query }, focused: 'player' });
+    if (mine !== searchGeneration) return;
+    const choices = [...(ok ? (json?.choices ?? []) : []).filter((c) => c.value !== query), ...direct];
+    setStatus($('history-search-note'), choices.length === 0 ? `Nobody the bot knows matches “${query}”.` : `${plural(choices.length, 'player')} found.`);
+    results.replaceChildren(
+      ...choices.map((c) =>
+        el('button', {
+          type: 'button',
+          className: 'btn btn-ghost btn-small history-result',
+          textContent: c.name,
+          onclick: () => openHistory({ steamId: c.value, name: c.name.split(' · ')[0] }),
+        }),
+      ),
+    );
+  } catch (error) {
+    if (mine !== searchGeneration) return;
+    console.error('Could not search for players', error);
+    setStatus($('history-search-note'), 'Couldn’t reach the bot. Try again in a minute.');
+  }
+};
+
+// Opens the History tab's search with something typed, such as a name nobody in game has.
+const findPlayer = (query) => {
+  historyPlayer = null;
+  selectTab('history');
+  $('history-search').value = query;
+  searchPlayers(query);
+  $('history-search').focus();
 };
 
 // Draws new data, or keeps it until an open Act menu closes.
@@ -1155,15 +1408,13 @@ const render = (overview) => {
   const players = overview.online?.players ?? [];
   const today = utcDay(overview.generatedAt);
   onlineIds = new Set(players.map((p) => p.steamId));
-  $('count-players').textContent = overview.online ? String(players.length) : '–';
-  const alerts = alertCount(overview);
-  $('count-alerts').textContent = String(alerts);
-  $('count-alerts').classList.toggle('tab-count-alert', alerts > 0);
+  $('count-live').textContent = overview.online ? String(players.length) : '–';
+  renderReviewCounts();
   $('tile-ingame').textContent = overview.online ? String(players.length) : '–';
   $('tile-ingame-note').textContent = overview.server ? `of ${overview.server.maxPlayers} slots` : '';
   $('tile-watch').textContent = String(players.filter((p) => needsLook(p, today)).length);
+  $('tile-headshots-ingame').textContent = String(players.filter((p) => p.headshotsToday?.flagged).length);
   $('tile-risky-ingame').textContent = overview.steam ? String(players.filter((p) => p.steam && p.steam.risk !== 'low').length) : 'Off';
-  $('tile-new').textContent = String(players.filter((p) => p.firstSeen === today).length);
   $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';
   // How many of the alerts are for players in game now, when the server is answering.
   const inGameNote = (count) => (overview.online ? `${count} in game` : null);
@@ -1174,9 +1425,12 @@ const render = (overview) => {
   $('tile-flagged').textContent = String(overview.totals.flaggedPlayers);
   $('tile-flagged-note').textContent = inGameNote(overview.players.filter((p) => p.flags.length > 0 && onlineIds.has(p.steamId)).length) ?? '';
   $('tile-teamkills').textContent = String(overview.totals.teamKills);
-  $('tile-teamkills-note').textContent = overview.totals.vehicleTeamKills > 0 ? `${overview.totals.vehicleTeamKills} with a vehicle` : '';
-  $('tile-vehicle').textContent = String(overview.totals.vehicleSuicides);
-  $('tile-suicides-note').textContent = `${overview.totals.suicides} suicides of any kind`;
+  $('tile-teamkills-note').textContent = [
+    overview.totals.vehicleTeamKills > 0 ? `${overview.totals.vehicleTeamKills} with a vehicle` : null,
+    plural(overview.totals.vehicleSuicides, 'vehicle suicide'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   renderServer(overview);
   renderPlayers(overview);
   renderGriefers(overview);
@@ -1186,6 +1440,7 @@ const render = (overview) => {
   renderBans(overview);
   renderReserved(overview);
   renderStaffSteam(overview);
+  if (tab === 'history') renderHistory();
   if (overview.staffProfiles !== undefined && !mine && !askedThisSignIn()) {
     noteAsked();
     openSteam();
@@ -1369,7 +1624,8 @@ const load = async () => {
   const current = () => mine === generation;
   if (demo) {
     show(demoAdmin(period, Date.now()));
-    if (tab === 'kills') loadKills();
+    loadKills();
+    if (tab === 'history') loadHistory();
     return;
   }
   const token = loadToken();
@@ -1404,7 +1660,9 @@ const load = async () => {
     if (!current()) return;
     showNotice();
     show(overview);
-    if (tab === 'kills') loadKills();
+    loadKills();
+    if (tab === 'history') loadHistory();
+    connectFeed();
   } catch (error) {
     if (!current()) return;
     console.error('Could not load the staff page', error);
@@ -1464,30 +1722,31 @@ $('incidents-all').addEventListener('click', () => {
   render(data);
 });
 
-// The Kills tab's "Only headshots", and back from a player's kills to everyone.
+// "Only headshots" on the kill feed and on a player's kills, and the History tab's search.
 $('feed-headshots').addEventListener('change', (event) => {
   killFilters.feed = event.target.checked;
-  if (kills) renderFeed();
+  renderFeed();
 });
-$('killer-headshots').addEventListener('change', (event) => {
-  killFilters.killer = event.target.checked;
-  if (killerKills) renderKillerList();
+$('history-headshots').addEventListener('change', (event) => {
+  killFilters.history = event.target.checked;
+  if (historyLoaded()) renderHistoryList();
 });
-$('killer-close').addEventListener('click', () => {
-  // Back, when this page went to the player; otherwise there is nothing to go back to.
-  if (history.state?.killer) {
-    history.back();
-    return;
-  }
-  killer = null;
-  selectTab('kills');
+$('history-search').addEventListener('input', (event) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => searchPlayers(event.target.value), SEARCH_DELAY_MS);
 });
 
 // Only refresh while someone is looking; catch up straight away when they come back, or when nothing has loaded yet.
+// The live kill feed closes too while nobody is looking, and opens again with the latest kills.
 document.addEventListener('visibilitychange', () => {
   if (demo || !configured || !loadToken()) return;
-  if (document.hidden) clearTimeout(timer);
-  else if (!data || Date.now() - lastLoad >= REFRESH_MS) load();
+  if (document.hidden) {
+    clearTimeout(timer);
+    disconnectFeed();
+    return;
+  }
+  connectFeed();
+  if (!data || Date.now() - lastLoad >= REFRESH_MS) load();
   else timer = setTimeout(load, REFRESH_MS - (Date.now() - lastLoad));
 });
 
@@ -1519,6 +1778,7 @@ route();
 
 if (demo) {
   showNotice('Showing sample data, not the real server. ', link(thisPage((p) => p.delete('demo')), 'Sign in for the real page'));
+  startDemoFeed();
   load();
 } else if (!configured) {
   showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with sample data'));

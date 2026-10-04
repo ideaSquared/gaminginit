@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: possible griefers, risky Steam accounts, the kill feed and headshots, bans and kicks on our WARDOGS server." />
+    <meta name="description" content="For gaminginit staff: the server and kill feed live, flags to review (headshots, griefing, risky Steam accounts) and every player's history on our WARDOGS server." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -60,7 +60,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The admin tools, possible griefers from the kill feed, risky Steam accounts, every kill and who gets the most headshots, every ban, kick and warning with its reason, the reserved slots and the map rotations. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The server and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; the admin tools, the reserved slots and the map rotations. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -71,21 +71,21 @@
 
           <div id="admin-body" hidden>
             <div class="admin-tabs" role="tablist" aria-label="Staff page">
-              <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="true" data-tab="players">
-                <span class="tab-name">Players <span class="tab-count" id="count-players"></span></span>
-                <span class="tab-hint">Who is on the server now</span>
+              <button type="button" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true" data-tab="live">
+                <span class="tab-name">Live <span class="tab-count" id="count-live"></span></span>
+                <span class="tab-hint">The server, who is on and every kill now</span>
               </button>
-              <button type="button" role="tab" id="tab-alerts" aria-controls="panel-alerts" aria-selected="false" tabindex="-1" data-tab="alerts">
-                <span class="tab-name">Alerts <span class="tab-count" id="count-alerts"></span></span>
-                <span class="tab-hint">Accounts and behaviour worth a look</span>
+              <button type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review">
+                <span class="tab-name">Review <span class="tab-count" id="count-review"></span></span>
+                <span class="tab-hint">What the bot flagged, and what staff did</span>
               </button>
-              <button type="button" role="tab" id="tab-kills" aria-controls="panel-kills" aria-selected="false" tabindex="-1" data-tab="kills">
-                <span class="tab-name">Kills <span class="tab-count" id="count-kills"></span></span>
-                <span class="tab-hint">The kill feed and headshots</span>
+              <button type="button" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history">
+                <span class="tab-name">History</span>
+                <span class="tab-hint">Any player’s kills, team kills and record</span>
               </button>
               <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
                 <span class="tab-name">Admin</span>
-                <span class="tab-hint">Commands, the log, bans and VIP</span>
+                <span class="tab-hint">Commands, bans and VIP</span>
               </button>
               <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
                 <span class="tab-name">Rotations</span>
@@ -93,7 +93,7 @@
               </button>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-players" aria-labelledby="tab-players">
+            <div class="tab-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
               <div class="card server-strip" id="server-strip"></div>
 
               <div class="tiles">
@@ -105,23 +105,23 @@
                 <div class="tile">
                   <p class="tile-label">Worth a look now</p>
                   <p class="tile-value" id="tile-watch">–</p>
-                  <p class="tile-note">Risky account, griefing or new</p>
+                  <p class="tile-note">Risky account, griefing, headshots or new</p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Headshots flagged today</p>
+                  <p class="tile-value" id="tile-headshots-ingame">–</p>
+                  <p class="tile-note">In game now</p>
                 </div>
                 <div class="tile">
                   <p class="tile-label">Risky Steam accounts</p>
                   <p class="tile-value" id="tile-risky-ingame">–</p>
                   <p class="tile-note">In game now</p>
                 </div>
-                <div class="tile">
-                  <p class="tile-label">New today</p>
-                  <p class="tile-value" id="tile-new">–</p>
-                  <p class="tile-note">First time in 90 days</p>
-                </div>
               </div>
 
               <article class="card panel admin-panel" aria-labelledby="players-title">
                 <h2 class="panel-title" id="players-title">Server list</h2>
-                <p class="section-note">Everyone in game, from the bot’s check each minute. Use <strong>Act</strong> on a player to warn, kick, move them to another team, ban or look them up.</p>
+                <p class="section-note">Everyone in game, from the bot’s check each minute. Click a name for their history, or use <strong>Act</strong> to warn, kick, move them to another team or ban them.</p>
                 <div class="list-tools">
                   <div class="list-search">
                     <label class="finder-label" for="player-search">Search</label>
@@ -142,9 +142,20 @@
                   <table class="admin-table server-table" id="server-players"></table>
                 </div>
               </article>
+
+              <article class="card panel admin-panel" aria-labelledby="feed-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="feed-title">Kill feed <span class="feed-state" id="feed-state" data-state="off"></span></h2>
+                  <label class="check" for="feed-headshots"><input type="checkbox" id="feed-headshots" /> Only headshots</label>
+                </div>
+                <p class="section-note" id="feed-note"></p>
+                <div class="admin-scroll kills-scroll">
+                  <table class="admin-table" id="kill-feed"></table>
+                </div>
+              </article>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-alerts" aria-labelledby="tab-alerts" hidden>
+            <div class="tab-panel" role="tabpanel" id="panel-review" aria-labelledby="tab-review" hidden>
               <div class="admin-bar">
                 <div class="period" role="group" aria-label="Period">
                   <button type="button" data-days="1" aria-pressed="false">Today</button>
@@ -155,22 +166,27 @@
               </div>
 
               <div class="card panel how-alerts">
-                <h2 class="panel-title">How alerts work</h2>
+                <h2 class="panel-title">How flags work</h2>
                 <ol class="alert-steps">
-                  <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every death in the kill feed is checked for team kills and vehicle suicides.</li>
+                  <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every kill in the kill feed is checked for headshots, team kills and vehicle suicides.</li>
                   <li><strong>Serious ones go to Discord.</strong> Players passing a griefing mark and the riskiest Steam accounts are posted in the moderation log channel as they happen.</li>
-                  <li><strong>Everything is listed here,</strong> riskiest first. An alert is a reason to look, not proof: check the player before you act.</li>
+                  <li><strong>Everything is listed here,</strong> those in game first. A flag is a reason to look, not proof: check the player’s history before you act.</li>
                 </ol>
               </div>
 
               <div class="tiles">
+                <div class="tile">
+                  <p class="tile-label">Flagged for headshots</p>
+                  <p class="tile-value" id="tile-headshot-flags">–</p>
+                  <p class="tile-note" id="tile-headshot-flags-note"></p>
+                </div>
                 <div class="tile">
                   <p class="tile-label">Risky Steam accounts</p>
                   <p class="tile-value" id="tile-risky">–</p>
                   <p class="tile-note" id="tile-risky-note"></p>
                 </div>
                 <div class="tile">
-                  <p class="tile-label">Players flagged for griefing</p>
+                  <p class="tile-label">Flagged for griefing</p>
                   <p class="tile-value" id="tile-flagged">–</p>
                   <p class="tile-note" id="tile-flagged-note"></p>
                 </div>
@@ -179,12 +195,18 @@
                   <p class="tile-value" id="tile-teamkills">–</p>
                   <p class="tile-note" id="tile-teamkills-note"></p>
                 </div>
-                <div class="tile">
-                  <p class="tile-label">Vehicle suicides</p>
-                  <p class="tile-value" id="tile-vehicle">–</p>
-                  <p class="tile-note" id="tile-suicides-note"></p>
-                </div>
               </div>
+              <p class="section-note kills-status" id="kills-status" role="status" hidden></p>
+
+              <article class="card panel admin-panel" aria-labelledby="headshots-title">
+                <h2 class="panel-title" id="headshots-title">Headshots</h2>
+                <p class="section-note" id="headshots-note"></p>
+                <details class="rules">
+                  <summary>How headshots are judged</summary>
+                  <ul class="flag-rules" id="headshot-rules"></ul>
+                </details>
+                <div id="headshots"></div>
+              </article>
 
               <article class="card panel admin-panel" aria-labelledby="steam-title">
                 <h2 class="panel-title" id="steam-title">Risky Steam accounts</h2>
@@ -216,120 +238,10 @@
                   <table class="admin-table" id="incidents"></table>
                 </div>
               </article>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-kills" aria-labelledby="tab-kills" hidden>
-              <div class="admin-bar">
-                <div class="period" role="group" aria-label="Period">
-                  <button type="button" data-days="1" aria-pressed="false">Today</button>
-                  <button type="button" data-days="7" aria-pressed="true">7 days</button>
-                  <button type="button" data-days="30" aria-pressed="false">30 days</button>
-                </div>
-                <p class="section-note" id="kills-period-note"></p>
-              </div>
-              <p class="section-note kills-status" id="kills-status" role="status" hidden></p>
-
-              <article class="card panel admin-panel killer" id="killer" aria-labelledby="killer-title" hidden>
-                <div class="panel-head">
-                  <h2 class="panel-title" id="killer-title">Kills</h2>
-                  <button type="button" class="btn btn-ghost btn-small" id="killer-close"><span aria-hidden="true">←</span> Everyone</button>
-                </div>
-                <p class="muted" id="killer-loading"></p>
-                <div id="killer-body" hidden>
-                  <div class="killer-head" id="killer-head"></div>
-                  <p class="killer-summary" id="killer-summary"></p>
-                  <div class="killer-grid">
-                    <section>
-                      <h3 class="group-title" id="killer-weapons-title">By weapon</h3>
-                      <div class="admin-scroll">
-                        <table class="admin-table killer-table" id="killer-weapons" aria-labelledby="killer-weapons-title"></table>
-                      </div>
-                    </section>
-                    <section>
-                      <h3 class="group-title" id="killer-days-title">By day</h3>
-                      <div class="admin-scroll">
-                        <table class="admin-table killer-table" id="killer-days" aria-labelledby="killer-days-title"></table>
-                      </div>
-                    </section>
-                  </div>
-                  <div class="panel-head killer-list-head">
-                    <h3 class="group-title" id="killer-list-title">Every kill</h3>
-                    <label class="check" for="killer-headshots"><input type="checkbox" id="killer-headshots" /> Only headshots</label>
-                  </div>
-                  <p class="section-note" id="killer-note"></p>
-                  <div class="admin-scroll">
-                    <table class="admin-table" id="killer-list" aria-labelledby="killer-list-title"></table>
-                  </div>
-                </div>
-              </article>
-
-              <div id="kills-all">
-                <div class="tiles">
-                  <div class="tile">
-                    <p class="tile-label">Kills</p>
-                    <p class="tile-value" id="tile-kills">–</p>
-                    <p class="tile-note" id="tile-kills-note"></p>
-                  </div>
-                  <div class="tile">
-                    <p class="tile-label">Headshots</p>
-                    <p class="tile-value" id="tile-headshots">–</p>
-                    <p class="tile-note" id="tile-headshots-note"></p>
-                  </div>
-                  <div class="tile">
-                    <p class="tile-label">Flagged for headshots</p>
-                    <p class="tile-value" id="tile-headshot-flags">–</p>
-                    <p class="tile-note" id="tile-headshot-flags-note"></p>
-                  </div>
-                  <div class="tile">
-                    <p class="tile-label">Most headshots</p>
-                    <p class="tile-value" id="tile-top-headshots">–</p>
-                    <p class="tile-note" id="tile-top-headshots-note"></p>
-                  </div>
-                </div>
-
-                <article class="card panel admin-panel" aria-labelledby="headshots-title">
-                  <h2 class="panel-title" id="headshots-title">Headshots</h2>
-                  <p class="section-note" id="headshots-note"></p>
-                  <details class="rules">
-                    <summary>How headshots are judged</summary>
-                    <ul class="flag-rules" id="headshot-rules"></ul>
-                  </details>
-                  <div id="headshots"></div>
-                </article>
-
-                <article class="card panel admin-panel" aria-labelledby="feed-title">
-                  <div class="panel-head">
-                    <h2 class="panel-title" id="feed-title">Kill feed</h2>
-                    <label class="check" for="feed-headshots"><input type="checkbox" id="feed-headshots" /> Only headshots</label>
-                  </div>
-                  <p class="section-note" id="feed-note"></p>
-                  <div class="admin-scroll">
-                    <table class="admin-table" id="kill-feed"></table>
-                  </div>
-                </article>
-              </div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
-              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="tools-title">Admin tools</h2>
-                  <button type="button" class="btn btn-ghost btn-small" id="tools-back" hidden></button>
-                </div>
-                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
-                <div id="tools"></div>
-              </article>
 
               <article class="card panel admin-panel" aria-labelledby="modlog-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="modlog-title">Moderation log</h2>
-                  <div class="period" role="group" aria-label="Period">
-                    <button type="button" data-days="1" aria-pressed="false">Today</button>
-                    <button type="button" data-days="7" aria-pressed="true">7 days</button>
-                    <button type="button" data-days="30" aria-pressed="false">30 days</button>
-                  </div>
-                </div>
-                <p class="section-note">Warnings, kicks, bans, unbans and team moves through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
+                <h2 class="panel-title" id="modlog-title">Moderation log</h2>
+                <p class="section-note">Warnings, kicks, bans, unbans, team moves and VIP through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
                 <div class="list-tools">
                   <div class="list-filter">
                     <p class="finder-label" id="modlog-filter-label">Show</p>
@@ -340,6 +252,90 @@
                 <div class="admin-scroll">
                   <table class="admin-table" id="modlog"></table>
                 </div>
+              </article>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-history" aria-labelledby="tab-history" hidden>
+              <div class="admin-bar">
+                <div class="period" role="group" aria-label="Period">
+                  <button type="button" data-days="1" aria-pressed="false">Today</button>
+                  <button type="button" data-days="7" aria-pressed="true">7 days</button>
+                  <button type="button" data-days="30" aria-pressed="false">30 days</button>
+                </div>
+                <p class="section-note" id="history-period-note"></p>
+              </div>
+
+              <article class="card panel admin-panel history-find" aria-labelledby="history-find-title">
+                <h2 class="panel-title" id="history-find-title">Find a player</h2>
+                <div class="list-search">
+                  <label class="finder-label" for="history-search">Name or Steam ID</label>
+                  <input class="finder-input" id="history-search" type="search" placeholder="Anyone seen in the last 30 days, banned or with VIP" autocomplete="off" spellcheck="false" aria-describedby="history-search-note" />
+                </div>
+                <p class="finder-count" id="history-search-note" role="status">Or click any player’s name on this page.</p>
+                <div class="history-results" id="history-results"></div>
+              </article>
+
+              <article class="card panel admin-panel history-player" id="history-player" aria-labelledby="history-title" hidden>
+                <div class="panel-head">
+                  <h2 class="panel-title" id="history-title">History</h2>
+                  <span class="row-actions" id="history-act"></span>
+                </div>
+                <div class="history-head" id="history-head"></div>
+
+                <section class="history-section" aria-labelledby="history-record-title">
+                  <h3 class="group-title" id="history-record-title">Record</h3>
+                  <p class="muted tool-note">Time played and seeding over the last 90 days, their Steam account, VIP, ban and staff history: the same as Look up.</p>
+                  <div class="tool-output history-record" id="history-record"></div>
+                </section>
+
+                <section class="history-section" aria-labelledby="history-kills-title">
+                  <h3 class="group-title" id="history-kills-title">Kills and headshots</h3>
+                  <p class="muted" id="history-loading"></p>
+                  <div id="history-kills" hidden>
+                    <p class="killer-summary" id="history-summary"></p>
+                    <div class="killer-grid">
+                      <section>
+                        <h4 class="group-title" id="history-weapons-title">By weapon</h4>
+                        <div class="admin-scroll">
+                          <table class="admin-table killer-table" id="history-weapons" aria-labelledby="history-weapons-title"></table>
+                        </div>
+                      </section>
+                      <section>
+                        <h4 class="group-title" id="history-days-title">By day</h4>
+                        <div class="admin-scroll">
+                          <table class="admin-table killer-table" id="history-days" aria-labelledby="history-days-title"></table>
+                        </div>
+                      </section>
+                    </div>
+                    <div class="panel-head killer-list-head">
+                      <h4 class="group-title" id="history-list-title">Every kill</h4>
+                      <label class="check" for="history-headshots"><input type="checkbox" id="history-headshots" /> Only headshots</label>
+                    </div>
+                    <p class="section-note" id="history-note"></p>
+                    <div class="admin-scroll kills-scroll">
+                      <table class="admin-table" id="history-list" aria-labelledby="history-list-title"></table>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="history-section" aria-labelledby="history-grief-title">
+                  <h3 class="group-title" id="history-grief-title">Team kills and vehicle suicides</h3>
+                  <p class="section-note" id="history-grief-note"></p>
+                  <div class="admin-scroll">
+                    <table class="admin-table" id="history-incidents" aria-labelledby="history-grief-title"></table>
+                  </div>
+                </section>
+              </article>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
+              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="tools-title">Admin tools</h2>
+                  <button type="button" class="btn btn-ghost btn-small" id="tools-back" hidden></button>
+                </div>
+                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
+                <div id="tools"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="bans-title">

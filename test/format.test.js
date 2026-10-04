@@ -874,6 +874,20 @@ describe('the staff page server list', () => {
     assert.deepEqual(all.filter((p) => needsLook(p, TODAY)).map((p) => p.name), ['Cy', 'Bo', 'Ash']);
   });
 
+  it('shows today’s headshots when they are unlikely by luck, and red once the day is flagged', () => {
+    const today = (overrides) => ({ kills: 20, headshots: 15, expected: 5.3, chance: 1e-7, flagged: true, ...overrides });
+    const flagged = player('Fay', { headshotsToday: today() });
+    assert.deepEqual(watchList(flagged, TODAY), [
+      { text: '15 of 20 kills headshots today', kind: 'bad', title: 'Usual: about 5. Chance by luck: 1 in 10 million.' },
+    ]);
+    assert.equal(needsLook(flagged, TODAY), true);
+    const lucky = player('Gil', { headshotsToday: today({ headshots: 9, chance: 0.02, flagged: false }) });
+    assert.deepEqual(watchList(lucky, TODAY).map((b) => [b.text, b.kind]), [['9 of 20 kills headshots today', 'hot']]);
+    assert.equal(needsLook(lucky, TODAY), false);
+    assert.deepEqual(watchList(player('Hal', { headshotsToday: today({ chance: 0.4, flagged: false }) }), TODAY), []);
+    assert.deepEqual(watchList(player('Ivy', { headshotsToday: today({ expected: null, chance: null, flagged: false }) }), TODAY), []);
+  });
+
   it('counts each team, biggest first, with no team last', () => {
     assert.deepEqual(teamCounts(all), [
       { name: 'Valkyra', count: 2 },

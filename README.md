@@ -73,7 +73,7 @@ You need:
   `/api/stats` and on player pages; without it, they are not shown. The live page needs a bot that serves
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
   The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
-  README, "Staff page"), and its Kills tab `/api/admin/kills`.
+  README, "Staff page"), and for its kills and headshots `/api/admin/kills` and the live kill feed `/api/admin/live`.
   The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
   list is not shown. The teams page needs a bot that sends `teams` (same section); without it, the page says so.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
@@ -239,39 +239,57 @@ get a staff spot instead: the bot keeps you on the server's reserved list for as
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
 
-The page has five tabs. Each says what is in it, with a count: how many are in game, how many alerts there are, and
-how many players are flagged for headshots. The address keeps the tab (`/admin#alerts`, `/admin#kills`, `/admin#admin`,
-`/admin#rotations`), and on the Kills tab the player shown (`/admin#kills/<Steam ID>`), so a link opens the right one.
-← → move between tabs from the keyboard.
+The page has five tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
+staff did) and **History** (any player's record), then **Admin** and **Rotations**. Each tab says what is in it, with a
+count: how many are in game, and how many flags there are. The address keeps the tab (`/admin#review`,
+`/admin#history`, `/admin#admin`, `/admin#rotations`), and on History the player shown (`/admin#history/<Steam ID>`),
+so a link opens the right one, and the browser's Back goes back. Old links (`#alerts`, `#kills`) open Review, and
+`#kills/<Steam ID>` that player's history. ← → move between tabs from the keyboard. **Any player's name, on any tab,
+opens their history.**
 
-### Players: who is on the server now
+### Live: the server, who is on and every kill now
 
 - **The server at a glance:** live, seeding or empty, the map, the players, each team's score, and when the bot last
   checked. When the bot cannot reach the server, it says so and when it last could.
-- **Tiles:** players in game, how many are worth a look now, risky Steam accounts in game, and players new today.
+- **Tiles:** players in game, how many are worth a look now, how many in game are flagged for headshots today, and risky
+  Steam accounts in game.
 - **The server list:** everyone in game, with their team, kills and deaths this match, time on the server today, and
-  what is worth knowing: a high-risk Steam account or one worth a look, team kills and vehicle suicides today (red once
-  they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth a look have a yellow mark
-  by their name.
+  what is worth knowing: a high-risk Steam account or one worth a look, today's headshots when they are unlikely by luck
+  (yellow below 1 in 20, red once the day is flagged; hover for their usual and the chance), team kills and vehicle
+  suicides today (red once they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth
+  a look have a yellow mark by their name.
 - **Search** by name or Steam ID, pick a **team**, **sort** by team, most kills, longest on today or name, and tick
-  **Only players worth a look**. When nobody in game matches a search, "Look up" searches everyone the bot knows.
-- **Act** on a player opens a menu: look up, their kills, warn, kick, move to another team, or ban. Kills opens their
-  kills on the Kills tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Players"
-  goes back.
-- On a phone each player is a small card, with Act at the top.
+  **Only players worth a look**. When nobody in game matches a search, "Find" searches everyone the bot knows on the
+  History tab.
+- **Act** on a player opens a menu: their history, warn, kick, move to another team, or ban. History opens the History
+  tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
+- **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
+  from the game a second or two after the kills, and new ones glow as they come in. Each has who, whom, with what,
+  headshot, team kill, wallbangs and the like, how far and on which map. **Only headshots** hides the rest. By its title:
+  **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
+  feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
+  opens again with the latest kills.
+- On a phone each player in the server list is a small card, with Act at the top.
 
-### Alerts: what the bot found by itself
+### Review: what the bot flagged, and what staff did
 
-- **How alerts work**, in three steps: the bot checks every player's Steam account as they join, and every death in
-  the kill feed for team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk, and only
-  the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed here,
-  riskiest first. An alert is a reason to look, not proof.
-- **Tiles:** risky Steam accounts, players flagged for griefing, team kills and vehicle suicides in the period. The first
-  two say how many of them are in game now.
-- **In game first.** Risky Steam accounts and possible griefers are each in two lists: **In game now** first, as the
-  players staff can still warn, kick or move, its count in yellow when there is anyone in it; then **Not in game**, for
-  everyone else seen in the period, still shown in full, and left out when there is nobody in it. While the server is
-  not answering, nobody is known to be in game, so each is one list. The bot lists those in game first too, so its limit of 100 never leaves one out.
+- **How flags work**, in three steps: the bot checks every player's Steam account as they join, and every kill in the
+  kill feed for headshots, team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk,
+  and only the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed
+  here, those in game first. A flag is a reason to look, not proof.
+- **Tiles:** players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
+  vehicle, and vehicle suicides) in the period. The first three say how many of them are in game now.
+- **In game first.** Each list is in two parts: **In game now** first, as the players staff can still warn, kick or
+  move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, left out
+  when there is nobody in it. While the server is not answering, nobody is known to be in game, so each is one list. The
+  bot lists those in game first too, so its limit of 100 never leaves one out.
+- **Headshots.** Many headshots, day after day, can be a sign of cheating. Everyone with a headshot in the period, most
+  flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with the
+  server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many or
+  more: "1 in 4,800", or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. A day is flagged with
+  10 or more kills and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets
+  more headshots than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
+  Needs the bot's kill feed (its README, "Weapon stats" and "Kills and headshots").
 - **Risky Steam accounts.** Everyone seen in the period, or in game now, whose Steam account the bot scores as high risk
   or worth a look, riskiest first: why (VAC and game bans, community and trading bans, a new account, a private profile
   or one never set up), how old the account is and when the bot checked, whether they are banned, and their
@@ -283,32 +301,30 @@ how many players are flagged for headshots. The address keeps the tab (`/admin#a
   (crashing it, or blowing it up), or 10 or more suicides. Most flagged days first, with their matches, kills and time
   played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
-- Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers look up and
-  ban, as the game can only warn, kick or move players who are on.
+- **Moderation log.** Every warning, kick, ban, unban, team move and VIP added or removed through the bot, with the
+  reason and who did it (VIP added: Friend, Regular, Seeder, Paid or Other, and any note; VIP removed: any reason given),
+  and bans made or lifted outside the bot (in game, or in the server's settings). Each kind of action can be hidden
+  (team moves, say); the page remembers what you hid in this browser.
+- Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers their history
+  and ban, as the game can only warn, kick or move players who are on.
 
-### Kills: the kill feed and headshots
+### History: any player's record
 
-Many headshots, day after day, can be a sign of cheating. This tab shows who gets them, and every kill behind them.
+- **Find a player** by name or Steam ID: anyone in game, seen in the last 30 days, banned or with VIP, from the same
+  suggestions as the admin tools. A Steam ID can always be opened. Or click any name on the page.
+- **The player:** a link to their public player page and their Steam profile, whether they are in game or banned, their
+  headshot flags and griefing flags, and Act.
+- **Record:** time played and seeding over the last 90 days, their Steam account, VIP, ban and staff history, exactly as
+  the Look up tool (and `/player` in Discord) shows them.
+- **Kills and headshots** in the period: their headshots in words, against their usual and the chance by luck; by
+  weapon; by day, with each flagged day marked; and every kill, newest first (their latest 1,000 a day), with **Only
+  headshots**. The names of those they killed open those players' history.
+- **Team kills and vehicle suicides** in the period: their totals, and each one they made or were killed in, from the
+  latest 300 in the period.
+- Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
+  opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
-- **Tiles:** the kills in the period and how many players made them, the share that were headshots, how many players
-  were flagged for headshots (and how many of them are in game), and who got the most headshots.
-- **Headshots.** Everyone with a headshot in the period, in game first (as on the Alerts tab), then most flagged days
-  and least likely by luck: their headshots of their kills, **Usual** (how many a player with the server's usual aim
-  would get with the same weapons), **Chance by luck** (how often that player would get as many or more: "1 in 4,800",
-  or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. A day is flagged with 10 or more kills
-  and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets more headshots
-  than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
-- **Kill feed.** The server's latest 250 kills, newest first, to the second: who, whom, with what, headshot, team kill,
-  wallbangs and the like, how far and on which map. **Only headshots** hides the rest.
-- **A player's kills.** Click any name on the tab, or Act → Kills anywhere, for their kills in the period: their
-  headshots in words, against their usual and the chance by luck; by weapon; by day, with each flagged day marked; and
-  every kill, newest first (their latest 1,000 a day), with its own **Only headshots**. Names there open those players'
-  kills too. "← Everyone", or the browser's Back, goes back.
-- Pick today, 7 days or 30 days (UTC days). It loads when you open the tab, and refreshes with the page. Kills start
-  from when the bot first kept them for this tab, and it keeps 30 days. Needs the bot's kill feed (its README, "Weapon
-  stats" and "Headshots").
-
-### Admin: commands, the log, bans and VIP
+### Admin: commands, bans and VIP
 
 - **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
   give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
@@ -318,10 +334,6 @@ Many headshots, day after day, can be a sign of cheating. This tab shows who get
   list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log.
-- **Moderation log.** Every warning, kick, ban, unban, team move and VIP added or removed through the bot, with the
-  reason and who did it (VIP added: Friend, Regular, Seeder, Paid or Other, and any note; VIP removed: any reason given),
-  and bans made or lifted outside the bot (in game, or in the server's settings), over today, 7 days or 30 days. Each
-  kind of action can be hidden (team moves, say); the page remembers what you hid in this browser.
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool with them picked.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
@@ -361,10 +373,11 @@ Many headshots, day after day, can be a sign of cheating. This tab shows who get
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
-- It refreshes every minute while the browser tab is visible, like the bot's checks. A player's Act menu stays open
-  through a refresh.
-- It shows Steam IDs, linked to Steam profiles. Player names link to their public player page, except on the Kills tab,
-  where they open that player's kills.
+- It refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills happen.
+  A player's Act menu stays open through a refresh.
+- It shows Steam IDs, linked to Steam profiles. Player names open their history; History links to their public player
+  page.
+- `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
   do, and its rotations change in the page only.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
@@ -395,6 +408,6 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `admin.js` renders the staff page (its Kills tab too), `tools.js` its admin tools, and `rotations.js` its
+`demo.js` makes the sample data. `admin.js` renders the staff page (its live kill feed and History too), `tools.js` its admin tools, and `rotations.js` its
 Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

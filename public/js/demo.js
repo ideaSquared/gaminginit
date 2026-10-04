@@ -622,6 +622,17 @@ export const demoAdmin = (days, now) => {
       griefFlags: name === 'Vex' ? ['teamKills', 'sameTeammate'] : [],
       teamKillsToday: name === 'Vex' ? 4 : name === 'Tusk' ? 1 : 0,
       vehicleSuicidesToday: name === 'Vex' ? 2 : 0,
+      // Ghost_7 and Pike get far more headshots than their weapons do today; Rook more than usual.
+      headshotsToday:
+        name === 'Ghost_7'
+          ? { kills: 28, headshots: 21, expected: 7.4, chance: 2e-9, flagged: true }
+          : name === 'Pike'
+            ? { kills: 31, headshots: 24, expected: 9.1, chance: 4e-7, flagged: true }
+            : name === 'Rook'
+              ? { kills: 14, headshots: 8, expected: 4.1, chance: 0.03, flagged: false }
+              : kills > 0
+                ? { kills, headshots: Math.round(kills * 0.27), expected: kills * 0.27, chance: 0.5, flagged: false }
+                : null,
       banned: false,
       reserved: ['Kestrel', 'Moth', 'Rook', 'Sable'].includes(name),
     };
@@ -835,11 +846,50 @@ export const demoKills = (days, now) => {
   };
 };
 
+// A kill as the live kill feed sends it, the `n`th since the page opened, by someone in game.
+export const demoFeedKill = (n, now) => {
+  const inGame = KILLERS.filter(([name]) => !OFFLINE.includes(name));
+  const killer = inGame[Math.floor(chance(n, 13) * inGame.length)];
+  return { ...demoKill(killer, 1000 + n, now), killer: { steamId: demoSteamId(killer[0]), name: killer[0] } };
+};
+
+// A sample player's name by Steam ID, or the Steam ID for someone not in the sample.
+const demoNameOf = (steamId) =>
+  KILLERS.find(([name]) => demoSteamId(name) === steamId)?.[0] ??
+  NAMES.find((n) => demoSteamId(n) === steamId) ??
+  VICTIMS.find((_, i) => victimRef(i).steamId === steamId) ??
+  steamId;
+
+// A sample player's record on the History tab, as the bot's /player answers: made up, like the rest.
+export const demoPlayerRecord = (steamId, now) => {
+  const name = demoNameOf(steamId);
+  const inGame = !OFFLINE.includes(name) && (KILLERS.some(([n]) => n === name) || VICTIMS.includes(name));
+  const banned = name === 'Bravo_Six' || name === 'Nightjar';
+  return {
+    embeds: [
+      {
+        title: `👤 ${name}`,
+        description: [`\`${steamId}\` · [Steam profile](https://steamcommunity.com/profiles/${steamId})`, inGame ? '🟢 In game now' : '⚫ Not in game'].join('\n'),
+        fields: [
+          { name: 'Playtime · last 90 days', value: '41h 20m', inline: true },
+          { name: 'Seeding', value: '6h 5m · 9 seed days', inline: true },
+          { name: 'Matches', value: '58 · 1,204 kills · 1.62 K/D', inline: true },
+          { name: 'Steam account', value: name === 'Pike' ? '🔴 High risk (5 points): 1 VAC ban, 41 days ago · private profile' : '🟢 Nothing risky' },
+          { name: 'VIP', value: name === 'Moth' ? 'Seeder VIP until tomorrow' : 'None' },
+          { name: 'Ban', value: banned ? `Banned <t:${Math.floor((now - 200 * MINUTE) / 1000)}:R>: Cheating` : 'Not banned' },
+          { name: 'Staff history', value: name === 'Vex' ? 'Warned: Stop team killing with vehicles\nKicked: Crashed a full heli into the base' : 'Nothing yet.' },
+        ],
+        footer: { text: 'Sample data. Staff history only covers what staff did through the bot.' },
+      },
+    ],
+  };
+};
+
 // One sample player's kills, as GET /api/admin/kills?player= sends them: everyone in the sample has some.
 export const demoPlayerKills = (steamId, days, now) => {
   const killer = KILLERS.find(([name]) => demoSteamId(name) === steamId);
   const row = killer === undefined ? null : killerRow(killer, days);
-  const name = killer?.[0] ?? (NAMES.find((n) => demoSteamId(n) === steamId) ?? VICTIMS.find((_, i) => victimRef(i).steamId === steamId) ?? steamId);
+  const name = demoNameOf(steamId);
   const today = Math.floor(now / DAY) * DAY;
   const byDay = Array.from({ length: row?.days ?? 0 }, (_, i) => {
     const flagged = i < (row?.flaggedDays ?? 0);

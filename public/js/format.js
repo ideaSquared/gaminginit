@@ -88,7 +88,7 @@ export const serverState = (stats, now) => {
 // Whether the server is answering, so its players, map and score are worth showing.
 export const isOnline = (state) => state.kind === 'live' || state.kind === 'seeding' || state.kind === 'empty';
 
-const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+export const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 const span = (days) => (days === 7 ? 'a week' : plural(days, 'day'));
 
 // Players for each server state, from the bot's thresholds: "0 players", "1–19 players", "20+ players".
@@ -753,6 +753,19 @@ export const killerSummary = ({ kills, headshots, expected, chance }) => {
 
 // The staff page's server list (`online.players` in the bot's answer).
 
+// Today's headshots, as a badge, when they are unlikely by luck: red once the day is flagged. An older bot sends none.
+const headshotsWatch = (today) => {
+  if (!today || today.chance === null || today.chance >= ODDS_SHOWN) return [];
+  const usual = today.expected === null ? '' : `Usual: about ${Math.round(today.expected)}. `;
+  return [
+    {
+      text: `${today.headshots} of ${today.kills} kills headshots today`,
+      kind: today.flagged ? 'bad' : 'hot',
+      title: `${usual}Chance by luck: ${luckOdds(today.chance)}.`,
+    },
+  ];
+};
+
 const STEAM_BADGES = { high: 'High-risk Steam account', medium: 'Steam account worth a look' };
 
 // What is worth watching about a player in game, as badges: `kind` is 'bad', 'hot' or 'accent', or '' for a quiet one.
@@ -762,6 +775,7 @@ export const watchList = (player, today) => [
   ...(player.steam && player.steam.risk !== 'low'
     ? [{ text: STEAM_BADGES[player.steam.risk], kind: player.steam.risk === 'high' ? 'bad' : 'hot', title: player.steam.flags.map(steamFlagLabel).join(', ') }]
     : []),
+  ...headshotsWatch(player.headshotsToday),
   ...(player.teamKillsToday > 0
     ? [{ text: `${plural(player.teamKillsToday, 'team kill')} today`, kind: player.griefFlags.length > 0 ? 'bad' : '' }]
     : []),
@@ -772,9 +786,14 @@ export const watchList = (player, today) => [
   ...(player.reserved ? [{ text: 'VIP', kind: '' }] : []),
 ];
 
-// Whether a player in game is worth a look now: banned, a risky Steam account, flagged for griefing today, or new.
+// Whether a player in game is worth a look now: banned, a risky Steam account, flagged for headshots or griefing today,
+// or new.
 export const needsLook = (player, today) =>
-  player.banned || (player.steam !== null && player.steam.risk !== 'low') || player.griefFlags.length > 0 || player.firstSeen === today;
+  player.banned ||
+  (player.steam !== null && player.steam.risk !== 'low') ||
+  player.headshotsToday?.flagged === true ||
+  player.griefFlags.length > 0 ||
+  player.firstSeen === today;
 
 // Each team in game with how many are on it, biggest first, and players without a team (`name` null) last.
 export const teamCounts = (players) => {

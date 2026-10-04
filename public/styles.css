@@ -2919,8 +2919,8 @@ body.refreshing .tile-value {
   color: var(--text);
 }
 
-/* Kills tab. A player's name opens their kills, so it is a button drawn as a name. */
-.link-button.player-kills {
+/* Staff page names open the player's history, so each is a button drawn as a name. */
+.link-button.player-name {
   color: inherit;
   font-weight: 600;
   text-align: left;
@@ -2929,7 +2929,7 @@ body.refreshing .tile-value {
   overflow-wrap: anywhere;
 }
 
-.link-button.player-kills:hover {
+.link-button.player-name:hover {
   color: var(--accent);
   text-decoration-color: currentColor;
 }
@@ -2938,19 +2938,111 @@ body.refreshing .tile-value {
   margin-bottom: 16px;
 }
 
-.killer-head {
+/* The live kill feed's state, by its title: live, reconnecting, or loaded with each refresh. */
+.feed-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.feed-state::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--series-quiet);
+}
+
+.feed-state[data-state='live'],
+.feed-state[data-state='sample'] {
+  color: var(--accent);
+}
+
+.feed-state[data-state='live']::before,
+.feed-state[data-state='sample']::before {
+  background: var(--accent);
+}
+
+.feed-state[data-state='retrying'] {
+  color: var(--warning);
+}
+
+.feed-state[data-state='retrying']::before {
+  background: var(--warning);
+}
+
+/* Long lists of kills scroll inside their card, with their headings kept in view. */
+.kills-scroll {
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+}
+
+.kills-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+
+/* History: the search and its results, then the player's record, kills and team kills. */
+.history-find .list-search {
+  max-width: 480px;
+}
+
+.history-find .finder-input {
+  margin-top: 6px;
+}
+
+.history-find .finder-count {
+  margin-top: 8px;
+}
+
+.history-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.history-results:empty {
+  display: none;
+}
+
+.history-result {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.history-head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 8px 16px;
+  margin-top: 4px;
 }
 
-.killer-head .badges {
+.history-head .badges {
   margin-top: 2px;
 }
 
-.killer-head .row-actions {
-  margin-left: auto;
+.history-section {
+  margin-top: 28px;
+}
+
+.history-section > .tool-note {
+  margin-bottom: 8px;
+}
+
+.history-record .reply-embed {
+  margin-top: 0;
 }
 
 .killer-summary {
