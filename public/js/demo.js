@@ -1,3 +1,4 @@
+import { FACTION_HEX } from './format.js';
 import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
 
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
@@ -213,7 +214,7 @@ const weapons = (now) => {
 
 const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
 // Made-up colours for the sample; the real ones come from the game server.
-const SIDE_COLOURS = { Valkyra: '#d93a3a', Lonestar: '#3a7bd9', Manticore: '#e0a020' };
+const SIDE_COLOURS = FACTION_HEX;
 const PROFILE_DAYS = 90;
 const VIP_RULE = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
 
@@ -959,7 +960,7 @@ export const demoCommands = [
   {"name":"warn","description":"Send a player a private warning in game (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to warn: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"message","description":"The warning","required":true,"max_length":140}]},
   {"name":"player","description":"A player's Steam ID, playtime, seeding, VIP, bans and staff history (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Pick the player, or type a name or Steam ID","required":true,"autocomplete":true}]},
   {"name":"kick","description":"Remove a player from the server; they can rejoin (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to kick: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"reason","description":"Why; the player sees this","required":true,"max_length":200}]},
-  {"name":"switchteam","description":"Move a player to another team (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to move: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"team","description":"The team to move them to (with two teams, leave it out for the other one)","required":false,"choices":[{"name":"🤠 Lonestar","value":"Lonestar"},{"name":"🦂 Manticore","value":"Manticore"},{"name":"🐻 Valkyra","value":"Valkyra"}]}]},
+  {"name":"switchteam","description":"Move a player to another team (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Who to move: pick from the players in game","required":true,"autocomplete":true},{"type":3,"name":"team","description":"The team to move them to (with two teams, leave it out for the other one)","required":false,"choices":[{"name":"🔵 Lonestar","value":"Lonestar"},{"name":"🟢 Manticore","value":"Manticore"},{"name":"🔴 Valkyra","value":"Valkyra"}]}]},
   {"name":"ban","description":"Ban a player for a set time or for good (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"player","description":"Pick the player, or type a name or Steam ID","required":true,"autocomplete":true},{"type":3,"name":"duration","description":"How long","required":true,"choices":[{"name":"1 hour","value":"1h"},{"name":"1 day","value":"1d"},{"name":"3 days","value":"3d"},{"name":"7 days","value":"7d"},{"name":"30 days","value":"30d"},{"name":"Permanent","value":"permanent"}]},{"type":3,"name":"reason","description":"Why; kept with the ban","required":true,"max_length":200}]},
   {"name":"unban","description":"Lift a ban (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"steam_id","description":"Pick from the banned players, or type a Steam ID","required":true,"autocomplete":true}]},
   {"name":"setnextmap","description":"Set the map and setup after this match, without changing the rotation (staff only)","type":1,"default_member_permissions":"8","contexts":[0],"options":[{"type":3,"name":"map","description":"Pick the map from the list","required":true,"autocomplete":true},{"type":3,"name":"mode","description":"Game mode (default: as in the rotation)","required":false,"autocomplete":true},{"type":5,"name":"infantry_only","description":"Infantry only (default: as in the rotation)","required":false},{"type":5,"name":"hardcore","description":"Hardcore (default: as in the rotation)","required":false},{"type":3,"name":"lighting","description":"Time of day and weather (default: as in the rotation)","required":false,"autocomplete":true},{"type":3,"name":"zones","description":"Control zone layout (default: as in the rotation)","required":false,"autocomplete":true}]},
@@ -988,7 +989,7 @@ export const demoCall = async (path, body) => {
     const typed = (options[focused] ?? '').toLowerCase();
     const choices =
       focused === 'player' || focused === 'steam_id'
-        ? NAMES.map((n, i) => ({ name: `${n} · ${i % 2 ? 'Manticore' : 'Valkyra'} · 7656119800000${String(i).padStart(4, '0')}`, value: `7656119800000${String(i).padStart(4, '0')}` }))
+        ? NAMES.map((n, i) => ({ name: `${n} · ${i % 2 ? '🟢 Manticore' : '🔴 Valkyra'} · 7656119800000${String(i).padStart(4, '0')}`, value: `7656119800000${String(i).padStart(4, '0')}` }))
         : focused === 'map'
           ? DEMO_MAPS
           : focused === 'rotation'
