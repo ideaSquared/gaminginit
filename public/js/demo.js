@@ -1,3 +1,5 @@
+import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
+
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
 
 const MINUTE = 60_000;
@@ -1158,4 +1160,116 @@ export const demoRotationsChange = async (body) => {
     if (state.applied.name === rotation.name) outcome = choose('Default');
   }
   return { ok: true, json: { ...demoRotationsPage(), ...(outcome ? { outcome } : {}) } };
+};
+
+// The staff page's Lines tab, as the bot sends it: each list with what the bot puts around its lines and fills in,
+// for gaminginit.com with seeder VIP on, 20 players to go live and 100 points to win.
+const DEMO_SITE = 'gaminginit.com';
+const DEMO_HALFWAY_AFTER = ` Seed on 3 days in a week and get a reserved slot. How at ${DEMO_SITE}`;
+const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard, Discord and seeding at ${DEMO_SITE}`;
+const demoList = (id, group, name, note, frame, lines) => ({ id, group, name, note, off: null, ...frame, lines, changed: null });
+const demoFaction = (group, key, name, note, frame, lines) => demoList(`${group === 'Halfway' ? 'halfway' : 'nearly'}.${key}`, group, name, note, frame, lines);
+const DEMO_TEAM_LONGEST = 'x'.repeat(16);
+const halfwayFrame = (team) => ({
+  values: { team, score: '50' },
+  longest: { team: DEMO_TEAM_LONGEST, score: '100' },
+  before: 'Halfway there! ',
+  after: DEMO_HALFWAY_AFTER,
+});
+const nearlyFrame = (team) => ({ values: { team, score: '90' }, longest: { team: DEMO_TEAM_LONGEST, score: '90' }, before: '', after: DEMO_NEARLY_AFTER });
+const exactFrame = (values, before, after) => ({ values, longest: values, before, after });
+
+const DEMO_LISTS = [
+  demoList(
+    'seeding',
+    'Seeding',
+    'Seeding',
+    'Every few minutes while the server seeds, and 30 seconds after someone joins. What seeding earns goes after it.',
+    exactFrame({ needed: '19 more players' }, '', ` Seed for over 10 min on 3 days in a week and get a reserved slot. How at ${DEMO_SITE}`),
+    ["We're seeding! {needed} and we go live.", 'Seeding now: {needed} to go live. Stick around and bring a friend.', "Quiet, isn't it? {needed} and it won't be."],
+  ),
+  demoList(
+    'tenMinutes',
+    '10 minutes in',
+    '10 minutes in',
+    '10 minutes after the match goes live. The line is the whole message, so say where the rules and the website are.',
+    exactFrame({ site: DEMO_SITE }, '', ''),
+    ['10 minutes in and nobody has rage quit yet. Rules are in our Discord, leaderboard at {site}', 'Still alive? Impressive. Rules are in our Discord, and your K/D is on the leaderboard at {site}'],
+  ),
+  ...[
+    ['lonestar', 'Lonestar', ['Lonestar leads on {score}! Screenshot it, this never happens.', 'Lonestar leads on {score}! The default pick is cooking. Yeehaw.']],
+    ['manticore', 'Manticore', ['Manticore leads on {score}. Green winning? Shocking. Truly.', 'Manticore leads on {score}. Green is winning. Water is also wet.']],
+    ['valkyra', 'Valkyra', ['Valkyra leads on {score}. Not my points, OUR points, comrade.', 'Valkyra leads on {score}. The motherland is pleased. For now.']],
+  ].map(([key, name, lines]) =>
+    demoFaction('Halfway', key, name, `When ${name} is in front at half the winning score. "Halfway there!" goes before it, and seeding or the Discord after it.`, halfwayFrame(name), lines),
+  ),
+  demoList(
+    'halfwayLevel',
+    'Halfway',
+    'Level scores',
+    'At half the winning score when the top teams are level. These go in place of "Halfway there!", with seeding or the Discord after them.',
+    exactFrame({}, '', DEMO_HALFWAY_AFTER),
+    ["Halfway there and it's neck and neck!", 'Halfway there and dead level. Somebody do something.'],
+  ),
+  demoList(
+    'halfwayOther',
+    'Halfway',
+    'Any other team',
+    'When a team without a list of its own is in front at half the winning score. "Halfway there!" goes before it, and seeding or the Discord after it.',
+    halfwayFrame('Other team'),
+    ['{team} leads on {score}!'],
+  ),
+  ...[
+    ['lonestar', 'Lonestar', ['Lonestar has {score}! The default pick is about to win. Clip it.', 'Lonestar has {score}! Historians will study this match.']],
+    ['manticore', 'Manticore', ['Manticore has {score}. Green about to win again. Groundbreaking.', 'Manticore has {score}. Green diff incoming.']],
+    ['valkyra', 'Valkyra', ['Valkyra has {score}! Victory for the motherland is in sight, comrades.', 'Valkyra has {score}! Start rehearsing the victory parade.']],
+  ].map(([key, name, lines]) =>
+    demoFaction('Nearly won', key, name, `When ${name} is the first team to reach 90% of the winning score. The leaderboard goes after it.`, nearlyFrame(name), lines),
+  ),
+  demoList(
+    'nearlyOther',
+    'Nearly won',
+    'Any other team',
+    'When a team without a list of its own is the first to reach 90% of the winning score. The leaderboard goes after it.',
+    nearlyFrame('Other team'),
+    ['{team} has {score} points!'],
+  ),
+];
+
+// What the demo's staff changed: one list, by Sarge, yesterday.
+const demoLineState = {
+  'halfway.lonestar': {
+    lines: ['Lonestar leads on {score}! Somebody finally parked the spawn truck.', 'Lonestar leads on {score}! Reddit wrote blue off. Reddit was wrong.'],
+    changed: { at: Date.now() - DAY, by: 'demo', byName: 'Sarge' },
+  },
+};
+
+const demoLinesPage = () => ({
+  max: 200,
+  maxLines: 50,
+  lists: DEMO_LISTS.map((list) => {
+    const own = demoLineState[list.id];
+    return own ? { ...list, lines: [...own.lines], changed: { ...own.changed } } : { ...list, lines: [...list.lines] };
+  }),
+});
+
+export const demoLines = async () => ({ ok: true, status: 200, json: demoLinesPage() });
+
+// A change, as the bot makes it: refused with a reason, or the page as it is after it.
+export const demoLinesChange = async (body) => {
+  const refuse = (error) => ({ ok: false, json: { error } });
+  const list = DEMO_LISTS.find((l) => l.id === body.list);
+  if (!list) return refuse('There is no list of lines by that name. Reload the page.');
+  if (body.action === 'reset') {
+    delete demoLineState[list.id];
+    return { ok: true, json: demoLinesPage() };
+  }
+  const lines = linesToSave(body.lines);
+  if (lines.length === 0) return refuse("Keep at least one line. To go back to the bot's own lines, use \"Use the bot's lines\".");
+  if (lines.length > 50) return refuse('A list can have at most 50 lines.');
+  const wrong = lines.findIndex((line) => lineProblem(list, line, 200) !== null);
+  if (wrong >= 0) return refuse(`Line ${wrong + 1}: ${lineProblem(list, lines[wrong], 200)}`);
+  if (sameLines(lines, list.lines)) delete demoLineState[list.id];
+  else demoLineState[list.id] = { lines, changed: { at: Date.now(), by: 'demo', byName: 'Sarge' } };
+  return { ok: true, json: demoLinesPage() };
 };

@@ -60,7 +60,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The server and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; the admin tools, the reserved slots and the map rotations. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The server and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; the admin tools, the reserved slots, the map rotations and what the bot says in game. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -90,6 +90,10 @@
               <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
                 <span class="tab-name">Rotations</span>
                 <span class="tab-hint">The maps for each day</span>
+              </button>
+              <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines">
+                <span class="tab-name">Lines</span>
+                <span class="tab-hint">What the bot says in game</span>
               </button>
             </div>
 
@@ -376,6 +380,10 @@
 
             <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
               <div id="rotations"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
+              <div id="lines"></div>
             </div>
           </div>
 

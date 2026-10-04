@@ -4,6 +4,8 @@ import {
   demoCommands,
   demoFeedKill,
   demoKills,
+  demoLines,
+  demoLinesChange,
   demoPlayerKills,
   demoPlayerRecord,
   demoRotations,
@@ -52,17 +54,18 @@ import {
   WEAPON_KINDS,
   withVehicle,
 } from './format.js';
+import { createLines } from './lines.js';
 import { demo, showNotice, thisPage } from './live.js';
 import { createRotations } from './rotations.js';
 import { createTools, replyNodes } from './tools.js';
 import { el, link, mapTag, playerHref } from './views.js';
 
-// The staff page, in five tabs. Live: the server now, everyone in game, to search and act on, and every kill as it
+// The staff page, in six tabs. Live: the server now, everyone in game, to search and act on, and every kill as it
 // happens. Review: what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get,
 // risky Steam accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff
 // did. History: any player's record, kills and headshots, and team kills. Admin: the admin tools (every staff command),
 // the bans on the server and the reserved slots. Rotations: the map rotations, the week and what is on the server (see
-// rotations.js). Any player's name opens their history. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
+// rotations.js). Lines: what the bot says in game (see lines.js). Any player's name opens their history. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
 // session token, which this page keeps for this browser and sends with each request. Staff link the Steam account they
 // play on, so the bot never counts them as seeders: the page asks once each sign-in until they have. ?demo shows sample
 // data without signing in.
@@ -144,8 +147,8 @@ const saveHidden = (hidden) => {
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['live', 'review', 'history', 'admin', 'rotations'];
-const TAB_NAMES = { live: 'Live', review: 'Review', history: 'History', admin: 'Admin', rotations: 'Rotations' };
+const TABS = ['live', 'review', 'history', 'admin', 'rotations', 'lines'];
+const TAB_NAMES = { live: 'Live', review: 'Review', history: 'History', admin: 'Admin', rotations: 'Rotations', lines: 'Lines' };
 // The tabs the page had before, which old links name.
 const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review' };
 let tab = 'live';
@@ -204,6 +207,7 @@ const signedOut = (message) => {
   $('signin-error').textContent = message ?? '';
   if ($('steam-dialog').open) $('steam-dialog').close();
   rotations.reset();
+  lines.reset();
   disconnectFeed();
   killsGeneration += 1;
   historyGeneration += 1;
@@ -252,8 +256,9 @@ const selectTab = (name, { focus = false } = {}) => {
   if (focus) $(`tab-${tab}`).focus();
   const hash = tabHash();
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
-  // Loaded when first opened, as only staff working on rotations need them.
+  // Loaded when first opened, as only staff working on rotations or lines need them.
   if (tab === 'rotations' && data) rotations.show();
+  if (tab === 'lines' && data) lines.show();
   // A player's history is drawn straight away with what the page knows, and loaded when it is not yet.
   if (tab === 'history' && data) {
     renderHistory();
@@ -1497,6 +1502,7 @@ const render = (overview) => {
   }
   if (!tools.ready) loadCommands();
   if (tab === 'rotations') rotations.ensure();
+  if (tab === 'lines') lines.ensure();
 };
 
 // Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.
@@ -1638,6 +1644,12 @@ const rotations = createRotations({
   root: $('rotations'),
   load: () => (demo ? demoRotations() : get('admin/rotations')),
   send: (body) => (demo ? demoRotationsChange(body) : call('admin/rotations', body)),
+});
+
+const lines = createLines({
+  root: $('lines'),
+  load: () => (demo ? demoLines() : get('admin/lines')),
+  send: (body) => (demo ? demoLinesChange(body) : call('admin/lines', body)),
 });
 
 // The bot's staff commands, once, for the admin tools' forms.
