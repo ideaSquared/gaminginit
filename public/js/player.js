@@ -4,6 +4,7 @@ import {
   byMap,
   bySide,
   calendarWeeks,
+  clockHour,
   daysAgo,
   formatDuration,
   formatHours,
@@ -46,7 +47,7 @@ const $ = (id) => document.getElementById(id);
 const id = new URLSearchParams(location.search).get('id') ?? '';
 
 // The reader's own time for matches; UTC for days, like the bot's records.
-const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const dateLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 const ofDay = (day) => dayLong.format(Date.parse(`${day}T00:00:00Z`));
@@ -96,13 +97,15 @@ const renderHead = (now) => {
       .join(' · '),
   );
 
-  const mvps = bests(profile.matches, profile.activity).mvps;
+  // The places are the leaderboard's own days, not the period picked below, so they say which days beside them. The MVP
+  // count is only in the personal bests, where it follows the period.
+  const ranks = topRanks(profile.ranks);
   $('player-chips').replaceChildren(
     ...[
       profile.online ? el('li', { className: 'chip chip-online' }, el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now') : null,
       profile.vip ? el('li', { className: 'chip chip-vip', textContent: `VIP until ${dateLong.format(profile.vip.until)}` }) : null,
-      ...topRanks(profile.ranks).map((rank) => el('li', { className: 'chip chip-rank', title: `Last ${profile.ranks.days} days`, textContent: rank.text })),
-      mvps > 0 ? el('li', { className: 'chip', title: 'Most kills in the match', textContent: `MVP ${mvps}×` }) : null,
+      ranks.length > 0 ? el('li', { className: 'chips-label', textContent: `Leaderboard, last ${profile.ranks.days} days` }) : null,
+      ...ranks.map((rank) => el('li', { className: 'chip chip-rank', textContent: rank.text })),
     ].filter(Boolean),
   );
 

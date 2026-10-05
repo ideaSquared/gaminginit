@@ -65,7 +65,7 @@
 
       <section class="section live" aria-labelledby="live-title">
         <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Back to the server</a></p>
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
 
           <header class="live-head">
             <div class="live-id">
@@ -96,6 +96,8 @@
                 <h3 id="feed-title">Kill feed</h3>
                 <p class="board-sub" id="feed-sub">Every death as it happens, newest first.</p>
                 <ol class="kill-feed" id="kill-feed" tabindex="0" aria-label="Kill feed, newest first"></ol>
+                <!-- Phones only: the feed there shows the latest kills, and more on request. -->
+                <button type="button" class="btn btn-ghost btn-small more-kills" id="more-kills" hidden>Show more</button>
               </article>
 
               <div class="live-side">
@@ -105,7 +107,7 @@
                 </article>
                 <article class="card panel" aria-labelledby="live-weapons-title" id="live-weapons-panel">
                   <h3 id="live-weapons-title">Weapons this match</h3>
-                  <div id="live-weapons"></div>
+                  <div class="table-wrap" id="live-weapons"></div>
                 </article>
               </div>
             </div>

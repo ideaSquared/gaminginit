@@ -29,6 +29,10 @@ export const formatHours = (minutes) => {
   return `${hours < 10 ? hours.toFixed(1) : Math.round(hours)} h`;
 };
 
+// How to write the hour of a clock time for `locale` (the reader's own when left out): no leading zero on a 12-hour
+// clock, "7:00 PM", and the zero kept on a 24-hour one, "07:00", which is how those locales write it.
+export const clockHour = (locale) => (new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 'numeric' : '2-digit');
+
 export const compact = (n) => {
   if (n < 10_000) return n.toLocaleString('en-GB');
   if (n < 1_000_000) return `${(n / 1000).toFixed(n < 100_000 ? 1 : 0)}K`;
@@ -113,7 +117,8 @@ export const vipDetail = (vip) =>
   'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
   "server's next daily restart. Keep seeding to keep it.";
 
-// The leaderboard's boards: what each one shows, besides the rank and the name.
+// The leaderboard's boards: what each one shows, besides the rank and the name. A board with `keep` leaves out the
+// rows it returns false for.
 export const BOARDS = [
   {
     key: 'kills',
@@ -140,8 +145,14 @@ export const BOARDS = [
     sub: () => 'Time on the server before it went live.',
     headings: ['Seed days', 'Seeding'],
     cells: (p) => [String(p.seedDays), formatHours(p.seedingMinutes)],
+    // Some minutes of seeding, but never enough on one day to count as a seed day, does not make a top seeder.
+    keep: (p) => p.seedDays > 0,
   },
 ];
+
+// A board's rows from the bot's leaderboard, without the ones the board leaves out. The table numbers what is left, so
+// the ranks stay 1, 2, 3 with no gap.
+export const boardRows = (board, leaderboard) => (leaderboard?.[board.key] ?? []).filter(board.keep ?? (() => true));
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 
@@ -213,6 +224,29 @@ export const niceScale = (value, tickCount = 4) => {
   const step = Math.max(1, [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= rough && Number.isInteger(s)) ?? 10 * magnitude);
   const top = Math.ceil(max / step) * step;
   return { max: top, ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
+};
+
+// A span of times of day with the AM or PM said once when both ends share it: "7:00 – 10:00 PM". The browser knows
+// how each locale writes it. Where it cannot, both ends are written out in full.
+export const timeRange = (formatter, from, to) => {
+  try {
+    return formatter.formatRange(from, to);
+  } catch {
+    return `${formatter.format(from)}–${formatter.format(to)}`;
+  }
+};
+
+// Which of a row of day labels need their month: the first one shown, and each one in a different month from the
+// label before it. `days` are the labels' times in ms (UTC dates) and `shown` says which of them get a label at all.
+export const monthStarts = (days, shown) => {
+  let month = null;
+  return days.map((at, i) => {
+    if (!shown[i]) return false;
+    const next = new Date(at).getUTCMonth();
+    const starts = next !== month;
+    month = next;
+    return starts;
+  });
 };
 
 // "Valkyra 43–32 Kharr", in the order the server lists the factions.
@@ -764,6 +798,9 @@ export const headshotRule = ({ kills, odds }) =>
 
 export const flaggedDaysLabel = (days) => `Flagged ${plural(days, 'day')}`;
 
+// Whether a player's headshots are nothing to look at: an ordinary chance by luck, and no flagged day.
+export const ordinaryHeadshots = (player) => player.flaggedDays === 0 && luckOdds(player.chance) === 'Ordinary';
+
 // One player's headshots in words, above their kills.
 export const killerSummary = ({ kills, headshots, expected, chance }) => {
   if (kills === 0) return 'No kills in this period.';
@@ -830,6 +867,7 @@ export const teamCounts = (players) => {
 };
 
 export const PLAYER_SORTS = {
+  watch: 'Worth a look first',
   team: 'Team',
   kills: 'Most kills',
   today: 'Longest on today',
@@ -837,12 +875,15 @@ export const PLAYER_SORTS = {
 };
 
 // The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
-// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order.
-export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'team' }, today) => {
+// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order: those worth a look first by
+// default, so staff see them without hunting, then by team.
+export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'watch' }, today) => {
   const q = query.trim().toLowerCase();
   const byName = (a, b) => a.name.localeCompare(b.name);
+  const byTeam = (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b);
   const order = {
-    team: (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b),
+    watch: (a, b) => Number(needsLook(b, today)) - Number(needsLook(a, today)) || byTeam(a, b),
+    team: byTeam,
     kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
     today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),
     name: byName,
@@ -851,7 +892,7 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
     .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
     .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
     .filter((p) => !watch || needsLook(p, today))
-    .sort(order[sort] ?? order.team);
+    .sort(order[sort] ?? order.watch);
 };
 
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.

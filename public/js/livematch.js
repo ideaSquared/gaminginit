@@ -29,9 +29,16 @@ const LINK_STATES = {
   off: 'Not connected',
 };
 
+// On phones the kill feed is a short list in the page, not a scroll box of its own (styles.css, below 900px): it shows
+// this many kills at first, and this many more each time "Show more" is pressed.
+const FEED_SHOWN = 15;
+const narrow = window.matchMedia('(max-width: 899px)');
+
 let snapshot = null;
 // Deaths already shown, so the ones that arrive later stand out.
 const shown = new Set();
+// How many kills a phone shows now. It stays where "Show more" left it while the feed updates.
+let feedShown = FEED_SHOWN;
 
 const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
 
@@ -94,23 +101,34 @@ const feedRow = (d, palette, now, fresh) => {
 
 const renderFeed = (match, palette, now) => {
   const list = $('kill-feed');
+  const more = $('more-kills');
+  // Only the scroll box on wider screens needs the keyboard to reach it.
+  if (narrow.matches) list.removeAttribute('tabindex');
+  else list.tabIndex = 0;
   if (!match || match.feed.length === 0) {
     list.replaceChildren(el('li', { className: 'muted', textContent: 'Waiting for the first kill of this match.' }));
+    more.hidden = true;
     return;
   }
   // The first update marks nothing as new, so the whole list does not flash.
   const firstLoad = shown.size === 0;
-  list.replaceChildren(...match.feed.map((d) => feedRow(d, palette, now, !firstLoad && !shown.has(d.id))));
+  // The newest kills come first, so a new one pushes the oldest shown off the end and the count stays put.
+  const rows = narrow.matches ? match.feed.slice(0, feedShown) : match.feed;
+  list.replaceChildren(...rows.map((d) => feedRow(d, palette, now, !firstLoad && !shown.has(d.id))));
   for (const d of match.feed) shown.add(d.id);
   if (shown.size > 500) shown.clear();
+  more.hidden = rows.length >= match.feed.length;
+  setText(more, `Show more (${match.feed.length - rows.length} left)`);
 };
 
-const highlight = (label, value, ...note) => [el('dt', { textContent: label }), el('dd', {}, el('strong', { textContent: value }), el('span', { className: 'muted' }, ...note))];
+// The big value is text, or a player's name from who().
+const highlight = (label, value, ...note) => [el('dt', { textContent: label }), el('dd', {}, el('strong', {}, value), el('span', { className: 'muted' }, ...note))];
 
 const renderHighlights = (match, palette) => {
   const h = match.highlights;
   const entries = [
-    h.firstBlood && highlight('First blood', h.firstBlood.weapon ?? 'Kill', who(h.firstBlood.killer, palette), ' on ', who(h.firstBlood.victim, palette)),
+    h.firstBlood &&
+      highlight('First blood', who(h.firstBlood.killer, palette), 'on ', who(h.firstBlood.victim, palette), h.firstBlood.weapon ? ` with the ${h.firstBlood.weapon}` : ''),
     h.onFire.length > 0 &&
       highlight(
         'On fire',
@@ -280,6 +298,16 @@ const missing = () => {
   setText($('idle-title'), 'The live match is not on yet');
   setText($('idle-text'), 'Our bot does not follow the live match yet. Until it does, the server card shows the score and players.');
 };
+
+$('more-kills').addEventListener('click', () => {
+  feedShown += FEED_SHOWN;
+  if (snapshot?.match) renderFeed(snapshot.match, colours(), Date.now());
+});
+
+// Turning a phone sideways, or resizing the window, changes whether the feed is a short list or a scroll box.
+narrow.addEventListener('change', () => {
+  if (snapshot) render(snapshot);
+});
 
 startPush(render, { url: apiUrl('live'), socket: 'live/socket', sample: demoLive, onState: showLink, missing });
 

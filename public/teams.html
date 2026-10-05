@@ -65,7 +65,7 @@
 
       <section class="section" aria-labelledby="teams-title">
         <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Back to the server</a></p>
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
           <div class="section-head">
             <h1 class="page-title" id="teams-title">Teams</h1>
             <p class="section-note" id="teams-note">Which team wins most, over the last 30 days.</p>
@@ -90,7 +90,7 @@
           </div>
 
           <div class="team-grid">
-            <article class="card board" aria-labelledby="standings-title">
+            <article class="card board team-standings" aria-labelledby="standings-title">
               <h3 id="standings-title">Wins by team</h3>
               <p class="board-sub">A match goes to the team with the most points.</p>
               <div id="standings"><p class="muted">Loading…</p></div>
@@ -106,19 +106,19 @@
                 <div class="table-scroll"><table id="map-table"></table></div>
               </details>
             </article>
-          </div>
 
-          <div class="finishes">
-            <article class="card board" aria-labelledby="closest-title">
-              <h3 id="closest-title">Closest finish</h3>
-              <p class="board-sub">The win by the fewest points over the next team.</p>
-              <div id="closest"><p class="muted">Loading…</p></div>
-            </article>
-            <article class="card board" aria-labelledby="biggest-title">
-              <h3 id="biggest-title">Biggest win</h3>
-              <p class="board-sub">The win by the most points over the next team.</p>
-              <div id="biggest"><p class="muted">Loading…</p></div>
-            </article>
+            <div class="finishes">
+              <article class="card board" aria-labelledby="closest-title">
+                <h3 id="closest-title">Closest finish</h3>
+                <p class="board-sub">The win by the fewest points over the next team.</p>
+                <div id="closest"><p class="muted">Loading…</p></div>
+              </article>
+              <article class="card board" aria-labelledby="biggest-title">
+                <h3 id="biggest-title">Biggest win</h3>
+                <p class="board-sub">The win by the most points over the next team.</p>
+                <div id="biggest"><p class="muted">Loading…</p></div>
+              </article>
+            </div>
           </div>
 
           <a class="more-link" href="matches" data-keep-query>See the latest matches <span aria-hidden="true">→</span></a>

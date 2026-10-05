@@ -1,4 +1,4 @@
-import { BOARDS, compact, metres, percent, utcDay, WEAPON_KINDS } from './format.js';
+import { BOARDS, boardRows, compact, metres, percent, utcDay, WEAPON_KINDS } from './format.js';
 import { startLive } from './live.js';
 import { boardTable, el, playerName, setText } from './views.js';
 
@@ -21,7 +21,7 @@ const renderLeaderboard = (stats) => {
   setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
   root.replaceChildren(
     ...BOARDS.map((board) => {
-      const rows = leaderboard[board.key] ?? [];
+      const rows = boardRows(board, leaderboard);
       return el(
         'article',
         { className: 'card board' },

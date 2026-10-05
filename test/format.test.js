@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   busyRuns,
   busyShares,
+  clockHour,
   compact,
   emptyNote,
   formatDuration,
@@ -13,6 +14,7 @@ import {
   latestMatches,
   mapSegments,
   mapKey,
+  monthStarts,
   niceScale,
   peak,
   phaseRanges,
@@ -23,10 +25,12 @@ import {
   serverState,
   STALE_MS,
   timeAgo,
+  timeRange,
   toLocalHours,
   vipDetail,
   vipOffer,
   BOARDS,
+  boardRows,
   bests,
   byMap,
   bySide,
@@ -82,6 +86,7 @@ import {
   killerSummary,
   luckOdds,
   oddsKind,
+  ordinaryHeadshots,
   usualHeadshots,
   watchList,
   needsLook,
@@ -146,6 +151,16 @@ describe('text', () => {
     assert.equal(formatHours(45), '45 min');
     assert.equal(formatHours(312), '5.2 h');
     assert.equal(formatHours(900), '15 h');
+  });
+
+  it('writes the hour without a leading zero on a 12-hour clock, and with one on a 24-hour clock', () => {
+    const at = (hour) => new Date(2026, 0, 1, hour, 5);
+    const clock = (locale, hour) => new Intl.DateTimeFormat(locale, { hour: clockHour(locale), minute: '2-digit' }).format(at(hour));
+    assert.equal(clock('en-US', 19), '7:05 PM');
+    assert.equal(clock('en-US', 7), '7:05 AM');
+    assert.equal(clock('en-GB', 19), '19:05');
+    assert.equal(clock('en-GB', 7), '07:05');
+    assert.equal(clock('de-DE', 7), '07:05');
   });
 
   it('formats counts and ratios', () => {
@@ -221,6 +236,46 @@ describe('chart helpers', () => {
     assert.deepEqual(niceScale(3), { max: 3, ticks: [0, 1, 2, 3] });
     assert.deepEqual(niceScale(0), { max: 1, ticks: [0, 1] });
   });
+
+  it('puts the month on the first day label and wherever the month changes', () => {
+    const day = (iso) => Date.parse(`${iso}T00:00:00Z`);
+    const days = ['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03'].map(day);
+    assert.deepEqual(monthStarts(days, [true, true, true, true, true]), [true, false, true, false, false]);
+    // Every other day: the month changes at the first label shown in October, even when 1 Oct itself has none.
+    assert.deepEqual(monthStarts(days, [false, true, false, true, false]), [false, true, false, true, false]);
+    assert.deepEqual(monthStarts([], []), []);
+  });
+});
+
+// Times in the reader's locale; ICU puts a narrow no-break space before AM and PM, so spaces are made plain here.
+const plain = (text) => text.replace(/\s/g, ' ');
+const clockIn = (locale) => new Intl.DateTimeFormat(locale, { hour: clockHour(locale), minute: '2-digit' });
+const at = (hour) => new Date(2000, 0, 1, hour);
+
+describe('times of day', () => {
+  it('drops the leading zero on a 12-hour clock and keeps it on a 24-hour one', () => {
+    assert.equal(clockHour('en-US'), 'numeric');
+    assert.equal(clockHour('en-GB'), '2-digit');
+    assert.equal(plain(clockIn('en-US').format(at(19))), '7:00 PM');
+    assert.equal(plain(clockIn('en-US').format(at(5))), '5:00 AM');
+    assert.equal(plain(clockIn('en-US').format(at(0))), '12:00 AM');
+    assert.equal(clockIn('en-GB').format(at(19)), '19:00');
+    assert.equal(clockIn('en-GB').format(at(5)), '05:00');
+    assert.equal(clockIn('en-GB').format(at(0)), '00:00');
+  });
+
+  it('says AM or PM once for a range that has the same one at both ends', () => {
+    assert.equal(plain(timeRange(clockIn('en-US'), at(19), at(22))).replace(/ – /, '–'), '7:00–10:00 PM');
+    assert.equal(plain(timeRange(clockIn('en-US'), at(11), at(14))).replace(/ – /, '–'), '11:00 AM–2:00 PM');
+    assert.equal(plain(timeRange(clockIn('en-US'), at(23), at(0))).replace(/ – /, '–'), '11:00 PM–12:00 AM');
+    assert.equal(timeRange(clockIn('en-GB'), at(19), at(22)).replace(/ – /, '–'), '19:00–22:00');
+    assert.equal(timeRange(clockIn('en-GB'), at(23), at(0)).replace(/ – /, '–'), '23:00–00:00');
+  });
+
+  it('writes both ends out in full where the browser cannot make a range', () => {
+    const plainFormat = { format: (date) => `${date.getHours()}h` };
+    assert.equal(timeRange(plainFormat, at(19), at(22)), '19h–22h');
+  });
 });
 
 const vip = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
@@ -254,6 +309,27 @@ describe('leaderboard boards', () => {
       seeding: ['4', '1.5 h'],
     });
     assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
+  });
+
+  it('leaves players with no seed days off the top seeders, and keeps the rest in the bot’s order', () => {
+    const seeders = BOARDS.find((b) => b.key === 'seeding');
+    const leaderboard = {
+      seeding: [
+        { name: 'Sable', seedDays: 11, seedingMinutes: 520 },
+        { name: 'Moth', seedDays: 6, seedingMinutes: 260 },
+        { name: 'Ash', seedDays: 0, seedingMinutes: 12 },
+      ],
+    };
+    assert.deepEqual(boardRows(seeders, leaderboard).map((p) => p.name), ['Sable', 'Moth']);
+    assert.equal(boardRows(seeders, { seeding: [leaderboard.seeding[2]] }).length, 0);
+  });
+
+  it('leaves the other boards’ rows alone, and gives none when the bot sent none', () => {
+    const kills = BOARDS.find((b) => b.key === 'kills');
+    const rows = [{ name: 'Ash', kills: 0, deaths: 0 }];
+    assert.deepEqual(boardRows(kills, { kills: rows }), rows);
+    assert.deepEqual(boardRows(kills, {}), []);
+    assert.deepEqual(boardRows(kills, undefined), []);
   });
 });
 
@@ -487,6 +563,20 @@ describe('player pages', () => {
     for (const hex of ['#3366ff', '#000000', '#5a1010']) assert.ok(contrast(rgb(readableColour(hex)), surface) >= 4.5, hex);
     assert.equal(readableColour(undefined), null);
     assert.equal(readableColour('blue'), null);
+  });
+
+  it('lightens a side’s colour enough that the page’s dark ink reads on it, as on the Teams bars', () => {
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const ink = rgb('#0b0d10');
+    const steps = [0, 51, 102, 153, 204, 255];
+    for (const r of steps) {
+      for (const g of steps) {
+        for (const b of steps) {
+          const hex = `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+          assert.ok(contrast(rgb(readableColour(hex)), ink) >= 4.5, hex);
+        }
+      }
+    }
   });
 
   it('has each faction’s colour, readable on a button', () => {
@@ -927,12 +1017,19 @@ describe('the staff page server list', () => {
   it('searches, filters and sorts the list', () => {
     const names = (options) => filterPlayers(all, options, TODAY).map((p) => p.name);
 
-    assert.deepEqual(names({}), ['Bo', 'Ash', 'Dee', 'Cy']);
+    // Those worth a look first, then by team.
+    assert.deepEqual(names({}), ['Bo', 'Ash', 'Cy', 'Dee']);
+    assert.deepEqual(names({ sort: 'watch' }), ['Bo', 'Ash', 'Cy', 'Dee']);
+    assert.deepEqual(names({ sort: 'team' }), ['Bo', 'Ash', 'Dee', 'Cy']);
     assert.deepEqual(names({ query: ' a' }), ['Ash']);
     assert.deepEqual(names({ query: ash.steamId.slice(-4) }), ['Ash']);
     assert.deepEqual(names({ team: 'valkyra' }), ['Ash', 'Dee']);
     assert.deepEqual(names({ team: 'none' }), ['Cy']);
     assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Bo', 'Cy']);
+    assert.deepEqual(names({ watch: true }), ['Bo', 'Ash', 'Cy']);
+    // The team and search still apply, with those worth a look first.
+    assert.deepEqual(names({ team: 'valkyra', sort: 'watch' }), ['Ash', 'Dee']);
+    assert.deepEqual(names({ query: '7656119800000' }), ['Bo', 'Ash', 'Cy', 'Dee']);
     // Most kills, then fewest deaths; Cy has no kills reported.
     assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
     assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
@@ -964,6 +1061,15 @@ describe('the staff page kills tab', () => {
     assert.equal(luckOdds(1e-12), 'Under 1 in a billion');
     assert.equal(luckOdds(0), 'Under 1 in a billion');
     assert.equal(luckOdds(null), '–');
+  });
+
+  it('knows whose headshots are nothing to look at: ordinary by luck, with no flagged day', () => {
+    assert.equal(ordinaryHeadshots({ chance: 0.3, flaggedDays: 0 }), true);
+    assert.equal(ordinaryHeadshots({ chance: 0.05, flaggedDays: 0 }), true);
+    assert.equal(ordinaryHeadshots({ chance: 0.02, flaggedDays: 0 }), false);
+    assert.equal(ordinaryHeadshots({ chance: 0.3, flaggedDays: 1 }), false);
+    // Not enough kills to judge: not called ordinary.
+    assert.equal(ordinaryHeadshots({ chance: null, flaggedDays: 0 }), false);
   });
 
   it('colours a chance below the flag’s mark, and one below 1 in 20', () => {

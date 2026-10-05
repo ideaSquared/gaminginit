@@ -1,4 +1,4 @@
-import { kd, mapKey, result, sideKey } from './format.js';
+import { factionColours, kd, mapKey, result, sideColours, sideKey } from './format.js';
 
 // DOM building blocks shared by the pages.
 
@@ -97,13 +97,38 @@ export const sideName = (name, colours, className = 'side') => {
   return node;
 };
 
-// A finished match's map and result: "OZETI  Valkyra won 300–255".
-export const matchHeadline = (match) =>
-  el(
+// A finished match's map and every side's score, highest first, each name in its colour: "OZETI  Valkyra 100 · Lonestar
+// 72 · Manticore 41". The winner is in bold, and a draw says so. A side with no colour from the server gets its
+// faction's usual one.
+export const matchHeadline = (match) => {
+  const outcome = result(match.factionScores);
+  if (!outcome) return el('p', { className: 'match-headline' }, mapTag(match.map), el('span', { className: 'match-score', textContent: 'No score recorded' }));
+  const colours = new Map([...factionColours, ...sideColours([match])]);
+  const scores = [...match.factionScores].sort((a, b) => b.score - a.score);
+  return el(
     'p',
     { className: 'match-headline' },
     mapTag(match.map),
-    el('span', { className: 'match-score', textContent: result(match.factionScores)?.text ?? 'No score recorded' }),
+    el(
+      'span',
+      { className: 'scores' },
+      outcome.winner ? null : el('span', { className: 'muted', textContent: 'Draw: ' }),
+      ...scores.flatMap((s, i) => {
+        const won = outcome.winner !== null && i === 0;
+        return [
+          i > 0 ? el('span', { className: 'muted', textContent: ' · ' }) : null,
+          el(
+            'span',
+            { className: won ? 'score-side score-won' : 'score-side' },
+            sideName(s.name, colours, won ? 'side side-mine' : 'side'),
+            // Bold is the only sign of the winner on screen, so say it for screen readers too.
+            won ? el('span', { className: 'visually-hidden', textContent: ' won' }) : null,
+            ` ${s.score}`,
+          ),
+        ];
+      }),
+    ),
   );
+};
 
 export const matchMeta = (...parts) => el('p', { className: 'match-meta', textContent: parts.join(' · ') });

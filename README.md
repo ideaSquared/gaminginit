@@ -9,31 +9,44 @@ What it shows:
 
 - The home page (`/`):
   - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
-    more players are needed to go live.
+    more players are needed to go live. The players bar has a mark labelled "Live at 20" (the bot's
+    `thresholds.live`) where the server goes live.
   - Discord member and online counts.
   - A first look at the other pages, each linking to its page: the match on now with its top 3, the 2 latest matches
-    with winner, length, peak players and top player, the top 5 by kills over the last 30 days, and players over the
-    last 24 hours with the peak, matches and time live.
+    with every side's score (the winner first and in bold), length, peak players and top player, the top 5 by kills
+    over the last 30 days, and players over the last 24 hours with the peak, matches and time live.
   - "Play with us": the steps to find us in game.
 - A stats page (`/stats`): players now, the peak and the matches in the last 24 hours and time live today; players
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
+  The daily chart's day labels give the month on the first label and wherever the month changes ("23 Sep … 1 Oct").
+  Today is not over, so its bar is dashed and lighter, and its row in the table says "so far".
   It also has the busy times of day: average players in each hour, with the busy hours highlighted. An hour is busy
   when the server had 97+ players (the bot's `thresholds.busy`) at least half the time. Over the last 14 days when the
   bot sends `hourly` with `busy`, otherwise over the last 24 hours. The bot takes each hour from its median day of the
   14, so one bad day, like a quiet evening, does not take an hour off the busy times, and it leaves crashes out until
   the players are back.
-- A matches page (`/matches`) with the last 10 matches, each with its top 5.
+- A matches page (`/matches`) with the last 10 matches, each with every side's score, highest first, with the side
+  names in their colour in game (the winner in bold, and "Draw:" for a draw; a side the bot sent no colour for gets its
+  faction's usual one), and its top 5. Each match is also a link
+  target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
+  it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
+  link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
-  the latest winner's streak; each team's wins, win rate and matches played; each map's matches split by the team
-  that won them, with draws and the average length (also as a table); and the closest finish and the biggest win.
-  Teams are in their colour in game; teams without one get colours checked to tell apart for colour-blind readers.
+  the latest winner's streak; each team's wins and win rate (and matches played, only when the teams played different
+  numbers of them); each map's matches split by the team that won them, with draws and the average length (also as a
+  table); and the closest finish and the biggest win. Teams are in their colour in game; teams without one get colours
+  checked to tell apart for colour-blind readers. On the map bars each part also has its team's name (or its initial
+  when it is narrow) and its count, so the colour is not the only way to tell the teams apart.
 - A live page (`/live`) for the match on now, updated as it happens: the score, the kill feed (who killed whom, with
   what, from how far, headshots, team kills, double and triple kills, kill streaks), each player's kills, deaths and
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
   multi-kill, most headshots and a rivalry). The longest kill counts hand-held weapons only. The bot pushes each change
   over a WebSocket, a second or two after the kill. Without the bot's kill feed it shows the score and the server's top
-  5, read once a minute.
-- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders.
+  5, read once a minute. On a wide screen the kill feed scrolls inside its card; on a phone (under 900 px wide) it is a
+  short list in the page, the latest 15 kills with "Show more" for 15 more at a time, so scrolling the page is never
+  caught in a box of its own.
+- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders
+  (players with no seed days are left out).
   Under it, the weapons: the 10 with the most kills over the last 30 days, each with its share of headshots, average
   distance and longest kill, plus the kills recorded, the share of headshots and the longest kill of all with a
   hand-held weapon (not mines, emplacements, vehicles or anything built). From the game's kill feed, which the bot takes
@@ -46,12 +59,14 @@ What it shows:
   (kills, headshots and longest kill with each, when the bot has the kill feed); their maps and sides; a calendar of
   their days on the server with streaks; kills in each of their last 20 matches; and their recent matches with the
   result, every side's score and their place on the scoreboard. Sides are named in their colour in game, from the bot's
-  match records, lightened where needed so they read on the dark cards.
+  match records, lightened where needed so they read on the dark cards. Under their name, chips show whether they are in
+  game or have seeder VIP, and the leaderboard places they hold in the top 10, under a label saying they are for the
+  last 30 days, whichever period is chosen. Tables too wide for a small screen scroll inside their card.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
-  and how to help. Then our seeders: the top seeders over the last 30 days, and who has seeder VIP now and until when
-  (only VIP from seeding, not from staff).
+  and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
+  and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).
@@ -99,7 +114,7 @@ Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `match
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 6 places in `index.html` (two are the invite as text under the Join buttons) and 1 in each other page. If the invite changes, change all 15. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 14. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
@@ -195,7 +210,7 @@ Cloudflare creates the DNS record and certificate.
 
 ### 5. Check it works
 
-Open the site and look at the server card and the line under the hero.
+Open the site and look at the server card and the line under the header.
 
 | What you see                                              | What it means                                                                                 |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -260,14 +275,17 @@ opens their history.**
   (yellow below 1 in 20, red once the day is flagged; hover for their usual and the chance), team kills and vehicle
   suicides today (red once they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth
   a look have a yellow mark by their name.
-- **Search** by name or Steam ID, pick a **team**, **sort** by team, most kills, longest on today or name, and tick
-  **Only players worth a look**. When nobody in game matches a search, "Find" searches everyone the bot knows on the
-  History tab.
+- **Search** by name or Steam ID, pick a **team**, **sort** by worth a look first, team, most kills, longest on today or
+  name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: the players with a yellow
+  mark at the top, then each group by team, so the ones to check never hide among the rest. When nobody in game
+  matches a search, "Find" searches everyone the bot knows on the History tab.
 - **Act** on a player opens a menu: their history, warn, kick, move to another team, or ban. History opens the History
   tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
-  from the game a second or two after the kills, and new ones glow as they come in. Each has who, whom, with what,
-  headshot, team kill, wallbangs and the like, how far and on which map. A weapon the bot has no name for is marked
+  from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
+  kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
+  wallbangs and the like, how far and on which map, which is only shown when it differs from the kill above, as the
+  server stays on one map for a long run of kills. A weapon the bot has no name for is marked
   **Check name** (see Weapons to name, on Review). **Only headshots** hides the rest. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
@@ -286,13 +304,16 @@ opens their history.**
   move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, left out
   when there is nobody in it. While the server is not answering, nobody is known to be in game, so each is one list. The
   bot lists those in game first too, so its limit of 100 never leaves one out.
-- **Headshots.** Many headshots, day after day, can be a sign of cheating. Everyone with a headshot in the period, most
-  flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with the
-  server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many or
-  more: "1 in 4,800", or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. A day is flagged with
-  10 or more kills and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets
-  more headshots than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
-  Needs the bot's kill feed (its README, "Weapon stats" and "Kills and headshots").
+- **Headshots.** Many headshots, day after day, can be a sign of cheating. The players with a headshot in the period,
+  most flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with
+  the server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many
+  or more: "1 in 4,800", or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. Most players are
+  Ordinary, so those with an Ordinary chance and no flagged day are hidden, in both parts, until staff tick **Show
+  ordinary players (N)**, N being how many there are (the box is left out when there are none). The tiles and the
+  tab's count still go by everyone. A day is flagged with 10 or more kills and a chance below 1 in 1,000, as the bot
+  sends the marks. Usual goes by weapon: a sniper rifle gets more headshots than a machine gun, so a sniper is not
+  flagged for sniping. "How headshots are judged" explains it. Needs the bot's kill feed (its README, "Weapon stats" and
+  "Kills and headshots").
 - **Weapons to name.** The game sends the bot a code for each weapon, not its name, and the bot names the ones it
   knows. The rest show as their code, like "WEPN 099": over the last 30 days, most kills first, with their kills, longest
   kill, the last day used and who used them most, those in game first. The game's own kill feed names them, so staff
@@ -326,7 +347,8 @@ opens their history.**
   the Look up tool (and `/player` in Discord) shows them.
 - **Kills and headshots** in the period: their headshots in words, against their usual and the chance by luck; by
   weapon; by day, with each flagged day marked; and every kill, newest first (their latest 1,000 a day), with **Only
-  headshots**. The names of those they killed open those players' history.
+  headshots**, and the time, date and map shown as in the kill feed. The names of those they killed open those players'
+  history.
 - **Team kills and vehicle suicides** in the period: their totals, and each one they made or were killed in, from the
   latest 300 in the period.
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
@@ -365,7 +387,8 @@ opens their history.**
   their order are compared, so a map's setup (lighting, say) being reported differently doesn't hide the marks; moving
   maps around in the editor does, until it is saved and on the server.
 - **The week.** A rotation for each day, Monday to Sunday. Days left on Default play **Default**, which starts as the
-  rotation the server had. Changing today's pick puts it on the server straight away (after asking).
+  rotation the server had. Changing today's pick puts it on the server straight away (after asking). Each day shows
+  its rotation's full name, wrapping onto more lines in a narrow card rather than cut off.
 - **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
   (or tap one to add it at the end), drag maps by their ⠿ handle into order (or focus the handle and use the arrow
   keys), and open ⚙ for a map's game mode, infantry only, hardcore, lighting and control zones. A bar in the maps'
@@ -401,6 +424,7 @@ opens their history.**
   "Discord user" and their ID, linked to their Discord profile.
 - It refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills happen.
   A player's Act menu stays open through a refresh.
+- Times are in your own time and clock: "7:00 PM" on a 12-hour clock (no leading zero), "07:00" on a 24-hour one.
 - It shows Steam IDs, linked to Steam profiles. Player names open their history; History links to their public player
   page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
@@ -416,7 +440,14 @@ opens their history.**
 - Fetches the stats every 60 seconds, and only while the tab is visible. The bot's numbers change once a minute.
 - If the bot has not read the server for 3 minutes, the server shows as **Offline** with when it was last seen.
 - If a refresh fails, the page keeps the last numbers and says it is retrying.
+- Notices ("Live stats are not connected yet", the retrying one and the `?demo` one) show right under the header on
+  every page, the home page too.
+- On a phone the home page's hero is shorter (less copy, a smaller Seeder VIP box and no Server status button), so the
+  server card is on the first screen.
+- Each page other than the home page has a "← Home" link at the top. A player's page has "← All players".
 - Player and server names are inserted as text, never as HTML.
+- Times of day follow the reader's locale: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
+  ("07:00"). A range says AM or PM once when both ends share it ("7:00 – 10:00 PM").
 - Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
   player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills chart and use ← →.
 - Player pages are marked `noindex`, so search engines leave individual players out. The players page is indexed.

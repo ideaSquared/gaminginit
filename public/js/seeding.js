@@ -1,4 +1,4 @@
-import { BOARDS, emptyNote, phaseRanges, vipOffer } from './format.js';
+import { BOARDS, boardRows, emptyNote, phaseRanges, vipOffer } from './format.js';
 import { startLive } from './live.js';
 import { boardTable, el, playerName, setText } from './views.js';
 
@@ -32,7 +32,7 @@ const renderTopSeeders = (stats) => {
     return;
   }
   setText($('top-seeders-sub'), `Time on the server before it went live, over the last ${leaderboard.days} days (UTC days).`);
-  const rows = leaderboard[SEEDERS.key] ?? [];
+  const rows = boardRows(SEEDERS, leaderboard);
   root.replaceChildren(rows.length > 0 ? boardTable(SEEDERS, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }));
 };
 

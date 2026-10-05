@@ -65,11 +65,12 @@
 
       <section class="section" aria-labelledby="matches-title">
         <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Back to the server</a></p>
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
           <div class="section-head">
             <h1 class="page-title" id="matches-title">Matches</h1>
             <p class="section-note">The last 10, newest first. Top players by kills. A match counts once the server has gone live.</p>
           </div>
+          <p class="match-missing" id="match-missing" role="status" hidden>That match is older than the last 10.</p>
           <ol class="match-grid" id="all-matches"><li class="muted">Loading…</li></ol>
           <a class="more-link" href="teams" data-keep-query>Which team wins most, and on which maps <span aria-hidden="true">→</span></a>
         </div>

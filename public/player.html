@@ -101,6 +101,7 @@
               <p class="section-note" id="period-note">The last 30 days on our server (UTC days). Places are on the leaderboard’s boards.</p>
               <div class="tiles player-tiles" id="player-tiles"></div>
 
+              <!-- Two columns on wide screens, balanced by the browser, so the long weapons list never leaves a gap. -->
               <div class="profile-grid">
                 <article class="card panel seed-panel" id="seed-panel" aria-labelledby="seed-title" hidden>
                   <h3 id="seed-title">Seeder VIP</h3>
@@ -113,19 +114,19 @@
                   <h3 id="bests-title">Personal bests</h3>
                   <dl class="bests" id="player-bests"></dl>
                 </article>
+                <article class="card panel" aria-labelledby="maps-title">
+                  <h3 id="maps-title">Maps</h3>
+                  <div class="table-wrap" id="player-maps"></div>
+                </article>
+                <article class="card panel" aria-labelledby="sides-title">
+                  <h3 id="sides-title">Sides</h3>
+                  <div class="table-wrap" id="player-sides"></div>
+                </article>
                 <!-- Shown when the bot has the game's kill feed. -->
                 <article class="card panel" id="weapons-panel" aria-labelledby="weapons-title" hidden>
                   <h3 id="weapons-title">Weapons</h3>
                   <p class="board-sub weapons-since" id="weapons-since" hidden></p>
-                  <div id="player-weapons"></div>
-                </article>
-                <article class="card panel" aria-labelledby="maps-title">
-                  <h3 id="maps-title">Maps</h3>
-                  <div id="player-maps"></div>
-                </article>
-                <article class="card panel" aria-labelledby="sides-title">
-                  <h3 id="sides-title">Sides</h3>
-                  <div id="player-sides"></div>
+                  <div class="table-wrap" id="player-weapons"></div>
                 </article>
               </div>
             </section>
