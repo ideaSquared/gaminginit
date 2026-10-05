@@ -1,8 +1,21 @@
 {
-  // Static site on Cloudflare Workers: `npm run deploy`. Static asset requests are free and unlimited.
+  // One Worker serves the website of every community in src/communities.json, each on its own domain. `npm run deploy`.
   "name": "wardogs-community-site",
+  "main": "src/worker.js",
   "compatibility_date": "2026-09-30",
-  "assets": { "directory": "./public" },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    // Only the pages go through the Worker, to put each community's name and stats in. Scripts, styles and images are
+    // served straight from the static assets: free and unlimited, and never a Worker request.
+    "run_worker_first": ["/*", "!/js/*", "!/styles.css", "!/*.png", "!/*.svg"]
+  },
+  "vars": {
+    // The bot's URL. Each community's stats are at <BOT_URL>/t/<community id>/api/stats.
+    "BOT_URL": "https://wardogs-discord-bot.idea-squared.workers.dev",
+    // The community the workers.dev address (and its previews) shows, unless ?community=<id> asks for another.
+    "DEFAULT_COMMUNITY": "gaminginit"
+  },
   // Cloudflare's Git builds run `wrangler preview` for branches other than main, which needs this block.
   "previews": {}
 }

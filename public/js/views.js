@@ -1,4 +1,4 @@
-import { factionColours, kd, mapKey, result, sideColours, sideKey } from './format.js';
+import { factionColours, keptParams, kd, mapKey, result, sideColours, sideKey } from './format.js';
 
 // DOM building blocks shared by the pages.
 
@@ -17,11 +17,11 @@ export const el = (tag, props = {}, ...children) => {
 
 export const link = (href, textContent) => el('a', { href, textContent });
 
-// A player's page. Keeps ?demo and ?stats, so a preview stays a preview.
+// A player's page. Keeps ?demo (and on previews ?stats and ?community), so a preview stays a preview.
 export const playerHref = (id) => {
   const url = new URL('player', location.href);
   const params = new URLSearchParams(location.search);
-  for (const key of ['demo', 'stats']) if (params.has(key)) url.searchParams.set(key, params.get(key));
+  for (const key of keptParams(location.hostname)) if (params.has(key)) url.searchParams.set(key, params.get(key));
   url.searchParams.set('id', id);
   return url.pathname + url.search;
 };

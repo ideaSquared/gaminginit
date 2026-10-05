@@ -3,6 +3,11 @@ import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
 
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
 
+// Whose site this is, for the sample server and Discord names: the page says so on <html>, and the site's Worker puts
+// each community's own there (see src/worker.js).
+const SITE_NAME = document.documentElement.dataset.communityName;
+const SITE_DOMAIN = document.documentElement.dataset.communityDomain;
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -70,7 +75,7 @@ export const demoStats = (now) => {
     generatedAt: now,
     thresholds: { seeding: 1, live: LIVE, busy: BUSY },
     server: {
-      name: 'gaminginit #1',
+      name: `${SITE_NAME} #1`,
       players,
       maxPlayers: CAPACITY,
       map: 'Ozeti',
@@ -104,7 +109,7 @@ export const demoStats = (now) => {
             top: top(2),
           }
         : null,
-    discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
+    discord: { name: SITE_NAME, members: 1284, online: 213, fetchedAt: minute },
     leaderboard: leaderboard(),
     weapons: weapons(now),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
@@ -439,7 +444,7 @@ export const demoLive = (now) => {
   return {
     generatedAt: now,
     feed: true,
-    server: { name: 'gaminginit #1', players: 62, maxPlayers: CAPACITY, map: 'Zestafona', phase: 'live', factionScores, seenAt: minute },
+    server: { name: `${SITE_NAME} #1`, players: 62, maxPlayers: CAPACITY, map: 'Zestafona', phase: 'live', factionScores, seenAt: minute },
     currentMatch: {
       map: 'Zestafona',
       startedAt: start,
@@ -683,7 +688,7 @@ export const demoAdmin = (days, now) => {
       maxSlots: 2,
     },
     server: {
-      name: 'gaminginit #1 | UK | Seed for VIP',
+      name: `${SITE_NAME} #1 | UK | Seed for VIP`,
       players: inGame.length,
       maxPlayers: CAPACITY,
       map: 'Ozeti',
@@ -1172,8 +1177,8 @@ export const demoRotationsChange = async (body) => {
 };
 
 // The staff page's Lines tab, as the bot sends it: each list with what the bot puts around its lines and fills in,
-// for gaminginit.com with seeder VIP on, 20 players to go live and 100 points to win.
-const DEMO_SITE = 'gaminginit.com';
+// for this site with seeder VIP on, 20 players to go live and 100 points to win.
+const DEMO_SITE = SITE_DOMAIN;
 const DEMO_HALFWAY_AFTER = ` Seed on 3 days in a week and get a reserved slot. How at ${DEMO_SITE}`;
 const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard, Discord and seeding at ${DEMO_SITE}`;
 const demoList = (id, group, name, note, frame, lines) => ({ id, group, name, note, off: null, ...frame, lines, changed: null });
