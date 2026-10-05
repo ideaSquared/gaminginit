@@ -1,5 +1,5 @@
 import { busiestChart, dailyChart, hourRange, populationChart } from './charts.js';
-import { BUSY_PLAYERS, busyRuns, busyShares, formatHours, hourlyAverages, hourStyle, isBusy, isOnline, peak, serverState, toLocalHours } from './format.js';
+import { BUSY_PLAYERS, busyRuns, busyShares, clockHour, formatHours, hourlyAverages, isBusy, isOnline, peak, serverState, toLocalHours } from './format.js';
 import { startLive } from './live.js';
 import { el, setText } from './views.js';
 
@@ -9,7 +9,7 @@ const DAY = 86_400_000;
 
 const $ = (id) => document.getElementById(id);
 
-const hourClock = new Intl.DateTimeFormat(undefined, { hour: hourStyle(), minute: '2-digit' });
+const hourClock = new Intl.DateTimeFormat(undefined, { hour: clockHour(), minute: '2-digit' });
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 let stats = null;

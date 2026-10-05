@@ -1,4 +1,4 @@
-import { formatDuration, hourStyle, latestMatches } from './format.js';
+import { clockHour, formatDuration, latestMatches } from './format.js';
 import { startLive } from './live.js';
 import { el, matchHeadline, matchMeta, playersTable } from './views.js';
 
@@ -9,7 +9,7 @@ import { el, matchHeadline, matchMeta, playersTable } from './views.js';
 const MATCHES = 10;
 
 // When the match ended, in the reader's own time: "Wed 1 Oct, 21:40".
-const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: hourStyle(), minute: '2-digit' });
+const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
 
 // The match the address links to, as its card id, or null when the address does not link to a match.
 const linked = () => {

@@ -226,10 +226,6 @@ export const niceScale = (value, tickCount = 4) => {
   return { max: top, ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
 };
 
-// The hour option for a time of day: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
-// ("07:00"), where the zero is the usual way to write it.
-export const hourStyle = (locale) => (new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 'numeric' : '2-digit');
-
 // A span of times of day with the AM or PM said once when both ends share it: "7:00 – 10:00 PM". The browser knows
 // how each locale writes it. Where it cannot, both ends are written out in full.
 export const timeRange = (formatter, from, to) => {

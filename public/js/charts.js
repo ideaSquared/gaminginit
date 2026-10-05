@@ -1,4 +1,4 @@
-import { formatHours, heatLevel, hourStyle, kd, monthStarts, niceScale, ordinal, played, playerCount, segments, timeRange } from './format.js';
+import { clockHour, formatHours, heatLevel, kd, monthStarts, niceScale, ordinal, played, playerCount, segments, timeRange } from './format.js';
 
 // Small hand-drawn SVG charts: a 24-hour population line, daily-peak and busy-times columns, and on player pages an
 // activity calendar and kills per match. Each redraws at its container's real width so text stays crisp, and each
@@ -21,7 +21,7 @@ const text = (parent, attrs, content) => {
   return node;
 };
 
-const clock = new Intl.DateTimeFormat(undefined, { hour: hourStyle(), minute: '2-digit' });
+const clock = new Intl.DateTimeFormat(undefined, { hour: clockHour(), minute: '2-digit' });
 const dayShort = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
 const dayNumber = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone: 'UTC' });
 const dayMonth = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });

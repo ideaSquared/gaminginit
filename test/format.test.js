@@ -9,7 +9,6 @@ import {
   formatDuration,
   formatHours,
   hourlyAverages,
-  hourStyle,
   isOnline,
   kd,
   latestMatches,
@@ -250,13 +249,13 @@ describe('chart helpers', () => {
 
 // Times in the reader's locale; ICU puts a narrow no-break space before AM and PM, so spaces are made plain here.
 const plain = (text) => text.replace(/\s/g, ' ');
-const clockIn = (locale) => new Intl.DateTimeFormat(locale, { hour: hourStyle(locale), minute: '2-digit' });
+const clockIn = (locale) => new Intl.DateTimeFormat(locale, { hour: clockHour(locale), minute: '2-digit' });
 const at = (hour) => new Date(2000, 0, 1, hour);
 
 describe('times of day', () => {
   it('drops the leading zero on a 12-hour clock and keeps it on a 24-hour one', () => {
-    assert.equal(hourStyle('en-US'), 'numeric');
-    assert.equal(hourStyle('en-GB'), '2-digit');
+    assert.equal(clockHour('en-US'), 'numeric');
+    assert.equal(clockHour('en-GB'), '2-digit');
     assert.equal(plain(clockIn('en-US').format(at(19))), '7:00 PM');
     assert.equal(plain(clockIn('en-US').format(at(5))), '5:00 AM');
     assert.equal(plain(clockIn('en-US').format(at(0))), '12:00 AM');
