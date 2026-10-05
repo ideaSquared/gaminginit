@@ -46,6 +46,13 @@ const scores = (seed) => [
   { name: 'Kharr', score: 255 + (seed % 2) * 45 },
 ];
 
+// A finished match's scores: three sides in their colours in game, a different winner each time, and a draw every
+// fourth match.
+const finalScores = (seed) => {
+  const points = seed % 4 === 3 ? [300, 300, 118] : [300, 255 - (seed % 3) * 20, 140 + (seed % 4) * 10];
+  return SIDES.map((name, i) => ({ name, score: points[(i + seed) % 3], colorHex: SIDE_COLOURS[name] }));
+};
+
 export const demoStats = (now) => {
   const minute = Math.floor(now / MINUTE) * MINUTE;
   const history = [];
@@ -83,7 +90,7 @@ export const demoStats = (now) => {
       endedAt: minute - (i + 1) * 55 * MINUTE - 10 * HOUR,
       durationMs: (38 + ((i * 7) % 20)) * MINUTE,
       peakPlayers: 64 - ((i * 5) % 18),
-      factionScores: scores(i),
+      factionScores: finalScores(i),
       top: top(i),
     })),
     currentMatch:

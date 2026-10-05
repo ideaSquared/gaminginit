@@ -9,11 +9,13 @@ import {
   formatDuration,
   formatHours,
   hourlyAverages,
+  hourStyle,
   isOnline,
   kd,
   latestMatches,
   mapSegments,
   mapKey,
+  monthStarts,
   niceScale,
   peak,
   phaseRanges,
@@ -24,6 +26,7 @@ import {
   serverState,
   STALE_MS,
   timeAgo,
+  timeRange,
   toLocalHours,
   vipDetail,
   vipOffer,
@@ -233,6 +236,46 @@ describe('chart helpers', () => {
     assert.deepEqual(niceScale(10), { max: 10, ticks: [0, 5, 10] });
     assert.deepEqual(niceScale(3), { max: 3, ticks: [0, 1, 2, 3] });
     assert.deepEqual(niceScale(0), { max: 1, ticks: [0, 1] });
+  });
+
+  it('puts the month on the first day label and wherever the month changes', () => {
+    const day = (iso) => Date.parse(`${iso}T00:00:00Z`);
+    const days = ['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03'].map(day);
+    assert.deepEqual(monthStarts(days, [true, true, true, true, true]), [true, false, true, false, false]);
+    // Every other day: the month changes at the first label shown in October, even when 1 Oct itself has none.
+    assert.deepEqual(monthStarts(days, [false, true, false, true, false]), [false, true, false, true, false]);
+    assert.deepEqual(monthStarts([], []), []);
+  });
+});
+
+// Times in the reader's locale; ICU puts a narrow no-break space before AM and PM, so spaces are made plain here.
+const plain = (text) => text.replace(/\s/g, ' ');
+const clockIn = (locale) => new Intl.DateTimeFormat(locale, { hour: hourStyle(locale), minute: '2-digit' });
+const at = (hour) => new Date(2000, 0, 1, hour);
+
+describe('times of day', () => {
+  it('drops the leading zero on a 12-hour clock and keeps it on a 24-hour one', () => {
+    assert.equal(hourStyle('en-US'), 'numeric');
+    assert.equal(hourStyle('en-GB'), '2-digit');
+    assert.equal(plain(clockIn('en-US').format(at(19))), '7:00 PM');
+    assert.equal(plain(clockIn('en-US').format(at(5))), '5:00 AM');
+    assert.equal(plain(clockIn('en-US').format(at(0))), '12:00 AM');
+    assert.equal(clockIn('en-GB').format(at(19)), '19:00');
+    assert.equal(clockIn('en-GB').format(at(5)), '05:00');
+    assert.equal(clockIn('en-GB').format(at(0)), '00:00');
+  });
+
+  it('says AM or PM once for a range that has the same one at both ends', () => {
+    assert.equal(plain(timeRange(clockIn('en-US'), at(19), at(22))).replace(/ – /, '–'), '7:00–10:00 PM');
+    assert.equal(plain(timeRange(clockIn('en-US'), at(11), at(14))).replace(/ – /, '–'), '11:00 AM–2:00 PM');
+    assert.equal(plain(timeRange(clockIn('en-US'), at(23), at(0))).replace(/ – /, '–'), '11:00 PM–12:00 AM');
+    assert.equal(timeRange(clockIn('en-GB'), at(19), at(22)).replace(/ – /, '–'), '19:00–22:00');
+    assert.equal(timeRange(clockIn('en-GB'), at(23), at(0)).replace(/ – /, '–'), '23:00–00:00');
+  });
+
+  it('writes both ends out in full where the browser cannot make a range', () => {
+    const plainFormat = { format: (date) => `${date.getHours()}h` };
+    assert.equal(timeRange(plainFormat, at(19), at(22)), '19h–22h');
   });
 });
 

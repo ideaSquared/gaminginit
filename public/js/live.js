@@ -39,21 +39,23 @@ export const thisPage = (change) => {
 };
 
 // A link to part of a page, like /#join or leaderboard#weapons, can miss: the part is hidden until the bot's numbers
-// arrive, or they fill in what is above it and push it down. So once the first numbers are in, scroll there again,
-// unless the reader has started scrolling themselves.
-let hashTarget = null;
+// arrive, or they fill in what is above it and push it down, or the page only builds it from them, like a match's card
+// on /matches. So once the first numbers are in, find it and scroll there, unless the reader has started scrolling
+// themselves.
+let hashId = null;
 try {
-  hashTarget = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+  hashId = location.hash.length > 1 ? decodeURIComponent(location.hash.slice(1)) : null;
 } catch {
   // A malformed #fragment: nothing to scroll to.
 }
 const readerMoved = () => {
-  hashTarget = null;
+  hashId = null;
 };
 for (const type of ['wheel', 'touchmove', 'keydown', 'mousedown']) addEventListener(type, readerMoved, { once: true, passive: true });
 const scrollToRevealed = () => {
-  if (hashTarget && hashTarget.getClientRects().length > 0) hashTarget.scrollIntoView();
-  hashTarget = null;
+  const target = hashId === null ? null : document.getElementById(hashId);
+  if (target && target.getClientRects().length > 0) target.scrollIntoView();
+  hashId = null;
 };
 
 export const showNotice = (...content) => {

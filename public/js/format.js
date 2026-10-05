@@ -226,6 +226,33 @@ export const niceScale = (value, tickCount = 4) => {
   return { max: top, ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
 };
 
+// The hour option for a time of day: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
+// ("07:00"), where the zero is the usual way to write it.
+export const hourStyle = (locale) => (new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 'numeric' : '2-digit');
+
+// A span of times of day with the AM or PM said once when both ends share it: "7:00 – 10:00 PM". The browser knows
+// how each locale writes it. Where it cannot, both ends are written out in full.
+export const timeRange = (formatter, from, to) => {
+  try {
+    return formatter.formatRange(from, to);
+  } catch {
+    return `${formatter.format(from)}–${formatter.format(to)}`;
+  }
+};
+
+// Which of a row of day labels need their month: the first one shown, and each one in a different month from the
+// label before it. `days` are the labels' times in ms (UTC dates) and `shown` says which of them get a label at all.
+export const monthStarts = (days, shown) => {
+  let month = null;
+  return days.map((at, i) => {
+    if (!shown[i]) return false;
+    const next = new Date(at).getUTCMonth();
+    const starts = next !== month;
+    month = next;
+    return starts;
+  });
+};
+
 // "Valkyra 43–32 Kharr", in the order the server lists the factions.
 export const scoreLine = (scores) => {
   const list = scores ?? [];

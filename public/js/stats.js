@@ -1,5 +1,5 @@
-import { busiestChart, dailyChart, hourLabel, populationChart } from './charts.js';
-import { BUSY_PLAYERS, busyRuns, busyShares, formatHours, hourlyAverages, isBusy, isOnline, peak, serverState, toLocalHours } from './format.js';
+import { busiestChart, dailyChart, hourRange, populationChart } from './charts.js';
+import { BUSY_PLAYERS, busyRuns, busyShares, formatHours, hourlyAverages, hourStyle, isBusy, isOnline, peak, serverState, toLocalHours } from './format.js';
 import { startLive } from './live.js';
 import { el, setText } from './views.js';
 
@@ -9,7 +9,7 @@ const DAY = 86_400_000;
 
 const $ = (id) => document.getElementById(id);
 
-const hourClock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
+const hourClock = new Intl.DateTimeFormat(undefined, { hour: hourStyle(), minute: '2-digit' });
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 let stats = null;
@@ -47,7 +47,8 @@ const renderCharts = (now) => {
     live: stats?.thresholds.live ?? 20,
     now,
   });
-  daily.update({ days: stats?.days ?? [], today: new Date(now).toISOString().slice(0, 10), count: 14 });
+  const today = new Date(now).toISOString().slice(0, 10);
+  daily.update({ days: stats?.days ?? [], today, count: 14 });
 
   // When the server is busy: the hours with the busy threshold or more players at least half the time. Over the last
   // 14 days when the bot sends hourly figures, each hour from its median day so one bad day does not drag it down,
@@ -64,13 +65,13 @@ const renderCharts = (now) => {
     $('busiest-table'),
     ['Hour', 'Average players', `Time at ${threshold}+`],
     averages.map((average, hour) => [
-      `${hourLabel(hour)}–${hourLabel((hour + 1) % 24)}`,
+      hourRange(hour),
       average === null ? '–' : Math.round(average),
       shares[hour] === null ? '–' : `${Math.round(shares[hour] * 100)}%`,
     ]),
   );
   const runs = busyRuns(shares);
-  const range = ({ start, length }) => (length === 24 ? 'All day' : `${hourLabel(start)}–${hourLabel((start + length) % 24)}`);
+  const range = ({ start, length }) => (length === 24 ? 'All day' : hourRange(start, length));
   $('busiest-summary').hidden = averages.every((a) => a === null);
   $('busiest-key').hidden = runs.length === 0;
   setText($('busiest-when'), runs.length === 0 ? 'No busy hours' : runs.map(range).join(', '));
@@ -98,7 +99,10 @@ const renderCharts = (now) => {
   tableOf(
     $('daily-table'),
     ['Day (UTC)', 'Peak players', 'Time live'],
-    [...(stats?.days ?? [])].reverse().map((d) => [dayLong.format(Date.parse(`${d.day}T00:00:00Z`)), d.peak, formatHours(d.liveMinutes)]),
+    [...(stats?.days ?? [])]
+      .reverse()
+      // Today is not over, so its peak and time live are so far.
+      .map((d) => [`${dayLong.format(Date.parse(`${d.day}T00:00:00Z`))}${d.day === today ? ' (so far)' : ''}`, d.peak, formatHours(d.liveMinutes)]),
   );
 };
 

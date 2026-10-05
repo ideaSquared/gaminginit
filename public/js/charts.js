@@ -1,4 +1,4 @@
-import { formatHours, heatLevel, kd, niceScale, ordinal, played, playerCount, segments } from './format.js';
+import { formatHours, heatLevel, hourStyle, kd, monthStarts, niceScale, ordinal, played, playerCount, segments, timeRange } from './format.js';
 
 // Small hand-drawn SVG charts: a 24-hour population line, daily-peak and busy-times columns, and on player pages an
 // activity calendar and kills per match. Each redraws at its container's real width so text stays crisp, and each
@@ -21,9 +21,10 @@ const text = (parent, attrs, content) => {
   return node;
 };
 
-const clock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
+const clock = new Intl.DateTimeFormat(undefined, { hour: hourStyle(), minute: '2-digit' });
 const dayShort = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
 const dayNumber = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone: 'UTC' });
+const dayMonth = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 // One tooltip per chart. Values lead, labels follow; everything goes in with textContent.
@@ -237,26 +238,37 @@ export const dailyChart = (root) => {
     }
     svg('line', { class: 'baseline', x1: m.left, x2: m.left + plotW, y1: y(0), y2: y(0) }, chart);
 
-    const labelEvery = band < 30 ? 2 : 1;
+    // Every other day on narrow screens, counting back from today so today is always labelled. A label says its month
+    // where the month starts, so "1 Oct" shows where September ends. With room, it has the weekday too; the month
+    // label is the longest, so it needs the most.
+    const labelEvery = band < 34 ? 2 : 1;
+    const shown = slots.map((_, i) => (count - 1 - i) % labelEvery === 0);
+    const withMonth = monthStarts(slots.map((s) => s.at), shown);
+    const labelFormat = (month) => {
+      if (band >= 56) return month ? dayLong : dayShort;
+      if (band >= 50 && !month) return dayShort;
+      return month ? dayMonth : dayNumber;
+    };
     root.replaceChildren(chart);
     const tip = makeTooltip(root);
 
     slots.forEach((slot, i) => {
       const cx = m.left + band * i + band / 2;
       const isToday = slot.day === today;
-      if ((count - 1 - i) % labelEvery === 0) {
-        const label = band >= 44 ? dayShort.format(slot.at) : dayNumber.format(slot.at);
-        text(chart, { class: isToday ? 'tick tick-strong' : 'tick', x: cx, y: height - 8, 'text-anchor': 'middle' }, label);
+      if (shown[i]) {
+        text(chart, { class: isToday ? 'tick tick-strong' : 'tick', x: cx, y: height - 8, 'text-anchor': 'middle' }, labelFormat(withMonth[i]).format(slot.at));
       }
       const group = svg('g', { class: 'bar', tabindex: 0 }, chart);
+      // Today is not over, so its peak is only the peak so far.
+      const sofar = isToday ? ' so far' : '';
       const description = slot.stats
-        ? `${slot.stats.peak} players at peak, live ${formatHours(slot.stats.liveMinutes)}`
+        ? `${slot.stats.peak} players at peak${sofar}, live ${formatHours(slot.stats.liveMinutes)}`
         : 'No readings';
       group.setAttribute('aria-label', `${dayLong.format(slot.at)}: ${description}`);
       svg('rect', { class: 'hit', x: cx - band / 2, y: m.top, width: band, height: plotH }, group);
       if (slot.stats && slot.stats.peak > 0) {
         const h = Math.max(1, y(0) - y(slot.stats.peak));
-        svg('path', { class: 'column', d: columnPath(cx - barW / 2, y(slot.stats.peak), barW, h) }, group);
+        svg('path', { class: isToday ? 'column column-partial' : 'column', d: columnPath(cx - barW / 2, y(slot.stats.peak), barW, h) }, group);
         // Only the best day and today carry a value; the tooltip and table have the rest.
         if (isToday || i === best) {
           text(chart, { class: 'cap-label', x: cx, y: y(slot.stats.peak) - 6, 'text-anchor': 'middle' }, String(slot.stats.peak));
@@ -264,7 +276,7 @@ export const dailyChart = (root) => {
       }
       const show = () => {
         group.classList.add('active');
-        tip.show(cx, slot.stats ? y(slot.stats.peak) : y(0), slot.stats ? `${slot.stats.peak} peak` : 'No data', `${dayLong.format(slot.at)}${slot.stats ? ` · live ${formatHours(slot.stats.liveMinutes)}` : ''}`);
+        tip.show(cx, slot.stats ? y(slot.stats.peak) : y(0), slot.stats ? `${slot.stats.peak} peak${sofar}` : 'No data', `${dayLong.format(slot.at)}${slot.stats ? ` · live ${formatHours(slot.stats.liveMinutes)}` : ''}`);
       };
       const hide = () => {
         group.classList.remove('active');
@@ -286,8 +298,11 @@ export const dailyChart = (root) => {
   };
 };
 
-// "19:00", for an hour of the day in local time.
+// "7:00 PM" or "19:00", for an hour of the day in local time.
 export const hourLabel = (hour) => clock.format(new Date(2000, 0, 1, hour));
+
+// "7:00 – 10:00 PM" or "19:00–22:00": `length` hours from `hour`, wrapping past midnight.
+export const hourRange = (hour, length = 1) => timeRange(clock, new Date(2000, 0, 1, hour), new Date(2000, 0, 1, (hour + length) % 24));
 
 // Average players in each hour of the day. The busy hours are in the series colour and the rest in gray, so the
 // reader sees when to play before reading any numbers.
@@ -352,7 +367,7 @@ export const busiestChart = (root) => {
       const { group, cx, average } = groups[index];
       group.classList.add('active');
       const value = average === null ? 'No readings' : `${playerCount(Math.round(average))} on average`;
-      const hours = `${hourLabel(index)}–${hourLabel((index + 1) % 24)}${busy[index] ? ' · busy' : ''}`;
+      const hours = `${hourRange(index)}${busy[index] ? ' · busy' : ''}`;
       tip.show(cx, y(average ?? 0), value, hours);
       return `${hours}: ${value}`;
     };

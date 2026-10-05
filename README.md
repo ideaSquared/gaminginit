@@ -13,17 +13,24 @@ What it shows:
     `thresholds.live`) where the server goes live.
   - Discord member and online counts.
   - A first look at the other pages, each linking to its page: the match on now with its top 3, the 2 latest matches
-    with winner, length, peak players and top player, the top 5 by kills over the last 30 days, and players over the
-    last 24 hours with the peak, matches and time live.
+    with every side's score (the winner first and in bold), length, peak players and top player, the top 5 by kills
+    over the last 30 days, and players over the last 24 hours with the peak, matches and time live.
   - "Play with us": the steps to find us in game.
 - A stats page (`/stats`): players now, the peak and the matches in the last 24 hours and time live today; players
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
+  The daily chart's day labels give the month on the first label and wherever the month changes ("23 Sep … 1 Oct").
+  Today is not over, so its bar is dashed and lighter, and its row in the table says "so far".
   It also has the busy times of day: average players in each hour, with the busy hours highlighted. An hour is busy
   when the server had 97+ players (the bot's `thresholds.busy`) at least half the time. Over the last 14 days when the
   bot sends `hourly` with `busy`, otherwise over the last 24 hours. The bot takes each hour from its median day of the
   14, so one bad day, like a quiet evening, does not take an hour off the busy times, and it leaves crashes out until
   the players are back.
-- A matches page (`/matches`) with the last 10 matches, each with its top 5.
+- A matches page (`/matches`) with the last 10 matches, each with every side's score, highest first, with the side
+  names in their colour in game (the winner in bold, and "Draw:" for a draw; a side the bot sent no colour for gets its
+  faction's usual one), and its top 5. Each match is also a link
+  target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
+  it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
+  link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
   the latest winner's streak; each team's wins and win rate (and matches played, only when the teams played different
   numbers of them); each map's matches split by the team that won them, with draws and the average length (also as a
@@ -435,6 +442,8 @@ opens their history.**
   server card is on the first screen.
 - Each page other than the home page has a "← Home" link at the top. A player's page has "← All players".
 - Player and server names are inserted as text, never as HTML.
+- Times of day follow the reader's locale: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
+  ("07:00"). A range says AM or PM once when both ends share it ("7:00 – 10:00 PM").
 - Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
   player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills chart and use ← →.
 - Player pages are marked `noindex`, so search engines leave individual players out. The players page is indexed.
