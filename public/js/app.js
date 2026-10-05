@@ -73,10 +73,12 @@ const renderServer = (now) => {
   const live = stats?.thresholds.live ?? 0;
   meter.setAttribute('aria-valuemax', String(max));
   meter.setAttribute('aria-valuenow', String(players));
-  meter.setAttribute('aria-valuetext', online ? `${players} of ${max} players` : 'No reading');
+  const marked = Boolean(server) && live > 0;
+  // The "Live at" label is inside the meter, which screen readers read only by its value, so the value says it too.
+  meter.setAttribute('aria-valuetext', online ? `${players} of ${max} players${marked ? `, live at ${live}` : ''}` : 'No reading');
   meter.style.setProperty('--fill', String(Math.min(players / max, 1)));
   meter.style.setProperty('--mark', String(Math.min(live / max, 1)));
-  meter.classList.toggle('no-mark', !server || live <= 0);
+  meter.classList.toggle('no-mark', !marked);
   setText($('meter-label'), `Live at ${live}`);
 };
 

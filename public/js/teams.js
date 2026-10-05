@@ -103,7 +103,7 @@ const initial = (name) => Array.from(name)[0]?.toUpperCase() ?? '';
 
 // A map's matches as one bar, split by the team that won them. Each part says whose it is as well as how many, so the
 // colours are not the only way to tell the teams apart: the name when there is room, else the initial (the styles pick
-// by the part's own width), else only the count, which is on the part's label and title either way.
+// by the part's own width, and keep every part wide enough for its initial and count).
 const mapBar = (map, board) => {
   const bar = el('span', { className: 'map-bar', role: 'group', ariaLabel: `${map.map}: wins by team` });
   bar.append(
@@ -123,6 +123,7 @@ const mapBar = (map, board) => {
         ),
       );
       part.style.flexGrow = String(s.count);
+      part.style.setProperty('--digits', String(String(s.count).length));
       part.style.setProperty('--team', draw ? DRAW_COLOUR : colourOf(s.name));
       return part;
     }),
