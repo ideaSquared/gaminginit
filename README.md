@@ -42,7 +42,9 @@ What it shows:
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
   multi-kill, most headshots and a rivalry). The longest kill counts hand-held weapons only. The bot pushes each change
   over a WebSocket, a second or two after the kill. Without the bot's kill feed it shows the score and the server's top
-  5, read once a minute.
+  5, read once a minute. On a wide screen the kill feed scrolls inside its card; on a phone (under 900 px wide) it is a
+  short list in the page, the latest 15 kills with "Show more" for 15 more at a time, so scrolling the page is never
+  caught in a box of its own.
 - A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders
   (players with no seed days are left out).
   Under it, the weapons: the 10 with the most kills over the last 30 days, each with its share of headshots, average
@@ -57,7 +59,9 @@ What it shows:
   (kills, headshots and longest kill with each, when the bot has the kill feed); their maps and sides; a calendar of
   their days on the server with streaks; kills in each of their last 20 matches; and their recent matches with the
   result, every side's score and their place on the scoreboard. Sides are named in their colour in game, from the bot's
-  match records, lightened where needed so they read on the dark cards.
+  match records, lightened where needed so they read on the dark cards. Under their name, chips show whether they are in
+  game or have seeder VIP, and the leaderboard places they hold in the top 10, under a label saying they are for the
+  last 30 days, whichever period is chosen. Tables too wide for a small screen scroll inside their card.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,

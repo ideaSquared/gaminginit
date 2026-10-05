@@ -1035,6 +1035,11 @@ th {
   border-bottom: 1px solid var(--hairline);
 }
 
+/* A table wider than the screen scrolls inside its card, so the page itself never scrolls sideways. */
+.table-wrap {
+  overflow-x: auto;
+}
+
 .table-scroll th {
   position: sticky;
   top: 0;
@@ -1957,6 +1962,19 @@ tbody tr:last-child td {
   border-color: var(--series);
 }
 
+/* Says which days the leaderboard places that follow it are for, on a line of its own above them. */
+.chips-label {
+  flex-basis: 100%;
+  margin-top: 4px;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.chips-label:first-child {
+  margin-top: 0;
+}
+
 .online-now {
   display: flex;
   flex-wrap: wrap;
@@ -2068,13 +2086,23 @@ tbody tr:last-child td {
 }
 
 @media (min-width: 900px) {
-  .profile-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-
   .profile-charts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Wide screens: two columns that the browser balances, so the tall weapons list sits beside the short cards, not above
+   a gap. A card never splits between columns. From 1000px, so the maps' five columns have room in half the width. */
+@media (min-width: 1000px) {
+  .profile-grid {
+    display: block;
+    columns: 2;
+    column-gap: 16px;
+  }
+
+  .profile-grid > .panel {
+    margin-bottom: 16px;
+    break-inside: avoid;
   }
 }
 
@@ -2147,6 +2175,12 @@ tbody tr:last-child td {
 
 .bests dd strong {
   font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+/* A player's name as the big value (first blood) is as bold as the other values. */
+.bests dd strong .who {
+  font-weight: inherit;
 }
 
 .bests dd .muted {
@@ -2162,6 +2196,31 @@ tbody tr:last-child td {
 
 .stat-table td:first-child {
   width: 100%;
+}
+
+/* The smallest phones: the cards on a player's page are a little narrower, headings may wrap and the map's tag is
+   tighter, so the five columns of the maps fit without scrolling. */
+@media (max-width: 400px) {
+  .profile-section .card {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .stat-table th,
+  .stat-table td {
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  .stat-table th:nth-child(n + 2) {
+    white-space: normal;
+  }
+
+  .stat-table .map-tag {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
 }
 
 .streaks {
@@ -2329,7 +2388,8 @@ tbody tr:last-child td {
   font-weight: 800;
 }
 
-.more-matches {
+.more-matches,
+.more-kills {
   margin-top: 16px;
   background: none;
   font: inherit;
@@ -2337,7 +2397,8 @@ tbody tr:last-child td {
   cursor: pointer;
 }
 
-.more-matches[hidden] {
+.more-matches[hidden],
+.more-kills[hidden] {
   display: none;
 }
 
@@ -2509,16 +2570,17 @@ body.refreshing .tile-value {
 
 .kill-feed {
   list-style: none;
-  max-height: 30rem;
   margin: 8px 0 0;
   padding: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
+/* Wide screens keep the feed in a box that scrolls inside its card. On phones it is a short list in the page, with a
+   button for more, so a thumb scrolling the page is never caught in a box of its own. */
 @media (min-width: 900px) {
   .kill-feed {
     max-height: 44rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
