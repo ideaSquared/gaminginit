@@ -9,7 +9,8 @@ What it shows:
 
 - The home page (`/`):
   - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
-    more players are needed to go live.
+    more players are needed to go live. The players bar has a mark labelled "Live at 20" (the bot's
+    `thresholds.live`) where the server goes live.
   - Discord member and online counts.
   - A first look at the other pages, each linking to its page: the match on now with its top 3, the 2 latest matches
     with winner, length, peak players and top player, the top 5 by kills over the last 30 days, and players over the
@@ -102,7 +103,7 @@ Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `match
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 6 places in `index.html` (two are the invite as text under the Join buttons) and 1 in each other page. If the invite changes, change all 15. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 14. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
@@ -198,7 +199,7 @@ Cloudflare creates the DNS record and certificate.
 
 ### 5. Check it works
 
-Open the site and look at the server card and the line under the hero.
+Open the site and look at the server card and the line under the header.
 
 | What you see                                              | What it means                                                                                 |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -419,6 +420,11 @@ opens their history.**
 - Fetches the stats every 60 seconds, and only while the tab is visible. The bot's numbers change once a minute.
 - If the bot has not read the server for 3 minutes, the server shows as **Offline** with when it was last seen.
 - If a refresh fails, the page keeps the last numbers and says it is retrying.
+- Notices ("Live stats are not connected yet", the retrying one and the `?demo` one) show right under the header on
+  every page, the home page too.
+- On a phone the home page's hero is shorter (less copy, a smaller Seeder VIP box and no Server status button), so the
+  server card is on the first screen.
+- Each page other than the home page has a "← Home" link at the top. A player's page has "← All players".
 - Player and server names are inserted as text, never as HTML.
 - Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
   player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills chart and use ← →.

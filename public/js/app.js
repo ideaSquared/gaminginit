@@ -70,12 +70,14 @@ const renderServer = (now) => {
   const meter = $('players-meter');
   const max = server?.maxPlayers || 1;
   const players = online ? server.players : 0;
+  const live = stats?.thresholds.live ?? 0;
   meter.setAttribute('aria-valuemax', String(max));
   meter.setAttribute('aria-valuenow', String(players));
   meter.setAttribute('aria-valuetext', online ? `${players} of ${max} players` : 'No reading');
   meter.style.setProperty('--fill', String(Math.min(players / max, 1)));
-  meter.style.setProperty('--mark', String(Math.min((stats?.thresholds.live ?? 0) / max, 1)));
-  meter.classList.toggle('no-mark', !server);
+  meter.style.setProperty('--mark', String(Math.min(live / max, 1)));
+  meter.classList.toggle('no-mark', !server || live <= 0);
+  setText($('meter-label'), `Live at ${live}`);
 };
 
 const renderDiscord = () => {

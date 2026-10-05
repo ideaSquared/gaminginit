@@ -403,6 +403,43 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+/* On phones the server card is what people came for, so the hero gives up some copy and space to bring it up the screen. */
+@media (max-width: 599px) {
+  .hero-inner {
+    gap: 16px;
+    padding-top: 16px;
+    padding-bottom: 32px;
+  }
+
+  .eyebrow {
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .lede {
+    margin-top: 16px;
+    font-size: 1rem;
+  }
+
+  .eyebrow-more,
+  .lede-more {
+    display: none;
+  }
+
+  .hero-actions {
+    margin-top: 16px;
+  }
+
+  /* The card is just below, so the button that scrolls to it is not needed. */
+  .hero-actions .btn-ghost {
+    display: none;
+  }
+
+  .discord-count {
+    margin-top: 12px;
+  }
+}
+
 .online-dot {
   display: inline-block;
   width: 8px;
@@ -588,6 +625,37 @@ h1 {
   display: none;
 }
 
+/* Says what the mark is, under the bar. It slides along with the mark: its left edge is at the mark when that is at
+   the start of the bar and its right edge when it is at the end, so it never runs off either end. */
+.meter:not(.no-mark) {
+  margin-bottom: 32px;
+}
+
+.meter-label {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  transform: translateX(calc(var(--mark) * -100%));
+  color: var(--text-2);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 599px) {
+  .server-card {
+    padding: 20px;
+  }
+
+  .server-name {
+    margin-top: 12px;
+  }
+
+  .players {
+    margin-top: 12px;
+  }
+}
+
 .server-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -619,6 +687,7 @@ h1 {
 
 .notice:not([hidden]) {
   display: block;
+  padding-bottom: 12px;
 }
 
 .notice {
@@ -635,13 +704,18 @@ h1 {
 /* Sections */
 
 .section {
-  padding: 56px 0;
+  padding: 36px 0;
 }
 
 @media (min-width: 900px) {
   .section {
-    padding: 80px 0;
+    padding: 48px 0;
   }
+}
+
+/* A notice is part of the page's top: keep what follows it close. */
+.notice:not([hidden]) + .section {
+  padding-top: 12px;
 }
 
 .section-head {
@@ -1544,6 +1618,19 @@ tbody tr:last-child td {
 
 .vip-cta a {
   font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .vip-cta {
+    margin-top: 14px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Just the tag and the link: the offer is in step 4 of "Play with us". */
+  .vip-offer {
+    display: none;
+  }
 }
 
 .vip-tag {
