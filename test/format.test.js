@@ -27,6 +27,7 @@ import {
   vipDetail,
   vipOffer,
   BOARDS,
+  boardRows,
   bests,
   byMap,
   bySide,
@@ -254,6 +255,27 @@ describe('leaderboard boards', () => {
       seeding: ['4', '1.5 h'],
     });
     assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
+  });
+
+  it('leaves players with no seed days off the top seeders, and keeps the rest in the bot’s order', () => {
+    const seeders = BOARDS.find((b) => b.key === 'seeding');
+    const leaderboard = {
+      seeding: [
+        { name: 'Sable', seedDays: 11, seedingMinutes: 520 },
+        { name: 'Moth', seedDays: 6, seedingMinutes: 260 },
+        { name: 'Ash', seedDays: 0, seedingMinutes: 12 },
+      ],
+    };
+    assert.deepEqual(boardRows(seeders, leaderboard).map((p) => p.name), ['Sable', 'Moth']);
+    assert.equal(boardRows(seeders, { seeding: [leaderboard.seeding[2]] }).length, 0);
+  });
+
+  it('leaves the other boards’ rows alone, and gives none when the bot sent none', () => {
+    const kills = BOARDS.find((b) => b.key === 'kills');
+    const rows = [{ name: 'Ash', kills: 0, deaths: 0 }];
+    assert.deepEqual(boardRows(kills, { kills: rows }), rows);
+    assert.deepEqual(boardRows(kills, {}), []);
+    assert.deepEqual(boardRows(kills, undefined), []);
   });
 });
 
@@ -487,6 +509,20 @@ describe('player pages', () => {
     for (const hex of ['#3366ff', '#000000', '#5a1010']) assert.ok(contrast(rgb(readableColour(hex)), surface) >= 4.5, hex);
     assert.equal(readableColour(undefined), null);
     assert.equal(readableColour('blue'), null);
+  });
+
+  it('lightens a side’s colour enough that the page’s dark ink reads on it, as on the Teams bars', () => {
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const ink = rgb('#0b0d10');
+    const steps = [0, 51, 102, 153, 204, 255];
+    for (const r of steps) {
+      for (const g of steps) {
+        for (const b of steps) {
+          const hex = `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+          assert.ok(contrast(rgb(readableColour(hex)), ink) >= 4.5, hex);
+        }
+      }
+    }
   });
 
   it('has each faction’s colour, readable on a button', () => {

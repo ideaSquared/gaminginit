@@ -24,16 +24,19 @@ What it shows:
   the players are back.
 - A matches page (`/matches`) with the last 10 matches, each with its top 5.
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
-  the latest winner's streak; each team's wins, win rate and matches played; each map's matches split by the team
-  that won them, with draws and the average length (also as a table); and the closest finish and the biggest win.
-  Teams are in their colour in game; teams without one get colours checked to tell apart for colour-blind readers.
+  the latest winner's streak; each team's wins and win rate (and matches played, only when the teams played different
+  numbers of them); each map's matches split by the team that won them, with draws and the average length (also as a
+  table); and the closest finish and the biggest win. Teams are in their colour in game; teams without one get colours
+  checked to tell apart for colour-blind readers. On the map bars each part also has its team's name (or its initial
+  when it is narrow) and its count, so the colour is not the only way to tell the teams apart.
 - A live page (`/live`) for the match on now, updated as it happens: the score, the kill feed (who killed whom, with
   what, from how far, headshots, team kills, double and triple kills, kill streaks), each player's kills, deaths and
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
   multi-kill, most headshots and a rivalry). The longest kill counts hand-held weapons only. The bot pushes each change
   over a WebSocket, a second or two after the kill. Without the bot's kill feed it shows the score and the server's top
   5, read once a minute.
-- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders.
+- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders
+  (players with no seed days are left out).
   Under it, the weapons: the 10 with the most kills over the last 30 days, each with its share of headshots, average
   distance and longest kill, plus the kills recorded, the share of headshots and the longest kill of all with a
   hand-held weapon (not mines, emplacements, vehicles or anything built). From the game's kill feed, which the bot takes
@@ -50,8 +53,8 @@ What it shows:
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
-  and how to help. Then our seeders: the top seeders over the last 30 days, and who has seeder VIP now and until when
-  (only VIP from seeding, not from staff).
+  and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
+  and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).

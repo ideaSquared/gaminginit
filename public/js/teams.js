@@ -50,11 +50,18 @@ const renderStandings = (board) => {
   const root = $('standings');
   if (board.teams.length === 0) return message(root, 'No matches with a result in the last 30 days.');
   const most = Math.max(...board.teams.map((t) => t.wins), 1);
+  // Every team plays every match, so "Played" is usually the same number all the way down. It only says something when
+  // the teams played different numbers of matches.
+  const played = new Set(board.teams.map((t) => t.matches)).size > 1;
   root.replaceChildren(
     el(
       'table',
       { className: 'players-table team-table' },
-      el('thead', {}, el('tr', {}, ...['#', 'Team', 'Wins', 'Win rate', 'Played'].map((h) => el('th', { scope: 'col', textContent: h })))),
+      el(
+        'thead',
+        {},
+        el('tr', {}, ...['#', 'Team', 'Wins', 'Win rate', ...(played ? ['Played'] : [])].map((h) => el('th', { scope: 'col', textContent: h }))),
+      ),
       el(
         'tbody',
         {},
@@ -69,7 +76,7 @@ const renderStandings = (board) => {
             el('td', { className: 'player' }, sideName(t.name, colours), bar),
             el('td', { textContent: compact(t.wins) }),
             el('td', { textContent: percent(t.matches > 0 ? t.wins / t.matches : null) }),
-            el('td', { textContent: compact(t.matches) }),
+            played ? el('td', { textContent: compact(t.matches) }) : null,
           );
         }),
       ),
@@ -91,17 +98,32 @@ const renderKey = (board) => {
   );
 };
 
-// A map's matches as one bar, split by the team that won them, with each part's count on it when there is room.
+// A team's first letter, for a segment too narrow for its name.
+const initial = (name) => Array.from(name)[0]?.toUpperCase() ?? '';
+
+// A map's matches as one bar, split by the team that won them. Each part says whose it is as well as how many, so the
+// colours are not the only way to tell the teams apart: the name when there is room, else the initial (the styles pick
+// by the part's own width), else only the count, which is on the part's label and title either way.
 const mapBar = (map, board) => {
-  const bar = el('span', { className: 'map-bar', role: 'img' });
-  const segments = mapSegments(map, board.teams);
-  bar.ariaLabel = `${map.map}: ${segments.map((s) => `${s.name ?? 'draws'} ${s.count}`).join(', ')}`;
+  const bar = el('span', { className: 'map-bar', role: 'group', ariaLabel: `${map.map}: wins by team` });
   bar.append(
-    ...segments.map((s) => {
-      const part = el('span', { className: s.name === null ? 'map-bar-part map-bar-draw' : 'map-bar-part', title: `${s.name ? `${s.name} won` : 'Draws:'} ${matchCount(s.count)} (${percent(s.share)})` });
+    ...mapSegments(map, board.teams).map((s) => {
+      const draw = s.name === null;
+      const name = draw ? 'Draw' : s.name;
+      const label = `${draw ? `Draws: ${matchCount(s.count)}` : `${name}: ${wins(s.count)}`} (${percent(s.share)})`;
+      const part = el(
+        'span',
+        { className: draw ? 'map-bar-part map-bar-draw' : 'map-bar-part', role: 'img', ariaLabel: label, title: label },
+        el(
+          'span',
+          { className: 'map-bar-label' },
+          el('span', { className: 'map-bar-name', textContent: name }),
+          el('span', { className: 'map-bar-initial', textContent: initial(name) }),
+          el('span', { className: 'map-bar-count', textContent: String(s.count) }),
+        ),
+      );
       part.style.flexGrow = String(s.count);
-      part.style.setProperty('--team', s.name === null ? DRAW_COLOUR : colourOf(s.name));
-      if (s.share >= 0.12) part.textContent = String(s.count);
+      part.style.setProperty('--team', draw ? DRAW_COLOUR : colourOf(s.name));
       return part;
     }),
   );

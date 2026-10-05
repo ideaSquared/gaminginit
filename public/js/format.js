@@ -113,7 +113,8 @@ export const vipDetail = (vip) =>
   'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
   "server's next daily restart. Keep seeding to keep it.";
 
-// The leaderboard's boards: what each one shows, besides the rank and the name.
+// The leaderboard's boards: what each one shows, besides the rank and the name. A board with `keep` leaves out the
+// rows it returns false for.
 export const BOARDS = [
   {
     key: 'kills',
@@ -140,8 +141,14 @@ export const BOARDS = [
     sub: () => 'Time on the server before it went live.',
     headings: ['Seed days', 'Seeding'],
     cells: (p) => [String(p.seedDays), formatHours(p.seedingMinutes)],
+    // Some minutes of seeding, but never enough on one day to count as a seed day, does not make a top seeder.
+    keep: (p) => p.seedDays > 0,
   },
 ];
+
+// A board's rows from the bot's leaderboard, without the ones the board leaves out. The table numbers what is left, so
+// the ranks stay 1, 2, 3 with no gap.
+export const boardRows = (board, leaderboard) => (leaderboard?.[board.key] ?? []).filter(board.keep ?? (() => true));
 
 export const peak = (history) => history.reduce((max, [, players]) => Math.max(max, players), 0);
 

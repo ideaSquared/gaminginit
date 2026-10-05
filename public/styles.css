@@ -703,6 +703,12 @@ h1 {
 @media (min-width: 900px) {
   .charts {
     grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+
+  /* Busy times has a row to itself, under the two charts above it. */
+  .chart-card-wide {
+    grid-column: 1 / -1;
   }
 }
 
@@ -873,18 +879,7 @@ h1 {
   font-size: 0.8rem;
 }
 
-/* Busy times, under the 24-hour chart */
-
-.busiest {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--hairline);
-}
-
-.busiest h4 {
-  margin: 0;
-  font-size: 0.95rem;
-}
+/* Busy times: when the busy hours are, above the chart */
 
 .busiest-summary {
   display: flex;
@@ -911,7 +906,7 @@ h1 {
   background: var(--series);
 }
 
-.busiest .chart {
+.busiest-summary + .chart {
   margin-top: 8px;
 }
 
@@ -1231,16 +1226,31 @@ tbody tr:last-child td {
   margin-top: 16px;
 }
 
-@media (min-width: 900px) {
-  .team-grid {
-    grid-template-columns: 2fr 3fr;
-    align-items: start;
-  }
+/* The closest finish and biggest win sit in the grid, so they are not a second row of cards under it. */
+.team-grid .finishes {
+  margin-top: 0;
 }
 
 @media (min-width: 760px) {
   .finishes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* On wide screens the standings run across the top, the maps sit beside the finishes stacked, and each card is only as
+   tall as its own content, so none is left half empty beside a taller one. */
+@media (min-width: 900px) {
+  .team-grid {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+
+  .team-standings {
+    grid-column: 1 / -1;
+  }
+
+  .team-grid .finishes {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1310,22 +1320,60 @@ tbody tr:last-child td {
   margin: 10px 0 6px;
 }
 
-/* A zero basis, so the parts share the bar by their counts alone, not by their labels' width. */
+/* A zero basis, so the parts share the bar by their counts alone, not by their labels' width. Each part is its own
+   container, so its label follows its own width: the name when there is room, else the initial (colour alone must not
+   say whose it is), else only the count. A part is never narrower than a digit, so the draws' count shows however few
+   there were. The dark ink is for the team colours, which are all lightened to at least 4.5:1 against the dark cards,
+   so it reads on every one of them; the draws' grey takes the light ink. */
 .map-bar-part {
+  container-type: inline-size;
   display: grid;
   place-items: center;
   flex-basis: 0;
-  min-width: 4px;
+  min-width: 14px;
+  overflow: hidden;
   border-radius: 4px;
   background: var(--team);
   color: var(--page);
   font-size: 0.75rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .map-bar-draw {
   color: var(--text);
+}
+
+.map-bar-label {
+  display: flex;
+  gap: 0.4em;
+  max-width: 100%;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.map-bar-name {
+  display: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container (max-width: 35px) {
+  .map-bar-initial {
+    display: none;
+  }
+}
+
+@container (min-width: 100px) {
+  .map-bar-initial {
+    display: none;
+  }
+
+  .map-bar-name {
+    display: block;
+  }
 }
 
 .finishes .board-sub {
@@ -1348,6 +1396,11 @@ tbody tr:last-child td {
   .boards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Boards of different lengths side by side: each is only as tall as its own list, not stretched to the longest. */
+.boards-fit {
+  align-items: start;
 }
 
 .board {
@@ -1380,7 +1433,8 @@ tbody tr:last-child td {
   }
 }
 
-/* Weapons: the headline numbers beside the list on wide screens, above it on phones. */
+/* Weapons: the headline numbers in a row above the list, so the list has the whole width and nothing sits half empty
+   beside it. On phones they are two across, with the longest kill on a row of its own. */
 
 .weapons {
   display: grid;
@@ -1388,20 +1442,7 @@ tbody tr:last-child td {
   gap: 16px;
 }
 
-@media (min-width: 900px) {
-  .weapons {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .weapons .weapon-tiles {
-    grid-column: 2;
-    grid-row: 1;
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (min-width: 760px) and (max-width: 899px) {
+@media (min-width: 760px) {
   .weapon-tiles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1411,7 +1452,7 @@ tbody tr:last-child td {
   grid-column: 1 / -1;
 }
 
-@media (min-width: 760px) and (max-width: 899px) {
+@media (min-width: 760px) {
   .weapon-tiles .tile-wide {
     grid-column: auto;
   }
