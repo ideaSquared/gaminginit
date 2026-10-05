@@ -22,6 +22,7 @@ import {
   flaggedDaysLabel,
   flagLabel,
   flagRule,
+  formatDuration,
   formatHours,
   headshotCount,
   headshotRule,
@@ -64,10 +65,10 @@ import { createRotations } from './rotations.js';
 import { createTools, replyNodes } from './tools.js';
 import { el, link, mapTag, playerHref } from './views.js';
 
-// The staff page, in six tabs. Live: the server now, everyone in game, to search and act on, and every kill as it
-// happens. Review: what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get,
-// risky Steam accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff
-// did. History: any player's record, kills and headshots, and team kills. Admin: the admin tools (every staff command),
+// The staff page, in six tabs. Live: the server now, everyone in game, to search and act on, every kill as it happens,
+// and who joined and left. Review: what the bot flagged by itself, to look at: far more headshots than a player's
+// weapons usually get, risky Steam accounts, possible griefers and their team kills and vehicle suicides; and the
+// moderation log of what staff did. History: any player's record, kills and headshots, and team kills. Admin: the admin tools (every staff command),
 // the bans on the server and the reserved slots. Rotations: the map rotations, the week and what is on the server (see
 // rotations.js). Lines: what the bot says in game (see lines.js). Any player's name opens their history. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
 // session token, which this page keeps for this browser and sends with each request. Staff link the Steam account they
@@ -733,6 +734,41 @@ const renderIncidents = (overview) => {
     shown.map(incidentRow),
     focused === null ? 'No team kills or vehicle suicides in this period.' : `None involving ${focused.name} in this period.`,
   );
+};
+
+// Who joined and left the server, newest first. After the bot could not read the server for a while, it only knows
+// a join or leave happened since its check before (`from`). Hidden for a bot that does not send them.
+const renderJoins = (overview) => {
+  $('joins-card').hidden = overview.joins === undefined;
+  if (overview.joins === undefined) return;
+  const rows = overview.joins.map((e) =>
+    el(
+      'tr',
+      {},
+      el(
+        'td',
+        { className: 'when' },
+        when.format(e.at),
+        ...(e.from === null
+          ? []
+          : [
+              el('span', {
+                className: 'kill-distance join-gap',
+                textContent: `since ${when.format(e.from)}`,
+                title: 'The bot couldn’t read the server in between, so this happened some time between the two.',
+              }),
+            ]),
+      ),
+      cell(e.kind === 'joined' ? badge('Joined', 'accent') : badge('Left')),
+      el('td', { className: 'player' }, who(e.player)),
+      e.kind === 'joined'
+        ? cell()
+        : e.minutes === null
+          ? el('td', { className: 'num muted', textContent: '–', title: 'They were on when the bot started keeping this log.' })
+          : el('td', { className: 'num', textContent: formatDuration(e.minutes * 60_000) }),
+    ),
+  );
+  table($('joins'), ['When', 'What', 'Player', ['On for', 'num']], rows, 'Nobody has joined or left since the bot started keeping this log.');
 };
 
 const RISK_KIND = { high: 'bad', medium: 'hot' };
@@ -1539,6 +1575,7 @@ const render = (overview) => {
     .join(' · ');
   renderServer(overview);
   renderPlayers(overview);
+  renderJoins(overview);
   renderGriefers(overview);
   renderIncidents(overview);
   renderSteam(overview);

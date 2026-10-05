@@ -290,6 +290,11 @@ opens their history.**
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
   opens again with the latest kills.
+- **Joins and leaves.** Who joined and left the server, newest first: the latest 500, each with when, the player, and
+  for someone who left, how long they were on. From the bot's check each minute, so each shows up to a minute late, and
+  someone on for less than a minute between two checks is missed. After the bot could not read the server for a while,
+  a join or leave also says "since" the check before, as it happened some time between the two. Players already on when
+  the bot started keeping the log show "–" for their time on. Hidden while the bot does not send it.
 - On a phone each player in the server list is a small card, with Act at the top.
 
 ### Review: what the bot flagged, and what staff did

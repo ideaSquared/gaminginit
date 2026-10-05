@@ -648,10 +648,37 @@ export const demoAdmin = (days, now) => {
       reserved: ['Kestrel', 'Moth', 'Rook', 'Sable'].includes(name),
     };
   });
+  // Joins and leaves, newest first. Each leave says how long they were on. Moss was on when the bot started keeping the
+  // log, so their time on is not known; Nightjar left while the bot could not read the server.
+  const visitor = (name, i) => ({ steamId: `7656119800002${String(i).padStart(4, '0')}`, name });
+  const player = (name) => {
+    const p = inGame.find((q) => q.name === name);
+    return p === undefined ? ref(name) : { steamId: p.steamId, name: p.name, ...(p.id ? { id: p.id } : {}) };
+  };
+  const join = (minutes, kind, who, onFor = null, from = null) => ({
+    at: ago(minutes),
+    kind,
+    player: typeof who === 'string' ? player(who) : who,
+    from: from === null ? null : ago(from),
+    minutes: kind === 'left' ? onFor : null,
+  });
+  const joins = [
+    join(2, 'joined', 'Zed'),
+    join(5, 'left', visitor('Drifter', 1), 37),
+    join(9, 'joined', 'Ghost_7'),
+    join(14, 'joined', 'Wren'),
+    join(25, 'left', 'Bravo_Six', 48),
+    join(31, 'left', visitor('Moss', 2)),
+    join(42, 'joined', visitor('Drifter', 1)),
+    join(73, 'joined', 'Bravo_Six'),
+    join(140, 'left', 'Nightjar', 54, 171),
+    join(225, 'joined', 'Nightjar'),
+  ];
   const sum = (key) => players.reduce((n, p) => n + p[key], 0);
   return {
     generatedAt: now,
     days,
+    joins,
     feedSince: new Date(now - 40 * DAY).toISOString().slice(0, 10),
     flags: { teamKills: 3, sameTeammate: 2, vehicleSuicides: 2, suicides: 10 },
     totals: {
