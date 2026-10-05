@@ -32,6 +32,12 @@ const rewriter = (community, statsUrl) => {
   const [plain, accent] = wordmarkOf(community);
   let title = '';
   return new HTMLRewriter()
+    .on('html', {
+      element(el) {
+        el.setAttribute('data-community-name', community.name);
+        el.setAttribute('data-community-domain', new URL(community.origin).host);
+      },
+    })
     .on('title', {
       text(chunk) {
         title += chunk.text;

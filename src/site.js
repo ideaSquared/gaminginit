@@ -11,7 +11,10 @@ export const HTML_DEFAULTS = {
 };
 
 const ID = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/;
-const HOST = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/;
+// A domain name: two or more labels of letters, digits and dashes, none starting or ending with a dash.
+const LABEL = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
+const HOST = new RegExp(`^${LABEL}(?:\\.${LABEL})+$`);
+const ORIGIN = new RegExp(`^https://${LABEL}(?:\\.${LABEL})+$`);
 const INVITE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
 const FIELDS = ['name', 'wordmark', 'origin', 'hosts', 'discordInvite', 'ogImage', 'lede', 'statsUrl'];
 
@@ -35,7 +38,7 @@ export const communityProblems = (communities) => {
     for (const field of Object.keys(c)) if (!FIELDS.includes(field)) say(`"${field}" is not a field a community has`);
     if (!ID.test(id)) say('the id must be 3 to 32 lowercase letters, digits and dashes, the same as on the bot');
     if (typeof c.name !== 'string' || c.name.trim() === '' || c.name.length > 60) say('name must be 1 to 60 characters');
-    if (!/^https:\/\/[a-z0-9.-]+$/.test(c.origin ?? '')) say('origin must be https://<domain>, with no path');
+    if (!ORIGIN.test(c.origin ?? '')) say('origin must be https://<domain>, with no path');
     if (!INVITE.test(c.discordInvite ?? '')) say('discordInvite must be a link like https://discord.gg/abc123');
     if (c.wordmark !== undefined && !(Array.isArray(c.wordmark) && c.wordmark.length === 2 && c.wordmark.every((p) => typeof p === 'string'))) {
       say('wordmark must be two strings: the plain part and the coloured part');

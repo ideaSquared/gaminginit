@@ -49,6 +49,16 @@ describe('communityProblems', () => {
     assert.deepEqual(communityProblems({ alpha: { ...alpha, statsUrl: 'https://bot.example/t/alpha/api/stats' } }), []);
   });
 
+  it('refuses domains with a label that starts or ends with a dash', () => {
+    const problems = communityProblems({ alpha: { ...alpha, origin: 'https://alpha-.example', hosts: ['alpha-.example', 'alpha.-example'] } });
+    assert.deepEqual(problems, [
+      'alpha: origin must be https://<domain>, with no path',
+      'alpha: "alpha-.example" is not a domain name',
+      'alpha: "alpha.-example" is not a domain name',
+    ]);
+    assert.deepEqual(communityProblems({ alpha: { ...alpha, origin: 'https://a-1.example', hosts: ['a-1.example', 'www.a-1.example'] } }), []);
+  });
+
   it('refuses bad ids, origins, invites and preview addresses as domains', () => {
     const problems = communityProblems({
       Bad_Id: { ...alpha, origin: 'http://alpha.example/path', discordInvite: 'https://evil.example', hosts: ['x.workers.dev'] },
@@ -117,6 +127,8 @@ describe('brand', () => {
       const html = publicFile(page);
       assert.ok(html.includes(HTML_DEFAULTS.name), page);
       assert.ok(html.includes(HTML_DEFAULTS.invite), page);
+      // The sample data (?demo) reads whose site it is from here, and the Worker swaps it.
+      assert.ok(html.includes(`<html lang="en-GB" data-community-name="${HTML_DEFAULTS.name}" data-community-domain="${new URL(HTML_DEFAULTS.origin).host}">`), page);
       // The staff page has no canonical link or link previews: it is kept out of search.
       if (page !== 'admin.html') assert.ok(html.includes(`${HTML_DEFAULTS.origin}/`), page);
       // Without the Worker (npm start) each page reads gaminginit's stats, from where the Worker would point it.
