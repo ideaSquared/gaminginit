@@ -982,7 +982,31 @@ export const demoPlayerKills = (steamId, days, now) => {
     byDay,
     list,
     kept: row?.kills ?? 0,
+    sessions: demoSessions(!OFFLINE.includes(name), days, now),
   };
+};
+
+// A player's times on the server, newest first: the one they are on now, while in game, then an evening on two days in
+// three. The day before yesterday, the bot couldn't read the server when they left; on the oldest, in a longer period,
+// they were already on when the log started.
+const demoSessions = (inGame, days, now) => {
+  const past = Array.from({ length: days }, (_, i) => i)
+    .filter((i) => i % 3 !== 1)
+    .map((i) => {
+      const leftAt = now - i * DAY - 3 * HOUR;
+      const minutes = 45 + ((i * 37) % 150);
+      const gap = i === 2;
+      const unknown = days > 1 && i === days - 1;
+      return {
+        joinedAt: unknown ? null : leftAt - minutes * MINUTE,
+        joinedFrom: null,
+        leftAt,
+        leftFrom: gap ? leftAt - 25 * MINUTE : null,
+        minutes: unknown ? null : gap ? minutes - 25 : minutes,
+      };
+    });
+  const current = { joinedAt: now - 35 * MINUTE, joinedFrom: null, leftAt: null, leftFrom: null, minutes: 35 };
+  return inGame ? [current, ...past] : past;
 };
 
 // The bot's staff commands, as GET /api/admin/commands sends them, for the admin tools in ?demo. Copied from the bot;

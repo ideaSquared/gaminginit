@@ -350,6 +350,11 @@ opens their history.**
   headshot flags and griefing flags, and Act.
 - **Record:** time played and seeding over the last 90 days, their Steam account, VIP, ban and staff history, exactly as
   the Look up tool (and `/player` in Discord) shows them.
+- **Time on the server** in the period: each time they were on, newest first, with when they joined, when they left
+  (or "In game now") and how long, and how many times and how long in all. From the bot's check each minute, like
+  Joins and leaves on Live, so a time "since" another means the bot couldn't read the server in between, and "Already
+  on" that they were on when the bot started keeping the log. The bot keeps 30 days. Hidden while the bot does not send
+  it.
 - **Kills and headshots** in the period: their headshots in words, against their usual and the chance by luck; by
   weapon; by day, with each flagged day marked; and every kill, newest first (their latest 1,000 a day), with **Only
   headshots**, and the time, date and map shown as in the kill feed. The names of those they killed open those players'

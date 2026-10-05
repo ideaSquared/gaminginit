@@ -736,6 +736,21 @@ const renderIncidents = (overview) => {
   );
 };
 
+// When something was noticed, and after a gap in the bot's checks, since when: it happened some time between the two.
+const whenSince = (at, from) =>
+  el(
+    'td',
+    { className: 'when' },
+    when.format(at),
+    from === null
+      ? null
+      : el('span', {
+          className: 'kill-distance join-gap',
+          textContent: `since ${when.format(from)}`,
+          title: 'The bot couldn’t read the server in between, so this happened some time between the two.',
+        }),
+  );
+
 // Who joined and left the server, newest first. After the bot could not read the server for a while, it only knows
 // a join or leave happened since its check before (`from`). Hidden for a bot that does not send them.
 const renderJoins = (overview) => {
@@ -745,20 +760,7 @@ const renderJoins = (overview) => {
     el(
       'tr',
       {},
-      el(
-        'td',
-        { className: 'when' },
-        when.format(e.at),
-        ...(e.from === null
-          ? []
-          : [
-              el('span', {
-                className: 'kill-distance join-gap',
-                textContent: `since ${when.format(e.from)}`,
-                title: 'The bot couldn’t read the server in between, so this happened some time between the two.',
-              }),
-            ]),
-      ),
+      whenSince(e.at, e.from),
       cell(e.kind === 'joined' ? badge('Joined', 'accent') : badge('Left')),
       el('td', { className: 'player' }, who(e.player)),
       e.kind === 'joined'
@@ -1376,6 +1378,35 @@ const renderHistoryKills = () => {
   renderHistoryList();
 };
 
+// Their times on the server in the period, newest first, with the one they are on now first. Hidden for a bot that does
+// not send them.
+const renderHistorySessions = () => {
+  const sessions = historyLoaded() ? historyKills.sessions : undefined;
+  $('history-sessions-section').hidden = sessions === undefined;
+  if (sessions === undefined) return;
+  const total = sessions.reduce((n, s) => n + (s.minutes ?? 0), 0);
+  $('history-sessions-note').textContent =
+    sessions.length === 0
+      ? 'From the bot’s check each minute, so each time shows up to a minute late.'
+      : `${plural(sessions.length, 'time')} on the server, ${formatDuration(total * 60_000)} in all. Newest first, from the bot’s check each minute, so each time shows up to a minute late.`;
+  table(
+    $('history-sessions'),
+    ['Joined', 'Left', ['On for', 'num']],
+    sessions.map((s) =>
+      el(
+        'tr',
+        {},
+        s.joinedAt === null
+          ? el('td', { className: 'when muted', textContent: 'Already on', title: 'They were on when the bot started keeping this log.' })
+          : whenSince(s.joinedAt, s.joinedFrom),
+        s.leftAt === null ? cell(badge('In game now', 'accent')) : whenSince(s.leftAt, s.leftFrom),
+        el('td', { className: s.minutes === null ? 'num muted' : 'num', textContent: s.minutes === null ? '–' : formatDuration(s.minutes * 60_000) }),
+      ),
+    ),
+    'Not on the server in this period.',
+  );
+};
+
 // Their team kills and vehicle suicides, and team kills on them, from the Review tab's list.
 const renderHistoryGrief = (steamId) => {
   const row = data?.players.find((p) => p.steamId === steamId) ?? null;
@@ -1391,7 +1422,7 @@ const renderHistoryGrief = (steamId) => {
 const renderHistory = () => {
   $('history-player').hidden = historyPlayer === null;
   const days = period === 1 ? 'Today' : `The last ${period} days`;
-  setStatus($('history-period-note'), `${days} (UTC days), for their kills and team kills. Their record covers the last 90 days.`);
+  setStatus($('history-period-note'), `${days} (UTC days), for their time on the server, kills and team kills. Their record covers the last 90 days.`);
   if (historyPlayer === null) return;
   const { steamId } = historyPlayer;
   const loaded = historyLoaded();
@@ -1424,6 +1455,7 @@ const renderHistory = () => {
         ? replyNodes(record.reply, data?.staff ?? {})
         : [el('p', { className: 'tool-error', textContent: record.error })]),
   );
+  renderHistorySessions();
   renderHistoryKills();
   renderHistoryGrief(steamId);
 };
