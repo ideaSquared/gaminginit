@@ -745,7 +745,7 @@ const whenSince = (at, from) =>
     from === null
       ? null
       : el('span', {
-          className: 'kill-distance join-gap',
+          className: 'join-gap',
           textContent: `since ${when.format(from)}`,
           title: 'The bot couldn’t read the server in between, so this happened some time between the two.',
         }),
@@ -1399,7 +1399,7 @@ const renderHistorySessions = () => {
         s.joinedAt === null
           ? el('td', { className: 'when muted', textContent: 'Already on', title: 'They were on when the bot started keeping this log.' })
           : whenSince(s.joinedAt, s.joinedFrom),
-        s.leftAt === null ? cell(badge('In game now', 'accent')) : whenSince(s.leftAt, s.leftFrom),
+        s.leftAt === null ? el('td', { className: 'when' }, badge('In game now', 'accent')) : whenSince(s.leftAt, s.leftFrom),
         el('td', { className: s.minutes === null ? 'num muted' : 'num', textContent: s.minutes === null ? '–' : formatDuration(s.minutes * 60_000) }),
       ),
     ),
