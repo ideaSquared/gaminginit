@@ -1,4 +1,4 @@
-import { defaultLabel, discordParts, optionLabel, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
+import { clockHour, defaultLabel, discordParts, optionLabel, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
@@ -14,7 +14,7 @@ const BOOLEAN = 5;
 const SUGGEST_DELAY_MS = 250;
 
 // In the reader's own time: "Fri 3 Oct, 21:40".
-const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
 
 // Text from the bot, with its Discord markdown shown as it would be in Discord. `staff` names Discord users.
 const discordNodes = (text, staff) =>

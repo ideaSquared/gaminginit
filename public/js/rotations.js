@@ -1,3 +1,4 @@
+import { clockHour } from './format.js';
 import {
   chosenBy,
   copyDraft,
@@ -44,11 +45,11 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
 // The day after `day` (YYYY-MM-DD).
 const nextDay = (day) => new Date(Date.parse(`${day}T00:00:00Z`) + 24 * 60 * 60_000).toISOString().slice(0, 10);
 
-// "06:00", the hour each rotation day starts, in the reader's own time on `day` (summer time included).
+// "06:00" or "6:00 AM", the hour each rotation day starts, in the reader's own time on `day` (summer time included).
 const localHour = (hour, day) => {
   const [y, m, d] = String(day ?? '').split('-').map(Number);
   const at = Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d) ? Date.UTC(y, m - 1, d, hour) : Date.UTC(2026, 0, 1, hour);
-  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date(at));
+  return new Intl.DateTimeFormat(undefined, { hour: clockHour(), minute: '2-digit' }).format(new Date(at));
 };
 
 const button = (text, props = {}) => el('button', { type: 'button', textContent: text, ...props });
@@ -599,12 +600,24 @@ export const createRotations = ({ root, load, send }) => {
             ...choices.map((r) => el('option', { value: r.name, textContent: r.name, selected: own !== null && own.toLowerCase() === r.name.toLowerCase(), disabled: r.entries.length === 0 })),
           );
           pick.dataset.focus = `day-${i}`;
-          pick.addEventListener('change', () => plan(i, pick.value, pick));
+          // A card is too narrow for a long name in the select, which cuts it off. So the name is written out under the
+          // select, which is see-through and laid over it: it still opens, and works from the keyboard.
+          const chosen = el('span', { className: 'rot-day-chosen', ariaHidden: 'true' });
+          const showChosen = () => {
+            chosen.textContent = pick.selectedOptions[0]?.textContent ?? '';
+          };
+          showChosen();
+          pick.addEventListener('change', async () => {
+            showChosen();
+            // A pick that is not made (declined, or the bot said no) puts the select back.
+            await plan(i, pick.value, pick);
+            showChosen();
+          });
           return el(
             'div',
             { className: `rot-day${isToday ? ' rot-day-today' : ''}${own ? ' rot-day-own' : ''}` },
             el('p', { className: 'rot-day-name' }, el('span', { className: 'rot-day-long', textContent: day }), el('span', { className: 'rot-day-short', textContent: day.slice(0, 3) }), isToday ? el('span', { className: 'rot-today-chip', textContent: 'Today' }) : null),
-            pick,
+            el('div', { className: 'rot-day-pick' }, pick, chosen),
             rotation ? strip(rotation.entries, 'rot-strip rot-strip-day') : el('p', { className: 'rot-note', textContent: 'Keeps what the server has' }),
           );
         }),

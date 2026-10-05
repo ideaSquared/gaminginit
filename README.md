@@ -264,14 +264,17 @@ opens their history.**
   (yellow below 1 in 20, red once the day is flagged; hover for their usual and the chance), team kills and vehicle
   suicides today (red once they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth
   a look have a yellow mark by their name.
-- **Search** by name or Steam ID, pick a **team**, **sort** by team, most kills, longest on today or name, and tick
-  **Only players worth a look**. When nobody in game matches a search, "Find" searches everyone the bot knows on the
-  History tab.
+- **Search** by name or Steam ID, pick a **team**, **sort** by worth a look first, team, most kills, longest on today or
+  name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: the players with a yellow
+  mark at the top, then each group by team, so the ones to check never hide among the rest. When nobody in game
+  matches a search, "Find" searches everyone the bot knows on the History tab.
 - **Act** on a player opens a menu: their history, warn, kick, move to another team, or ban. History opens the History
   tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
-  from the game a second or two after the kills, and new ones glow as they come in. Each has who, whom, with what,
-  headshot, team kill, wallbangs and the like, how far and on which map. A weapon the bot has no name for is marked
+  from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
+  kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
+  wallbangs and the like, how far and on which map, which is only shown when it differs from the kill above, as the
+  server stays on one map for a long run of kills. A weapon the bot has no name for is marked
   **Check name** (see Weapons to name, on Review). **Only headshots** hides the rest. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
@@ -290,13 +293,16 @@ opens their history.**
   move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, left out
   when there is nobody in it. While the server is not answering, nobody is known to be in game, so each is one list. The
   bot lists those in game first too, so its limit of 100 never leaves one out.
-- **Headshots.** Many headshots, day after day, can be a sign of cheating. Everyone with a headshot in the period, most
-  flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with the
-  server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many or
-  more: "1 in 4,800", or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. A day is flagged with
-  10 or more kills and a chance below 1 in 1,000, as the bot sends the marks. Usual goes by weapon: a sniper rifle gets
-  more headshots than a machine gun, so a sniper is not flagged for sniping. "How headshots are judged" explains it.
-  Needs the bot's kill feed (its README, "Weapon stats" and "Kills and headshots").
+- **Headshots.** Many headshots, day after day, can be a sign of cheating. The players with a headshot in the period,
+  most flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with
+  the server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many
+  or more: "1 in 4,800", or "Ordinary" for 1 in 20 or likelier) and the weapon they killed most with. Most players are
+  Ordinary, so those with an Ordinary chance and no flagged day are hidden, in both parts, until staff tick **Show
+  ordinary players (N)**, N being how many there are (the box is left out when there are none). The tiles and the
+  tab's count still go by everyone. A day is flagged with 10 or more kills and a chance below 1 in 1,000, as the bot
+  sends the marks. Usual goes by weapon: a sniper rifle gets more headshots than a machine gun, so a sniper is not
+  flagged for sniping. "How headshots are judged" explains it. Needs the bot's kill feed (its README, "Weapon stats" and
+  "Kills and headshots").
 - **Weapons to name.** The game sends the bot a code for each weapon, not its name, and the bot names the ones it
   knows. The rest show as their code, like "WEPN 099": over the last 30 days, most kills first, with their kills, longest
   kill, the last day used and who used them most, those in game first. The game's own kill feed names them, so staff
@@ -330,7 +336,8 @@ opens their history.**
   the Look up tool (and `/player` in Discord) shows them.
 - **Kills and headshots** in the period: their headshots in words, against their usual and the chance by luck; by
   weapon; by day, with each flagged day marked; and every kill, newest first (their latest 1,000 a day), with **Only
-  headshots**. The names of those they killed open those players' history.
+  headshots**, and the time, date and map shown as in the kill feed. The names of those they killed open those players'
+  history.
 - **Team kills and vehicle suicides** in the period: their totals, and each one they made or were killed in, from the
   latest 300 in the period.
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
@@ -369,7 +376,8 @@ opens their history.**
   their order are compared, so a map's setup (lighting, say) being reported differently doesn't hide the marks; moving
   maps around in the editor does, until it is saved and on the server.
 - **The week.** A rotation for each day, Monday to Sunday. Days left on Default play **Default**, which starts as the
-  rotation the server had. Changing today's pick puts it on the server straight away (after asking).
+  rotation the server had. Changing today's pick puts it on the server straight away (after asking). Each day shows
+  its rotation's full name, wrapping onto more lines in a narrow card rather than cut off.
 - **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
   (or tap one to add it at the end), drag maps by their ⠿ handle into order (or focus the handle and use the arrow
   keys), and open ⚙ for a map's game mode, infantry only, hardcore, lighting and control zones. A bar in the maps'
@@ -405,6 +413,7 @@ opens their history.**
   "Discord user" and their ID, linked to their Discord profile.
 - It refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills happen.
   A player's Act menu stays open through a refresh.
+- Times are in your own time and clock: "7:00 PM" on a 12-hour clock (no leading zero), "07:00" on a 24-hour one.
 - It shows Steam IDs, linked to Steam profiles. Player names open their history; History links to their public player
   page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.

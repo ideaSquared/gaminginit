@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   busyRuns,
   busyShares,
+  clockHour,
   compact,
   emptyNote,
   formatDuration,
@@ -83,6 +84,7 @@ import {
   killerSummary,
   luckOdds,
   oddsKind,
+  ordinaryHeadshots,
   usualHeadshots,
   watchList,
   needsLook,
@@ -147,6 +149,16 @@ describe('text', () => {
     assert.equal(formatHours(45), '45 min');
     assert.equal(formatHours(312), '5.2 h');
     assert.equal(formatHours(900), '15 h');
+  });
+
+  it('writes the hour without a leading zero on a 12-hour clock, and with one on a 24-hour clock', () => {
+    const at = (hour) => new Date(2026, 0, 1, hour, 5);
+    const clock = (locale, hour) => new Intl.DateTimeFormat(locale, { hour: clockHour(locale), minute: '2-digit' }).format(at(hour));
+    assert.equal(clock('en-US', 19), '7:05 PM');
+    assert.equal(clock('en-US', 7), '7:05 AM');
+    assert.equal(clock('en-GB', 19), '19:05');
+    assert.equal(clock('en-GB', 7), '07:05');
+    assert.equal(clock('de-DE', 7), '07:05');
   });
 
   it('formats counts and ratios', () => {
@@ -963,12 +975,19 @@ describe('the staff page server list', () => {
   it('searches, filters and sorts the list', () => {
     const names = (options) => filterPlayers(all, options, TODAY).map((p) => p.name);
 
-    assert.deepEqual(names({}), ['Bo', 'Ash', 'Dee', 'Cy']);
+    // Those worth a look first, then by team.
+    assert.deepEqual(names({}), ['Bo', 'Ash', 'Cy', 'Dee']);
+    assert.deepEqual(names({ sort: 'watch' }), ['Bo', 'Ash', 'Cy', 'Dee']);
+    assert.deepEqual(names({ sort: 'team' }), ['Bo', 'Ash', 'Dee', 'Cy']);
     assert.deepEqual(names({ query: ' a' }), ['Ash']);
     assert.deepEqual(names({ query: ash.steamId.slice(-4) }), ['Ash']);
     assert.deepEqual(names({ team: 'valkyra' }), ['Ash', 'Dee']);
     assert.deepEqual(names({ team: 'none' }), ['Cy']);
     assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Bo', 'Cy']);
+    assert.deepEqual(names({ watch: true }), ['Bo', 'Ash', 'Cy']);
+    // The team and search still apply, with those worth a look first.
+    assert.deepEqual(names({ team: 'valkyra', sort: 'watch' }), ['Ash', 'Dee']);
+    assert.deepEqual(names({ query: '7656119800000' }), ['Bo', 'Ash', 'Cy', 'Dee']);
     // Most kills, then fewest deaths; Cy has no kills reported.
     assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
     assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
@@ -1000,6 +1019,15 @@ describe('the staff page kills tab', () => {
     assert.equal(luckOdds(1e-12), 'Under 1 in a billion');
     assert.equal(luckOdds(0), 'Under 1 in a billion');
     assert.equal(luckOdds(null), '–');
+  });
+
+  it('knows whose headshots are nothing to look at: ordinary by luck, with no flagged day', () => {
+    assert.equal(ordinaryHeadshots({ chance: 0.3, flaggedDays: 0 }), true);
+    assert.equal(ordinaryHeadshots({ chance: 0.05, flaggedDays: 0 }), true);
+    assert.equal(ordinaryHeadshots({ chance: 0.02, flaggedDays: 0 }), false);
+    assert.equal(ordinaryHeadshots({ chance: 0.3, flaggedDays: 1 }), false);
+    // Not enough kills to judge: not called ordinary.
+    assert.equal(ordinaryHeadshots({ chance: null, flaggedDays: 0 }), false);
   });
 
   it('colours a chance below the flag’s mark, and one below 1 in 20', () => {

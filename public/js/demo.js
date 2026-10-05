@@ -779,6 +779,7 @@ const KILLERS = [
   ['Tusk', 18, 4, 4.4, 0.6, 0, [['M249 SAW', 'weapon', 1, 0.22, 0.24]]],
   ['Vex', 22, 3, 3.1, 0.6, 0, [['Humvee', 'vehicle', 0.5, 0, 0], ['AK74', 'weapon', 0.5, 0.27, 0.27]]],
   ['Ash', 15, 4, 3.9, 0.5, 0, [['M4', 'weapon', 0.8, 0.27, 0.31], ['SMG 99', 'weapon', 0.2, 0.16, 0.16]]],
+  ['Nightjar', 24, 6, 6.3, 0.4, 0, [['AK74', 'weapon', 1, 0.25, 0.27]]],
 ];
 
 // The weapons in the sample the bot has no name for, so it sends the game's code for them.

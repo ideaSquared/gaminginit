@@ -15,6 +15,7 @@ import {
   accountAge,
   alertCount,
   BUTTON_BACKGROUND,
+  clockHour,
   DEATH_TAGS,
   factionColours,
   filterPlayers,
@@ -33,6 +34,7 @@ import {
   modActionLabel,
   needsLook,
   oddsKind,
+  ordinaryHeadshots,
   percent,
   PLAYER_SORTS,
   plural,
@@ -154,8 +156,9 @@ const TAB_NAMES = { live: 'Live', review: 'Review', history: 'History', admin: '
 // The tabs the page had before, which old links name.
 const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review' };
 let tab = 'live';
-// The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order.
-const filters = { query: '', team: '', watch: false, sort: 'team' };
+// The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order, which
+// starts with those worth a look at the top.
+const filters = { query: '', team: '', watch: false, sort: 'watch' };
 // The moderation log's hidden kinds of action, such as team moves.
 const modHidden = loadHidden();
 // Who is in game now, by Steam ID, so a menu only offers what works on them.
@@ -186,9 +189,12 @@ let historyGeneration = 0;
 let killsWaiting = false;
 // "Only headshots" on the kill feed and on a player's kills.
 const killFilters = { feed: false, history: false };
+// "Show ordinary players" on the Review tab's headshots: off, those whose headshots are ordinary and who have no flagged
+// day are left out.
+let showOrdinary = false;
 
 // In the reader's own time: "Fri 3 Oct, 21:40".
-const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
 
 const signInHref = () => {
   const url = new URL(botUrl('/auth/login'));
@@ -936,8 +942,24 @@ const renderStaffSteam = (overview) => {
 
 // Kills: the live kill feed (Live), the headshots list (Review) and a player's kills (History).
 
-// In the reader's own time, to the second, as kills come seconds apart: "Fri 3 Oct, 21:40:12".
-const whenKill = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+// In the reader's own time, to the second, as kills come seconds apart: "Fri 3 Oct, 21:40:12", or only "21:40:12" for a
+// kill from today.
+const whenKill = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit', second: '2-digit' });
+const timeKill = new Intl.DateTimeFormat(undefined, { hour: clockHour(), minute: '2-digit', second: '2-digit' });
+
+// When a kill happened. A kill from today shows only its time, as the date would repeat on every row of a long list; an
+// older one shows the date as well. The full date and time are always in the hover.
+const killWhen = (at) =>
+  el(
+    'td',
+    { className: 'when' },
+    el('time', {
+      dateTime: new Date(at).toISOString(),
+      title: whenKill.format(at),
+      textContent: (new Date(at).toDateString() === new Date().toDateString() ? timeKill : whenKill).format(at),
+    }),
+  );
+
 // A UTC day: "Fri 3 Oct".
 const utcDate = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
@@ -959,9 +981,16 @@ const uncheckedName = () => {
   return mark;
 };
 
+// The map a kill was on, only when it differs from the kill above it (`above`, the row before it in the list, if any):
+// a match is on one map for a long run of kills. Staff who read the table with a screen reader still get it.
+const killMap = (k, above) =>
+  above !== undefined && (above.map ?? '') === (k.map ?? '')
+    ? el('td', { className: 'map-same' }, k.map ? el('span', { className: 'visually-hidden', textContent: k.map }) : null)
+    : cell(k.map ? mapTag(k.map) : '–');
+
 // A kill's weapon, what sort it is when not carried by hand, what the game said about it, and whether it was a team
 // kill; then whether it was a headshot, how far, and where.
-const killCells = (k) => [
+const killCells = (k, above) => [
   cell(
     k.weapon,
     WEAPON_KINDS[k.weaponKind] ? el('span', { className: 'kill-distance', textContent: ` · ${WEAPON_KINDS[k.weaponKind]}` }) : null,
@@ -978,7 +1007,7 @@ const killCells = (k) => [
   ),
   cell(k.headshot ? badge('Headshot', 'accent') : ''),
   el('td', { className: 'num', textContent: k.distance === null ? '–' : metres(k.distance) }),
-  cell(k.map ? mapTag(k.map) : '–'),
+  killMap(k, above),
 ];
 
 // The kill feed shows the latest kills, up to as many as the bot keeps.
@@ -986,14 +1015,15 @@ const FEED_SHOWN = 250;
 const FEED_HEADERS = ['When', 'Killer', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'];
 const FEED_STATES = { live: 'Live', connecting: 'Connecting…', retrying: 'Reconnecting…', off: 'Every minute', sample: 'Sample' };
 
-const feedRow = (k) =>
+// `above` is the kill in the row above, which the map is compared with.
+const feedRow = (k, above) =>
   el(
     'tr',
     {},
-    el('td', { className: 'when', textContent: whenKill.format(k.at) }),
+    killWhen(k.at),
     el('td', { className: 'player' }, who(k.killer)),
     el('td', { className: 'player' }, who(k.victim)),
-    ...killCells(k),
+    ...killCells(k, above),
   );
 
 const feedShown = (k) => !killFilters.feed || k.headshot;
@@ -1006,7 +1036,8 @@ const feedNote = () =>
 
 const renderFeed = () => {
   feedNote();
-  table($('kill-feed'), FEED_HEADERS, feed.filter(feedShown).map(feedRow), feed.length === 0 ? 'No kills yet.' : 'No headshots among them.');
+  const shown = feed.filter(feedShown);
+  table($('kill-feed'), FEED_HEADERS, shown.map((k, i) => feedRow(k, shown[i - 1])), feed.length === 0 ? 'No kills yet.' : 'No headshots among them.');
 };
 
 // New kills, newest first, added at the top without redrawing the rest, so a name staff are about to click stays put.
@@ -1019,13 +1050,17 @@ const addFeed = (added) => {
     return;
   }
   feedNote();
-  const rows = added.filter(feedShown).map((k) => {
-    const row = feedRow(k);
+  const fresh = added.filter(feedShown);
+  const rows = fresh.map((k, i) => {
+    const row = feedRow(k, fresh[i - 1]);
     row.classList.add('kill-new');
     return row;
   });
   body.prepend(...rows);
-  while (body.rows.length > feed.filter(feedShown).length) body.lastElementChild.remove();
+  const shown = feed.filter(feedShown);
+  // The kill that was at the top now has one above it, so its map may no longer need showing.
+  if (rows.length > 0 && shown[rows.length] !== undefined) body.rows[rows.length].lastElementChild.replaceWith(killMap(shown[rows.length], shown[rows.length - 1]));
+  while (body.rows.length > shown.length) body.lastElementChild.remove();
 };
 
 // The live kill feed (GET /api/admin/live): a WebSocket the bot sends each batch of kills down as it comes in. The
@@ -1128,9 +1163,16 @@ const renderHeadshots = () => {
     el('li', {}, badge('Flagged', 'bad'), ` ${headshotRule(flag)}.`),
     el('li', {}, 'An honest player has a lucky day now and then. Flagged day after day is the red flag. Check their history, and watch them play, before you act.'),
   );
+  const ordinary = kills.players.filter(ordinaryHeadshots);
+  const hiding = !showOrdinary && ordinary.length > 0;
+  $('headshots-ordinary-label').hidden = ordinary.length === 0;
+  setStatus($('headshots-ordinary-text'), `Show ordinary players (${ordinary.length})`);
   $('headshots-note').textContent = kills.since
     ? `${totals.kills.toLocaleString('en-GB')} kills in this period, ${percent(totals.kills > 0 ? totals.headshots / totals.kills : null)} of them headshots. ` +
-      'Everyone with a headshot, most flagged days first, then least likely by luck. Click a name for their history.'
+      (hiding
+        ? 'Everyone with a headshot who stands out, most flagged days first, then least likely by luck. Those with an ordinary chance by luck and no flagged day are hidden unless you show them. '
+        : 'Everyone with a headshot, most flagged days first, then least likely by luck. ') +
+      'Click a name for their history.'
     : 'No kills yet. They start with the first kill after the bot is updated.';
   const row = (p) =>
     el(
@@ -1145,10 +1187,10 @@ const renderHeadshots = () => {
     );
   inGameFirst($('headshots'), data, {
     headers: ['Player', ['Headshots', 'num'], ['Usual', 'num'], ['Chance by luck', 'num'], 'Most kills with', ''],
-    items: kills.players,
+    items: hiding ? kills.players.filter((p) => !ordinaryHeadshots(p)) : kills.players,
     row,
-    empty: 'Nobody got a headshot in this period.',
-    emptyInGame: 'Nobody in game got a headshot in this period.',
+    empty: hiding ? 'Nobody stands out in this period. Show ordinary players to see everyone with a headshot.' : 'Nobody got a headshot in this period.',
+    emptyInGame: hiding && ordinary.some((p) => onlineIds.has(p.steamId)) ? 'Nobody in game stands out.' : 'Nobody in game got a headshot in this period.',
   });
 };
 
@@ -1251,7 +1293,7 @@ const renderHistoryList = () => {
   table(
     $('history-list'),
     ['When', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'],
-    shown.map((kill) => el('tr', {}, el('td', { className: 'when', textContent: whenKill.format(kill.at) }), el('td', { className: 'player' }, who(kill.victim)), ...killCells(kill))),
+    shown.map((kill, i) => el('tr', {}, killWhen(kill.at), el('td', { className: 'player' }, who(kill.victim)), ...killCells(kill, shown[i - 1]))),
     k.list.length === 0 ? 'No kills in this period.' : 'No headshots among them.',
   );
 };
@@ -1775,6 +1817,7 @@ document.querySelector('.admin-tabs').addEventListener('keydown', (event) => {
 
 // The server list's search, sort and "worth a look".
 $('player-sort').replaceChildren(...Object.entries(PLAYER_SORTS).map(([value, text]) => el('option', { value, textContent: text })));
+$('player-sort').value = filters.sort;
 $('player-search').addEventListener('input', (event) => {
   filters.query = event.target.value;
   renderPlayers(data);
@@ -1801,6 +1844,10 @@ $('feed-headshots').addEventListener('change', (event) => {
 $('history-headshots').addEventListener('change', (event) => {
   killFilters.history = event.target.checked;
   if (historyLoaded()) renderHistoryList();
+});
+$('headshots-ordinary').addEventListener('change', (event) => {
+  showOrdinary = event.target.checked;
+  if (kills !== null) renderHeadshots();
 });
 $('history-search').addEventListener('input', (event) => {
   clearTimeout(searchTimer);

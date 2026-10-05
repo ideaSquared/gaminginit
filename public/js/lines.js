@@ -1,5 +1,5 @@
 import { groupLists, lineProblem, linesToSave, listLabel, messageLength, messageParts, problemCount, sameLines, tidyLine } from './linesmodel.js';
-import { factionColours } from './format.js';
+import { clockHour, factionColours } from './format.js';
 import { el, sideName } from './views.js';
 
 // The staff page's Lines tab: the lines the bot says in game, list by list. Pick a list on the left, change its lines,
@@ -13,7 +13,7 @@ const STALE_MS = 60_000;
 // How long a message stays.
 const TOAST_MS = 6_000;
 
-const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
 
 const button = (text, props = {}) => el('button', { type: 'button', textContent: text, ...props });
 

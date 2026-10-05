@@ -29,6 +29,10 @@ export const formatHours = (minutes) => {
   return `${hours < 10 ? hours.toFixed(1) : Math.round(hours)} h`;
 };
 
+// How to write the hour of a clock time for `locale` (the reader's own when left out): no leading zero on a 12-hour
+// clock, "7:00 PM", and the zero kept on a 24-hour one, "07:00", which is how those locales write it.
+export const clockHour = (locale) => (new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 'numeric' : '2-digit');
+
 export const compact = (n) => {
   if (n < 10_000) return n.toLocaleString('en-GB');
   if (n < 1_000_000) return `${(n / 1000).toFixed(n < 100_000 ? 1 : 0)}K`;
@@ -771,6 +775,9 @@ export const headshotRule = ({ kills, odds }) =>
 
 export const flaggedDaysLabel = (days) => `Flagged ${plural(days, 'day')}`;
 
+// Whether a player's headshots are nothing to look at: an ordinary chance by luck, and no flagged day.
+export const ordinaryHeadshots = (player) => player.flaggedDays === 0 && luckOdds(player.chance) === 'Ordinary';
+
 // One player's headshots in words, above their kills.
 export const killerSummary = ({ kills, headshots, expected, chance }) => {
   if (kills === 0) return 'No kills in this period.';
@@ -837,6 +844,7 @@ export const teamCounts = (players) => {
 };
 
 export const PLAYER_SORTS = {
+  watch: 'Worth a look first',
   team: 'Team',
   kills: 'Most kills',
   today: 'Longest on today',
@@ -844,12 +852,15 @@ export const PLAYER_SORTS = {
 };
 
 // The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
-// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order.
-export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'team' }, today) => {
+// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order: those worth a look first by
+// default, so staff see them without hunting, then by team.
+export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'watch' }, today) => {
   const q = query.trim().toLowerCase();
   const byName = (a, b) => a.name.localeCompare(b.name);
+  const byTeam = (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b);
   const order = {
-    team: (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b),
+    watch: (a, b) => Number(needsLook(b, today)) - Number(needsLook(a, today)) || byTeam(a, b),
+    team: byTeam,
     kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
     today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),
     name: byName,
@@ -858,7 +869,7 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
     .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
     .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
     .filter((p) => !watch || needsLook(p, today))
-    .sort(order[sort] ?? order.team);
+    .sort(order[sort] ?? order.watch);
 };
 
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
