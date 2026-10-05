@@ -3,7 +3,8 @@
 The website for the gaminginit gaming community, at [gaminginit.com](https://gaminginit.com): a Discord invite, and
 live status and stats for our WARDOGS server. The live numbers come from
 [wardogs-discord-bot](https://github.com/ParagonJenko/wardogs-discord-bot), which reads the game server's RCON once
-a minute and serves them at `GET /api/stats`.
+a minute and serves them at `GET /api/stats` (and, on a bot that serves several communities, each one's at
+`GET /t/<community>/api/stats`).
 
 What it shows:
 
@@ -76,13 +77,75 @@ The stats, matches, leaderboard, weapons and seeding used to be in full on the h
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no third-party requests.
 
+**One deployment serves the website of any number of communities**, each on its own domain, with its own name, Discord
+invite and stats from the bot (see [Communities](#communities)).
+
+## Communities
+
+Every community the site serves is in `src/communities.json`, by the same id it has on the bot:
+
+```json
+{
+  "gaminginit": {
+    "name": "gaminginit",
+    "wordmark": ["gaming", "init"],
+    "origin": "https://gaminginit.com",
+    "hosts": ["gaminginit.com", "www.gaminginit.com"],
+    "discordInvite": "https://discord.gg/qsJFYGhSJ4",
+    "ogImage": "https://gaminginit.com/og-image.png",
+    "statsUrl": "https://wardogs-discord-bot.idea-squared.workers.dev/api/stats"
+  }
+}
+```
+
+| Field           | What                                                                                          |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| `name`          | The community's name: page titles, link previews, the "Join the … Discord" step               |
+| `origin`        | Its main address, `https://` and the domain only: canonical links, the sitemap and `robots.txt` |
+| `hosts`         | Every domain it is served on. A domain can belong to one community only                       |
+| `discordInvite` | Its Discord invite, set to never expire with no use limit                                     |
+| `wordmark`      | Optional: the name in two parts, plain and coloured, for the logo. Default: the name in one colour |
+| `ogImage`       | Optional: an `https://` image (1200×630) for link previews. Without one, previews have no image |
+| `lede`          | Optional: the intro paragraph under the heading, in place of gaminginit's                     |
+| `statsUrl`      | Optional: where its stats are, if not `<BOT_URL>/t/<id>/api/stats`                            |
+
+To add a community:
+
+1. Add it on the bot first (`npm run tenant -- add <id> <discord server id>` in wardogs-discord-bot), so its stats
+   exist at `<BOT_URL>/t/<id>/api/stats`.
+2. Add it to `src/communities.json` and run `npm test`: it checks every entry, and that no domain belongs to two
+   communities.
+3. Deploy (`npm run deploy`, or push to `main` with option B below).
+4. Attach its domain to the Worker: **Workers & Pages** → `wardogs-community-site` → **Settings** → **Domains &
+   Routes** → **Add** → **Custom domain**. The domain must be on the Cloudflare account.
+
+Before the domain is set up, preview it on the workers.dev address with `?community=<id>`.
+
+How it works:
+
+- A small Worker (`src/worker.js`) answers each page: it picks the community by the domain the request came to, then
+  puts its name, Discord invite, stats URL, canonical links and link-preview details into the page as it is sent. Link
+  previews and search engines read those without running any JavaScript, so each community's are its own.
+- A domain that is not in `src/communities.json` gets a 404, never another community's page.
+- Only pages go through the Worker. Scripts, styles and images are served straight from the static assets, free and
+  unlimited (`run_worker_first` in `wrangler.jsonc`).
+- `?stats=` and `?community=` only work on the workers.dev address and `localhost`. On a community's own domain the page
+  always shows that community's stats, so nobody can send a link to one community's site that shows other numbers.
+- gaminginit's `statsUrl` is the bot's `/api/stats`, so it reads everything the bot serves there, as before: the stats,
+  the player pages, the live page (`/api/live` and its WebSocket) and the staff page (`/auth/login` and
+  `/api/admin/...`). The bot's per-community addresses, `/t/<id>/api/...`, serve the stats and the player pages only,
+  so for now another community's live page and staff page do not load. The bot only sends a staff sign-in back to its
+  own `SITE_URL`, so the staff page on another community's domain never receives one.
+
 ## Deploy
 
 You need:
 
 - [Node.js](https://nodejs.org) 22 or newer.
 - A free Cloudflare account. Use the same one as the bot.
-- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). The leaderboard and VIP
+- The bot deployed with the `/api/stats` endpoint (from wardogs-discord-bot `main`). For communities other than
+  gaminginit, a bot that serves several communities, with each one's stats at `/t/<id>/api/stats`: add the community
+  on the bot before adding it here. The leaderboard and VIP
   sections need a bot that sends `leaderboard` and `vip`; with an older bot the page still works without them.
   The player pages need a bot that serves `/api/players` and `/api/player`, next to `/api/stats`; with an older bot,
   names are not links and the players page cannot load.
@@ -104,21 +167,22 @@ You need:
    npm run deploy
    ```
 2. Wrangler prints the bot's URL, like `https://wardogs-discord-bot.<your-subdomain>.workers.dev`.
-3. Open that URL with `/api/stats` on the end in a browser. You should see JSON. `"server": null` is fine until the
-   bot has run its first check (within a minute).
+3. Open that URL with `/api/stats` on the end in a browser (for another community, `/t/<community id>/api/stats`). You
+   should see JSON. `"server": null` is fine until the bot has run its first check (within a minute).
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html` and `admin.html`) where it says so:
+In `wrangler.jsonc`, set `BOT_URL` to the bot's URL from step 1 (without `/api/stats`). A community's stats are read
+from `<BOT_URL>/t/<id>/api/stats`, and the player pages from `/t/<id>/api/players` and `/t/<id>/api/player` next to it,
+unless its entry in `src/communities.json` sets `statsUrl`. gaminginit sets `statsUrl` to the bot's `/api/stats`.
+`DEFAULT_COMMUNITY` is the community the workers.dev address shows.
 
-| What            | Where                                                                                        |
-| --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 14. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
-| Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
-| Intro text      | The `.lede` paragraph under the heading                                                      |
+Then add each community to `src/communities.json` (see [Communities](#communities)).
 
-Commit and push the change to `main` if you will use option B or C below.
+The pages themselves (`public/*.html`) are gaminginit's, which is what `npm start` shows. The Worker swaps in each
+community's name, invite and stats URL; the `stats-url` meta in each page is only used without the Worker.
+
+Commit and push the change to `main` if you will use option B below.
 
 ### 3. Deploy the site
 
@@ -162,6 +226,9 @@ Pushes to other branches, such as pull requests, run `npx wrangler preview` and 
 command needs the `previews` block in `wrangler.jsonc`, which is already there.
 
 #### Option C: GitHub Pages
+
+GitHub Pages only serves files, without the Worker, so it shows one community: the one the pages are written for
+(gaminginit), with the `stats-url` in each page. For several communities, use option A or B.
 
 GitHub Pages is free for public repos. For a private repo it needs a paid GitHub plan.
 
@@ -215,25 +282,32 @@ Open the site and look at the server card and the line under the header.
 | What you see                                              | What it means                                                                                 |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Status **Live**, **Seeding** or **Empty** with a player count | Working.                                                                                  |
-| "Live stats are not connected yet"                        | The `stats-url` meta tag still has the placeholder. Do step 2, then deploy again.             |
+| "Live stats are not connected yet"                        | The community has no `statsUrl` and `BOT_URL` is not set in `wrangler.jsonc`. Do step 2, then deploy again. |
+| "There is no community site at this address"              | The domain is not in any community's `hosts` in `src/communities.json`.                       |
 | "Could not load the live stats"                           | The stats URL is wrong or the bot is not deployed. Open the URL directly; it must show JSON.  |
 | Status **Waiting**                                        | The bot is deployed but has not checked the game server yet. Wait a minute.                   |
 | Status **Offline**                                        | The bot cannot reach the game server. Check the bot's logs in Cloudflare.                     |
-| No Discord member count under the buttons                 | `DISCORD_INVITE` is not set in the bot's `wrangler.jsonc`, or the bot has not refreshed yet (every 10 min). |
+| No Discord member count under the buttons                 | `DISCORD_INVITE` is not set in the bot's `wrangler.jsonc` (or with `/settings set`, on a bot that serves several communities), or the bot has not refreshed yet (every 10 min). |
 
-Serving the site's files is free and unlimited on Cloudflare. Only the stats requests count towards the bot's
-100,000 requests a day on the free plan.
+Serving the site's scripts, styles and images is free and unlimited on Cloudflare. Each page view is one request to
+the site's Worker, and the stats it loads count towards the bot's requests. On the free plan both share the account's
+100,000 requests a day, so a site serving several busy communities, or a bot hosting other communities, belongs on the
+Workers Paid plan (see the bot's README).
 
 ## Try it locally
 
 ```bash
-npm start                      # serves public/ on http://localhost:3000
+npm start                      # serves public/ on http://localhost:3000, as gaminginit's site
+npm run dev                    # runs the Worker on http://localhost:8787: ?community=<id> shows any community
 ```
 
 - `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. On
   `http://localhost:3000/live?demo` a sample match plays itself out. Links between
-  the pages keep `?demo` (and `?stats=`). `http://localhost:3000/player?demo&id=d00000000000` is a sample player.
+  the pages keep `?demo` (and on `localhost` and workers.dev, `?stats=` and `?community=`).
+  `http://localhost:3000/player?demo&id=d00000000000` is a sample player.
 - `http://localhost:3000/?stats=http://localhost:8787/api/stats` reads a bot running locally with `wrangler dev`.
+  `?stats=` only works on `localhost` and workers.dev addresses. With `npm run dev` the site is on port 8787 too, so
+  run one of them on another port (`npm run dev -- --port 8788`).
 
 Until the stats URL is set, the page says live stats are not connected and links to the demo.
 
@@ -445,7 +519,8 @@ opens their history.**
 - On a phone the home page's hero is shorter (less copy, a smaller Seeder VIP box and no Server status button), so the
   server card is on the first screen.
 - Each page other than the home page has a "← Home" link at the top. A player's page has "← All players".
-- Player and server names are inserted as text, never as HTML.
+- Player and server names are inserted as text, never as HTML. So are community names and intros from
+  `src/communities.json`.
 - Times of day follow the reader's locale: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
   ("07:00"). A range says AM or PM once when both ends share it ("7:00 – 10:00 PM").
 - Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
@@ -461,7 +536,9 @@ opens their history.**
 npm test    # Node's built-in test runner; no dependencies to install
 ```
 
-The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
+The formatting and state logic is in `public/js/format.js`, and choosing and branding each community is in
+`src/site.js`; those are what the tests cover, with a check of `src/communities.json` and that every page in `public/`
+has what the Worker swaps. `src/worker.js` serves the pages. `live.js` fetches the bot's
 numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and

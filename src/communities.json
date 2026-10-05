@@ -1,0 +1,11 @@
+{
+  "gaminginit": {
+    "name": "gaminginit",
+    "wordmark": ["gaming", "init"],
+    "origin": "https://gaminginit.com",
+    "hosts": ["gaminginit.com", "www.gaminginit.com"],
+    "discordInvite": "https://discord.gg/qsJFYGhSJ4",
+    "ogImage": "https://gaminginit.com/og-image.png",
+    "statsUrl": "https://wardogs-discord-bot.idea-squared.workers.dev/api/stats"
+  }
+}

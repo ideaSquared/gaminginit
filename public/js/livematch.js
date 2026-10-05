@@ -21,6 +21,9 @@ import { el, playerHref, playersTable, setText } from './views.js';
 
 const $ = (id) => document.getElementById(id);
 
+// "<community> WARDOGS server", from the page's own title, which the site puts each community's name in.
+const SITE_TITLE = document.title.replace(/^Live match \| /, '');
+
 const LINK_STATES = {
   live: 'Live',
   connecting: 'Connecting',
@@ -253,7 +256,7 @@ const render = (latest) => {
   const server = snapshot?.server;
   setText($('live-title'), state === 'loading' ? 'Loading…' : server?.map || snapshot?.match?.map || 'Live match');
   $('live-score').replaceChildren(...(server && state !== 'offline' && server.factionScores.length > 0 ? scoreLine(server.factionScores, palette) : []));
-  document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | gaminginit WARDOGS server` : 'Live match | gaminginit WARDOGS server';
+  document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | ${SITE_TITLE}` : `Live match | ${SITE_TITLE}`;
 
   const idle = IDLE[state];
   $('live-idle').hidden = !idle;

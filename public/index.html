@@ -23,7 +23,7 @@
     <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
     <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta name="theme-color" content="#0b0d10" />
-    <!-- Where the bot serves its stats. See README.md. -->
+    <!-- Where the bot serves its stats. The Worker sets it for each community (see README.md); this is for npm start. -->
     <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -200,14 +200,14 @@
           <ol class="steps">
             <li class="card step">
               <span class="step-n" aria-hidden="true">1</span>
-              <h3>Join the gaminginit Discord</h3>
+              <h3>Join the <span data-site-name>gaminginit</span> Discord</h3>
               <p>Meet the regulars, find a squad and hear about events first.</p>
               <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
               <!-- The invite as text, for when the button doesn't open Discord. -->
-              <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code>discord.gg/qsJFYGhSJ4</code>.</p>
+              <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code data-site-invite>discord.gg/qsJFYGhSJ4</code>.</p>
             </li>
             <li class="card step">
               <span class="step-n" aria-hidden="true">2</span>

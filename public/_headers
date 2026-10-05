@@ -1,4 +1,4 @@
-# Keep the workers.dev copies (production and branch previews) out of search results.
-# Only gaminginit.com should be indexed.
+# Keep the workers.dev copies (production and branch previews) out of search results. Only each community's own
+# domains should be indexed. The Worker (src/worker.js) does the same for the pages it serves.
 https://:worker.:subdomain.workers.dev/*
   X-Robots-Tag: noindex

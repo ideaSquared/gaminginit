@@ -2,13 +2,14 @@
   "name": "wardogs-community-site",
   "version": "1.0.0",
   "private": true,
-  "description": "Website for the gaminginit gaming community, with live WARDOGS server stats from the wardogs-discord-bot.",
+  "description": "Community websites with live WARDOGS server stats from the wardogs-discord-bot. One deployment serves any number of communities, each on its own domain.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "start": "npx --yes serve@14 public",
+    "dev": "npx --yes wrangler@4 dev",
     "test": "node --test",
     "deploy": "npx --yes wrangler@4 deploy"
   }
