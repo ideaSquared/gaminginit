@@ -3229,6 +3229,19 @@ body.refreshing .tile-value {
   background: var(--warning);
 }
 
+/* The join log has four columns, so it needs less room before it scrolls sideways. */
+.admin-table.joins-table {
+  min-width: 420px;
+}
+
+/* "since …" under a time, when the bot couldn't read the server in between. */
+.join-gap {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Long lists of kills scroll inside their card, with their headings kept in view. */
 .kills-scroll {
   max-height: min(70vh, 720px);

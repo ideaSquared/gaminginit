@@ -648,10 +648,37 @@ export const demoAdmin = (days, now) => {
       reserved: ['Kestrel', 'Moth', 'Rook', 'Sable'].includes(name),
     };
   });
+  // Joins and leaves, newest first. Each leave says how long they were on. Moss was on when the bot started keeping the
+  // log, so their time on is not known; Nightjar left while the bot could not read the server.
+  const visitor = (name, i) => ({ steamId: `7656119800002${String(i).padStart(4, '0')}`, name });
+  const player = (name) => {
+    const p = inGame.find((q) => q.name === name);
+    return p === undefined ? ref(name) : { steamId: p.steamId, name: p.name, ...(p.id ? { id: p.id } : {}) };
+  };
+  const join = (minutes, kind, who, onFor = null, from = null) => ({
+    at: ago(minutes),
+    kind,
+    player: typeof who === 'string' ? player(who) : who,
+    from: from === null ? null : ago(from),
+    minutes: kind === 'left' ? onFor : null,
+  });
+  const joins = [
+    join(2, 'joined', 'Zed'),
+    join(5, 'left', visitor('Drifter', 1), 37),
+    join(9, 'joined', 'Ghost_7'),
+    join(14, 'joined', 'Wren'),
+    join(25, 'left', 'Bravo_Six', 48),
+    join(31, 'left', visitor('Moss', 2)),
+    join(42, 'joined', visitor('Drifter', 1)),
+    join(73, 'joined', 'Bravo_Six'),
+    join(140, 'left', 'Nightjar', 54, 171),
+    join(225, 'joined', 'Nightjar'),
+  ];
   const sum = (key) => players.reduce((n, p) => n + p[key], 0);
   return {
     generatedAt: now,
     days,
+    joins,
     feedSince: new Date(now - 40 * DAY).toISOString().slice(0, 10),
     flags: { teamKills: 3, sameTeammate: 2, vehicleSuicides: 2, suicides: 10 },
     totals: {
@@ -955,7 +982,31 @@ export const demoPlayerKills = (steamId, days, now) => {
     byDay,
     list,
     kept: row?.kills ?? 0,
+    sessions: demoSessions(!OFFLINE.includes(name), days, now),
   };
+};
+
+// A player's times on the server, newest first: the one they are on now, while in game, then an evening on two days in
+// three. The day before yesterday, the bot couldn't read the server when they left; on the oldest, in a longer period,
+// they were already on when the log started.
+const demoSessions = (inGame, days, now) => {
+  const past = Array.from({ length: days }, (_, i) => i)
+    .filter((i) => i % 3 !== 1)
+    .map((i) => {
+      const leftAt = now - i * DAY - 3 * HOUR;
+      const minutes = 45 + ((i * 37) % 150);
+      const gap = i === 2;
+      const unknown = days > 1 && i === days - 1;
+      return {
+        joinedAt: unknown ? null : leftAt - minutes * MINUTE,
+        joinedFrom: null,
+        leftAt,
+        leftFrom: gap ? leftAt - 25 * MINUTE : null,
+        minutes: unknown ? null : gap ? minutes - 25 : minutes,
+      };
+    });
+  const current = { joinedAt: now - 35 * MINUTE, joinedFrom: null, leftAt: null, leftFrom: null, minutes: 35 };
+  return inGame ? [current, ...past] : past;
 };
 
 // The bot's staff commands, as GET /api/admin/commands sends them, for the admin tools in ?demo. Copied from the bot;
