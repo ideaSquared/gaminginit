@@ -39,6 +39,8 @@ import {
   readableColour,
   sideColours,
   factionColours,
+  feedEmpty,
+  feedKillShown,
   BUTTON_BACKGROUND,
   daysAgo,
   heatLevel,
@@ -1033,6 +1035,26 @@ describe('the staff page server list', () => {
     // Most kills, then fewest deaths; Cy has no kills reported.
     assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
     assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
+  });
+
+  it("filters the live kill feed to headshots, team kills or both, and says when that leaves none", () => {
+    const feed = [
+      { id: 'a', headshot: true, teamKill: false },
+      { id: 'b', headshot: false, teamKill: true },
+      { id: 'c', headshot: true, teamKill: true },
+      { id: 'd', headshot: false, teamKill: false },
+    ];
+    const ids = (filters) => feed.filter((k) => feedKillShown(k, filters)).map((k) => k.id);
+
+    assert.deepEqual(ids({}), ['a', 'b', 'c', 'd']);
+    assert.deepEqual(ids({ headshots: true }), ['a', 'c']);
+    assert.deepEqual(ids({ teamKills: true }), ['b', 'c']);
+    assert.deepEqual(ids({ headshots: true, teamKills: true }), ['c']);
+
+    assert.equal(feedEmpty(0, { teamKills: true }), 'No kills yet.');
+    assert.equal(feedEmpty(5, { headshots: true }), 'No headshots among them.');
+    assert.equal(feedEmpty(5, { teamKills: true }), 'No team kills among them.');
+    assert.equal(feedEmpty(5, { headshots: true, teamKills: true }), 'No team kills by headshot among them.');
   });
 
   it('counts the alerts worth a look', () => {

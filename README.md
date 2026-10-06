@@ -286,7 +286,8 @@ opens their history.**
   kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
   wallbangs and the like, how far and on which map, which is only shown when it differs from the kill above, as the
   server stays on one map for a long run of kills. A weapon the bot has no name for is marked
-  **Check name** (see Weapons to name, on Review). **Only headshots** hides the rest. By its title:
+  **Check name** (see Weapons to name, on Review). **Only team kills** and **Only headshots** hide the rest (tick both
+  for team kills by headshot): Only team kills is for watching a player someone in game says is team killing. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
   opens again with the latest kills.
@@ -348,8 +349,8 @@ opens their history.**
   suggestions as the admin tools. A Steam ID can always be opened. Or click any name on the page.
 - **The player:** a link to their public player page and their Steam profile, whether they are in game or banned, their
   headshot flags and griefing flags, and Act.
-- **Record:** time played and seeding over the last 90 days, their Steam account, VIP, ban and staff history, exactly as
-  the Look up tool (and `/player` in Discord) shows them.
+- **Record:** time played and seeding over the last 90 days, their team kills today (UTC), their Steam account, VIP,
+  ban and staff history, exactly as the Look up tool (and `/player` in Discord) shows them.
 - **Time on the server** in the period: each time they were on, newest first, with when they joined, when they left
   (or "In game now") and how long, and how many times and how long in all. From the bot's check each minute, like
   Joins and leaves on Live, so a time "since" another means the bot couldn't read the server in between, and "Already

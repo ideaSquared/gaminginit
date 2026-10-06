@@ -915,6 +915,34 @@ const demoNameOf = (steamId) =>
   VICTIMS.find((_, i) => victimRef(i).steamId === steamId) ??
   steamId;
 
+// A sample player's team kills today, as /player shows them: the same as the Review tab's sample for Vex and Tusk.
+const demoTeamKills = (name, now) => {
+  const ago = (minutes) => `<t:${Math.floor((now - minutes * MINUTE) / 1000)}:R>`;
+  if (name === 'Vex') {
+    return [
+      '🚩 Flagged: team kills, same teammate, vehicle suicides',
+      '**7 team kills** (4 with a vehicle) · 3 suicides (2 in a vehicle)',
+      'Teammates killed: **Moth** ×3, **Rook** ×2, **Sable**, **Pike**',
+      `${ago(58)} Killed themselves in a vehicle with Humvee on Bakurani`,
+      `${ago(11)} Killed teammate **Moth** with MH-6 on Ozeti`,
+      `${ago(11)} Killed teammate **Rook** with MH-6 on Ozeti`,
+      `${ago(9)} Killed themselves in a vehicle with MH-6 on Ozeti`,
+      `${ago(6)} Killed teammate **Moth** with Humvee from 4 m on Ozeti`,
+    ].join('\n');
+  }
+  if (name === 'Tusk') {
+    return [
+      '🚩 Flagged: team kills, suicides',
+      '**3 team kills** · killed by a teammate 1 time · 12 suicides',
+      'Teammates killed: **Pike**, **Rook**, **Sable**',
+      `${ago(96)} Killed teammate **Rook** with M249 SAW from 42 m on Bakurani`,
+      `${ago(31)} Killed teammate **Pike** with AK74 from 18 m on Ozeti`,
+      `${ago(24)} Killed teammate **Sable** with M67 frag grenade from 7 m on Ozeti`,
+    ].join('\n');
+  }
+  return 'No team kills or suicides today.';
+};
+
 // A sample player's record on the History tab, as the bot's /player answers: made up, like the rest.
 export const demoPlayerRecord = (steamId, now) => {
   const name = demoNameOf(steamId);
@@ -929,12 +957,15 @@ export const demoPlayerRecord = (steamId, now) => {
           { name: 'Playtime · last 90 days', value: '41h 20m', inline: true },
           { name: 'Seeding', value: '6h 5m · 9 seed days', inline: true },
           { name: 'Matches', value: '58 · 1,204 kills · 1.62 K/D', inline: true },
+          { name: 'Team kills · today (UTC)', value: demoTeamKills(name, now) },
           { name: 'Steam account', value: name === 'Pike' ? '🔴 High risk (5 points): 1 VAC ban, 41 days ago · private profile' : '🟢 Nothing risky' },
           { name: 'VIP', value: name === 'Moth' ? 'Seeder VIP until tomorrow' : 'None' },
           { name: 'Ban', value: banned ? `Banned <t:${Math.floor((now - 200 * MINUTE) / 1000)}:R>: Cheating` : 'Not banned' },
           { name: 'Staff history', value: name === 'Vex' ? 'Warned: Stop team killing with vehicles\nKicked: Crashed a full heli into the base' : 'Nothing yet.' },
         ],
-        footer: { text: 'Sample data. Staff history only covers what staff did through the bot.' },
+        footer: {
+          text: 'Sample data. Staff history only covers what staff did through the bot. Team kills are from the kill feed, with sides from the last check, up to a minute old.',
+        },
       },
     ],
   };
