@@ -1249,6 +1249,14 @@ const DEMO_LISTS = [
     ["We're seeding! {needed} and we go live.", 'Seeding now: {needed} to go live. Stick around and bring a friend.', "Quiet, isn't it? {needed} and it won't be."],
   ),
   demoList(
+    'welcome',
+    'Welcome',
+    'Welcome',
+    'A private message to each player a couple of minutes after they join, and not again for 6 hours. Say the basic rules: the Discord and the website go after it.',
+    exactFrame({}, '', ` Discord: discord.gg/qsJFYGhSJ4 | Website: ${DEMO_SITE}`),
+    ['Welcome! Rules: no cheating or exploits, no team killing or griefing, no racism or abuse, and listen to admins. Full rules on our Discord.'],
+  ),
+  demoList(
     'tenMinutes',
     '10 minutes in',
     '10 minutes in',
