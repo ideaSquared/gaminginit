@@ -438,9 +438,12 @@ const table = (node, headers, rows, empty) => {
   );
 };
 
-// An alert list in two parts, each under its own heading: players in game now first, as the ones staff can still warn,
-// kick or move, then everyone else seen in the period. While the server is not answering nobody is known to be in game,
-// so it is one list.
+// The alert lists whose "Not in game" part staff opened, by the list's id, so a refresh keeps it open.
+const awayOpen = new Set();
+
+// An alert list in two parts: players in game now first, as the ones staff can still warn, kick or move, then everyone
+// else seen in the period, folded away until staff open it. While the server is not answering nobody is known to be in
+// game, so it is one list.
 const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }) => {
   const grid = (labelId, rows, text) => {
     const t = el('table', { className: 'admin-table' });
@@ -453,17 +456,34 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
     return;
   }
   // The count is in the alert colour when someone in game has an alert.
-  const group = (key, heading, list, text, alert) => {
-    const id = `${node.id}-${key}`;
-    const count = el('span', { className: `tab-count${alert && list.length > 0 ? ' tab-count-alert' : ''}`, textContent: String(list.length) });
-    return el('section', { className: 'alert-group' }, el('h3', { className: 'group-title', id }, ...heading, count), grid(id, list.map(row), text));
-  };
+  const count = (list, alert) =>
+    el('span', { className: `tab-count${alert && list.length > 0 ? ' tab-count-alert' : ''}`, textContent: String(list.length) });
   const here = items.filter((p) => onlineIds.has(p.steamId));
   const away = items.filter((p) => !onlineIds.has(p.steamId));
+  const hereId = `${node.id}-ingame`;
+  const awayId = `${node.id}-away`;
+  const awayGroup = () => {
+    const box = el(
+      'details',
+      { className: 'alert-group away-group', open: awayOpen.has(node.id) },
+      el('summary', { className: 'group-title', id: awayId }, 'Not in game', count(away, false)),
+      grid(awayId, away.map(row), ''),
+    );
+    box.addEventListener('toggle', () => (box.open ? awayOpen.add(node.id) : awayOpen.delete(node.id)));
+    return box;
+  };
+  // A refresh keeps keyboard focus on "Not in game", without scrolling to it, when the one it replaces had it.
+  const focused = document.activeElement?.id === awayId && node.contains(document.activeElement);
   node.replaceChildren(
-    group('ingame', [el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now'], here, items.length === 0 ? empty : emptyInGame, true),
-    ...(away.length === 0 ? [] : [group('away', ['Not in game'], away, '', false)]),
+    el(
+      'section',
+      { className: 'alert-group' },
+      el('h3', { className: 'group-title', id: hereId }, el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now', count(here, true)),
+      grid(hereId, here.map(row), items.length === 0 ? empty : emptyInGame),
+    ),
+    ...(away.length === 0 ? [] : [awayGroup()]),
   );
+  if (focused) document.getElementById(awayId)?.focus({ preventScroll: true });
 };
 
 const cell = (...children) => el('td', {}, ...children);

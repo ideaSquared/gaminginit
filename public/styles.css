@@ -2789,12 +2789,14 @@ body.refreshing .tile-value {
   background: var(--surface-2);
 }
 
-/* An alert list's two parts: in game now, then not in game. Headed in sentence case, below the card's own title. */
+/* An alert list's two parts: in game now, then not in game, folded away until staff open it. Headed in sentence case,
+   below the card's own title. */
 .alert-group + .alert-group {
   margin-top: 24px;
 }
 
-.panel h3.group-title {
+.panel h3.group-title,
+.away-group > summary.group-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2802,6 +2804,31 @@ body.refreshing .tile-value {
   text-transform: none;
   letter-spacing: 0;
   font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.away-group > summary.group-title {
+  width: fit-content;
+  line-height: 1.15;
+  list-style: none;
+  cursor: pointer;
+}
+
+.away-group > summary.group-title::-webkit-details-marker {
+  display: none;
+}
+
+.away-group > summary.group-title::before {
+  content: '▸';
+  color: var(--text-2);
+}
+
+.away-group[open] > summary.group-title::before {
+  content: '▾';
+}
+
+.away-group > summary.group-title:hover::before {
   color: var(--text);
 }
 

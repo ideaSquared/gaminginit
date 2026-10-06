@@ -303,13 +303,14 @@ opens their history.**
 - **How flags work**, in three steps: the bot checks every player's Steam account as they join, and every kill in the
   kill feed for headshots, team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk,
   and only the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed
-  here, those in game first. A flag is a reason to look, not proof.
+  here, those in game first and the rest folded under Not in game. A flag is a reason to look, not proof.
 - **Tiles:** players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
   vehicle, and vehicle suicides) in the period. The first three say how many of them are in game now.
 - **In game first.** Each list is in two parts: **In game now** first, as the players staff can still warn, kick or
-  move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, left out
-  when there is nobody in it. While the server is not answering, nobody is known to be in game, so each is one list. The
-  bot lists those in game first too, so its limit of 100 never leaves one out.
+  move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, as a
+  dropdown with its count, closed until staff open it (it stays open through refreshes until they close it), and left
+  out when there is nobody in it. While the server is not answering, nobody is known to be in game, so each is one list.
+  The bot lists those in game first too, so its limit of 100 never leaves one out.
 - **Headshots.** Many headshots, day after day, can be a sign of cheating. The players with a headshot in the period,
   most flagged days first, then least likely by luck: their headshots of their kills, **Usual** (how many a player with
   the server's usual aim would get with the same weapons), **Chance by luck** (how often that player would get as many
