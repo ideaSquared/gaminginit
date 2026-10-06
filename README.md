@@ -410,8 +410,9 @@ opens their history.**
 
 ### Lines: what the bot says in game
 
-- **The lists.** The bot's messages in game each pick a line at random from a list: seeding, 10 minutes in, and for
-  halfway and nearly won, one list for each faction plus level scores and any other team. Pick a list on the left; each
+- **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (the basic rules,
+  sent privately to each player who joins), 10 minutes in, and for halfway and nearly won, one list for each faction
+  plus level scores and any other team. Pick a list on the left; each
   says how many lines it has and whether staff changed it or it is the bot's own.
 - **The editor.** Change a line, take it out (×), or add one (**+ Add a line**, or Enter in a line to add one after
   it). The buttons under "Filled in by the bot" put a placeholder such as `{score}` where the cursor is, and show what
