@@ -117,6 +117,11 @@ export const vipDetail = (vip) =>
   'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
   "server's next daily restart. Keep seeding to keep it.";
 
+// What the K/D board needs to list a player, as "10 hours played", with `plus` after the number. A bot from before
+// the board needed time played sends kdMinMatches instead.
+export const kdNeeds = (rule, plus = '') =>
+  rule.kdMinHours === undefined ? `${rule.kdMinMatches}${plus} matches` : `${rule.kdMinHours}${plus} hours played`;
+
 // The leaderboard's boards: what each one shows, besides the rank and the name. A board with `keep` leaves out the
 // rows it returns false for.
 export const BOARDS = [
@@ -129,7 +134,7 @@ export const BOARDS = [
   {
     key: 'kd',
     title: 'Best K/D',
-    sub: (board) => `At least ${board.kdMinMatches} matches.`,
+    sub: (board) => `At least ${kdNeeds(board)}.`,
     headings: ['K/D', 'Kills'],
     cells: (p) => [kd(p.kills, p.deaths), String(p.kills)],
   },

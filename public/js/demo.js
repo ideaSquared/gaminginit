@@ -134,7 +134,7 @@ const leaderboard = () => {
   const by = (value) => [...players].sort((a, b) => value(b) - value(a));
   return {
     days: 30,
-    kdMinMatches: 3,
+    kdMinHours: 10,
     kills: by((p) => p.kills),
     kd: by((p) => p.kills / Math.max(p.deaths, 1)),
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
@@ -320,7 +320,7 @@ export const demoProfile = (id, now) => {
     days: PROFILE_DAYS,
     activity: activity.filter((d) => d.matches > 0 || d.seedingMinutes > 0),
     matches,
-    ranks: { days: 30, kdMinMatches: 3, players: 214, kills: index + 1, kd: index < 5 ? 5 - index : 14 + index, playtime: index * 2 + 2, seeding: index === 0 ? 1 : null },
+    ranks: { days: 30, kdMinHours: 10, players: 214, kills: index + 1, kd: index < 5 ? 5 - index : 14 + index, playtime: index * 2 + 2, seeding: index === 0 ? 1 : null },
     online: online ? { map: 'Ozeti', faction: 'Valkyra', kills: 11 - index, deaths: 3 + index } : null,
     vip: index % 2 === 0 ? { until: today + 5 * DAY + 4 * HOUR } : null,
     seeding: { rule: VIP_RULE, seedDays: Math.min(3, (index + 1) % 4) },
