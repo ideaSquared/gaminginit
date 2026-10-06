@@ -3005,6 +3005,13 @@ body.refreshing .tile-value {
   display: none;
 }
 
+/* Ticks side by side, wrapping on a narrow screen. */
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
 .server-table {
   min-width: 720px;
 }

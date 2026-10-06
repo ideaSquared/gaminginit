@@ -18,6 +18,8 @@ import {
   clockHour,
   DEATH_TAGS,
   factionColours,
+  feedEmpty,
+  feedKillShown,
   filterPlayers,
   flaggedDaysLabel,
   flagLabel,
@@ -188,8 +190,8 @@ let historyRecord = null;
 let historyGeneration = 0;
 // New kills or history that came while an Act menu was open, as for `waiting`.
 let killsWaiting = false;
-// "Only headshots" on the kill feed and on a player's kills.
-const killFilters = { feed: false, history: false };
+// "Only headshots" and "Only team kills" on the kill feed, and "Only headshots" on a player's kills.
+const killFilters = { feed: { headshots: false, teamKills: false }, history: false };
 // "Show ordinary players" on the Review tab's headshots: off, those whose headshots are ordinary and who have no flagged
 // day are left out.
 let showOrdinary = false;
@@ -1064,7 +1066,7 @@ const feedRow = (k, above) =>
     ...killCells(k, above),
   );
 
-const feedShown = (k) => !killFilters.feed || k.headshot;
+const feedShown = (k) => feedKillShown(k, killFilters.feed);
 
 const feedNote = () =>
   setStatus(
@@ -1075,7 +1077,7 @@ const feedNote = () =>
 const renderFeed = () => {
   feedNote();
   const shown = feed.filter(feedShown);
-  table($('kill-feed'), FEED_HEADERS, shown.map((k, i) => feedRow(k, shown[i - 1])), feed.length === 0 ? 'No kills yet.' : 'No headshots among them.');
+  table($('kill-feed'), FEED_HEADERS, shown.map((k, i) => feedRow(k, shown[i - 1])), feedEmpty(feed.length, killFilters.feed));
 };
 
 // New kills, newest first, added at the top without redrawing the rest, so a name staff are about to click stays put.
@@ -1083,7 +1085,9 @@ const addFeed = (added) => {
   feed = [...added, ...feed].slice(0, FEED_SHOWN);
   const node = $('kill-feed');
   const body = node.tBodies[0];
-  if (!node.tHead || !body) {
+  const shown = feed.filter(feedShown);
+  // Drawn whole when it had no rows, or has none now, so it says why.
+  if (!node.tHead || !body || shown.length === 0) {
     renderFeed();
     return;
   }
@@ -1095,7 +1099,6 @@ const addFeed = (added) => {
     return row;
   });
   body.prepend(...rows);
-  const shown = feed.filter(feedShown);
   // The kill that was at the top now has one above it, so its map may no longer need showing.
   if (rows.length > 0 && shown[rows.length] !== undefined) body.rows[rows.length].lastElementChild.replaceWith(killMap(shown[rows.length], shown[rows.length - 1]));
   while (body.rows.length > shown.length) body.lastElementChild.remove();
@@ -1905,9 +1908,14 @@ $('incidents-all').addEventListener('click', () => {
   render(data);
 });
 
-// "Only headshots" on the kill feed and on a player's kills, and the History tab's search.
+// "Only headshots" and "Only team kills" on the kill feed, "Only headshots" on a player's kills, and the History tab's
+// search.
 $('feed-headshots').addEventListener('change', (event) => {
-  killFilters.feed = event.target.checked;
+  killFilters.feed.headshots = event.target.checked;
+  renderFeed();
+});
+$('feed-teamkills').addEventListener('change', (event) => {
+  killFilters.feed.teamKills = event.target.checked;
   renderFeed();
 });
 $('history-headshots').addEventListener('change', (event) => {

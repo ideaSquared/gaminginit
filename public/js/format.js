@@ -895,6 +895,20 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
     .sort(order[sort] ?? order.watch);
 };
 
+// The live kill feed's "Only headshots" and "Only team kills": a kill shows when it is everything ticked.
+export const feedKillShown = (kill, { headshots = false, teamKills = false } = {}) =>
+  (!headshots || kill.headshot) && (!teamKills || kill.teamKill);
+
+// What the live kill feed says when it has no kills, or none of them is everything ticked.
+export const feedEmpty = (kills, { headshots = false, teamKills = false } = {}) =>
+  kills === 0
+    ? 'No kills yet.'
+    : headshots && teamKills
+      ? 'No team kills by headshot among them.'
+      : teamKills
+        ? 'No team kills among them.'
+        : 'No headshots among them.';
+
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
 export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);
 
