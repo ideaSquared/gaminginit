@@ -472,6 +472,8 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
     box.addEventListener('toggle', () => (box.open ? awayOpen.add(node.id) : awayOpen.delete(node.id)));
     return box;
   };
+  // A refresh keeps keyboard focus on "Not in game", without scrolling to it, when the one it replaces had it.
+  const focused = document.activeElement?.id === awayId && node.contains(document.activeElement);
   node.replaceChildren(
     el(
       'section',
@@ -481,6 +483,7 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
     ),
     ...(away.length === 0 ? [] : [awayGroup()]),
   );
+  if (focused) document.getElementById(awayId)?.focus({ preventScroll: true });
 };
 
 const cell = (...children) => el('td', {}, ...children);
