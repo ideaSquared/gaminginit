@@ -1085,7 +1085,9 @@ const addFeed = (added) => {
   feed = [...added, ...feed].slice(0, FEED_SHOWN);
   const node = $('kill-feed');
   const body = node.tBodies[0];
-  if (!node.tHead || !body) {
+  const shown = feed.filter(feedShown);
+  // Drawn whole when it had no rows, or has none now, so it says why.
+  if (!node.tHead || !body || shown.length === 0) {
     renderFeed();
     return;
   }
@@ -1097,7 +1099,6 @@ const addFeed = (added) => {
     return row;
   });
   body.prepend(...rows);
-  const shown = feed.filter(feedShown);
   // The kill that was at the top now has one above it, so its map may no longer need showing.
   if (rows.length > 0 && shown[rows.length] !== undefined) body.rows[rows.length].lastElementChild.replaceWith(killMap(shown[rows.length], shown[rows.length - 1]));
   while (body.rows.length > shown.length) body.lastElementChild.remove();
