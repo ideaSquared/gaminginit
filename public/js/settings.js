@@ -30,17 +30,17 @@ import {
 import { createTools } from './tools.js';
 import { el } from './views.js';
 
-// The staff page for the server's settings, in four tabs. Rotations: the map rotations, the week and what is on the
-// server (see rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or
-// kicks for (see rules.js). Admin: the admin tools (every staff command), the bans on the server, the reserved slots and
-// staff Steam accounts. Watching the server and acting on players is on the Moderation page (admin.js); any player's
+// The staff page for the server's settings, in four tabs. Admin: the admin tools (every staff command), the bans on the
+// server, the reserved slots and staff Steam accounts. Rotations: the map rotations, the week and what is on the server
+// (see rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for
+// (see rules.js). Watching the server and acting on players is on the Moderation page (admin.js); any player's
 // name here opens their history there. Signing in, the Steam account and loading are in staff.js.
 
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['rotations', 'lines', 'rules', 'admin'];
+const TABS = ['admin', 'rotations', 'lines', 'rules'];
 // The Moderation page's tabs, which a link here may name by mistake.
 const MODERATION_TABS = ['live', 'review', 'history', 'players', 'alerts', 'kills'];
-let tab = 'rotations';
+let tab = TABS[0];
 let data = null;
 
 // A player's name, opening their history on the Moderation page, with their Steam ID linking to their Steam profile.
@@ -89,7 +89,7 @@ for (const type of ['input', 'change']) document.addEventListener(type, unsavedS
 const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames });
 
 const selectTab = (name, { focus = false } = {}) => {
-  tab = TABS.includes(name) ? name : 'rotations';
+  tab = TABS.includes(name) ? name : TABS[0];
   showTab(TABS, tab, { focus });
   const hash = tab === TABS[0] ? '' : `#${tab}`;
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);

@@ -75,8 +75,8 @@ What it shows:
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
   anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged and any player's
-  history. **Server settings** (`/server-settings`): the map rotations, what the bot says in game, the weapon rules,
-  and the admin tools, bans and reserved slots. See [Staff pages](#staff-pages).
+  history. **Server settings** (`/server-settings`): the admin tools, bans and reserved slots, the map rotations,
+  what the bot says in game and the weapon rules. See [Staff pages](#staff-pages).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
@@ -278,12 +278,12 @@ There are two, one for each kind of work, with a switch between them by the titl
 - **Moderation** (`/admin`), the page to keep open while the server is busy: **Live** (who is on, with those worth a
   look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did) and **History**
   (any player's record).
-- **Server settings** (`/server-settings`), for setting the server up: **Rotations**, **Lines**, **Weapon rules** and
-  **Admin** (every staff command, bans, reserved slots and staff Steam accounts).
+- **Server settings** (`/server-settings`), for setting the server up: **Admin** (every staff command, bans, reserved
+  slots and staff Steam accounts), **Rotations**, **Lines** and **Weapon rules**.
 
 Each tab says what is in it, with a count: how many are in game, and how many flags there are. The address keeps the
-tab (`/admin#review`, `/admin#history`, `/server-settings#lines`, `/server-settings#rules`, `/server-settings#admin`;
-Live and Rotations, the first tabs, have none), and on History the player shown (`/admin#history/<Steam ID>`), so a
+tab (`/admin#review`, `/admin#history`, `/server-settings#rotations`, `/server-settings#lines`, `/server-settings#rules`;
+Live and Admin, the first tabs, have none), and on History the player shown (`/admin#history/<Steam ID>`), so a
 link opens the right one, and the browser's Back goes back. Old links go where those tabs are now: `/admin#admin`,
 `#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to
 that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
@@ -447,6 +447,28 @@ Admin tab.
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
   opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
+### Server settings: Admin, commands, bans and VIP
+
+- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
+  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
+  map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
+  rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
+  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
+  first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
+  player's staff history and the moderation log. To warn, kick or move someone in game, Act on Moderation is quicker.
+- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
+  tool with them picked.
+- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
+  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+  Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
+  unlinking them takes it away.
+- **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
+  linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
+  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
+  counts as seeding again. Needs the bot's staff Steam
+  accounts (its README, "Staff Steam accounts").
+
 ### Server settings: Rotations, the maps for each day
 
 A tab with changes not saved yet (Rotations, Lines or Weapon rules) has a yellow dot by its name, so they are not
@@ -508,28 +530,6 @@ forgotten while on another tab.
   removes one. Leaving with unsaved changes asks first.
 - Kills within 30 seconds of the bot acting are one offence, and offences start again each day (UTC). Every warning
   and kick goes in the moderation log, done by the bot. The bot's README, "Weapon rules", has the details.
-
-### Server settings: Admin, commands, bans and VIP
-
-- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
-  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
-  map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
-  rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
-  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
-  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
-  first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
-  player's staff history and the moderation log. To warn, kick or move someone in game, Act on Moderation is quicker.
-- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
-  tool with them picked.
-- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
-  Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
-  unlinking them takes it away.
-- **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
-  linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
-  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
-  counts as seeding again. Needs the bot's staff Steam
-  accounts (its README, "Staff Steam accounts").
 
 ### Everywhere
 
