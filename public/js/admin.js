@@ -343,6 +343,7 @@ const ACTIONS = [
   { key: 'kick', label: 'Kick', note: 'They see the reason, and can rejoin', inGame: true },
   { key: 'switchteam', label: 'Move to another team', note: 'They respawn on the new side', inGame: true },
   { key: 'ban', label: 'Ban', note: 'For a set time or for good', inGame: false },
+  { key: 'private:add', label: 'Make profile private', note: 'Shown as [private profile] on the website and in public posts', inGame: false },
 ];
 
 const closeMenus = (except = null) => {

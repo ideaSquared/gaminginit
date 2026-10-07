@@ -304,8 +304,8 @@ opens their history.**
   name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: the players with a yellow
   mark at the top, then each group by team, so the ones to check never hide among the rest. When nobody in game
   matches a search, "Find" searches everyone the bot knows on the History tab.
-- **Act** on a player opens a menu: their history, warn, kick, move to another team, or ban. History opens the History
-  tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
+- **Act** on a player opens a menu: their history, warn, kick, move to another team, ban, or make their profile private.
+  History opens the History tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
@@ -366,8 +366,8 @@ opens their history.**
   reason and who did it (VIP added: Friend, Regular, Seeder, Paid or Other, and any note; VIP removed: any reason given),
   and bans made or lifted outside the bot (in game, or in the server's settings). Each kind of action can be hidden
   (team moves, say); the page remembers what you hid in this browser.
-- Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers their history
-  and ban, as the game can only warn, kick or move players who are on.
+- Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers their history,
+  ban and making their profile private, as the game can only warn, kick or move players who are on.
 
 ### History: any player's record
 
