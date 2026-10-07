@@ -4074,6 +4074,8 @@ textarea.tool-input {
 .rot-day .rot-day-select {
   position: absolute;
   inset: 0;
+  /* Above the name, which comes after it and is positioned too, or the name takes the click. */
+  z-index: 1;
   width: 100%;
   height: 100%;
   max-width: none;
