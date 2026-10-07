@@ -425,7 +425,11 @@ if (/^[0-9a-f]{12}$/.test(id)) {
   startLive(render, {
     url: apiUrl(`player?id=${id}`),
     sample: (now) => demoProfile(id, now),
-    missing: () => showMissing('No player found', 'The link may be old: players are listed for 90 days after they last played on our server.'),
+    missing: () =>
+      showMissing(
+        'No player found',
+        'The link may be old: players are listed for 90 days after they last played on our server. Or the player’s profile is private.',
+      ),
   });
 } else {
   showMissing('Pick a player', 'This page shows one player’s stats. Find a player in the list of everyone who has played on our server.');

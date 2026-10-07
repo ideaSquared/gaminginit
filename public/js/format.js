@@ -933,6 +933,9 @@ export const TOOL_GROUPS = [
       ['switchteam', 'Move to another team'],
       ['ban', 'Ban'],
       ['unban', 'Unban'],
+      ['private:add', 'Make a profile private'],
+      ['private:remove', 'Make a profile public again'],
+      ['private:list', 'See the private profiles'],
     ],
   },
   { name: 'VIP', tools: [['vip:add', 'Give VIP'], ['vip:remove', 'Remove VIP'], ['seeders', 'Top seeders']] },
@@ -961,7 +964,7 @@ export const TOOL_GROUPS = [
 ];
 
 // Tools that only read, so they run without asking first.
-export const READ_ONLY_TOOLS = new Set(['player', 'seeders', 'rotations:show']);
+export const READ_ONLY_TOOLS = new Set(['player', 'seeders', 'rotations:show', 'private:list']);
 
 const SUBCOMMAND = 1;
 

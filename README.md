@@ -64,6 +64,10 @@ What it shows:
   last 30 days, whichever period is chosen. Tables too wide for a small screen scroll inside their card.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
+- Private profiles: a player staff made private (the bot's `/private add`, or Make a profile private on the staff page)
+  shows as "[private profile]" everywhere on the site, with no link to a player page: the leaderboard, matches, the live
+  kill feed, the seeding page and the weapons. They are left off the players page, and their player page says no player
+  was found. The staff page still shows them as they are.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
@@ -390,7 +394,7 @@ opens their history.**
 ### Admin: commands, bans and VIP
 
 - **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
-  give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
+  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
   pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
