@@ -4064,62 +4064,25 @@ textarea.tool-input {
   text-transform: uppercase;
 }
 
-/* A day's rotation: its name written out in full, wrapping, as a narrow card cuts a select's own text short. The select is
-   laid over it, see-through, so it still opens and works from the keyboard. */
-.rot-day-pick {
-  position: relative;
+/* A day's rotation: a plain select, so it opens in every browser. A long name is cut short, and is its tooltip. */
+.rot-day .rot-day-select {
+  display: block;
+  width: 100%;
+  max-width: none;
   margin-top: 8px;
+  padding: 7px 8px;
+  font-size: 0.88rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  cursor: pointer;
 }
 
-.rot-day .rot-day-select {
-  position: absolute;
-  inset: 0;
-  /* Above the name, which comes after it and is positioned too, or the name takes the click. */
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  opacity: 0;
-  cursor: pointer;
+.rot-day-own .rot-day-select {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--axis));
 }
 
 .rot-day .rot-day-select:disabled {
   cursor: default;
-}
-
-.rot-day-chosen {
-  position: relative;
-  display: block;
-  padding: 7px 26px 7px 10px;
-  border: 1px solid var(--axis);
-  border-radius: 8px;
-  background: var(--page);
-  font-size: 0.88rem;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-
-.rot-day-chosen::after {
-  content: '▾';
-  position: absolute;
-  top: 50%;
-  right: 9px;
-  transform: translateY(-50%);
-  color: var(--muted);
-}
-
-.rot-day-own .rot-day-chosen {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--axis));
-}
-
-.rot-day-select:focus-visible + .rot-day-chosen {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.rot-day-select:disabled + .rot-day-chosen {
   opacity: 0.6;
 }
 
