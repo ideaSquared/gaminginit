@@ -296,13 +296,16 @@ opens their history.**
 - **Tiles:** players in game, how many are worth a look now, how many in game are flagged for headshots today, and risky
   Steam accounts in game.
 - **The server list:** everyone in game, with their team, kills and deaths this match, time on the server today, and
-  what is worth knowing: a high-risk Steam account or one worth a look, today's headshots when they are unlikely by luck
-  (yellow below 1 in 20, red once the day is flagged; hover for their usual and the chance), team kills and vehicle
-  suicides today (red once they pass a griefing mark), new today (first time in 90 days), VIP, or banned. Players worth
-  a look have a yellow mark by their name.
+  what is worth knowing: banned, team kills and vehicle suicides today (red once they pass a griefing mark), today's
+  headshots when they are unlikely by luck (yellow below 1 in 20, red once the day is flagged; hover for their usual
+  and the chance), a high-risk Steam account or one worth a look, new today (first time in 90 days), or VIP. Players
+  worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) have a yellow mark by their
+  name. Being new is shown, but is no reason to look on its own.
 - **Search** by name or Steam ID, pick a **team**, **sort** by worth a look first, team, most kills, longest on today or
-  name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: the players with a yellow
-  mark at the top, then each group by team, so the ones to check never hide among the rest. When nobody in game
+  name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: banned players, then those
+  flagged for griefing today with the most team kills first, then flagged headshots, then high-risk and risky Steam
+  accounts, then anyone else with team kills or vehicle suicides today, then the rest by team, so the ones to check
+  never hide among the rest. When nobody in game
   matches a search, "Find" searches everyone the bot knows on the History tab.
 - **Act** on a player opens a menu: their history, warn, kick, move to another team, ban, or make their profile private.
   History opens the History tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.

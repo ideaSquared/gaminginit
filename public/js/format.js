@@ -842,32 +842,51 @@ const headshotsWatch = (today) => {
 
 const STEAM_BADGES = { high: 'High-risk Steam account', medium: 'Steam account worth a look' };
 
-// What is worth watching about a player in game, as badges: `kind` is 'bad', 'hot' or 'accent', or '' for a quiet one.
-// `today` is the UTC day, to tell who is new.
+// What is worth watching about a player in game, as badges, in the order the list puts players: `kind` is 'bad', 'hot'
+// or 'accent', or '' for a quiet one. `today` is the UTC day, to tell who is new: a quiet badge, as being new is no
+// reason to look on its own.
 export const watchList = (player, today) => [
   ...(player.banned ? [{ text: 'Banned', kind: 'bad' }] : []),
-  ...(player.steam && player.steam.risk !== 'low'
-    ? [{ text: STEAM_BADGES[player.steam.risk], kind: player.steam.risk === 'high' ? 'bad' : 'hot', title: player.steam.flags.map(steamFlagLabel).join(', ') }]
-    : []),
-  ...headshotsWatch(player.headshotsToday),
   ...(player.teamKillsToday > 0
     ? [{ text: `${plural(player.teamKillsToday, 'team kill')} today`, kind: player.griefFlags.length > 0 ? 'bad' : '' }]
     : []),
   ...(player.vehicleSuicidesToday > 0
     ? [{ text: `${plural(player.vehicleSuicidesToday, 'vehicle suicide')} today`, kind: player.griefFlags.includes('vehicleSuicides') ? 'hot' : '' }]
     : []),
-  ...(player.firstSeen === today ? [{ text: 'New today', kind: 'accent', title: 'First time on the server in 90 days' }] : []),
+  ...headshotsWatch(player.headshotsToday),
+  ...(player.steam && player.steam.risk !== 'low'
+    ? [{ text: STEAM_BADGES[player.steam.risk], kind: player.steam.risk === 'high' ? 'bad' : 'hot', title: player.steam.flags.map(steamFlagLabel).join(', ') }]
+    : []),
+  ...(player.firstSeen === today ? [{ text: 'New today', kind: '', title: 'First time on the server in 90 days' }] : []),
   ...(player.reserved ? [{ text: 'VIP', kind: '' }] : []),
 ];
 
-// Whether a player in game is worth a look now: banned, a risky Steam account, flagged for headshots or griefing today,
-// or new.
-export const needsLook = (player, today) =>
+// Whether a player in game is worth a look now: banned, flagged for griefing or headshots today, or a risky Steam
+// account. Being new is not a reason on its own.
+export const needsLook = (player) =>
   player.banned ||
-  (player.steam !== null && player.steam.risk !== 'low') ||
-  player.headshotsToday?.flagged === true ||
   player.griefFlags.length > 0 ||
-  player.firstSeen === today;
+  player.headshotsToday?.flagged === true ||
+  (player.steam !== null && player.steam.risk !== 'low');
+
+// Where a player in game goes in the list, as numbers compared in turn, highest first: banned, then flagged for
+// griefing today (most team kills first), flagged for headshots, a high-risk then a risky Steam account, then anyone
+// with team kills or vehicle suicides today below the flags. Each only decides between players level on those before
+// it, so nothing lower down can lift a player over a higher tier.
+export const lookRank = (player) => [
+  player.banned ? 1 : 0,
+  player.griefFlags.length > 0 ? player.teamKillsToday : -1,
+  player.headshotsToday?.flagged === true ? 1 : 0,
+  player.steam?.risk === 'high' ? 2 : player.steam?.risk === 'medium' ? 1 : 0,
+  player.teamKillsToday,
+  player.vehicleSuicidesToday,
+];
+
+// Most worth a look first; 0 for two players level.
+export const byLook = (a, b) => {
+  const [x, y] = [lookRank(a), lookRank(b)];
+  return x.reduce((order, n, i) => order || y[i] - n, 0);
+};
 
 // Each team in game with how many are on it, biggest first, and players without a team (`name` null) last.
 export const teamCounts = (players) => {
@@ -889,14 +908,14 @@ export const PLAYER_SORTS = {
 };
 
 // The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
-// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order: those worth a look first by
-// default, so staff see them without hunting, then by team.
-export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'watch' }, today) => {
+// team, or 'none' for no team), only those worth a look when `watch`, in `sort` order: by default the most worth a look
+// first (see lookRank), so staff see a griefer without hunting, then by team.
+export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'watch' }) => {
   const q = query.trim().toLowerCase();
   const byName = (a, b) => a.name.localeCompare(b.name);
   const byTeam = (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b);
   const order = {
-    watch: (a, b) => Number(needsLook(b, today)) - Number(needsLook(a, today)) || byTeam(a, b),
+    watch: (a, b) => byLook(a, b) || byTeam(a, b),
     team: byTeam,
     kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
     today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),
@@ -905,7 +924,7 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
   return players
     .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
     .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
-    .filter((p) => !watch || needsLook(p, today))
+    .filter((p) => !watch || needsLook(p))
     .sort(order[sort] ?? order.watch);
 };
 
