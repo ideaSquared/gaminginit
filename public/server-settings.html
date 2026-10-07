@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Server settings | Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: our WARDOGS server's map rotations, what the bot says in game, the weapon rules, the admin tools, bans and reserved slots." />
+    <meta name="description" content="For gaminginit staff: our WARDOGS server's admin tools, bans and reserved slots, its map rotations, what the bot says in game and the weapon rules." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -69,7 +69,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The map rotations, what the bot says in game, the weapon rules, the admin tools, bans and reserved slots. On Moderation: who is on the server, with anyone worth a look at the top, every kill live, what the bot flagged and any player’s history. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The admin tools, bans and reserved slots, the map rotations, what the bot says in game and the weapon rules. On Moderation: who is on the server, with anyone worth a look at the top, every kill live, what the bot flagged and any player’s history. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -80,7 +80,11 @@
 
           <div id="admin-body" hidden>
             <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Server settings">
-              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="true" data-tab="rotations">
+              <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" data-tab="admin">
+                <span class="tab-name">Admin</span>
+                <span class="tab-hint">Commands, bans and VIP</span>
+              </button>
+              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
                 <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 <span class="tab-hint">The maps for each day</span>
               </button>
@@ -92,25 +96,9 @@
                 <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 <span class="tab-hint">Weapons the bot warns or kicks for</span>
               </button>
-              <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
-                <span class="tab-name">Admin</span>
-                <span class="tab-hint">Commands, bans and VIP</span>
-              </button>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations">
-              <div id="rotations"></div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
-              <div id="lines"></div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
-              <div id="rules"></div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
+            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin">
               <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
                 <h2 class="panel-title" id="tools-title">Admin tools</h2>
                 <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first. To warn, kick, move or ban someone in game, use <strong>Act</strong> on the <a href="admin" data-keep-query>Moderation</a> page’s server list.</p>
@@ -143,6 +131,18 @@
                   <table class="admin-table" id="staff-steam"></table>
                 </div>
               </article>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
+              <div id="rotations"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
+              <div id="lines"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
+              <div id="rules"></div>
             </div>
           </div>
 
