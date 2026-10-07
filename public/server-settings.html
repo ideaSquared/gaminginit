@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Server settings | Staff | gaminginit WARDOGS server</title>
+    <meta name="description" content="For gaminginit staff: our WARDOGS server's map rotations, what the bot says in game, the weapon rules, the admin tools, bans and reserved slots." />
+    <!-- Staff only: never in search results, and no address in links to other sites. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#0b0d10" />
+    <!-- Where the bot serves its stats. Keep it the same as in index.html. See README.md. -->
+    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="js/settings.js"></script>
+  </head>
+  <body class="staff">
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
+        </a>
+        <nav class="nav-sections" aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="stats" data-keep-query>Stats</a></li>
+            <li><a href="live" data-keep-query>Live</a></li>
+            <li><a href="matches" data-keep-query>Matches</a></li>
+            <li><a href="teams" data-keep-query>Teams</a></li>
+            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
+            <li><a href="players" data-keep-query>Players</a></li>
+            <li><a href="seeding" data-keep-query>Seeding</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+          <span>Discord</span>
+        </a>
+      </div>
+    </header>
+
+
+    <main id="main">
+      <!-- The notice for every page, like the server being down. Set in announcement.json; see README.md. -->
+      <div class="announcement wrap" id="announcement" role="status" hidden></div>
+      <div class="notice wrap" id="notice" role="status" hidden></div>
+
+      <section class="section admin" aria-labelledby="admin-title">
+        <div class="wrap">
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
+          <div class="section-head">
+            <div class="staff-head">
+              <h1 class="page-title" id="admin-title">Staff</h1>
+              <!-- The two staff pages. Keep the same as in admin.html. -->
+              <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" hidden>
+                <a href="admin" data-keep-query>Moderation</a>
+                <a href="server-settings" data-keep-query aria-current="page">Server settings</a>
+              </nav>
+            </div>
+            <p class="section-note" id="admin-user" hidden></p>
+          </div>
+
+          <div class="card panel signin" id="signin" hidden>
+            <h2 class="panel-title">Staff only</h2>
+            <p>The map rotations, what the bot says in game, the weapon rules, the admin tools, bans and reserved slots. On Moderation: who is on the server, with anyone worth a look at the top, every kill live, what the bot flagged and any player’s history. For Discord Administrators and members with a staff role in our server.</p>
+            <p class="signin-error" id="signin-error" role="alert" hidden></p>
+            <a class="btn btn-discord" id="signin-link" href="#">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+              <span>Sign in with Discord</span>
+            </a>
+            <p class="muted signin-note">Discord tells us who you are and your roles in our server, nothing else. You stay signed in on this browser for 8 hours.</p>
+          </div>
+
+          <div id="admin-body" hidden>
+            <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Server settings">
+              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="true" data-tab="rotations">
+                <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                <span class="tab-hint">The maps for each day</span>
+              </button>
+              <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines">
+                <span class="tab-name">Lines <span class="tab-dirty" id="dirty-lines" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                <span class="tab-hint">What the bot says in game</span>
+              </button>
+              <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules">
+                <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                <span class="tab-hint">Weapons the bot warns or kicks for</span>
+              </button>
+              <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
+                <span class="tab-name">Admin</span>
+                <span class="tab-hint">Commands, bans and VIP</span>
+              </button>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations">
+              <div id="rotations"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
+              <div id="lines"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
+              <div id="rules"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
+              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
+                <h2 class="panel-title" id="tools-title">Admin tools</h2>
+                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first. To warn, kick, move or ban someone in game, use <strong>Act</strong> on the <a href="admin" data-keep-query>Moderation</a> page’s server list.</p>
+                <div id="tools"></div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="bans-title">
+                <h2 class="panel-title" id="bans-title">Bans</h2>
+                <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="bans"></table>
+                </div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="reserved-title">
+                <h2 class="panel-title" id="reserved-title">Reserved slots</h2>
+                <p class="section-note" id="reserved-note"></p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="reserved"></table>
+                </div>
+              </article>
+
+              <article class="card panel admin-panel" aria-labelledby="staff-steam-title">
+                <div class="panel-head">
+                  <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
+                  <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
+                </div>
+                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the reserved list while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
+                <div class="admin-scroll">
+                  <table class="admin-table" id="staff-steam"></table>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <dialog class="card steam-dialog" id="steam-dialog" aria-labelledby="steam-dialog-title">
+            <form class="steam-form" id="steam-form" novalidate>
+              <h2 class="panel-title" id="steam-dialog-title">Link your Steam account</h2>
+              <p>Seeder VIP and the top seeders are for the players who seed, so staff are not counted. Link the Steam account you play on, and the bot counts your time on the server as playing, not seeding. You won’t earn seeder VIP or show as a top seeder. Your kills, matches and time played show as before. You get a staff spot instead: a reserved slot on the server for as long as you’re linked.</p>
+              <div class="tool-field">
+                <label class="tool-label" for="steam-input">Your Steam64 ID</label>
+                <input class="finder-input tool-input" id="steam-input" name="steamId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="7656119…" aria-describedby="steam-input-note steam-error" />
+                <p class="muted tool-note" id="steam-input-note">17 digits, starting 7656119. Or paste your Steam profile’s link, if it has that number in it.</p>
+                <p class="tool-error" id="steam-error" role="alert" hidden></p>
+              </div>
+              <details class="steam-guide" open>
+                <summary>How to find it</summary>
+                <ol>
+                  <li>In the Steam app, click your name at the top right, then <strong>Account details</strong>. Your Steam ID is the 17-digit number under your account name. Copy it and paste it above.</li>
+                  <li>Or open your Steam profile, right-click anywhere on it and pick <strong>Copy Page URL</strong>. If the link has <code>/profiles/</code> and a number in it, paste the whole link above.</li>
+                  <li>If your link is <code>steamcommunity.com/id/</code> and a name, you set a custom URL, so the number is not in it. Use <strong>Account details</strong>, or paste your link into <a href="https://steamid.io/" rel="noopener noreferrer" target="_blank">steamid.io</a> and copy the <strong>steamID64</strong>.</li>
+                </ol>
+              </details>
+              <div class="steam-actions">
+                <button type="submit" class="btn btn-small tool-run" id="steam-save">Link account</button>
+                <button type="button" class="btn btn-ghost btn-small" id="steam-cancel">Later</button>
+              </div>
+            </form>
+            <div class="steam-done" id="steam-done" hidden>
+              <h2 class="panel-title" id="steam-done-title">Steam account linked</h2>
+              <p id="steam-done-text"></p>
+              <div class="steam-actions">
+                <button type="button" class="btn btn-small tool-run" id="steam-done-close">Done</button>
+              </div>
+            </div>
+          </dialog>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
+        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
+        <p>Not affiliated with the developers or publishers of WARDOGS.</p>
+        <p class="footer-credit">Developed by <a href="https://ideasquared.co.uk" rel="noopener">ideaSquared</a></p>
+      </div>
+    </footer>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="discord-logo" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+        />
+      </symbol>
+    </svg>
+  </body>
+</html>

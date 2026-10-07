@@ -861,13 +861,63 @@ export const watchList = (player, today) => [
   ...(player.reserved ? [{ text: 'VIP', kind: '' }] : []),
 ];
 
-// Whether a player in game is worth a look now: banned, flagged for griefing or headshots today, or a risky Steam
-// account. Being new is not a reason on its own.
-export const needsLook = (player) =>
-  player.banned ||
-  player.griefFlags.length > 0 ||
-  player.headshotsToday?.flagged === true ||
-  (player.steam !== null && player.steam.risk !== 'low');
+// Why a player in game is worth a look: banned, flagged for griefing or headshots today, or a risky Steam account, as
+// the bot keeps them with a "Checked, they're fine". Being new is not a reason on its own.
+export const lookReasons = (player) => [
+  ...(player.banned ? ['banned'] : []),
+  ...(player.griefFlags.length > 0 ? ['griefing'] : []),
+  ...(player.headshotsToday?.flagged === true ? ['headshots'] : []),
+  ...(player.steam != null && player.steam.risk !== 'low' ? ['steam'] : []),
+];
+
+// Whether a player in game has anything worth a look about them (see lookReasons).
+export const needsLook = (player) => lookReasons(player).length > 0;
+
+// A staff member's "Checked, they're fine" still covers a player while nothing more came up since: no new reason, and
+// no more team kills or vehicle suicides today than when they were checked. An older bot sends no checks.
+export const checkHolds = (player) => {
+  const check = player.checked;
+  if (!check) return false;
+  return (
+    lookReasons(player).every((r) => check.reasons.includes(r)) &&
+    player.teamKillsToday <= check.teamKills &&
+    player.vehicleSuicidesToday <= check.vehicleSuicides
+  );
+};
+
+// Whether a player in game is worth a look now: something about them is (see needsLook), and nobody checked them, or
+// more came up since.
+export const lookNow = (player) => needsLook(player) && !checkHolds(player);
+
+// What the page sends the bot to check a player: what they are flagged for as it shows it now.
+export const checkOf = (player) => ({ reasons: lookReasons(player), teamKills: player.teamKillsToday, vehicleSuicides: player.vehicleSuicidesToday });
+
+// What staff did to someone recently, as the server list says it: warnings, kicks, bans and team moves in the last day.
+const ACTED = { warn: 'Warned', kick: 'Kicked', ban: 'Banned', switchteam: 'Moved' };
+export const ACTED_WINDOW_MS = DAY;
+
+// The latest of those for each player, by Steam ID, with how many there were in the last day. `moderation` is the bot's
+// moderation log.
+export const recentActions = (moderation, now) => {
+  const recent = new Map();
+  for (const e of moderation) {
+    if (!Object.hasOwn(ACTED, e.action) || now - e.at > ACTED_WINDOW_MS) continue;
+    const known = recent.get(e.player.steamId);
+    if (known === undefined) recent.set(e.player.steamId, { entry: e, count: 1 });
+    else recent.set(e.player.steamId, { entry: e.at > known.entry.at ? e : known.entry, count: known.count + 1 });
+  }
+  return recent;
+};
+
+// Who did it, in the middle of a sentence.
+const byWhom = (entry, staff) => (entry.by === 'bot' ? 'the bot' : entry.by === 'server' ? 'someone outside the bot' : staffBy(entry, staff));
+
+// "Warned 4 min ago by Sarge", and how many there were in the last day when more than one.
+export const actedText = ({ entry, count }, now, staff = {}) =>
+  `${ACTED[entry.action]} ${timeAgo(now - entry.at)} by ${byWhom(entry, staff)}${count > 1 ? ` · ${count} actions in 24 h` : ''}`;
+
+// "Checked by Sarge 4 min ago": a staff member's "Checked, they're fine" today.
+export const checkedText = (check, now, staff = {}) => `Checked by ${byWhom(check, staff)} ${timeAgo(now - check.at)}`;
 
 // Where a player in game goes in the list, as numbers compared in turn, highest first: banned, then flagged for
 // griefing today (most team kills first), flagged for headshots, a high-risk then a risky Steam account, then anyone
@@ -924,23 +974,48 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
   return players
     .filter((p) => q === '' || p.name.toLowerCase().includes(q) || p.steamId.includes(q))
     .filter((p) => team === '' || (team === 'none' ? p.faction === null : p.faction !== null && sideKey(p.faction) === team))
-    .filter((p) => !watch || needsLook(p))
+    .filter((p) => !watch || lookNow(p))
     .sort(order[sort] ?? order.watch);
 };
 
-// The live kill feed's "Only headshots" and "Only team kills": a kill shows when it is everything ticked.
-export const feedKillShown = (kill, { headshots = false, teamKills = false } = {}) =>
-  (!headshots || kill.headshot) && (!teamKills || kill.teamKill);
+// The server list in its two parts, each in the order it came: those worth a look now (see lookNow), which the staff
+// page always puts at the top, and everyone else.
+export const lookFirst = (players) => ({ look: players.filter(lookNow), rest: players.filter((p) => !lookNow(p)) });
 
-// What the live kill feed says when it has no kills, or none of them is everything ticked.
-export const feedEmpty = (kills, { headshots = false, teamKills = false } = {}) =>
-  kills === 0
-    ? 'No kills yet.'
-    : headshots && teamKills
-      ? 'No team kills by headshot among them.'
-      : teamKills
-        ? 'No team kills among them.'
-        : 'No headshots among them.';
+// The live kill feed's "Only headshots", "Only team kills" and "Only this player" (`player`, a Steam ID): a kill shows
+// when it is everything picked.
+export const feedKillShown = (kill, { headshots = false, teamKills = false, player = null } = {}) =>
+  (!headshots || kill.headshot) &&
+  (!teamKills || kill.teamKill) &&
+  (player === null || kill.killer.steamId === player || kill.victim.steamId === player);
+
+// What the live kill feed says when it has no kills, or none of them is everything picked. `playerName` names the
+// player picked.
+export const feedEmpty = (kills, { headshots = false, teamKills = false, player = null, playerName = '' } = {}) => {
+  if (kills === 0) return 'No kills yet.';
+  const what = headshots && teamKills ? 'team kills by headshot' : teamKills ? 'team kills' : headshots ? 'headshots' : null;
+  if (player !== null) return `No ${what ?? 'kills or deaths'} with ${playerName} among them.`;
+  return `No ${what} among them.`;
+};
+
+// Reasons to pick in the admin tools, which staff can change before sending: `warn` is the message /warn sends (the
+// player reads it in game, up to 140 characters; none for a reason that is no warning matter), `reason` the reason for
+// /kick and /ban, which the player sees too. Change them here.
+export const PRESET_REASONS = [
+  { label: 'Team killing', warn: 'Stop team killing, or you will be kicked.', reason: 'Team killing' },
+  { label: 'Team vehicles', warn: 'Stop destroying team vehicles, or you will be kicked.', reason: 'Destroying team vehicles' },
+  { label: 'Toxic chat', warn: 'Keep the chat friendly, or you will be kicked.', reason: 'Toxic chat' },
+  { label: 'Racism', warn: 'No racism or hate speech here. Next time is a ban.', reason: 'Racism or hate speech' },
+  { label: 'Cheating', warn: null, reason: 'Cheating' },
+  { label: 'Ignoring warnings', warn: null, reason: 'Ignoring staff warnings' },
+];
+
+// The reasons to pick for a tool's option ({ label, text }): /warn's message, and /kick's and /ban's reason.
+export const presetReasons = (toolKey, option) => {
+  if (toolKey === 'warn' && option === 'message') return PRESET_REASONS.filter((r) => r.warn !== null).map((r) => ({ label: r.label, text: r.warn }));
+  if ((toolKey === 'kick' || toolKey === 'ban') && option === 'reason') return PRESET_REASONS.map((r) => ({ label: r.label, text: r.reason }));
+  return [];
+};
 
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
 export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);

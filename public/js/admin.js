@@ -1,22 +1,12 @@
-import {
-  demoAdmin,
-  demoCall,
-  demoCommands,
-  demoFeedKill,
-  demoKills,
-  demoLines,
-  demoLinesChange,
-  demoPlayerKills,
-  demoPlayerRecord,
-  demoRotations,
-  demoRotationsChange,
-  demoRules,
-  demoRulesChange,
-} from './demo.js';
+import { demoFeedKill, demoKills, demoPlayerKills, demoPlayerRecord } from './demo.js';
 import {
   accountAge,
+  actedText,
   alertCount,
   BUTTON_BACKGROUND,
+  checkedText,
+  checkHolds,
+  checkOf,
   clockHour,
   DEATH_TAGS,
   factionColours,
@@ -33,27 +23,24 @@ import {
   headshotShare,
   kd,
   killerSummary,
+  lookFirst,
+  lookNow,
   luckOdds,
   metres,
   modActionCounts,
   modActionLabel,
-  needsLook,
   oddsKind,
   ordinaryHeadshots,
   percent,
   PLAYER_SORTS,
   plural,
-  readSteamId,
+  recentActions,
   RISK_LABELS,
-  sessionExpiry,
   sideColours,
   sideKey,
-  signInResult,
   staffBy,
-  staffNote,
   steamFlagLabel,
   steamFlagRule,
-  steamLinkedText,
   steamWhy,
   teamCounts,
   timeAgo,
@@ -63,79 +50,42 @@ import {
   WEAPON_KINDS,
   withVehicle,
 } from './format.js';
-import { createLines } from './lines.js';
-import { demo, showNotice, thisPage } from './live.js';
-import { createRotations } from './rotations.js';
-import { createRules } from './rules.js';
+import { demo, keepQuery, showNotice } from './live.js';
+import {
+  $,
+  badge,
+  botUrl,
+  call,
+  cell,
+  configured,
+  get,
+  load,
+  loadCommands,
+  loadToken,
+  number,
+  replaceButtons,
+  setStatus,
+  showAccount,
+  showTab,
+  staffCell,
+  staffNames,
+  start,
+  steamLink,
+  table,
+  tabKeys,
+  when,
+} from './staff.js';
 import { createTools, replyNodes } from './tools.js';
-import { el, link, mapTag, playerHref } from './views.js';
+import { el, mapTag, playerHref } from './views.js';
 
-// The staff page, in seven tabs. Live: the server now, everyone in game, to search and act on, every kill as it happens,
-// and who joined and left. Review: what the bot flagged by itself, to look at: far more headshots than a player's
-// weapons usually get, risky Steam accounts, possible griefers and their team kills and vehicle suicides; and the
-// moderation log of what staff did. History: any player's record, kills and headshots, and team kills. Admin: the admin tools (every staff command),
-// the bans on the server and the reserved slots. Rotations: the map rotations, the week and what is on the server (see
-// rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see
-// rules.js). Any player's name opens their history. Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
-// session token, which this page keeps for this browser and sends with each request. Staff link the Steam account they
-// play on, so the bot never counts them as seeders: the page asks once each sign-in until they have. ?demo shows sample
-// data without signing in.
-
-// The bot named in this page's own settings, never one named in the address (?stats=): a link could otherwise send a
-// signed-in staff member's session to another site. To try a local bot, edit the meta tag in a local copy.
-const botBase = document.querySelector('meta[name="stats-url"]')?.content ?? '';
-const configured = botBase !== '' && !botBase.includes('YOUR-SUBDOMAIN');
-const botUrl = (path) => new URL(path, botBase).href;
-
-const REFRESH_MS = 60_000;
-const SESSION_KEY = 'gaminginit-staff-session';
-// A session this close to running out is dropped, so a request never goes out with one that has.
-const EXPIRY_MARGIN_MS = 60_000;
-
-const $ = (id) => document.getElementById(id);
-
-// Sets a status line only when its words change, so a refresh does not make a screen reader say them again.
-const setStatus = (node, text) => {
-  if (node.textContent !== text) node.textContent = text;
-};
-
-// A row of filter buttons drawn in place of the last, keeping keyboard focus on the button for the same choice
-// (`data-key`) when one of the old ones had it, without scrolling to it: a refresh redraws the row while staff may have
-// scrolled away from it.
-const replaceButtons = (row, buttons) => {
-  const focused = row.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
-  row.replaceChildren(...buttons);
-  if (focused !== undefined) buttons.find((b) => b.dataset.key === focused)?.focus({ preventScroll: true });
-};
-
-// Storage can be off (a private window, blocked site data): then the sign-in lasts until the page is closed.
-let memoryToken = null;
-const saveToken = (token) => {
-  memoryToken = token;
-  try {
-    localStorage.setItem(SESSION_KEY, token);
-  } catch {
-    // Kept in memory only.
-  }
-};
-const loadToken = () => {
-  let token = memoryToken;
-  try {
-    token = localStorage.getItem(SESSION_KEY) ?? token;
-  } catch {
-    // Kept in memory only.
-  }
-  const expiresAt = token ? sessionExpiry(token) : null;
-  return expiresAt !== null && expiresAt - EXPIRY_MARGIN_MS > Date.now() ? token : null;
-};
-const forgetToken = () => {
-  memoryToken = null;
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch {
-    // Nothing kept.
-  }
-};
+// The staff page for moderation, in three tabs. Live: the server now, everyone in game with those worth a look always
+// at the top, to search and act on without leaving the page, every kill as it happens, and who joined and left. Review:
+// what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get, risky Steam
+// accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff did.
+// History: any player's record, kills and headshots, and team kills. A player's name on Live opens a quick look at them
+// at the side of the page; anywhere else, their history. Act on a player opens the admin tool for it over the page. The
+// rotations, lines, weapon rules and the Admin tab are on the Server settings page (settings.js). Signing in, the Steam
+// account and loading are in staff.js.
 
 // The kinds of action staff hid from the moderation log (MOD_ACTIONS keys), kept for this browser when storage is on.
 const MODLOG_HIDDEN_KEY = 'gaminginit-modlog-hidden';
@@ -155,13 +105,34 @@ const saveHidden = (hidden) => {
   }
 };
 
+// A choice kept for this browser when storage is on, such as compact rows.
+const loadPref = (key) => {
+  try {
+    return localStorage.getItem(key) ?? '';
+  } catch {
+    return '';
+  }
+};
+const savePref = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Kept until the page is closed.
+  }
+};
+const COMPACT_KEY = 'gaminginit-compact-rows';
+const ALERTS_KEY = 'gaminginit-look-alerts';
+// '' before the Review tab was first opened, 'seen' after, and 'open' while staff keep "How flags work" open.
+const HOW_FLAGS_KEY = 'gaminginit-how-flags';
+
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['live', 'review', 'history', 'admin', 'rotations', 'lines', 'rules'];
-const TAB_NAMES = { live: 'Live', review: 'Review', history: 'History', admin: 'Admin', rotations: 'Rotations', lines: 'Lines', rules: 'Weapon rules' };
+const TABS = ['live', 'review', 'history'];
 // The tabs the page had before, which old links name.
 const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review' };
+// The tabs now on the Server settings page, which old links to this page name.
+const SETTINGS_TABS = ['admin', 'rotations', 'lines', 'rules'];
 let tab = 'live';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order, which
 // starts with those worth a look at the top.
@@ -175,11 +146,6 @@ let onlineIds = new Set();
 let waiting = null;
 // The player whose incidents are shown, by Steam ID; null for everyone.
 let focus = null;
-let timer = 0;
-let lastLoad = 0;
-// Bumped by each load and by signing out, so an answer that comes back after a newer load started, or after signing
-// out, is dropped.
-let generation = 0;
 // The headshots list for the period (GET /api/admin/kills), loaded with each refresh, and the kill feed: the server's
 // latest kills, newest first, which the bot sends as they come in (see connectFeed).
 let kills = null;
@@ -187,95 +153,60 @@ let feed = [];
 let killsGeneration = 0;
 // The player on the History tab ({ steamId, name }), which the address keeps as #history/<Steam ID>, so Back goes back:
 // their kills (GET /api/admin/kills?player=) and their record ({ steamId, reply }: the /player command's reply, as Look
-// up shows it, or { steamId, error }). Each load has its own generation, as `generation` is for the rest.
+// up shows it, or { steamId, error }). Each load has its own generation, as the overview's loads do.
 let historyPlayer = null;
 let historyKills = null;
 let historyRecord = null;
 let historyGeneration = 0;
 // New kills or history that came while an Act menu was open, as for `waiting`.
 let killsWaiting = false;
-// "Only headshots" and "Only team kills" on the kill feed, and "Only headshots" on a player's kills.
-const killFilters = { feed: { headshots: false, teamKills: false }, history: false };
+// "Only headshots", "Only team kills" and only one player ({ steamId, name }, or null for everyone) on the kill feed,
+// and "Only headshots" on a player's kills.
+const killFilters = { feed: { headshots: false, teamKills: false, player: null }, history: false };
+// Compact rows on the server list: no Steam ID under each name, and less room around each row.
+let compact = loadPref(COMPACT_KEY) === '1';
 // "Show ordinary players" on the Review tab's headshots: off, those whose headshots are ordinary and who have no flagged
 // day are left out.
 let showOrdinary = false;
 
-// In the reader's own time: "Fri 3 Oct, 21:40".
-const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
-
-const signInHref = () => {
-  const url = new URL(botUrl('/auth/login'));
-  url.searchParams.set('return', location.origin + location.pathname + location.search);
-  return url.href;
-};
-
-const signedOut = (message) => {
-  generation += 1;
-  clearTimeout(timer);
-  document.body.classList.remove('refreshing');
+// Forgets what the page had when staff sign out, or their sign-in runs out.
+const signedOut = () => {
   data = null;
-  $('admin-body').hidden = true;
-  $('admin-user').hidden = true;
-  $('signin').hidden = false;
-  $('signin-link').href = signInHref();
-  $('signin-error').hidden = !message;
-  $('signin-error').textContent = message ?? '';
-  if ($('steam-dialog').open) $('steam-dialog').close();
-  rotations.reset();
-  lines.reset();
-  rules.reset();
   disconnectFeed();
   killsGeneration += 1;
   historyGeneration += 1;
   kills = null;
   historyKills = null;
   historyRecord = null;
+  if (actDialog.open) actDialog.close();
+  if (peekDialog.open) peekDialog.close();
+  lookSince.clear();
+  lookKnown = false;
+  document.title = BASE_TITLE;
 };
 
-const signOut = () => {
-  forgetToken();
-  signedOut(null);
-};
-
-// A Steam ID, linking to its Steam profile.
-const steamLink = (steamId) =>
-  el('a', {
-    className: 'steam-id',
-    href: `https://steamcommunity.com/profiles/${steamId}`,
-    rel: 'noopener noreferrer',
-    target: '_blank',
-    textContent: steamId,
-  });
-
-// A player's name, opening their history, with their Steam ID linking to their Steam profile.
-const who = (player) =>
+// A player's name, opening their history (or `open`, such as a quick look at them on Live), with their Steam ID linking
+// to their Steam profile.
+const who = (player, open = openHistory) =>
   el(
     'span',
     { className: 'staff-player' },
-    el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, onclick: () => openHistory(player) }),
+    el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, title: `Steam ID ${player.steamId}`, onclick: () => open(player) }),
     steamLink(player.steamId),
   );
-
-const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
+// On Live, a quick look.
+const whoLive = (player) => who(player, peek);
 
 // What the address keeps after the # for the tab shown, and on the History tab the player shown.
 const tabHash = () => (tab === 'live' ? '' : tab === 'history' && historyPlayer ? `#history/${historyPlayer.steamId}` : `#${tab}`);
 
 const selectTab = (name, { focus = false } = {}) => {
   tab = TABS.includes(name) ? name : 'live';
-  for (const t of TABS) {
-    const on = t === tab;
-    $(`tab-${t}`).setAttribute('aria-selected', String(on));
-    $(`tab-${t}`).tabIndex = on ? 0 : -1;
-    $(`panel-${t}`).hidden = !on;
-  }
-  if (focus) $(`tab-${tab}`).focus();
+  showTab(TABS, tab, { focus });
   const hash = tabHash();
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
-  // Loaded when first opened, as only staff working on rotations, lines or weapon rules need them.
-  if (tab === 'rotations' && data) rotations.show();
-  if (tab === 'lines' && data) lines.show();
-  if (tab === 'rules' && data) rules.show();
+  // "How flags work" is open the first time; after that it is folded away, unless staff leave it open.
+  if (tab === 'review' && loadPref(HOW_FLAGS_KEY) === '') savePref(HOW_FLAGS_KEY, 'seen');
   // A player's history is drawn straight away with what the page knows, and loaded when it is not yet.
   if (tab === 'history' && data) {
     renderHistory();
@@ -291,7 +222,7 @@ const fromHash = (hash) => {
   if (steamId !== null) return { name: 'history', steamId };
   return { name: Object.hasOwn(OLD_TABS, asked) ? OLD_TABS[asked] : asked, steamId: null };
 };
-const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash).name);
+const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash).name) || SETTINGS_TABS.includes(fromHash(hash).name);
 
 // The best name the page has for a Steam ID, until the bot sends theirs.
 const knownName = (steamId) =>
@@ -302,9 +233,14 @@ const knownName = (steamId) =>
     ...(data?.online?.players ?? []),
   ].find((p) => p.steamId === steamId)?.name ?? steamId;
 
-// Shows the tab and player the address names.
+// Shows the tab and player the address names. Old links to the Admin, Rotations, Lines and Weapon rules tabs go to them
+// on the Server settings page.
 const route = () => {
   const { name, steamId } = fromHash(location.hash);
+  if (SETTINGS_TABS.includes(name)) {
+    location.replace(keepQuery(`server-settings#${name}`));
+    return;
+  }
   if (name === 'history') historyPlayer = steamId === null ? null : { steamId, name: knownName(steamId) };
   selectTab(name);
 };
@@ -314,43 +250,111 @@ const openHistory = (player) => {
   historyPlayer = { steamId: player.steamId, name: player.name };
   const hash = `#history/${player.steamId}`;
   if (location.hash !== hash) history.pushState({ player: player.steamId }, '', location.pathname + location.search + hash);
-  $('tools-back').hidden = true;
   closeMenus();
+  if (peekDialog.open) peekDialog.close();
   selectTab('history');
   $('history-player').scrollIntoView({ block: 'start' });
 };
 
-// Opens an admin tool with the player picked, on the Admin tab, with a way back to where staff were. `key` null keeps
-// the tool open now when it takes a player.
+// Act: the admin tools for a player, over the page, so staff never leave the list they were working from. Only the
+// tools that take a player are offered; the rest are on the Server settings page's Admin tab.
+const actDialog = $('act-dialog');
+const ACT_NOTE = $('act-note').textContent;
+const tools = createTools({
+  root: $('act-tools'),
+  call,
+  onChanged: () => load(),
+  staff: staffNames,
+  only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
+});
+// Why there are no tools, when the bot has none.
+let toolsMissing = null;
+// The Act button staff came from, to go back to when the dialog closes, and the player it was for.
+let actFrom = null;
+let actFor = null;
+// The tool and player staff asked for before the tools had loaded, opened once they have.
+let actWaiting = null;
+
+// Opens an admin tool with the player picked, such as Kick. Until the tools have loaded, the dialog says so and opens
+// the tool when they come.
 const act = (key, player) => {
-  const from = tab;
-  selectTab('admin');
+  actFrom = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
+  actFor = player.steamId;
+  $('act-dialog-title').textContent = `Act on ${player.name}`;
+  setStatus($('act-note'), tools.ready ? ACT_NOTE : (toolsMissing ?? 'Loading the admin tools…'));
+  if (!actDialog.open) actDialog.showModal();
+  actWaiting = tools.ready ? null : { key, player };
   tools.use(key, player.steamId, player.name);
-  const back = $('tools-back');
-  back.hidden = from === 'admin';
-  back.textContent = `← Back to ${TAB_NAMES[from]}`;
-  back.onclick = () => {
-    back.hidden = true;
-    selectTab(from);
-  };
-  // The tool scrolls itself into view; the card's top, with the way back, goes there instead.
-  $('tools-title').closest('article').scrollIntoView({ block: 'start' });
 };
 
-// A row's button that opens an admin tool with that player picked.
-const actButton = (text, key, player) =>
-  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => act(key, player) });
+// The tools have loaded: the tool asked for while they were loading opens now, if the dialog is still open.
+const toolsReady = () => {
+  const asked = actWaiting;
+  actWaiting = null;
+  if (!asked || !actDialog.open) return;
+  setStatus($('act-note'), ACT_NOTE);
+  tools.use(asked.key, asked.player.steamId, asked.player.name);
+};
 
-// What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History is not
-// an admin tool: it opens the History tab.
+$('act-close').addEventListener('click', () => actDialog.close());
+actDialog.addEventListener('close', () => {
+  // The list may have been drawn again while the dialog was open, such as after a kick: then the same player's Act
+  // button in the same tab, if they are still there, or the quick look's first button.
+  const again = actFrom?.isConnected
+    ? actFrom
+    : peekDialog.open
+      ? peekDialog.querySelector('[data-peek]')
+      : $(`panel-${tab}`).querySelector(`.act-menu[data-steam-id="${actFor}"] > summary`);
+  again?.focus({ preventScroll: true });
+  actFrom = null;
+  actFor = null;
+  actWaiting = null;
+});
+
+// What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History and the
+// kill feed are not admin tools: they open the History tab, and show only that player in the kill feed.
 const ACTIONS = [
   { key: 'history', label: 'History', note: 'Kills and headshots, team kills, Steam account, bans and staff history', inGame: false },
+  { key: 'feed', label: 'Only them in the kill feed', note: 'Their kills and deaths, as they happen', inGame: false },
   { key: 'warn', label: 'Warn', note: 'A private message in game', inGame: true },
   { key: 'kick', label: 'Kick', note: 'They see the reason, and can rejoin', inGame: true },
   { key: 'switchteam', label: 'Move to another team', note: 'They respawn on the new side', inGame: true },
   { key: 'ban', label: 'Ban', note: 'For a set time or for good', inGame: false },
   { key: 'private:add', label: 'Make profile private', note: 'Shown as [private profile] on the website and in public posts', inGame: false },
 ];
+
+// "Checked, they're fine", for a player worth a look in game, or taking it back. Only with a bot that keeps checks: it
+// sends `checked` with each player in game.
+const CHECK_ACTIONS = {
+  check: { label: 'Checked, they’re fine', note: 'Moves them out of Worth a look now for all staff, until more comes up today' },
+  uncheck: { label: 'Take back the check', note: 'Puts them back in Worth a look now' },
+};
+const checkAction = (player) =>
+  player.checked === undefined || !onlineIds.has(player.steamId) ? null : lookNow(player) ? 'check' : checkHolds(player) ? 'uncheck' : null;
+
+// Does what a menu item or button picked, for `player`.
+const runAction = (key, player) => {
+  if (key === 'history') openHistory(player);
+  else if (key === 'feed') watchFeed(player);
+  else if (key === 'check' || key === 'uncheck') checkPlayer(player, key === 'check');
+  else act(key, player);
+};
+
+// Notes a "Checked, they're fine", or takes one back, for all staff, and loads the page again to show it.
+const checkPlayer = async (player, on) => {
+  const body = on ? { action: 'check', steamId: player.steamId, ...checkOf(player) } : { action: 'uncheck', steamId: player.steamId };
+  try {
+    const { ok, json } = await call('admin/check', body);
+    if (!ok) {
+      if (demo || loadToken()) showNotice(json?.error ?? 'Couldn’t save that just now. Try again in a minute.');
+      return;
+    }
+    load();
+  } catch (error) {
+    console.error('Could not save a check', error);
+    showNotice('Couldn’t reach the bot. Try again in a minute.');
+  }
+};
 
 const closeMenus = (except = null) => {
   for (const menu of document.querySelectorAll('.act-menu[open]')) if (menu !== except) menu.open = false;
@@ -377,7 +381,7 @@ const actMenu = (player) => {
   const list = el(
     'div',
     { className: 'act-list' },
-    ...ACTIONS.filter((a) => inGame || !a.inGame).map((a) =>
+    ...[...ACTIONS.filter((a) => inGame || !a.inGame), ...(checkAction(player) ? [{ key: checkAction(player), ...CHECK_ACTIONS[checkAction(player)] }] : [])].map((a) =>
       el(
         'button',
         {
@@ -385,8 +389,7 @@ const actMenu = (player) => {
           className: 'act-item',
           onclick: () => {
             menu.open = false;
-            if (a.key === 'history') openHistory(player);
-            else act(a.key, player);
+            runAction(a.key, player);
           },
         },
         el('span', { className: 'act-label', textContent: a.label }),
@@ -396,6 +399,7 @@ const actMenu = (player) => {
     inGame ? null : el('p', { className: 'act-note act-off', textContent: 'Not in game, so they can’t be warned, kicked or moved.' }),
   );
   const menu = el('details', { className: 'act-menu' }, el('summary', { className: 'btn btn-ghost btn-small', textContent: 'Act' }), list);
+  menu.dataset.steamId = player.steamId;
   menu.addEventListener('toggle', () => {
     if (!menu.open) {
       // Once every menu has closed: another may have opened as this one closed.
@@ -432,18 +436,6 @@ document.addEventListener('scroll', placeOpenMenus, { capture: true, passive: tr
 window.addEventListener('resize', placeOpenMenus);
 
 const FLAG_KIND = { teamKills: 'bad', sameTeammate: 'bad', vehicleSuicides: 'hot', suicides: 'hot' };
-
-const table = (node, headers, rows, empty) => {
-  if (rows.length === 0) {
-    node.replaceChildren(el('tbody', {}, el('tr', {}, el('td', { className: 'muted', colSpan: headers.length, textContent: empty }))));
-    return;
-  }
-  node.replaceChildren(
-    // A header as [text, 'num'] lines up with numbers on the right.
-    el('thead', {}, el('tr', {}, ...headers.map((h) => el('th', { scope: 'col', textContent: [h].flat()[0], className: [h].flat()[1] ?? '' })))),
-    el('tbody', {}, ...rows),
-  );
-};
 
 // The alert lists whose "Not in game" part staff opened, by the list's id, so a refresh keeps it open.
 const awayOpen = new Set();
@@ -492,17 +484,6 @@ const inGameFirst = (node, overview, { headers, items, row, empty, emptyInGame }
   );
   if (focused) document.getElementById(awayId)?.focus({ preventScroll: true });
 };
-
-const cell = (...children) => el('td', {}, ...children);
-
-// Who did something, by name. Someone the bot has no name for yet links to their Discord profile, which opens in
-// Discord with their name.
-const staffCell = (entry, staff = {}) => {
-  const text = staffBy(entry, staff);
-  if (!/^\d{17,20}$/.test(entry.by) || staff[entry.by] || entry.byName) return cell(text);
-  return cell(el('a', { href: `https://discord.com/users/${entry.by}`, rel: 'noopener noreferrer', target: '_blank', textContent: text }));
-};
-const number = (value) => el('td', { className: 'num', textContent: String(value) });
 
 const renderGriefers = (overview) => {
   const marks = overview.flags;
@@ -646,12 +627,61 @@ const renderTeamFilter = (players, scores) => {
   ]);
 };
 
-// Everyone in game, as staff searched, filtered and sorted it.
+// The server list's columns.
+const PLAYER_HEADERS = ['Player', 'Team', ['Kills / deaths', 'num'], ['Today', 'num'], 'Worth knowing', ''];
+
+// How long a player newly worth a look is marked "Just flagged".
+const JUST_FLAGGED_MS = 5 * 60_000;
+
+const badgeOf = (w) => {
+  const b = badge(w.text, w.kind);
+  if (w.title) b.title = w.title;
+  return b;
+};
+
+// What is worth knowing about a player in game: their flags and the rest (see watchList), "Just flagged" when they
+// became worth a look since the page loaded, any "Checked, they're fine" today, and what staff did to them in the last
+// day (`acted`, from recentActions).
+const worthKnowing = (p, overview, acted) => {
+  const now = overview.generatedAt;
+  const since = lookSince.get(p.steamId);
+  const marks = [
+    ...(since && now - since < JUST_FLAGGED_MS ? [{ text: 'Just flagged', kind: 'accent', title: `Worth a look since ${when.format(since)}` }] : []),
+    ...watchList(p, utcDay(now)),
+  ];
+  const did = acted.get(p.steamId);
+  const holds = checkHolds(p);
+  return [
+    marks.length === 0 ? null : el('span', { className: 'badges' }, ...marks.map(badgeOf)),
+    p.checked
+      ? el('p', {
+          className: `row-note${holds ? ' row-checked' : ''}`,
+          textContent: holds ? `✓ ${checkedText(p.checked, now, overview.staff)}` : `${checkedText(p.checked, now, overview.staff)}, but more came up since`,
+        })
+      : null,
+    did ? el('p', { className: 'row-note', textContent: actedText(did, now, overview.staff) }) : null,
+  ].filter(Boolean);
+};
+
+// One click to warn or kick a player worth a look, or to say they're fine once checked.
+const QUICK = { warn: 'Warn', kick: 'Kick', check: '✓ Checked, they’re fine' };
+const quickActs = (p) =>
+  el(
+    'span',
+    { className: 'quick-acts' },
+    ...['warn', 'kick', ...(checkAction(p) === 'check' ? ['check'] : [])].map((key) => {
+      const b = el('button', { type: 'button', className: `btn btn-ghost btn-small quick-${key}`, textContent: QUICK[key], onclick: () => runAction(key, p) });
+      b.dataset.quick = key;
+      return b;
+    }),
+  );
+
+// Everyone in game, as staff searched, filtered and sorted it, in two parts: those worth a look now first, whatever the
+// order, so a flagged player is never down the list; then everyone else. Each part is in the order picked.
 const renderPlayers = (overview) => {
   if (!overview) return;
   const online = overview.online;
   const players = online?.players ?? [];
-  const today = utcDay(overview.generatedAt);
   const colours = sideColours([{ factionScores: overview.server?.factionScores ?? [] }]);
   renderTeamFilter(players, overview.server?.factionScores ?? []);
   const shown = filterPlayers(players, filters);
@@ -665,67 +695,70 @@ const renderPlayers = (overview) => {
     td.dataset.label = label;
     return td;
   };
-  const rows = shown.map((p) => {
-    const watch = watchList(p, today);
+  const acted = recentActions(overview.moderation, overview.generatedAt);
+  // Those worth a look have their quick buttons under what is worth knowing.
+  const row = (p, quick) => {
+    const knowing = worthKnowing(p, overview, acted);
     return el(
       'tr',
-      { className: needsLook(p) ? 'watch' : '' },
-      el('td', { className: 'player' }, who(p)),
+      { className: lookNow(p) ? 'watch' : '' },
+      el('td', { className: 'player' }, whoLive(p)),
       labelled('Team', cell(...(p.faction === null ? ['–'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`]))),
       labelled('Kills / deaths', el('td', { className: 'num', textContent: p.kills === null ? '–' : `${p.kills} / ${p.deaths ?? 0}` })),
       labelled('Today', el('td', { className: 'num', textContent: p.minutesToday > 0 ? formatHours(p.minutesToday) : '–' })),
-      watch.length === 0
+      knowing.length === 0 && !quick
         ? el('td', { className: 'no-watch' }, el('span', { className: 'muted', textContent: '–' }))
-        : el(
-            'td',
-            {},
-            el(
-              'span',
-              { className: 'badges' },
-              ...watch.map((w) => {
-                const b = badge(w.text, w.kind);
-                if (w.title) b.title = w.title;
-                return b;
-              }),
-            ),
-          ),
+        : el('td', { className: 'knowing' }, ...knowing, quick ? quickActs(p) : null),
       el('td', { className: 'row-actions' }, actMenu(p)),
     );
-  });
+  };
   const node = $('server-players');
+  node.classList.toggle('compact', compact);
+  $('panel-live').classList.toggle('compact-rows', compact);
+  // A message in place of the list, such as when nobody is in game.
+  const instead = (...content) => node.replaceChildren(el('p', { className: 'muted list-instead' }, ...content));
   if (online === null) {
-    table(node, ['Player'], [], 'The server isn’t answering, so there is no list. It comes back with the server.');
+    instead('The server isn’t answering, so there is no list. It comes back with the server.');
     return;
   }
-  if (rows.length === 0 && query !== '') {
-    node.replaceChildren(
-      el(
-        'tbody',
-        {},
-        el(
-          'tr',
-          {},
-          el(
-            'td',
-            { className: 'muted', colSpan: 6 },
-            `Nobody in game matches “${query}”. `,
-            el('button', {
-              type: 'button',
-              className: 'link-button',
-              textContent: `Find “${query}” among everyone the bot knows`,
-              onclick: () => findPlayer(query),
-            }),
-          ),
-        ),
-      ),
+  if (players.length === 0) {
+    instead('Nobody is in game.');
+    return;
+  }
+  if (shown.length === 0 && query !== '') {
+    instead(
+      `Nobody in game matches “${query}”. `,
+      el('button', {
+        type: 'button',
+        className: 'link-button',
+        textContent: `Find “${query}” among everyone the bot knows`,
+        onclick: () => findPlayer(query),
+      }),
     );
     return;
   }
-  table(
-    node,
-    ['Player', 'Team', ['Kills / deaths', 'num'], ['Today', 'num'], 'Worth knowing', ''],
-    rows,
-    players.length === 0 ? 'Nobody is in game.' : 'Nobody in game matches. Try another team, or show everyone.',
+  const { look, rest } = lookFirst(shown);
+  const narrowed = shown.length < players.length;
+  const part = (id, title, list, alert, empty) => {
+    const t = el('table', { className: 'admin-table server-table' });
+    t.setAttribute('aria-labelledby', id);
+    table(t, PLAYER_HEADERS, list.map((p) => row(p, alert)), empty);
+    return el(
+      'section',
+      { className: `alert-group${alert ? ' look-group' : ''}` },
+      el(
+        'h3',
+        { className: 'group-title', id },
+        title,
+        el('span', { className: `tab-count${alert && list.length > 0 ? ' tab-count-alert' : ''}`, textContent: String(list.length) }),
+      ),
+      el('div', { className: 'admin-scroll' }, t),
+    );
+  };
+  node.replaceChildren(
+    part('players-look', 'Worth a look now', look, true, narrowed ? 'Nobody worth a look matches.' : 'Nobody in game is worth a look right now.'),
+    // "Only players worth a look" leaves the rest out.
+    filters.watch ? null : part('players-rest', 'Everyone else', rest, false, narrowed ? 'Nobody else matches. Try another team, or clear the search.' : 'Everyone in game is worth a look.'),
   );
 };
 
@@ -793,7 +826,7 @@ const renderJoins = (overview) => {
       {},
       whenSince(e.at, e.from),
       cell(e.kind === 'joined' ? badge('Joined', 'accent') : badge('Left')),
-      el('td', { className: 'player' }, who(e.player)),
+      el('td', { className: 'player' }, whoLive(e.player)),
       e.kind === 'joined'
         ? cell()
         : e.minutes === null
@@ -901,114 +934,6 @@ const renderModeration = (overview) => {
   table($('modlog'), ['When', 'What', 'Player', 'Reason', 'By', 'Details'], rows, all > 0 ? 'Nothing shown: pick what to show above.' : 'Nothing in this period.');
 };
 
-const renderBans = (overview) => {
-  if (overview.bans === null) {
-    $('bans-note').textContent = 'Couldn’t read the server’s ban list just now. Trying again in a minute.';
-    $('bans').replaceChildren();
-    return;
-  }
-  $('bans-note').textContent = 'Everyone banned on the server now, with the reason. Bans made outside the bot are permanent.';
-  // A ban keeps only who made it by Discord user ID, so a name kept with their log entries stands in when the bot sends
-  // none.
-  const logged = new Map(overview.moderation.filter((e) => e.byName).map((e) => [e.by, e.byName]));
-  const rows = overview.bans.map((b) =>
-    el(
-      'tr',
-      {},
-      el(
-        'td',
-        { className: 'player' },
-        who(b.player),
-        b.onServer ? null : el('span', { className: 'badges' }, badge('Waiting: banned when they next join', 'hot')),
-      ),
-      el('td', { className: 'reason', textContent: b.bot?.reason ?? b.reason ?? '–' }),
-      b.bot ? staffCell({ by: b.bot.by, byName: logged.get(b.bot.by) }, overview.staff) : cell(b.bannedBy ?? 'Outside the bot'),
-      el('td', { className: 'when', textContent: b.bot ? when.format(b.bot.at) : '–' }),
-      el('td', { className: 'when', textContent: b.bot?.until ? when.format(b.bot.until) : 'Never' }),
-      el('td', { className: 'row-actions' }, actButton('Unban', 'unban', b.player)),
-    ),
-  );
-  table($('bans'), ['Player', 'Reason', 'Banned by', 'Since', 'Ends', ''], rows, 'Nobody is banned.');
-};
-
-const renderReserved = (overview) => {
-  const reserved = overview.reserved;
-  if (reserved === undefined) {
-    $('reserved-note').textContent = 'The bot does not send the reserved list yet. Deploy the latest bot.';
-    $('reserved').replaceChildren();
-    return;
-  }
-  if (reserved === null) {
-    $('reserved-note').textContent = 'Couldn’t read ServerSettings.ini just now. Trying again in a minute.';
-    $('reserved').replaceChildren();
-    return;
-  }
-  const count = reserved.players.length;
-  // Staff spots: the bot keeps one for each staff member who linked their Steam account.
-  const staffCount = reserved.players.filter((r) => r.staff).length;
-  $('reserved-note').textContent = [
-    `${count} ${count === 1 ? 'player is' : 'players are'} on the reserved list in ServerSettings.ini, so they skip the queue when the server is full.`,
-    staffNote(staffCount, count),
-    reserved.maxSlots === null ? '' : `MaxReservedSlots holds ${reserved.maxSlots} of the server’s slots back for them.`,
-    'Changes take effect when the server next restarts.',
-  ]
-    .filter(Boolean)
-    .join(' ');
-  const rows = reserved.players.map((r) =>
-    el(
-      'tr',
-      {},
-      el('td', { className: 'player' }, who(r.player)),
-      cell(r.staff ? badge('Staff spot', 'accent') : r.bot ? badge('From the bot', 'accent') : badge('Permanent')),
-      el('td', { className: 'when', textContent: (r.staff ?? r.bot) ? when.format((r.staff ?? r.bot).since) : '–' }),
-      el('td', { className: 'when', textContent: r.staff ? 'While staff' : r.bot ? when.format(r.bot.until) : 'Never' }),
-      // A staff spot goes when their Steam account is unlinked, below.
-      el('td', { className: 'row-actions' }, r.staff ? null : actButton('Remove VIP', 'vip:remove', r.player)),
-    ),
-  );
-  table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
-};
-
-// The signed-in staff member's linked Steam account, or null.
-const myProfile = (overview) => overview?.staffProfiles?.find((p) => p.userId === overview.user?.id) ?? null;
-
-const ghostButton = (text, onclick) => el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick });
-
-// Staff who linked their Steam account, so the bot never counts them as seeders. Anyone can unlink anyone, for staff
-// who have left.
-const STAFF_STEAM_NOTE = $('staff-steam-note').textContent;
-const renderStaffSteam = (overview) => {
-  const profiles = overview.staffProfiles;
-  const mineButton = $('staff-steam-mine');
-  mineButton.hidden = profiles === undefined;
-  const note = profiles === undefined ? 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.' : STAFF_STEAM_NOTE;
-  setStatus($('staff-steam-note'), note);
-  if (profiles === undefined) {
-    $('staff-steam').replaceChildren();
-    return;
-  }
-  mineButton.textContent = myProfile(overview) ? 'Change yours' : 'Link yours';
-  const rows = profiles.map((p) => {
-    const mine = p.userId === overview.user?.id;
-    // The bot names an account it has never seen by its Steam ID.
-    const account = p.player.name === p.player.steamId ? steamLink(p.player.steamId) : who(p.player);
-    return el(
-      'tr',
-      {},
-      cell(mine ? `${p.name} (you)` : p.name),
-      el('td', { className: 'player' }, account, ...(p.seen ? [] : [' ', badge('Not seen in 90 days', 'hot')])),
-      el('td', { className: 'when', textContent: when.format(p.linkedAt) }),
-      el(
-        'td',
-        { className: 'row-actions' },
-        ...(mine ? [ghostButton('Change', () => openSteam())] : []),
-        ghostButton('Unlink', () => unlinkSteam(p, mine)),
-      ),
-    );
-  });
-  table($('staff-steam'), ['Staff', 'Steam account', 'Linked', ''], rows, 'Nobody has linked theirs yet.');
-};
-
 // Kills: the live kill feed (Live), the headshots list (Review) and a player's kills (History).
 
 // In the reader's own time, to the second, as kills come seconds apart: "Fri 3 Oct, 21:40:12", or only "21:40:12" for a
@@ -1090,23 +1015,51 @@ const feedRow = (k, above) =>
     'tr',
     {},
     killWhen(k.at),
-    el('td', { className: 'player' }, who(k.killer)),
-    el('td', { className: 'player' }, who(k.victim)),
+    el('td', { className: 'player' }, whoLive(k.killer)),
+    el('td', { className: 'player' }, whoLive(k.victim)),
     ...killCells(k, above),
   );
 
-const feedShown = (k) => feedKillShown(k, killFilters.feed);
+// The kill feed's filters as feedKillShown and feedEmpty take them.
+const feedFilters = () => {
+  const { player, ...rest } = killFilters.feed;
+  return { ...rest, player: player?.steamId ?? null, playerName: player?.name ?? '' };
+};
+const feedShown = (k) => feedKillShown(k, feedFilters());
 
 const feedNote = () =>
   setStatus(
     $('feed-note'),
-    `The server’s latest ${feed.length} kills, newest first${socketState === 'live' || socketState === 'sample' ? ', as they happen' : ''}. Click a name for their history.`,
+    `The server’s latest ${feed.length} kills, newest first${socketState === 'live' || socketState === 'sample' ? ', as they happen' : ''}. Click a name for a quick look at them.`,
   );
+
+// Which one player the kill feed shows, when only one.
+const renderFeedPlayer = () => {
+  const only = killFilters.feed.player;
+  $('feed-player').hidden = only === null;
+  if (only === null) return;
+  $('feed-player').replaceChildren(
+    badge('Only one player', 'accent'),
+    ` ${only.name}’s kills and deaths. `,
+    el('button', { type: 'button', className: 'link-button', textContent: 'Show everyone', onclick: () => watchFeed(null) }),
+  );
+};
 
 const renderFeed = () => {
   feedNote();
+  renderFeedPlayer();
   const shown = feed.filter(feedShown);
-  table($('kill-feed'), FEED_HEADERS, shown.map((k, i) => feedRow(k, shown[i - 1])), feedEmpty(feed.length, killFilters.feed));
+  table($('kill-feed'), FEED_HEADERS, shown.map((k, i) => feedRow(k, shown[i - 1])), feedEmpty(feed.length, feedFilters()));
+};
+
+// Shows only one player's kills and deaths in the kill feed (null for everyone), such as someone others say is team
+// killing, and brings the feed into view.
+const watchFeed = (player) => {
+  killFilters.feed.player = player === null ? null : { steamId: player.steamId, name: player.name };
+  if (peekDialog.open) peekDialog.close();
+  if (tab !== 'live') selectTab('live');
+  renderFeed();
+  if (player !== null) $('feed-card').scrollIntoView({ block: 'nearest' });
 };
 
 // New kills, newest first, added at the top without redrawing the rest, so a name staff are about to click stays put.
@@ -1131,6 +1084,7 @@ const addFeed = (added) => {
   // The kill that was at the top now has one above it, so its map may no longer need showing.
   if (rows.length > 0 && shown[rows.length] !== undefined) body.rows[rows.length].lastElementChild.replaceWith(killMap(shown[rows.length], shown[rows.length - 1]));
   while (body.rows.length > shown.length) body.lastElementChild.remove();
+  if (peekDialog.open && added.some((k) => k.killer.steamId === peekPlayer?.steamId || k.victim.steamId === peekPlayer?.steamId)) renderPeek();
 };
 
 // The live kill feed (GET /api/admin/live): a WebSocket the bot sends each batch of kills down as it comes in. The
@@ -1579,8 +1533,249 @@ const findPlayer = (query) => {
   $('history-search').focus();
 };
 
+// A quick look at a player, from their name on Live: what is worth knowing about them now, what staff did, their latest
+// kills and deaths in the kill feed, and the buttons to act, without leaving Live. Drawn again with each refresh and
+// each kill of theirs while open.
+const peekDialog = $('peek');
+// The player shown ({ steamId, name }), and the name staff clicked, to go back to.
+let peekPlayer = null;
+let peekFrom = null;
+// How many of the player's latest kills and deaths, and staff actions, it shows.
+const PEEK_KILLS = 8;
+const PEEK_ACTIONS = 5;
+
+const peek = (player) => {
+  if (!peekDialog.open) peekFrom = document.activeElement;
+  peekPlayer = { steamId: player.steamId, name: player.name };
+  closeMenus();
+  renderPeek();
+  if (!peekDialog.open) peekDialog.showModal();
+  $('peek-close').focus();
+};
+
+const fact = (label, value) => el('div', { className: 'player-peek-fact' }, el('dt', { textContent: label }), el('dd', {}, value));
+
+const renderPeek = () => {
+  if (peekPlayer === null) return;
+  const { steamId } = peekPlayer;
+  const now = data?.generatedAt ?? Date.now();
+  const online = data?.online?.players.find((p) => p.steamId === steamId) ?? null;
+  const player = online ?? peekPlayer;
+  const ban = data?.bans?.find((b) => b.player.steamId === steamId) ?? null;
+  // Keep keyboard focus on the same button through a redraw.
+  const focused = peekDialog.contains(document.activeElement) ? document.activeElement.dataset.peek : undefined;
+  $('peek-title').textContent = player.name;
+  const button = (key, text, run, kind = '') => {
+    const b = el('button', { type: 'button', className: `btn btn-ghost btn-small${kind ? ` ${kind}` : ''}`, textContent: text, onclick: run });
+    b.dataset.peek = key;
+    return b;
+  };
+  const check = checkAction(player);
+  const actions = [
+    ...(online ? [button('warn', 'Warn', () => act('warn', player)), button('kick', 'Kick', () => act('kick', player)), button('switchteam', 'Move team', () => act('switchteam', player))] : []),
+    button('ban', 'Ban', () => act('ban', player)),
+    ...(check ? [button(check, CHECK_ACTIONS[check].label, () => checkPlayer(player, check === 'check'), check === 'check' ? 'quick-check' : '')] : []),
+    button('feed', 'Only them in the kill feed', () => watchFeed(player)),
+    button('history', 'Full history →', () => openHistory(player)),
+  ];
+  const theirs = feed.filter((k) => k.killer.steamId === steamId || k.victim.steamId === steamId).slice(0, PEEK_KILLS);
+  const did = (data?.moderation ?? []).filter((e) => e.player.steamId === steamId).slice(0, PEEK_ACTIONS);
+  const hs = online?.headshotsToday;
+  $('peek-body').replaceChildren(
+    el(
+      'p',
+      { className: 'player-peek-id' },
+      steamLink(steamId),
+      online?.id ? el('a', { className: 'player-link', href: playerHref(online.id), textContent: 'Public player page' }) : null,
+    ),
+    el(
+      'span',
+      { className: 'badges' },
+      online ? badge(online.faction ? `In game · ${online.faction}` : 'In game', 'accent') : badge('Not in game'),
+      ban && !online?.banned ? badge(ban.onServer ? 'Banned' : 'Ban waiting', 'bad') : null,
+    ),
+    ...(online && data ? worthKnowing(online, data, recentActions(data.moderation, now)) : []),
+    el('div', { className: 'player-peek-actions' }, ...actions),
+    online
+      ? el(
+          'dl',
+          { className: 'player-peek-facts' },
+          fact('Kills / deaths', online.kills === null ? '–' : `${online.kills} / ${online.deaths ?? 0} this match`),
+          fact('On today', online.minutesToday > 0 ? formatHours(online.minutesToday) : '–'),
+          fact('Team kills today', String(online.teamKillsToday)),
+          fact('Vehicle suicides today', String(online.vehicleSuicidesToday)),
+          fact('Headshots today', hs ? `${hs.headshots} of ${hs.kills} kills${hs.expected === null ? '' : `, usual ${Math.round(hs.expected)}`}` : '–'),
+        )
+      : null,
+    el('h3', { className: 'group-title', textContent: 'Staff actions' }),
+    did.length === 0
+      ? el('p', { className: 'muted', textContent: 'Nothing in this period.' })
+      : el(
+          'ul',
+          { className: 'player-peek-list' },
+          ...did.map((e) =>
+            el(
+              'li',
+              {},
+              badge(modActionLabel(e.action), e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : ''),
+              ` ${timeAgo(now - e.at)} · ${staffBy(e, data?.staff ?? {})}`,
+              e.reason ? el('span', { className: 'muted', textContent: ` · ${e.reason}` }) : null,
+            ),
+          ),
+        ),
+    el('h3', { className: 'group-title', textContent: 'Kill feed' }),
+    theirs.length === 0
+      ? el('p', { className: 'muted', textContent: 'No kills or deaths in the kill feed.' })
+      : el(
+          'ul',
+          { className: 'player-peek-list' },
+          ...theirs.map((k) =>
+            el(
+              'li',
+              {},
+              el('time', { dateTime: new Date(k.at).toISOString(), className: 'when', textContent: timeKill.format(k.at) }),
+              k.killer.steamId === steamId ? ` Killed ${k.victim.name}` : ` Killed by ${k.killer.name}`,
+              el('span', { className: 'muted', textContent: ` · ${k.weapon}` }),
+              k.teamKill ? badge('Team kill', 'bad') : null,
+              k.headshot ? badge('Headshot', 'accent') : null,
+            ),
+          ),
+        ),
+  );
+  if (focused !== undefined) peekDialog.querySelector(`[data-peek="${focused}"]`)?.focus({ preventScroll: true });
+};
+
+$('peek-close').addEventListener('click', () => peekDialog.close());
+peekDialog.addEventListener('close', () => {
+  if (peekFrom?.isConnected) peekFrom.focus({ preventScroll: true });
+  peekFrom = null;
+  peekPlayer = null;
+});
+// A click on the backdrop, outside the panel, closes it. The panel's own padding is the dialog too, so where the click was
+// tells them apart.
+peekDialog.addEventListener('click', (event) => {
+  if (event.target !== peekDialog) return;
+  const box = peekDialog.getBoundingClientRect();
+  const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+  if (!inside) peekDialog.close();
+});
+
+// Alerts: the browser tab's title says how many in game are worth a look now, and a player who becomes worth a look
+// while the page is open is marked "Just flagged". With "Alert me" on, the page also beeps, shows a desktop notification
+// while its tab is in the background (when the browser allows them), and keeps checking every minute while hidden.
+const BASE_TITLE = document.title;
+// When each player worth a look now first was, this visit; null for those who already were when the page loaded.
+const lookSince = new Map();
+let lookKnown = false;
+let alertsOn = loadPref(ALERTS_KEY) === '1';
+let audio = null;
+
+// A short two-note chime. Browsers only play sound once staff have clicked on the page.
+const chime = () => {
+  if (audio === null || audio.state !== 'running') return;
+  const t = audio.currentTime;
+  for (const [i, frequency] of [880, 1320].entries()) {
+    const start = t + i * 0.18;
+    const tone = audio.createOscillator();
+    const gain = audio.createGain();
+    tone.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.2, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+    tone.connect(gain).connect(audio.destination);
+    tone.start(start);
+    tone.stop(start + 0.17);
+  }
+};
+
+const startAudio = () => {
+  const Context = window.AudioContext ?? window.webkitAudioContext;
+  if (Context === undefined) return;
+  audio ??= new Context();
+  if (audio.state === 'suspended') audio.resume().catch(() => undefined);
+};
+
+const notifications = () => (typeof Notification === 'undefined' ? 'none' : Notification.permission);
+
+const alertsNote = () => {
+  $('look-alerts').checked = alertsOn;
+  $('alerts-note').hidden = !alertsOn;
+  const desktop = notifications();
+  setStatus(
+    $('alerts-note'),
+    !alertsOn
+      ? ''
+      : desktop === 'granted'
+        ? 'Alerts on: a chime, and a desktop notification while this tab is in the background. The page keeps checking every minute while hidden.'
+        : desktop === 'denied'
+          ? 'Alerts on: a chime only, as this browser blocks notifications from this site. The page keeps checking every minute while hidden.'
+          : 'Alerts on: a chime only. Allow notifications when the browser asks, for desktop alerts too. The page keeps checking every minute while hidden.',
+  );
+};
+
+const setAlerts = async (on) => {
+  alertsOn = on;
+  savePref(ALERTS_KEY, on ? '1' : '');
+  if (on) {
+    startAudio();
+    // Older browsers answer with a callback rather than a promise; either way the note reads the answer after.
+    if (notifications() === 'default') {
+      try {
+        await Notification.requestPermission();
+      } catch {
+        // Asked again next time alerts are turned on.
+      }
+    }
+  }
+  alertsNote();
+};
+
+const alertLook = (fresh, overview) => {
+  chime();
+  if (!document.hidden || notifications() !== 'granted') return;
+  const today = utcDay(overview.generatedAt);
+  for (const p of fresh.slice(0, 3)) {
+    let note;
+    try {
+      note = new Notification(`${p.name} is worth a look`, {
+        body: watchList(p, today)
+          .map((w) => w.text)
+          .join(' · '),
+        tag: `look-${p.steamId}`,
+        icon: 'favicon.svg',
+      });
+    } catch (error) {
+      // Some phones only show notifications from a service worker: the chime and the title still tell.
+      console.error('Could not show a notification', error);
+      return;
+    }
+    note.addEventListener('click', () => {
+      window.focus();
+      selectTab('live');
+      peek(p);
+      note.close();
+    });
+  }
+};
+
+// Notes who became worth a look since the last load, for the title, "Just flagged" and the alerts. While the server is
+// not answering, nobody is known to be in game, so what the page had stays.
+const noticeLook = (overview) => {
+  if (overview.online === null) return;
+  const now = overview.generatedAt;
+  const looking = overview.online.players.filter(lookNow);
+  const ids = new Set(looking.map((p) => p.steamId));
+  for (const id of [...lookSince.keys()]) if (!ids.has(id)) lookSince.delete(id);
+  const fresh = looking.filter((p) => !lookSince.has(p.steamId));
+  for (const p of fresh) lookSince.set(p.steamId, lookKnown ? now : null);
+  document.title = looking.length > 0 ? `(${looking.length}) ${BASE_TITLE}` : BASE_TITLE;
+  if (lookKnown && fresh.length > 0 && alertsOn) alertLook(fresh, overview);
+  lookKnown = true;
+};
+
 // Draws new data, or keeps it until an open Act menu closes.
 const show = (overview) => {
+  noticeLook(overview);
   if (document.querySelector('.act-menu[open]')) waiting = overview;
   else render(overview);
 };
@@ -1588,23 +1783,7 @@ const show = (overview) => {
 const render = (overview) => {
   waiting = null;
   data = overview;
-  $('signin').hidden = true;
-  $('admin-body').hidden = false;
-  const user = $('admin-user');
-  user.hidden = false;
-  const mine = myProfile(overview);
-  const steamButton = el('button', {
-    type: 'button',
-    className: 'link-button',
-    textContent: mine ? `Steam: ${mine.player.name}` : 'Link your Steam account',
-    onclick: () => openSteam(),
-  });
-  if (mine) steamButton.setAttribute('aria-label', `Change your Steam account, linked to ${mine.player.name}`);
-  user.replaceChildren(
-    `Signed in as ${overview.user?.name ?? 'staff'}`,
-    ...(overview.staffProfiles === undefined ? [] : [' · ', steamButton]),
-    ...(demo ? [] : [' · ', el('button', { type: 'button', className: 'link-button', textContent: 'Sign out', onclick: signOut })]),
-  );
+  showAccount(overview);
   for (const button of document.querySelectorAll('.period button[data-days]')) {
     button.setAttribute('aria-pressed', String(Number(button.dataset.days) === period));
   }
@@ -1616,11 +1795,6 @@ const render = (overview) => {
   onlineIds = new Set(players.map((p) => p.steamId));
   $('count-live').textContent = overview.online ? String(players.length) : '–';
   renderReviewCounts();
-  $('tile-ingame').textContent = overview.online ? String(players.length) : '–';
-  $('tile-ingame-note').textContent = overview.server ? `of ${overview.server.maxPlayers} slots` : '';
-  $('tile-watch').textContent = String(players.filter((p) => needsLook(p)).length);
-  $('tile-headshots-ingame').textContent = String(players.filter((p) => p.headshotsToday?.flagged).length);
-  $('tile-risky-ingame').textContent = overview.steam ? String(players.filter((p) => p.steam && p.steam.risk !== 'low').length) : 'Off';
   $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';
   // How many of the alerts are for players in game now, when the server is answering.
   const inGameNote = (count) => (overview.online ? `${count} in game` : null);
@@ -1645,259 +1819,16 @@ const render = (overview) => {
   renderIncidents(overview);
   renderSteam(overview);
   renderModeration(overview);
-  renderBans(overview);
-  renderReserved(overview);
-  renderStaffSteam(overview);
   if (tab === 'history') renderHistory();
-  if (overview.staffProfiles !== undefined && !mine && !askedThisSignIn()) {
-    noteAsked();
-    openSteam();
-  }
-  if (!tools.ready) loadCommands();
-  if (tab === 'rotations') rotations.ensure();
-  if (tab === 'lines') lines.ensure();
-  if (tab === 'rules') rules.ensure();
-};
-
-// Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.
-const call = async (path, body) => {
-  if (demo) return demoCall(path, body);
-  const token = loadToken();
-  if (!token) {
-    signedOut('Your sign-in has run out. Sign in again.');
-    return { ok: false, json: { error: 'Your sign-in has run out. Sign in again.' } };
-  }
-  const response = await fetch(botUrl(path), {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json', authorization: `Bearer ${token}` },
-    body: JSON.stringify(body),
-  });
-  if (response.status === 401) {
-    forgetToken();
-    signedOut('Your sign-in has run out. Sign in again.');
-  }
-  return { ok: response.ok, json: await response.json().catch(() => null) };
-};
-
-const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: () => data?.staff ?? {} });
-
-// Linking the signed-in staff member's Steam account. Until they have, the page asks once each sign-in, told apart by
-// when it runs out; "Later" waits for the next one.
-const STEAM_ASKED_KEY = 'gaminginit-steam-asked';
-let steamAskedFor = null;
-const thisSignIn = () => String(sessionExpiry(loadToken() ?? '') ?? '');
-const askedThisSignIn = () => {
-  const signIn = thisSignIn();
-  try {
-    if (localStorage.getItem(STEAM_ASKED_KEY) === signIn) return true;
-  } catch {
-    // Kept in memory only.
-  }
-  return steamAskedFor === signIn;
-};
-const noteAsked = () => {
-  steamAskedFor = thisSignIn();
-  try {
-    localStorage.setItem(STEAM_ASKED_KEY, steamAskedFor);
-  } catch {
-    // Kept in memory only.
-  }
-};
-
-const steamDialog = $('steam-dialog');
-
-const steamError = (text) => {
-  $('steam-error').hidden = !text;
-  $('steam-error').textContent = text ?? '';
-  $('steam-input').setAttribute('aria-invalid', String(Boolean(text)));
-};
-
-const openSteam = () => {
-  if (steamDialog.open) return;
-  const mine = myProfile(data);
-  $('steam-form').hidden = false;
-  $('steam-done').hidden = true;
-  steamDialog.setAttribute('aria-labelledby', 'steam-dialog-title');
-  $('steam-dialog-title').textContent = mine ? 'Change your Steam account' : 'Link your Steam account';
-  $('steam-save').textContent = mine ? 'Save' : 'Link account';
-  $('steam-cancel').textContent = mine ? 'Cancel' : 'Later';
-  $('steam-input').value = mine?.player.steamId ?? '';
-  steamError(null);
-  steamDialog.showModal();
-};
-
-const unlinkSteam = async (profile, mine) => {
-  const question = mine
-    ? 'Unlink your Steam account? Your staff spot comes off the reserved list, and your time on the server counts as seeding again.'
-    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their staff spot comes off the reserved list, and their time on the server counts as seeding again.`;
-  if (!window.confirm(question)) return;
-  try {
-    const { ok, json } = await call('admin/profile', { action: 'unlink', ...(mine ? {} : { userId: profile.userId }) });
-    if (!ok) {
-      if (loadToken()) showNotice(json?.error ?? 'Couldn’t unlink that just now. Try again in a minute.');
-      return;
-    }
-    load();
-  } catch (error) {
-    console.error('Could not unlink a Steam account', error);
-    showNotice('Couldn’t reach the bot. Try again in a minute.');
-  }
-};
-
-$('steam-cancel').addEventListener('click', () => steamDialog.close());
-$('steam-done-close').addEventListener('click', () => steamDialog.close());
-$('staff-steam-mine').addEventListener('click', () => openSteam());
-$('steam-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const steamId = readSteamId($('steam-input').value);
-  if (steamId === null) {
-    steamError('That isn’t a Steam64 ID. It is 17 digits and starts with 7656119. See “How to find it” below.');
-    $('steam-input').focus();
-    return;
-  }
-  const save = $('steam-save');
-  save.disabled = true;
-  try {
-    const { ok, json } = await call('admin/profile', { action: 'link', steamId });
-    // Saved even when the dialog was closed while it went, so the page shows it either way.
-    if (ok) load();
-    if (!steamDialog.open) return;
-    if (!ok) {
-      steamError(json?.error ?? 'Couldn’t save that just now. Try again in a minute.');
-      return;
-    }
-    $('steam-done-text').textContent = steamLinkedText({ steamId, player: json?.player ?? null, sample: json?.sample === true });
-    $('steam-form').hidden = true;
-    $('steam-done').hidden = false;
-    steamDialog.setAttribute('aria-labelledby', 'steam-done-title');
-    $('steam-done-close').focus();
-  } catch (error) {
-    console.error('Could not link a Steam account', error);
-    steamError('Couldn’t reach the bot. Try again in a minute.');
-  } finally {
-    save.disabled = false;
-  }
-});
-
-// Reads from the bot's staff API as the signed-in staff member.
-const get = async (path) => {
-  const token = loadToken();
-  if (!token) {
-    signedOut('Your sign-in has run out. Sign in again.');
-    return { ok: false, status: 401, json: { error: 'Your sign-in has run out. Sign in again.' } };
-  }
-  const response = await fetch(botUrl(path), { headers: { accept: 'application/json', authorization: `Bearer ${token}` } });
-  if (response.status === 401) {
-    forgetToken();
-    signedOut('Your sign-in has run out. Sign in again.');
-  }
-  return { ok: response.ok, status: response.status, json: await response.json().catch(() => null) };
-};
-
-const rotations = createRotations({
-  root: $('rotations'),
-  load: () => (demo ? demoRotations() : get('admin/rotations')),
-  send: (body) => (demo ? demoRotationsChange(body) : call('admin/rotations', body)),
-});
-
-const lines = createLines({
-  root: $('lines'),
-  load: () => (demo ? demoLines() : get('admin/lines')),
-  send: (body) => (demo ? demoLinesChange(body) : call('admin/lines', body)),
-});
-
-const rules = createRules({
-  root: $('rules'),
-  load: () => (demo ? demoRules() : get('admin/rules')),
-  send: (body) => (demo ? demoRulesChange(body) : call('admin/rules', body)),
-});
-
-// The bot's staff commands, once, for the admin tools' forms.
-let commandsAsked = false;
-const loadCommands = async () => {
-  if (commandsAsked) return;
-  commandsAsked = true;
-  if (demo) {
-    tools.setCommands(demoCommands);
-    return;
-  }
-  try {
-    const response = await fetch(botUrl('admin/commands'), { headers: { accept: 'application/json', authorization: `Bearer ${loadToken()}` } });
-    if (response.status === 404) {
-      $('tools-note').textContent = 'The bot does not have the admin tools yet. Deploy the latest bot.';
-      return;
-    }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    tools.setCommands((await response.json()).commands ?? []);
-  } catch (error) {
-    console.error('Could not load the admin tools', error);
-    // Asked again with the next refresh.
-    commandsAsked = false;
-  }
-};
-
-// A refusal the bot explained, such as staff sign-in not being set up on it.
-class BotSaid extends Error {}
-
-const load = async () => {
-  clearTimeout(timer);
-  lastLoad = Date.now();
-  const mine = ++generation;
-  const current = () => mine === generation;
-  if (demo) {
-    show(demoAdmin(period, Date.now()));
-    loadKills();
-    if (tab === 'history') loadHistory();
-    return;
-  }
-  const token = loadToken();
-  if (!token) {
-    signedOut(data ? 'Your sign-in has run out. Sign in again.' : null);
-    return;
-  }
-  document.body.classList.add('refreshing');
-  try {
-    const response = await fetch(botUrl(`admin/overview?days=${period}`), {
-      headers: { accept: 'application/json', authorization: `Bearer ${token}` },
-    });
-    if (!current()) return;
-    if (response.status === 401) {
-      forgetToken();
-      signedOut('Your sign-in has run out. Sign in again.');
-      return;
-    }
-    if (response.status === 404) {
-      signedOut(null);
-      showNotice('The bot does not have the staff page yet. Deploy the latest bot.');
-      return;
-    }
-    if (!response.ok) {
-      const said = await response.json().then(
-        (body) => (typeof body?.error === 'string' ? body.error : null),
-        () => null,
-      );
-      throw said ? new BotSaid(said) : new Error(`HTTP ${response.status}`);
-    }
-    const overview = await response.json();
-    if (!current()) return;
-    showNotice();
-    show(overview);
-    loadKills();
-    if (tab === 'history') loadHistory();
-    connectFeed();
-  } catch (error) {
-    if (!current()) return;
-    console.error('Could not load the staff page', error);
-    const why = error instanceof BotSaid ? ` The bot says: ${error.message}` : '';
-    showNotice(
-      (data ? 'Could not refresh. Showing the last we had; trying again in a minute.' : 'Could not load the staff page. Trying again in a minute.') + why,
-    );
-  } finally {
-    if (current()) {
-      document.body.classList.remove('refreshing');
-      if (!document.hidden && loadToken()) timer = setTimeout(load, REFRESH_MS);
-    }
-  }
+  if (peekDialog.open) renderPeek();
+  loadCommands(
+    tools,
+    (text) => {
+      toolsMissing = text;
+      setStatus($('act-note'), text);
+    },
+    toolsReady,
+  );
 };
 
 for (const button of document.querySelectorAll('.period button[data-days]')) {
@@ -1909,20 +1840,8 @@ for (const button of document.querySelectorAll('.period button[data-days]')) {
 }
 
 // Tabs: click, or ← → Home End from the tab bar.
-for (const t of TABS) {
-  $(`tab-${t}`).addEventListener('click', () => {
-    $('tools-back').hidden = true;
-    selectTab(t);
-  });
-}
-document.querySelector('.admin-tabs').addEventListener('keydown', (event) => {
-  const i = TABS.indexOf(tab);
-  const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[event.key];
-  if (next === undefined) return;
-  event.preventDefault();
-  $('tools-back').hidden = true;
-  selectTab(TABS[(next + TABS.length) % TABS.length], { focus: true });
-});
+for (const t of TABS) $(`tab-${t}`).addEventListener('click', () => selectTab(t));
+tabKeys(TABS, () => tab, selectTab);
 
 // The server list's search, sort and "worth a look".
 $('player-sort').replaceChildren(...Object.entries(PLAYER_SORTS).map(([value, text]) => el('option', { value, textContent: text })));
@@ -1939,6 +1858,25 @@ $('player-watch').addEventListener('change', (event) => {
   filters.watch = event.target.checked;
   renderPlayers(data);
 });
+$('player-compact').checked = compact;
+$('player-compact').addEventListener('change', (event) => {
+  compact = event.target.checked;
+  savePref(COMPACT_KEY, compact ? '1' : '');
+  renderPlayers(data);
+});
+$('look-alerts').addEventListener('change', (event) => setAlerts(event.target.checked));
+alertsNote();
+// Browsers only start sound after a click or key press on the page.
+if (alertsOn) {
+  const unlock = () => startAudio();
+  document.addEventListener('pointerdown', unlock, { once: true });
+  document.addEventListener('keydown', unlock, { once: true });
+}
+
+// "How flags work": open the first time, folded away after that, unless staff leave it open.
+const howFlags = $('how-flags');
+howFlags.open = loadPref(HOW_FLAGS_KEY) !== 'seen';
+howFlags.addEventListener('toggle', () => savePref(HOW_FLAGS_KEY, howFlags.open ? 'open' : 'seen'));
 
 $('incidents-all').addEventListener('click', () => {
   focus = null;
@@ -1968,52 +1906,23 @@ $('history-search').addEventListener('input', (event) => {
   searchTimer = setTimeout(() => searchPlayers(event.target.value), SEARCH_DELAY_MS);
 });
 
-// Only refresh while someone is looking; catch up straight away when they come back, or when nothing has loaded yet.
-// The live kill feed closes too while nobody is looking, and opens again with the latest kills.
-document.addEventListener('visibilitychange', () => {
-  if (demo || !configured || !loadToken()) return;
-  if (document.hidden) {
-    clearTimeout(timer);
-    disconnectFeed();
-    return;
-  }
-  connectFeed();
-  if (!data || Date.now() - lastLoad >= REFRESH_MS) load();
-  else timer = setTimeout(load, REFRESH_MS - (Date.now() - lastLoad));
+if (demo) startDemoFeed();
+
+start({
+  route,
+  isRoute: isTabHash,
+  days: () => period,
+  show,
+  // The headshots and the player shown on History load with each refresh, and the live kill feed opens once signed in.
+  loaded: () => {
+    loadKills();
+    if (tab === 'history') loadHistory();
+    connectFeed();
+  },
+  signedOut,
+  // The live kill feed closes while nobody is looking, and opens again with the latest kills.
+  hidden: disconnectFeed,
+  visible: connectFeed,
+  // With alerts on, the page keeps checking while its tab is in the background.
+  background: () => alertsOn,
 });
-
-// Back from signing in: keep the session, and take it out of the address bar and history. The bot sends people back
-// with a new page load; a change to the # on this page is handled the same way.
-const arrive = (result = signInResult(location.hash)) => {
-  if (result) history.replaceState(null, '', location.pathname + location.search);
-  if (result?.session) saveToken(result.session);
-  if (result?.error) {
-    forgetToken();
-    signedOut(result.error);
-    return;
-  }
-  load();
-};
-
-window.addEventListener('hashchange', () => {
-  // A link to a tab or a player's kills, or back and forward between them.
-  if (isTabHash(location.hash)) {
-    route();
-    return;
-  }
-  if (!demo && configured) arrive();
-});
-
-// Read before the tab is picked, as picking one tidies the # away.
-const returned = signInResult(location.hash);
-route();
-
-if (demo) {
-  showNotice('Showing sample data, not the real server. ', link(thisPage((p) => p.delete('demo')), 'Sign in for the real page'));
-  startDemoFeed();
-  load();
-} else if (!configured) {
-  showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with sample data'));
-} else {
-  arrive(returned);
-}
