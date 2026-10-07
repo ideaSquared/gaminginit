@@ -905,6 +905,8 @@ describe('admin tools', () => {
     assert.deepEqual(tools[2].options.map((o) => o.name), ['steam_id', 'days']);
     assert.ok(READ_ONLY_TOOLS.has('player'));
     assert.ok(READ_ONLY_TOOLS.has('rotations:show'));
+    assert.ok(READ_ONLY_TOOLS.has('private:list'));
+    assert.ok(!READ_ONLY_TOOLS.has('private:add'));
     assert.ok(!READ_ONLY_TOOLS.has('kick'));
     assert.ok(!READ_ONLY_TOOLS.has('rotations:use'));
   });
