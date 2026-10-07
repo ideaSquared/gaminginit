@@ -232,15 +232,28 @@ let toolsMissing = null;
 // The Act button staff came from, to go back to when the dialog closes, and the player it was for.
 let actFrom = null;
 let actFor = null;
+// The tool and player staff asked for before the tools had loaded, opened once they have.
+let actWaiting = null;
 
-// Opens an admin tool with the player picked, such as Kick.
+// Opens an admin tool with the player picked, such as Kick. Until the tools have loaded, the dialog says so and opens
+// the tool when they come.
 const act = (key, player) => {
   actFrom = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
   actFor = player.steamId;
   $('act-dialog-title').textContent = `Act on ${player.name}`;
-  setStatus($('act-note'), tools.ready ? ACT_NOTE : (toolsMissing ?? 'The admin tools haven’t loaded yet. Try again in a moment.'));
+  setStatus($('act-note'), tools.ready ? ACT_NOTE : (toolsMissing ?? 'Loading the admin tools…'));
   if (!actDialog.open) actDialog.showModal();
+  actWaiting = tools.ready ? null : { key, player };
   tools.use(key, player.steamId, player.name);
+};
+
+// The tools have loaded: the tool asked for while they were loading opens now, if the dialog is still open.
+const toolsReady = () => {
+  const asked = actWaiting;
+  actWaiting = null;
+  if (!asked || !actDialog.open) return;
+  setStatus($('act-note'), ACT_NOTE);
+  tools.use(asked.key, asked.player.steamId, asked.player.name);
 };
 
 $('act-close').addEventListener('click', () => actDialog.close());
@@ -253,6 +266,7 @@ actDialog.addEventListener('close', () => {
   again?.focus({ preventScroll: true });
   actFrom = null;
   actFor = null;
+  actWaiting = null;
 });
 
 // What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History is not
@@ -1424,9 +1438,14 @@ const render = (overview) => {
   renderSteam(overview);
   renderModeration(overview);
   if (tab === 'history') renderHistory();
-  loadCommands(tools, (text) => {
-    toolsMissing = text;
-  });
+  loadCommands(
+    tools,
+    (text) => {
+      toolsMissing = text;
+      setStatus($('act-note'), text);
+    },
+    toolsReady,
+  );
 };
 
 for (const button of document.querySelectorAll('.period button[data-days]')) {

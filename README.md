@@ -121,7 +121,7 @@ Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `match
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all eleven pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 14. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 15. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
@@ -505,10 +505,11 @@ Admin tab.
 - They show Steam IDs, linked to Steam profiles. Player names open their history, on Moderation; History links to their
   public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
-- `http://localhost:3000/admin?demo` and `http://localhost:3000/server-settings?demo` show sample data without signing in. Its admin tools only say what they would
-  do, and its rotations, lines and weapon rules change in the page only.
+- `http://localhost:3000/admin?demo` and `http://localhost:3000/server-settings?demo` show sample data without signing
+  in. Their admin tools only say what they would do, and the rotations, lines and weapon rules on Server settings change
+  in the page only.
 - They only talk to the bot in their own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
-  member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
+  member's sign-in to another site. To try them against a local bot, change the meta tag in local copies.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
   lets that site read the staff data.
 

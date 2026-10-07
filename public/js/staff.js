@@ -218,13 +218,15 @@ export const staffNames = () => current?.staff ?? {};
 // The signed-in staff member's linked Steam account, or null.
 export const myProfile = (overview) => overview?.staffProfiles?.find((p) => p.userId === overview.user?.id) ?? null;
 
-// The bot's staff commands, once, for the admin tools' forms. `note` says when the bot has none.
+// The bot's staff commands, once, for the admin tools' forms. `note` says when the bot has none; `ready()` is called
+// once the tools have them.
 let commandsAsked = false;
-export const loadCommands = async (tools, note) => {
+export const loadCommands = async (tools, note, ready = () => undefined) => {
   if (commandsAsked || tools.ready) return;
   commandsAsked = true;
   if (demo) {
     tools.setCommands(demoCommands);
+    ready();
     return;
   }
   try {
@@ -235,6 +237,7 @@ export const loadCommands = async (tools, note) => {
     }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     tools.setCommands((await response.json()).commands ?? []);
+    ready();
   } catch (error) {
     console.error('Could not load the admin tools', error);
     // Asked again with the next refresh.
