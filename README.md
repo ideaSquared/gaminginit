@@ -285,8 +285,8 @@ Each tab says what is in it, with a count: how many are in game, and how many fl
 tab (`/admin#review`, `/admin#history`, `/admin#commands`, `/server-settings#rotations`, `/server-settings#lines`,
 `/server-settings#rules`; Live and Bans and VIP, the first tabs, have none), and on History the player shown
 (`/admin#history/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
-those tabs are now: `/admin#admin` to Commands, `/server-settings#admin` to Bans and VIP, `/admin#rotations`, `#lines`
-and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
+those tabs are now: `/admin#admin` and `/server-settings#commands` to Commands, `/server-settings#admin` to Bans and
+VIP, `/admin#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
 at them; anywhere else, on either page, it opens their history.**
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and

@@ -259,7 +259,8 @@ export const loadCommands = async (tools, note, ready = () => undefined) => {
 
 // Act: the admin tool for a player, such as Kick or Unban, in a dialog over the page (#act-dialog), so staff never leave
 // what they were working on. Only the tools that take a player are offered. When the button staff came from was drawn
-// again while the dialog was open, such as after a kick, `refocus(steamId)` gives the one to go back to, if any.
+// again while the dialog was open, such as after a kick or a refresh, `refocus(steamId, key)` gives the one to go back
+// to, if any: the same player's button for the same tool (`key`, such as 'unban').
 export const createActDialog = ({ refocus = () => null } = {}) => {
   const dialog = $('act-dialog');
   const ACT_NOTE = $('act-note').textContent;
@@ -273,9 +274,10 @@ export const createActDialog = ({ refocus = () => null } = {}) => {
   });
   // Why there are no tools, when the bot has none.
   let missing = null;
-  // The button staff came from, the player it was for, and the tool asked for before the tools had loaded.
+  // The button staff came from, the player and tool it was for, and the tool asked for before the tools had loaded.
   let from = null;
   let forId = null;
+  let forKey = null;
   let waiting = null;
 
   // Opens an admin tool with the player picked. Until the tools have loaded, the dialog says so and opens the tool when
@@ -283,6 +285,7 @@ export const createActDialog = ({ refocus = () => null } = {}) => {
   const act = (key, player) => {
     from = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
     forId = player.steamId;
+    forKey = key;
     $('act-dialog-title').textContent = `Act on ${player.name}`;
     setStatus($('act-note'), tools.ready ? ACT_NOTE : (missing ?? 'Loading the admin tools…'));
     if (!dialog.open) dialog.showModal();
@@ -301,10 +304,11 @@ export const createActDialog = ({ refocus = () => null } = {}) => {
 
   $('act-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
-    const again = from?.isConnected ? from : refocus(forId);
+    const again = from?.isConnected ? from : refocus(forId, forKey);
     again?.focus({ preventScroll: true });
     from = null;
     forId = null;
+    forKey = null;
     waiting = null;
   });
 

@@ -87,7 +87,10 @@ for (const name of Object.keys(EDITORS)) editorChanges.observe($(name), { subtre
 for (const type of ['input', 'change']) document.addEventListener(type, unsavedSoon, true);
 
 // Unban and Remove VIP open their admin tool over the page (see createActDialog).
-const actions = createActDialog();
+// The tables are drawn again with each refresh, so after one the same player's button for the same tool takes focus back.
+const actions = createActDialog({
+  refocus: (steamId, key) => $('panel-bans').querySelector(`button[data-act="${key}"][data-steam-id="${steamId}"]`),
+});
 
 const selectTab = (name, { focus = false } = {}) => {
   tab = TABS.includes(name) ? name : TABS[0];
@@ -114,8 +117,12 @@ const route = () => {
 };
 
 // A row's button that opens an admin tool with that player picked, such as Unban.
-const actButton = (text, key, player) =>
-  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => actions.act(key, player) });
+const actButton = (text, key, player) => {
+  const button = el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => actions.act(key, player) });
+  button.dataset.act = key;
+  button.dataset.steamId = player.steamId;
+  return button;
+};
 
 const renderBans = (overview) => {
   if (overview.bans === null) {
