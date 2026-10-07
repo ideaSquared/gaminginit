@@ -1,6 +1,7 @@
 import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import { clockHour, readSteamId, sessionExpiry, signInResult, staffBy, steamLinkedText } from './format.js';
 import { demo, keepQuery, showNotice, thisPage } from './live.js';
+import { createTools } from './tools.js';
 import { el, link } from './views.js';
 
 // What the two staff pages share: Moderation (admin.html, see admin.js) and Server settings (server-settings.html, see
@@ -223,31 +224,108 @@ export const staffNames = () => current?.staff ?? {};
 // The signed-in staff member's linked Steam account, or null.
 export const myProfile = (overview) => overview?.staffProfiles?.find((p) => p.userId === overview.user?.id) ?? null;
 
-// The bot's staff commands, once, for the admin tools' forms. `note` says when the bot has none; `ready()` is called
-// once the tools have them.
-let commandsAsked = false;
-export const loadCommands = async (tools, note, ready = () => undefined) => {
-  if (commandsAsked || tools.ready) return;
-  commandsAsked = true;
-  if (demo) {
-    tools.setCommands(demoCommands);
-    ready();
-    return;
-  }
-  try {
+// The bot's staff commands (GET /api/admin/commands), asked for once for every set of admin tools on the page: an
+// array, 'missing' for a bot without them, or null when the bot could not be reached (asked again next time).
+let commandsAsked = null;
+const askCommands = () => {
+  commandsAsked ??= (async () => {
+    if (demo) return demoCommands;
     const response = await fetch(botUrl('admin/commands'), { headers: { accept: 'application/json', authorization: `Bearer ${loadToken()}` } });
-    if (response.status === 404) {
-      note('The bot does not have the admin tools yet. Deploy the latest bot.');
-      return;
-    }
+    if (response.status === 404) return 'missing';
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    tools.setCommands((await response.json()).commands ?? []);
-    ready();
-  } catch (error) {
+    return (await response.json()).commands ?? [];
+  })().catch((error) => {
     console.error('Could not load the admin tools', error);
     // Asked again with the next refresh.
-    commandsAsked = false;
+    commandsAsked = null;
+    return null;
+  });
+  return commandsAsked;
+};
+
+// Gives a set of admin tools the bot's commands, once. `note` says when the bot has none; `ready()` is called once the
+// tools have them.
+export const loadCommands = async (tools, note, ready = () => undefined) => {
+  if (tools.ready) return;
+  const commands = await askCommands();
+  if (commands === null || tools.ready) return;
+  if (commands === 'missing') {
+    note('The bot does not have the admin tools yet. Deploy the latest bot.');
+    return;
   }
+  tools.setCommands(commands);
+  ready();
+};
+
+// Act: the admin tool for a player, such as Kick or Unban, in a dialog over the page (#act-dialog), so staff never leave
+// what they were working on. Only the tools that take a player are offered. When the button staff came from was drawn
+// again while the dialog was open, such as after a kick or a refresh, `refocus(steamId, key)` gives the one to go back
+// to, if any: the same player's button for the same tool (`key`, such as 'unban').
+export const createActDialog = ({ refocus = () => null } = {}) => {
+  const dialog = $('act-dialog');
+  const ACT_NOTE = $('act-note').textContent;
+  const tools = createTools({
+    root: $('act-tools'),
+    idPrefix: 'act-tool',
+    call,
+    onChanged: () => load(),
+    staff: staffNames,
+    only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
+  });
+  // Why there are no tools, when the bot has none.
+  let missing = null;
+  // The button staff came from, the player and tool it was for, and the tool asked for before the tools had loaded.
+  let from = null;
+  let forId = null;
+  let forKey = null;
+  let waiting = null;
+
+  // Opens an admin tool with the player picked. Until the tools have loaded, the dialog says so and opens the tool when
+  // they come.
+  const act = (key, player) => {
+    from = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
+    forId = player.steamId;
+    forKey = key;
+    $('act-dialog-title').textContent = `Act on ${player.name}`;
+    setStatus($('act-note'), tools.ready ? ACT_NOTE : (missing ?? 'Loading the admin tools…'));
+    if (!dialog.open) dialog.showModal();
+    waiting = tools.ready ? null : { key, player };
+    tools.use(key, player.steamId, player.name);
+  };
+
+  // The tools have loaded: the tool asked for while they were loading opens now, if the dialog is still open.
+  const ready = () => {
+    const asked = waiting;
+    waiting = null;
+    if (!asked || !dialog.open) return;
+    setStatus($('act-note'), ACT_NOTE);
+    tools.use(asked.key, asked.player.steamId, asked.player.name);
+  };
+
+  $('act-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => {
+    const again = from?.isConnected ? from : refocus(forId, forKey);
+    again?.focus({ preventScroll: true });
+    from = null;
+    forId = null;
+    forKey = null;
+    waiting = null;
+  });
+
+  return {
+    act,
+    dialog,
+    // The bot's commands for its tools, once; called as the page draws the overview.
+    load: () =>
+      loadCommands(
+        tools,
+        (text) => {
+          missing = text;
+          setStatus($('act-note'), text);
+        },
+        ready,
+      ),
+  };
 };
 
 // Linking the signed-in staff member's Steam account. Until they have, the page asks once each sign-in, told apart by

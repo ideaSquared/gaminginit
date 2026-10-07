@@ -9,10 +9,10 @@ import {
   badge,
   call,
   cell,
+  createActDialog,
   get,
   historyHref,
   load,
-  loadCommands,
   loadToken,
   myProfile,
   openSteam,
@@ -20,26 +20,26 @@ import {
   showAccount,
   showTab,
   staffCell,
-  staffNames,
   start,
   steamLink,
   table,
   tabKeys,
   when,
 } from './staff.js';
-import { createTools } from './tools.js';
 import { el } from './views.js';
 
-// The staff page for the server's settings, in four tabs. Admin: the admin tools (every staff command), the bans on the
-// server, the reserved slots and staff Steam accounts. Rotations: the map rotations, the week and what is on the server
-// (see rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for
-// (see rules.js). Watching the server and acting on players is on the Moderation page (admin.js); any player's
-// name here opens their history there. Signing in, the Steam account and loading are in staff.js.
+// The staff page for the server's settings, in four tabs. Bans and VIP: the bans on the server, the reserved slots and
+// staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see rotations.js). Lines:
+// what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see rules.js). Watching the
+// server, acting on players and the staff commands are on the Moderation page (admin.js); any player's name here opens
+// their history there. Signing in, the Steam account, Act and loading are in staff.js.
 
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['admin', 'rotations', 'lines', 'rules'];
+const TABS = ['bans', 'rotations', 'lines', 'rules'];
+// The tab Bans and VIP was before its commands went to Moderation, which old links name.
+const OLD_TABS = { admin: 'bans' };
 // The Moderation page's tabs, which a link here may name by mistake.
-const MODERATION_TABS = ['live', 'review', 'history', 'players', 'alerts', 'kills'];
+const MODERATION_TABS = ['live', 'review', 'history', 'commands', 'players', 'alerts', 'kills'];
 let tab = TABS[0];
 let data = null;
 
@@ -86,7 +86,11 @@ const editorChanges = new MutationObserver(unsavedSoon);
 for (const name of Object.keys(EDITORS)) editorChanges.observe($(name), { subtree: true, childList: true, attributes: true, characterData: true });
 for (const type of ['input', 'change']) document.addEventListener(type, unsavedSoon, true);
 
-const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames });
+// Unban and Remove VIP open their admin tool over the page (see createActDialog).
+// The tables are drawn again with each refresh, so after one the same player's button for the same tool takes focus back.
+const actions = createActDialog({
+  refocus: (steamId, key) => $('panel-bans').querySelector(`button[data-act="${key}"][data-steam-id="${steamId}"]`),
+});
 
 const selectTab = (name, { focus = false } = {}) => {
   tab = TABS.includes(name) ? name : TABS[0];
@@ -97,7 +101,10 @@ const selectTab = (name, { focus = false } = {}) => {
   if (data) EDITORS[tab]?.show();
 };
 
-const fromHash = (hash) => hash.slice(1).split('/')[0];
+const fromHash = (hash) => {
+  const asked = hash.slice(1).split('/')[0];
+  return Object.hasOwn(OLD_TABS, asked) ? OLD_TABS[asked] : asked;
+};
 const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash)) || MODERATION_TABS.includes(fromHash(hash));
 
 // Shows the tab the address names. A link to one of the Moderation page's tabs goes there.
@@ -109,15 +116,13 @@ const route = () => {
   selectTab(fromHash(location.hash));
 };
 
-// Opens an admin tool with the player picked, such as Unban, at the top of the Admin tab.
-const act = (key, player) => {
-  tools.use(key, player.steamId, player.name);
-  $('tools-title').closest('article').scrollIntoView({ block: 'start' });
+// A row's button that opens an admin tool with that player picked, such as Unban.
+const actButton = (text, key, player) => {
+  const button = el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => actions.act(key, player) });
+  button.dataset.act = key;
+  button.dataset.steamId = player.steamId;
+  return button;
 };
-
-// A row's button that opens an admin tool with that player picked.
-const actButton = (text, key, player) =>
-  el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick: () => act(key, player) });
 
 const renderBans = (overview) => {
   if (overview.bans === null) {
@@ -248,9 +253,7 @@ const render = (overview) => {
   renderBans(overview);
   renderReserved(overview);
   renderStaffSteam(overview);
-  loadCommands(tools, (text) => {
-    $('tools-note').textContent = text;
-  });
+  actions.load();
   EDITORS[tab]?.ensure();
 };
 
@@ -266,6 +269,7 @@ start({
   show: render,
   signedOut: () => {
     data = null;
+    if (actions.dialog.open) actions.dialog.close();
     rotations.reset();
     lines.reset();
     rules.reset();

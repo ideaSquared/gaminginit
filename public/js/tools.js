@@ -51,8 +51,9 @@ export const replyNodes = (reply, staff) => [
 
 // `call(path, body)` posts to the bot's staff API and resolves to { ok, json }. `onChanged()` is called after a command
 // that changes something, so the page can load the records again. `staff()` gives the current Discord user names.
-// `only(tool)` picks the tools offered, such as only those for a player; every tool by default.
-export const createTools = ({ root, call, onChanged, staff, only = () => true }) => {
+// `only(tool)` picks the tools offered, such as only those for a player; every tool by default. `idPrefix` starts the
+// ids of its fields, so two sets of tools can be on one page.
+export const createTools = ({ root, call, onChanged, staff, only = () => true, idPrefix = 'tool' }) => {
   let tools = [];
   let current = null;
   // What staff picked or typed for the player in each tool, so it carries over when they switch tools.
@@ -60,19 +61,19 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true })
   // The names of the choices last offered, by option and value, to show who a Steam ID is.
   const offered = new Map();
 
-  const picker = el('select', { id: 'tool-picker', className: 'finder-input tool-picker' });
+  const picker = el('select', { id: `${idPrefix}-picker`, className: 'finder-input tool-picker' });
   const help = el('p', { className: 'section-note tool-help' });
   const form = el('form', { className: 'tool-form', noValidate: false });
   const output = el('div', { className: 'tool-output', role: 'status' });
   root.replaceChildren(
-    el('label', { className: 'finder-label', htmlFor: 'tool-picker', textContent: 'Tool' }),
+    el('label', { className: 'finder-label', htmlFor: picker.id, textContent: 'Tool' }),
     picker,
     help,
     form,
     output,
   );
 
-  const fieldId = (name) => `tool-${name}`;
+  const fieldId = (name) => `${idPrefix}-${name}`;
 
   const values = () =>
     Object.fromEntries(
