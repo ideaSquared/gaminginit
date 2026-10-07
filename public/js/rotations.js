@@ -600,11 +600,10 @@ export const createRotations = ({ root, load, send }) => {
             ...choices.map((r) => el('option', { value: r.name, textContent: r.name, selected: own !== null && own.toLowerCase() === r.name.toLowerCase(), disabled: r.entries.length === 0 })),
           );
           pick.dataset.focus = `day-${i}`;
-          // A card is too narrow for a long name in the select, which cuts it off. So the name is written out under the
-          // select, which is see-through and laid over it: it still opens, and works from the keyboard.
-          const chosen = el('span', { className: 'rot-day-chosen', ariaHidden: 'true' });
+          // A plain select, so it opens in every browser. A card can be too narrow for a long name, so the name is also
+          // its tooltip.
           const showChosen = () => {
-            chosen.textContent = pick.selectedOptions[0]?.textContent ?? '';
+            pick.title = pick.selectedOptions[0]?.textContent ?? '';
           };
           showChosen();
           pick.addEventListener('change', async () => {
@@ -617,7 +616,7 @@ export const createRotations = ({ root, load, send }) => {
             'div',
             { className: `rot-day${isToday ? ' rot-day-today' : ''}${own ? ' rot-day-own' : ''}` },
             el('p', { className: 'rot-day-name' }, el('span', { className: 'rot-day-long', textContent: day }), el('span', { className: 'rot-day-short', textContent: day.slice(0, 3) }), isToday ? el('span', { className: 'rot-today-chip', textContent: 'Today' }) : null),
-            el('div', { className: 'rot-day-pick' }, pick, chosen),
+            pick,
             rotation ? strip(rotation.entries, 'rot-strip rot-strip-day') : el('p', { className: 'rot-note', textContent: 'Keeps what the server has' }),
           );
         }),
