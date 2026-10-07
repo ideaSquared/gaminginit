@@ -763,8 +763,12 @@ describe('staff page', () => {
     const marks = { teamKills: 3, sameTeammate: 2, vehicleSuicides: 2, suicides: 10 };
 
     assert.equal(flagLabel('sameTeammate'), 'Same teammate');
-    assert.equal(flagRule('teamKills', marks), '3 or more team kills in a day, not counting helicopter crashes');
-    assert.equal(flagRule('sameTeammate', marks), 'killed the same teammate 2 or more times in a day, not counting helicopter crashes');
+    assert.equal(flagRule('teamKills', marks), '3 or more team kills in a day');
+    assert.equal(flagRule('sameTeammate', marks), 'killed the same teammate 2 or more times in a day');
+    // From a bot that leaves helicopter crashes out of them.
+    assert.equal(flagRule('teamKills', marks, true), '3 or more team kills in a day, not counting helicopter crashes');
+    assert.equal(flagRule('sameTeammate', marks, true), 'killed the same teammate 2 or more times in a day, not counting helicopter crashes');
+    assert.equal(flagRule('vehicleSuicides', marks, true), '2 or more suicides in a vehicle in a day (crashing it, or blowing it up)');
     assert.equal(flagRule('vehicleSuicides', marks), '2 or more suicides in a vehicle in a day (crashing it, or blowing it up)');
     assert.equal(flagLabel('newFlag'), 'newFlag');
   });

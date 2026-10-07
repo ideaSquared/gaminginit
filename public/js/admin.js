@@ -501,7 +501,9 @@ const number = (value) => el('td', { className: 'num', textContent: String(value
 const renderGriefers = (overview) => {
   const marks = overview.flags;
   $('flag-rules').replaceChildren(
-    ...Object.keys(marks).map((flag) => el('li', {}, badge(flagLabel(flag), FLAG_KIND[flag]), ` ${flagRule(flag, marks)}`)),
+    ...Object.keys(marks).map((flag) =>
+      el('li', {}, badge(flagLabel(flag), FLAG_KIND[flag]), ` ${flagRule(flag, marks, overview.totals.crashTeamKills !== undefined)}`),
+    ),
   );
   $('griefers-note').textContent = overview.feedSince
     ? 'Everyone who team killed, was team killed or killed themselves, most flagged days first. ' +

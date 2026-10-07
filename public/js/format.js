@@ -666,13 +666,19 @@ export const sessionExpiry = (token) => {
 export const flagLabel = (flag) =>
   ({ teamKills: 'Team kills', sameTeammate: 'Same teammate', vehicleSuicides: 'Vehicle suicides', suicides: 'Suicides' })[flag] ?? flag;
 
-export const flagRule = (flag, marks) =>
-  ({
-    teamKills: `${marks.teamKills} or more team kills in a day, not counting helicopter crashes`,
-    sameTeammate: `killed the same teammate ${marks.sameTeammate} or more times in a day, not counting helicopter crashes`,
-    vehicleSuicides: `${marks.vehicleSuicides} or more suicides in a vehicle in a day (crashing it, or blowing it up)`,
-    suicides: `${marks.suicides} or more suicides of any kind in a day`,
-  })[flag] ?? flag;
+// `crashes`: whether the bot leaves helicopter crashes out of the team kill flags, as a bot that sends `crashTeamKills`
+// does.
+export const flagRule = (flag, marks, crashes = false) => {
+  const notCrashes = crashes ? ', not counting helicopter crashes' : '';
+  return (
+    {
+      teamKills: `${marks.teamKills} or more team kills in a day${notCrashes}`,
+      sameTeammate: `killed the same teammate ${marks.sameTeammate} or more times in a day${notCrashes}`,
+      vehicleSuicides: `${marks.vehicleSuicides} or more suicides in a vehicle in a day (crashing it, or blowing it up)`,
+      suicides: `${marks.suicides} or more suicides of any kind in a day`,
+    }[flag] ?? flag
+  );
+};
 
 // What staff did, as the moderation log names it.
 export const MOD_ACTIONS = {
