@@ -58,6 +58,7 @@ import {
   call,
   cell,
   configured,
+  createActDialog,
   get,
   load,
   loadCommands,
@@ -78,14 +79,14 @@ import {
 import { createTools, replyNodes } from './tools.js';
 import { el, mapTag, playerHref } from './views.js';
 
-// The staff page for moderation, in three tabs. Live: the server now, everyone in game with those worth a look always
+// The staff page for moderation, in four tabs. Live: the server now, everyone in game with those worth a look always
 // at the top, to search and act on without leaving the page, every kill as it happens, and who joined and left. Review:
 // what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get, risky Steam
 // accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff did.
-// History: any player's record, kills and headshots, and team kills. A player's name on Live opens a quick look at them
-// at the side of the page; anywhere else, their history. Act on a player opens the admin tool for it over the page. The
-// rotations, lines, weapon rules and the Admin tab are on the Server settings page (settings.js). Signing in, the Steam
-// account and loading are in staff.js.
+// History: any player's record, kills and headshots, and team kills. Commands: every staff command from Discord (see
+// tools.js). A player's name on Live opens a quick look at them at the side of the page; anywhere else, their history.
+// Act on a player opens the admin tool for it over the page. The bans and VIP, rotations, lines and weapon rules are on
+// the Server settings page (settings.js). Signing in, the Steam account, Act and loading are in staff.js.
 
 // The kinds of action staff hid from the moderation log (MOD_ACTIONS keys), kept for this browser when storage is on.
 const MODLOG_HIDDEN_KEY = 'gaminginit-modlog-hidden';
@@ -128,11 +129,11 @@ const HOW_FLAGS_KEY = 'gaminginit-how-flags';
 let period = 7;
 let data = null;
 // The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['live', 'review', 'history'];
-// The tabs the page had before, which old links name.
-const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review' };
+const TABS = ['live', 'review', 'history', 'commands'];
+// The tabs the page had before, which old links name. The Admin tab's commands are on Commands now.
+const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review', admin: 'commands' };
 // The tabs now on the Server settings page, which old links to this page name.
-const SETTINGS_TABS = ['admin', 'rotations', 'lines', 'rules'];
+const SETTINGS_TABS = ['bans', 'rotations', 'lines', 'rules'];
 let tab = 'live';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order, which
 // starts with those worth a look at the top.
@@ -178,7 +179,7 @@ const signedOut = () => {
   kills = null;
   historyKills = null;
   historyRecord = null;
-  if (actDialog.open) actDialog.close();
+  if (actions.dialog.open) actions.dialog.close();
   if (peekDialog.open) peekDialog.close();
   lookSince.clear();
   lookKnown = false;
@@ -256,60 +257,17 @@ const openHistory = (player) => {
   $('history-player').scrollIntoView({ block: 'start' });
 };
 
-// Act: the admin tools for a player, over the page, so staff never leave the list they were working from. Only the
-// tools that take a player are offered; the rest are on the Server settings page's Admin tab.
-const actDialog = $('act-dialog');
-const ACT_NOTE = $('act-note').textContent;
-const tools = createTools({
-  root: $('act-tools'),
-  call,
-  onChanged: () => load(),
-  staff: staffNames,
-  only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
+// Act: the admin tool for a player over the page (see createActDialog). When the button staff came from was drawn again
+// meanwhile, such as after a kick, focus goes back to the quick look's first button, or the same player's Act button in
+// the same tab, if they are still there.
+const actions = createActDialog({
+  refocus: (steamId) =>
+    peekDialog.open ? peekDialog.querySelector('[data-peek]') : $(`panel-${tab}`).querySelector(`.act-menu[data-steam-id="${steamId}"] > summary`),
 });
-// Why there are no tools, when the bot has none.
-let toolsMissing = null;
-// The Act button staff came from, to go back to when the dialog closes, and the player it was for.
-let actFrom = null;
-let actFor = null;
-// The tool and player staff asked for before the tools had loaded, opened once they have.
-let actWaiting = null;
+const act = actions.act;
 
-// Opens an admin tool with the player picked, such as Kick. Until the tools have loaded, the dialog says so and opens
-// the tool when they come.
-const act = (key, player) => {
-  actFrom = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
-  actFor = player.steamId;
-  $('act-dialog-title').textContent = `Act on ${player.name}`;
-  setStatus($('act-note'), tools.ready ? ACT_NOTE : (toolsMissing ?? 'Loading the admin tools…'));
-  if (!actDialog.open) actDialog.showModal();
-  actWaiting = tools.ready ? null : { key, player };
-  tools.use(key, player.steamId, player.name);
-};
-
-// The tools have loaded: the tool asked for while they were loading opens now, if the dialog is still open.
-const toolsReady = () => {
-  const asked = actWaiting;
-  actWaiting = null;
-  if (!asked || !actDialog.open) return;
-  setStatus($('act-note'), ACT_NOTE);
-  tools.use(asked.key, asked.player.steamId, asked.player.name);
-};
-
-$('act-close').addEventListener('click', () => actDialog.close());
-actDialog.addEventListener('close', () => {
-  // The list may have been drawn again while the dialog was open, such as after a kick: then the same player's Act
-  // button in the same tab, if they are still there, or the quick look's first button.
-  const again = actFrom?.isConnected
-    ? actFrom
-    : peekDialog.open
-      ? peekDialog.querySelector('[data-peek]')
-      : $(`panel-${tab}`).querySelector(`.act-menu[data-steam-id="${actFor}"] > summary`);
-  again?.focus({ preventScroll: true });
-  actFrom = null;
-  actFor = null;
-  actWaiting = null;
-});
+// Commands: every staff command from Discord, to pick, fill in and run.
+const commands = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames });
 
 // What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History and the
 // kill feed are not admin tools: they open the History tab, and show only that player in the kill feed.
@@ -1821,14 +1779,10 @@ const render = (overview) => {
   renderModeration(overview);
   if (tab === 'history') renderHistory();
   if (peekDialog.open) renderPeek();
-  loadCommands(
-    tools,
-    (text) => {
-      toolsMissing = text;
-      setStatus($('act-note'), text);
-    },
-    toolsReady,
-  );
+  actions.load();
+  loadCommands(commands, (text) => {
+    $('tools-note').textContent = text;
+  });
 };
 
 for (const button of document.querySelectorAll('.period button[data-days]')) {

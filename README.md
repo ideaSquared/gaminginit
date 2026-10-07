@@ -74,8 +74,8 @@ What it shows:
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
-  anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged and any player's
-  history. **Server settings** (`/server-settings`): the admin tools, bans and reserved slots, the map rotations,
+  anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged, any player's history
+  and every staff command. **Server settings** (`/server-settings`): the bans and reserved slots, the map rotations,
   what the bot says in game and the weapon rules. See [Staff pages](#staff-pages).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
@@ -276,17 +276,17 @@ footer ("Staff sign-in") and both are kept out of search results.
 There are two, one for each kind of work, with a switch between them by the title:
 
 - **Moderation** (`/admin`), the page to keep open while the server is busy: **Live** (who is on, with those worth a
-  look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did) and **History**
-  (any player's record).
-- **Server settings** (`/server-settings`), for setting the server up: **Admin** (every staff command, bans, reserved
-  slots and staff Steam accounts), **Rotations**, **Lines** and **Weapon rules**.
+  look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did), **History** (any
+  player's record) and **Commands** (every staff command).
+- **Server settings** (`/server-settings`), for setting the server up: **Bans and VIP** (the bans, reserved slots and
+  staff Steam accounts), **Rotations**, **Lines** and **Weapon rules**.
 
 Each tab says what is in it, with a count: how many are in game, and how many flags there are. The address keeps the
-tab (`/admin#review`, `/admin#history`, `/server-settings#rotations`, `/server-settings#lines`, `/server-settings#rules`;
-Live and Admin, the first tabs, have none), and on History the player shown (`/admin#history/<Steam ID>`), so a
-link opens the right one, and the browser's Back goes back. Old links go where those tabs are now: `/admin#admin`,
-`#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to
-that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
+tab (`/admin#review`, `/admin#history`, `/admin#commands`, `/server-settings#rotations`, `/server-settings#lines`,
+`/server-settings#rules`; Live and Bans and VIP, the first tabs, have none), and on History the player shown
+(`/admin#history/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
+those tabs are now: `/admin#admin` to Commands, `/server-settings#admin` to Bans and VIP, `/admin#rotations`, `#lines`
+and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
 at them; anywhere else, on either page, it opens their history.**
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
@@ -302,7 +302,7 @@ show as a top seeder, and your player page shows no seed days. Your kills, match
 get a staff spot instead: the bot keeps you on the server's reserved list for as long as you're linked, in place of a
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on Server settings'
-Admin tab.
+Bans and VIP tab.
 
 ### Moderation: Live, the server, who is on and every kill now
 
@@ -352,10 +352,10 @@ Admin tab.
   make their profile private, and "Checked, they're fine" or taking it back. History opens the History tab. Warn, kick,
   move, ban and private open that admin tool over the page, with the player picked, so you never leave the list: fill
   it in, run it, and close it (or Escape) to be back on the same player. It can switch to any other tool for a player,
-  such as Look up or Give VIP. The other tools are on Server settings' Admin tab.
+  such as Look up or Give VIP. Every other command is on the Commands tab.
 - **Reasons to pick.** Warn, Kick and Ban have buttons for the usual reasons (team killing, team vehicles, toxic chat,
   racism, and for kicks and bans cheating and ignoring warnings), which fill in the message or reason to change before
-  sending. They are `PRESET_REASONS` in `format.js`. On Server settings' Admin tab too.
+  sending. They are `PRESET_REASONS` in `format.js`. On the Commands tab too.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
@@ -447,20 +447,23 @@ Admin tab.
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
   opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
-### Server settings: Admin, commands, bans and VIP
+### Moderation: Commands, every staff command
 
-- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
+- Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
   pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
   list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
-  player's staff history and the moderation log. To warn, kick or move someone in game, Act on Moderation is quicker.
+  player's staff history and the moderation log. To warn, kick or move someone in game, Act on Live is quicker.
+
+### Server settings: Bans and VIP
+
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
-  tool with them picked.
+  tool over the page with them picked, as Act does on Moderation.
 - **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked, the same way.
   Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
   unlinking them takes it away.
 - **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
@@ -581,9 +584,9 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 numbers for every page and the notice in `announcement.json`, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `staff.js` has what the two staff pages share: signing in, the Steam account and
+`demo.js` makes the sample data. `staff.js` has what the two staff pages share: signing in, the Steam account, Act and
 loading the bot's staff overview. `admin.js` renders the Moderation page (its live kill feed and History too),
-`settings.js` the Server settings page, `tools.js` the admin tools (on Admin, and over Moderation from Act), and
+`settings.js` the Server settings page, `tools.js` the admin tools (on Commands, and over either page from Act), and
 `rotations.js` the Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
 Lines tab, with `linesmodel.js` holding its logic, for tests. `rules.js` renders the Weapon rules tab, with
 `rulesmodel.js` holding its logic, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
