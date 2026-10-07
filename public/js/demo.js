@@ -11,6 +11,8 @@ const DAY = 24 * HOUR;
 const CURVE = [38, 24, 10, 4, 0, 0, 0, 0, 2, 4, 6, 9, 14, 18, 22, 26, 31, 40, 52, 61, 64, 60, 55, 46];
 const NAMES = ['Kestrel', 'Bravo_Six', 'Moth', 'Nightjar', 'Pike', 'Rook', 'Sable', 'Tusk', 'Vex', 'Ash'];
 const MAPS = ['Bakurani', 'Ozeti', 'Zestafona'];
+// As on the bot: the K/D board only lists players with this much time played over 30 days.
+const KD_MIN_HOURS = 10;
 const CAPACITY = 64;
 const LIVE = 20;
 // Busy near full, like the real server's 97+ of its slots.
@@ -134,9 +136,9 @@ const leaderboard = () => {
   const by = (value) => [...players].sort((a, b) => value(b) - value(a));
   return {
     days: 30,
-    kdMinMatches: 3,
+    kdMinHours: KD_MIN_HOURS,
     kills: by((p) => p.kills),
-    kd: by((p) => p.kills / Math.max(p.deaths, 1)),
+    kd: by((p) => p.kills / Math.max(p.deaths, 1)).filter((p) => p.seedingMinutes + p.liveMinutes >= KD_MIN_HOURS * 60),
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
   };
@@ -297,6 +299,8 @@ export const demoProfile = (id, now) => {
     activity.push(day);
   }
   matches.sort((a, b) => b.endedAt - a.endedAt);
+  const ranked = new Date(today - 29 * DAY).toISOString().slice(0, 10);
+  const playedRanked = activity.filter((d) => d.day >= ranked).reduce((sum, d) => sum + d.seedingMinutes + d.liveMinutes, 0);
   const online = demoPlayers(now).players[index].online;
   // Their kills each day since the sample's kill feed started, shared out over a few favourite weapons.
   const since = new Date(now - 12 * DAY).toISOString().slice(0, 10);
@@ -320,7 +324,15 @@ export const demoProfile = (id, now) => {
     days: PROFILE_DAYS,
     activity: activity.filter((d) => d.matches > 0 || d.seedingMinutes > 0),
     matches,
-    ranks: { days: 30, kdMinMatches: 3, players: 214, kills: index + 1, kd: index < 5 ? 5 - index : 14 + index, playtime: index * 2 + 2, seeding: index === 0 ? 1 : null },
+    ranks: {
+      days: 30,
+      kdMinHours: KD_MIN_HOURS,
+      players: 214,
+      kills: index + 1,
+      kd: playedRanked < KD_MIN_HOURS * 60 ? null : index < 5 ? 5 - index : 14 + index,
+      playtime: index * 2 + 2,
+      seeding: index === 0 ? 1 : null,
+    },
     online: online ? { map: 'Ozeti', faction: 'Valkyra', kills: 11 - index, deaths: 3 + index } : null,
     vip: index % 2 === 0 ? { until: today + 5 * DAY + 4 * HOUR } : null,
     seeding: { rule: VIP_RULE, seedDays: Math.min(3, (index + 1) % 4) },

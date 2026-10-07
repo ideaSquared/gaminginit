@@ -11,6 +11,7 @@ import {
   hourlyAverages,
   isOnline,
   kd,
+  kdNeeds,
   latestMatches,
   mapSegments,
   mapKey,
@@ -310,6 +311,12 @@ describe('leaderboard boards', () => {
       playtime: ['4.0 h', '7'],
       seeding: ['4', '1.5 h'],
     });
+    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinHours: 10 }), 'At least 10 hours played.');
+  });
+
+  it('says what the K/D board needs, including from a bot that still counts matches', () => {
+    assert.equal(kdNeeds({ kdMinHours: 10 }, '+'), '10+ hours played');
+    assert.equal(kdNeeds({ kdMinMatches: 3 }), '3 matches');
     assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
   });
 

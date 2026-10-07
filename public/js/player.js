@@ -11,6 +11,7 @@ import {
   HEAT_STEPS,
   inPeriod,
   kd,
+  kdNeeds,
   longestKill,
   metres,
   ordinal,
@@ -152,7 +153,7 @@ const renderStats = (now) => {
   }
 
   const kdRank = place('kd');
-  const kdNote = period === profile.ranks?.days && !kdRank && totals.kills > 0 ? `${profile.ranks.kdMinMatches}+ matches to be placed` : null;
+  const kdNote = period === profile.ranks?.days && !kdRank && totals.kills > 0 ? `${kdNeeds(profile.ranks, '+')} to be placed` : null;
   $('player-tiles').replaceChildren(
     tile('Time played', formatHours(played(totals)), subline(place('playtime'), plural(totals.days, 'day'))),
     tile('Matches', String(totals.matches), subline(best.podiums > 0 ? `top 3 in ${best.podiums}` : null)),
