@@ -97,6 +97,7 @@ import {
   byLook,
   teamCounts,
   filterPlayers,
+  lookFirst,
   alertCount,
   discordParts,
   defaultLabel,
@@ -1078,6 +1079,20 @@ describe('the staff page server list', () => {
     // Most kills, then fewest deaths; Cy has no kills reported.
     assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
     assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
+  });
+
+  it('splits the list into those worth a look and everyone else, keeping the order picked', () => {
+    const parts = (options) => {
+      const { look, rest } = lookFirst(filterPlayers(all, options));
+      return [look.map((p) => p.name), rest.map((p) => p.name)];
+    };
+
+    assert.deepEqual(parts({}), [['Cy', 'Ash'], ['Dee', 'Bo']]);
+    // Whatever the order, those worth a look are the first part.
+    assert.deepEqual(parts({ sort: 'kills' }), [['Ash', 'Cy'], ['Bo', 'Dee']]);
+    assert.deepEqual(parts({ sort: 'name' }), [['Ash', 'Cy'], ['Bo', 'Dee']]);
+    assert.deepEqual(parts({ team: 'manticore' }), [[], ['Bo']]);
+    assert.deepEqual(lookFirst([]), { look: [], rest: [] });
   });
 
   it("filters the live kill feed to headshots, team kills or both, and says when that leaves none", () => {

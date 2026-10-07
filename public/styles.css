@@ -2913,10 +2913,52 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
-/* Staff page tabs: Players, Alerts, Kills, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
+/* The two staff pages, Moderation and Server settings, by the page's title: one pressed at a time, like a period. */
+.staff-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.staff-pages {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.staff-pages[hidden] {
+  display: none;
+}
+
+.staff-pages a {
+  padding: 7px 14px;
+  border-radius: 7px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.staff-pages a:hover {
+  color: var(--text);
+}
+
+.staff-pages a[aria-current='page'] {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* Each staff page's tabs: Live, Review and History; or Rotations, Lines, Weapon rules and Admin. Each says what is in
+   it, so the page reads at a glance. */
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -2981,15 +3023,11 @@ body.refreshing .tile-value {
   color: #1d1400;
 }
 
-@media (max-width: 1099px) {
-  .admin-tabs {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 559px) {
-  .admin-tabs {
+  /* Four tabs are two rows of two on a phone; three fit in one row. */
+  .admin-tabs-wrap {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
   }
 
   .admin-tabs [role='tab'] {
@@ -3093,6 +3131,33 @@ body.refreshing .tile-value {
 
 .server-table {
   min-width: 720px;
+  table-layout: fixed;
+}
+
+/* The same column widths in both parts of the server list, so they line up. Worth knowing takes the rest. */
+.server-table th:nth-child(1) {
+  width: 22%;
+}
+
+.server-table th:nth-child(2) {
+  width: 15%;
+}
+
+.server-table th:nth-child(3) {
+  width: 13%;
+}
+
+.server-table th:nth-child(4) {
+  width: 9%;
+}
+
+.server-table th:nth-child(6) {
+  width: 88px;
+}
+
+/* Those worth a look, then everyone else. */
+#server-players {
+  margin-top: 12px;
 }
 
 /* Team colours in tables, the server strip and the team filter. */
@@ -3156,6 +3221,11 @@ body.refreshing .tile-value {
 /* A player worth a look gets a mark down the side of their row. */
 .server-table tr.watch td:first-child {
   box-shadow: inset 3px 0 0 var(--warning);
+}
+
+/* The server list's message in place of the list, such as when nobody is in game. */
+.list-instead {
+  padding: 8px 0;
 }
 
 /* A row's "Act" menu. It opens over the page (see actMenu in admin.js), so tables that scroll sideways never cut it. */
@@ -3524,6 +3594,23 @@ body.refreshing .tile-value {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Act on a player: an admin tool over the Moderation page. */
+.act-dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  color: var(--text);
+}
+
+.act-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.act-dialog-note {
+  margin: 8px 0 16px;
 }
 
 /* Admin tools */

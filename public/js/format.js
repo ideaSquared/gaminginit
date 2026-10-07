@@ -928,6 +928,10 @@ export const filterPlayers = (players, { query = '', team = '', watch = false, s
     .sort(order[sort] ?? order.watch);
 };
 
+// The server list in its two parts, each in the order it came: those worth a look now (see needsLook), which the staff
+// page always puts at the top, and everyone else.
+export const lookFirst = (players) => ({ look: players.filter(needsLook), rest: players.filter((p) => !needsLook(p)) });
+
 // The live kill feed's "Only headshots" and "Only team kills": a kill shows when it is everything ticked.
 export const feedKillShown = (kill, { headshots = false, teamKills = false } = {}) =>
   (!headshots || kill.headshot) && (!teamKills || kill.teamKill);

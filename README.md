@@ -64,16 +64,19 @@ What it shows:
   last 30 days, whichever period is chosen. Tables too wide for a small screen scroll inside their card.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
-- Private profiles: a player staff made private (the bot's `/private add`, or Make a profile private on the staff page)
+- Private profiles: a player staff made private (the bot's `/private add`, or Make a profile private on Moderation)
   shows as "[private profile]" everywhere on the site, with no link to a player page: the leaderboard, matches, the live
   kill feed, the seeding page and the weapons. They are left off the players page, and their player page says no player
-  was found. The staff page still shows them as they are.
+  was found. The staff pages still show them as they are.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
-- A staff page (`/admin`), for staff only: they sign in with Discord. See [Staff page](#staff-page).
+- Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
+  anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged and any player's
+  history. **Server settings** (`/server-settings`): the map rotations, what the bot says in game, the weapon rules,
+  and the admin tools, bans and reserved slots. See [Staff pages](#staff-pages).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
@@ -93,8 +96,8 @@ You need:
   The weapons need a bot with the kill feed set up (its README, "Weapon stats"), which sends `weapons` in
   `/api/stats` and on player pages; without it, they are not shown. The live page needs a bot that serves
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
-  The staff page needs a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
-  README, "Staff page"), and for its kills and headshots `/api/admin/kills` and the live kill feed `/api/admin/live`.
+  The staff pages need a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
+  README, "Staff page"), and for their kills and headshots `/api/admin/kills` and the live kill feed `/api/admin/live`.
   The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
   list is not shown. The teams page needs a bot that sends `teams` (same section); without it, the page says so.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
@@ -113,11 +116,11 @@ You need:
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `admin.html` and `server-settings.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all ten pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all eleven pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
 | Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 14. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
@@ -262,15 +265,32 @@ npm start                      # serves public/ on http://localhost:3000
 
 Until the stats URL is set, the page says live stats are not connected and links to the demo.
 
-## Staff page
+## Staff pages
 
-`/admin` is for staff: Discord Administrators and members with a staff role in our Discord server (the bot's
-`DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. It is linked from every page's footer
-("Staff sign-in") and kept out of search results.
+The staff pages are for staff: Discord Administrators and members with a staff role in our Discord server (the bot's
+`DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. `/admin` is linked from every page's
+footer ("Staff sign-in") and both are kept out of search results.
+
+There are two, one for each kind of work, with a switch between them by the title:
+
+- **Moderation** (`/admin`), the page to keep open while the server is busy: **Live** (who is on, with those worth a
+  look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did) and **History**
+  (any player's record).
+- **Server settings** (`/server-settings`), for setting the server up: **Rotations**, **Lines**, **Weapon rules** and
+  **Admin** (every staff command, bans, reserved slots and staff Steam accounts).
+
+Each tab says what is in it, with a count: how many are in game, and how many flags there are. The address keeps the
+tab (`/admin#review`, `/admin#history`, `/server-settings#lines`, `/server-settings#rules`, `/server-settings#admin`;
+Live and Rotations, the first tabs, have none), and on History the player shown (`/admin#history/<Steam ID>`), so a
+link opens the right one, and the browser's Back goes back. Old links go where those tabs are now: `/admin#admin`,
+`#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to
+that player's history. ← → move between a page's tabs from the keyboard. **Any player's name, on either page, opens
+their history.**
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
-sends you back here. Discord only tells the bot who you are and your roles there. The page keeps the sign-in in this
-browser for 8 hours; "Sign out" forgets it. Anyone else is told the page is for staff only.
+sends you back to the page you were on. Discord only tells the bot who you are and your roles there. The sign-in is
+kept in this browser for 8 hours, for both pages; "Sign out" forgets it. Anyone else is told the pages are for staff
+only.
 
 **Your Steam account.** Seeder VIP and the top seeders are for the players who seed, not for staff. The first time you
 sign in without a Steam account linked, the page asks for your Steam64 ID (17 digits, starting 7656119), with how to find
@@ -279,36 +299,32 @@ custom link. Once linked, the bot counts your time on the server as playing, not
 show as a top seeder, and your player page shows no seed days. Your kills, matches and time played show as before. You
 get a staff spot instead: the bot keeps you on the server's reserved list for as long as you're linked, in place of a
 slot added by hand.
-"Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
+"Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on Server settings'
+Admin tab.
 
-The page has seven tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
-staff did) and **History** (any player's record), then **Admin**, **Rotations**, **Lines** and **Weapon rules**. Each tab says what is in it, with a
-count: how many are in game, and how many flags there are. The address keeps the tab (`/admin#review`,
-`/admin#history`, `/admin#admin`, `/admin#rotations`, `/admin#lines`, `/admin#rules`), and on History the player shown (`/admin#history/<Steam ID>`),
-so a link opens the right one, and the browser's Back goes back. Old links (`#alerts`, `#kills`) open Review, and
-`#kills/<Steam ID>` that player's history. ← → move between tabs from the keyboard. **Any player's name, on any tab,
-opens their history.**
-
-### Live: the server, who is on and every kill now
+### Moderation: Live, the server, who is on and every kill now
 
 - **The server at a glance:** live, seeding or empty, the map, the players, each team's score, and when the bot last
   checked. When the bot cannot reach the server, it says so and when it last could.
-- **Tiles:** players in game, how many are worth a look now, how many in game are flagged for headshots today, and risky
-  Steam accounts in game.
 - **The server list:** everyone in game, with their team, kills and deaths this match, time on the server today, and
   what is worth knowing: banned, team kills and vehicle suicides today (red once they pass a griefing mark), today's
   headshots when they are unlikely by luck (yellow below 1 in 20, red once the day is flagged; hover for their usual
   and the chance), a high-risk Steam account or one worth a look, new today (first time in 90 days), or VIP. Players
   worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) have a yellow mark by their
   name. Being new is shown, but is no reason to look on its own.
+- **Worth a look now, always at the top.** The list is in two parts: **Worth a look now** first, with its count in
+  yellow when there is anyone in it, and then **Everyone else**. Whatever the order picked, a flagged player is never
+  further down; when nobody is worth a look, the first part says so.
 - **Search** by name or Steam ID, pick a **team**, **sort** by worth a look first, team, most kills, longest on today or
-  name, and tick **Only players worth a look**. It opens sorted by **Worth a look first**: banned players, then those
-  flagged for griefing today with the most team kills first, then flagged headshots, then high-risk and risky Steam
-  accounts, then anyone else with team kills or vehicle suicides today, then the rest by team, so the ones to check
-  never hide among the rest. When nobody in game
-  matches a search, "Find" searches everyone the bot knows on the History tab.
+  name, and tick **Only players worth a look** to leave out everyone else. The search, team and order apply to both
+  parts. It opens sorted by **Worth a look first**: banned players, then those flagged for griefing today with the
+  most team kills first, then flagged headshots, then high-risk and risky Steam accounts, then anyone else with team
+  kills or vehicle suicides today, then the rest by team. When nobody in game matches a search, "Find" searches
+  everyone the bot knows on the History tab.
 - **Act** on a player opens a menu: their history, warn, kick, move to another team, ban, or make their profile private.
-  History opens the History tab. The rest open that admin tool on the Admin tab with the player picked, and "← Back to Live" goes back.
+  History opens the History tab. The rest open that admin tool over the page, with the player picked, so you never
+  leave the list: fill it in, run it, and close it (or Escape) to be back on the same player. It can switch to any other
+  tool for a player, such as Look up or Give VIP. The other tools are on Server settings' Admin tab.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
@@ -326,7 +342,7 @@ opens their history.**
   the bot started keeping the log show "–" for their time on. Hidden while the bot does not send it.
 - On a phone each player in the server list is a small card, with Act at the top.
 
-### Review: what the bot flagged, and what staff did
+### Moderation: Review, what the bot flagged, and what staff did
 
 - **How flags work**, in three steps: the bot checks every player's Steam account as they join, and every kill in the
   kill feed for headshots, team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk,
@@ -374,7 +390,7 @@ opens their history.**
 - Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers their history,
   ban and making their profile private, as the game can only warn, kick or move players who are on.
 
-### History: any player's record
+### Moderation: History, any player's record
 
 - **Find a player** by name or Steam ID: anyone in game, seen in the last 30 days, banned or with VIP, from the same
   suggestions as the admin tools. A Steam ID can always be opened. Or click any name on the page.
@@ -396,29 +412,7 @@ opens their history.**
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
   opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
-### Admin: commands, bans and VIP
-
-- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
-  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
-  map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
-  rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
-  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
-  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
-  first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
-  player's staff history and the moderation log.
-- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
-  tool with them picked.
-- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
-  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
-  Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
-  unlinking them takes it away.
-- **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
-  linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
-  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
-  counts as seeding again. Needs the bot's staff Steam
-  accounts (its README, "Staff Steam accounts").
-
-### Rotations: the maps for each day
+### Server settings: Rotations, the maps for each day
 
 - **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
   being played and the next, with their place in the rotation ("2 of 6"); and a quick swap to another rotation for the
@@ -440,7 +434,7 @@ opens their history.**
 - The bot keeps the rules (see its README, "Map rotations"): the server plays a new rotation from the next map, so a
   match is never cut short, and each day's rotation goes on at the hour shown, in your own time.
 
-### Lines: what the bot says in game
+### Server settings: Lines, what the bot says in game
 
 - **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (the basic rules,
   sent privately to each player who joins), 10 minutes in, and for halfway and nearly won, one list for each faction
@@ -459,7 +453,7 @@ opens their history.**
 - A list that is marked "too long or wrong" was fine when it was saved, but the bot's settings changed since (its
   website, seeder VIP or the winning score). The bot cuts such a line short until it is changed.
 
-### Weapon rules: weapons the bot warns or kicks for
+### Server settings: Weapon rules, weapons the bot warns or kicks for
 
 - **The rules.** Each rule is a name, its weapons, and what the bot does when someone kills with one of them: **Off**,
   **Warn** (a private message in game, each time), **Warn, then kick** (warnings for their first 1 to 5 offences of the
@@ -477,21 +471,43 @@ opens their history.**
 - Kills within 30 seconds of the bot acting are one offence, and offences start again each day (UTC). Every warning
   and kick goes in the moderation log, done by the bot. The bot's README, "Weapon rules", has the details.
 
+### Server settings: Admin, commands, bans and VIP
+
+- **Admin tools.** Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
+  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
+  map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
+  rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
+  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
+  first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
+  player's staff history and the moderation log. To warn, kick or move someone in game, Act on Moderation is quicker.
+- **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
+  tool with them picked.
+- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
+  or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked.
+  Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
+  unlinking them takes it away.
+- **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
+  linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
+  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
+  counts as seeding again. Needs the bot's staff Steam
+  accounts (its README, "Staff Steam accounts").
+
 ### Everywhere
 
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
-- It refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills happen.
-  A player's Act menu stays open through a refresh.
+- Each page refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills
+  happen. A player's Act menu stays open through a refresh, and so does a tool opened from it.
 - Times are in your own time and clock: "7:00 PM" on a 12-hour clock (no leading zero), "07:00" on a 24-hour one.
-- It shows Steam IDs, linked to Steam profiles. Player names open their history; History links to their public player
-  page.
+- They show Steam IDs, linked to Steam profiles. Player names open their history, on Moderation; History links to their
+  public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
-- `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
+- `http://localhost:3000/admin?demo` and `http://localhost:3000/server-settings?demo` show sample data without signing in. Its admin tools only say what they would
   do, and its rotations, lines and weapon rules change in the page only.
-- It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
+- They only talk to the bot in their own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
   lets that site read the staff data.
@@ -526,8 +542,10 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 numbers for every page and the notice in `announcement.json`, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `admin.js` renders the staff page (its live kill feed and History too), `tools.js` its admin tools, and `rotations.js` its
-Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
+`demo.js` makes the sample data. `staff.js` has what the two staff pages share: signing in, the Steam account and
+loading the bot's staff overview. `admin.js` renders the Moderation page (its live kill feed and History too),
+`settings.js` the Server settings page, `tools.js` the admin tools (on Admin, and over Moderation from Act), and
+`rotations.js` the Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
 Lines tab, with `linesmodel.js` holding its logic, for tests. `rules.js` renders the Weapon rules tab, with
 `rulesmodel.js` holding its logic, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.

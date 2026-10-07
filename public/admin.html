@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: the server and kill feed live, flags to review (headshots, griefing, risky Steam accounts) and every player's history on our WARDOGS server." />
+    <title>Moderation | Staff | gaminginit WARDOGS server</title>
+    <meta name="description" content="For gaminginit staff: who is on our WARDOGS server with those worth a look at the top, the kill feed live, flags to review (headshots, griefing, risky Steam accounts) and every player's history." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -56,13 +56,20 @@
         <div class="wrap">
           <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
           <div class="section-head">
-            <h1 class="page-title" id="admin-title">Staff</h1>
+            <div class="staff-head">
+              <h1 class="page-title" id="admin-title">Staff</h1>
+              <!-- The two staff pages. Keep the same as in server-settings.html. -->
+              <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" hidden>
+                <a href="admin" data-keep-query aria-current="page">Moderation</a>
+                <a href="server-settings" data-keep-query>Server settings</a>
+              </nav>
+            </div>
             <p class="section-note" id="admin-user" hidden></p>
           </div>
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The server and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; the admin tools, the reserved slots, the map rotations and what the bot says in game. For Discord Administrators and members with a staff role in our server.</p>
+            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history. On Server settings: the map rotations, what the bot says in game, the weapon rules, the admin tools, bans and reserved slots. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -72,10 +79,10 @@
           </div>
 
           <div id="admin-body" hidden>
-            <div class="admin-tabs" role="tablist" aria-label="Staff page">
+            <div class="admin-tabs" role="tablist" aria-label="Moderation">
               <button type="button" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true" data-tab="live">
                 <span class="tab-name">Live <span class="tab-count" id="count-live"></span></span>
-                <span class="tab-hint">The server, who is on and every kill now</span>
+                <span class="tab-hint">Who is on, those worth a look first, and every kill now</span>
               </button>
               <button type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review">
                 <span class="tab-name">Review <span class="tab-count" id="count-review"></span></span>
@@ -85,53 +92,14 @@
                 <span class="tab-name">History</span>
                 <span class="tab-hint">Any player’s kills, team kills and record</span>
               </button>
-              <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">
-                <span class="tab-name">Admin</span>
-                <span class="tab-hint">Commands, bans and VIP</span>
-              </button>
-              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
-                <span class="tab-name">Rotations</span>
-                <span class="tab-hint">The maps for each day</span>
-              </button>
-              <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines">
-                <span class="tab-name">Lines</span>
-                <span class="tab-hint">What the bot says in game</span>
-              </button>
-              <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules">
-                <span class="tab-name">Weapon rules</span>
-                <span class="tab-hint">Weapons the bot warns or kicks for</span>
-              </button>
             </div>
 
             <div class="tab-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
               <div class="card server-strip" id="server-strip"></div>
 
-              <div class="tiles">
-                <div class="tile">
-                  <p class="tile-label">In game</p>
-                  <p class="tile-value" id="tile-ingame">–</p>
-                  <p class="tile-note" id="tile-ingame-note"></p>
-                </div>
-                <div class="tile">
-                  <p class="tile-label">Worth a look now</p>
-                  <p class="tile-value" id="tile-watch">–</p>
-                  <p class="tile-note">Risky account, griefing, headshots or new</p>
-                </div>
-                <div class="tile">
-                  <p class="tile-label">Headshots flagged today</p>
-                  <p class="tile-value" id="tile-headshots-ingame">–</p>
-                  <p class="tile-note">In game now</p>
-                </div>
-                <div class="tile">
-                  <p class="tile-label">Risky Steam accounts</p>
-                  <p class="tile-value" id="tile-risky-ingame">–</p>
-                  <p class="tile-note">In game now</p>
-                </div>
-              </div>
-
               <article class="card panel admin-panel" aria-labelledby="players-title">
                 <h2 class="panel-title" id="players-title">Server list</h2>
-                <p class="section-note">Everyone in game, from the bot’s check each minute. Click a name for their history, or use <strong>Act</strong> to warn, kick, move them to another team or ban them.</p>
+                <p class="section-note">Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for their history, or use <strong>Act</strong> to warn, kick, move them to another team or ban them, without leaving this page.</p>
                 <div class="list-tools">
                   <div class="list-search">
                     <label class="finder-label" for="player-search">Search</label>
@@ -148,9 +116,7 @@
                   <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only players worth a look</label>
                 </div>
                 <p class="finder-count" id="players-count" role="status"></p>
-                <div class="admin-scroll">
-                  <table class="admin-table server-table" id="server-players"></table>
-                </div>
+                <div id="server-players"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="feed-title">
@@ -367,57 +333,17 @@
                 </section>
               </article>
             </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" hidden>
-              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="tools-title">Admin tools</h2>
-                  <button type="button" class="btn btn-ghost btn-small" id="tools-back" hidden></button>
-                </div>
-                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
-                <div id="tools"></div>
-              </article>
-
-              <article class="card panel admin-panel" aria-labelledby="bans-title">
-                <h2 class="panel-title" id="bans-title">Bans</h2>
-                <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
-                <div class="admin-scroll">
-                  <table class="admin-table" id="bans"></table>
-                </div>
-              </article>
-
-              <article class="card panel admin-panel" aria-labelledby="reserved-title">
-                <h2 class="panel-title" id="reserved-title">Reserved slots</h2>
-                <p class="section-note" id="reserved-note"></p>
-                <div class="admin-scroll">
-                  <table class="admin-table" id="reserved"></table>
-                </div>
-              </article>
-
-              <article class="card panel admin-panel" aria-labelledby="staff-steam-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
-                  <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
-                </div>
-                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the reserved list while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
-                <div class="admin-scroll">
-                  <table class="admin-table" id="staff-steam"></table>
-                </div>
-              </article>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
-              <div id="rotations"></div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
-              <div id="lines"></div>
-            </div>
-
-            <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
-              <div id="rules"></div>
-            </div>
           </div>
+
+          <!-- Act on a player: the admin tool for it, over the page (see act in admin.js). -->
+          <dialog class="card act-dialog" id="act-dialog" aria-labelledby="act-dialog-title">
+            <div class="panel-head">
+              <h2 class="panel-title" id="act-dialog-title">Act</h2>
+              <button type="button" class="btn btn-ghost btn-small" id="act-close">Close</button>
+            </div>
+            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
+            <div class="tools-panel" id="act-tools"></div>
+          </dialog>
 
           <dialog class="card steam-dialog" id="steam-dialog" aria-labelledby="steam-dialog-title">
             <form class="steam-form" id="steam-form" novalidate>

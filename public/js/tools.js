@@ -51,7 +51,8 @@ export const replyNodes = (reply, staff) => [
 
 // `call(path, body)` posts to the bot's staff API and resolves to { ok, json }. `onChanged()` is called after a command
 // that changes something, so the page can load the records again. `staff()` gives the current Discord user names.
-export const createTools = ({ root, call, onChanged, staff }) => {
+// `only(tool)` picks the tools offered, such as only those for a player; every tool by default.
+export const createTools = ({ root, call, onChanged, staff, only = () => true }) => {
   let tools = [];
   let current = null;
   // What staff picked or typed for the player in each tool, so it carries over when they switch tools.
@@ -207,7 +208,7 @@ export const createTools = ({ root, call, onChanged, staff }) => {
   return {
     // The bot's staff command definitions.
     setCommands(definitions) {
-      tools = toolsFrom(definitions);
+      tools = toolsFrom(definitions).filter(only);
       const groups = [...new Set(tools.map((t) => t.group))];
       picker.replaceChildren(
         ...groups.map((group) => el('optgroup', { label: group }, ...tools.filter((t) => t.group === group).map((t) => el('option', { value: t.key, textContent: t.label })))),
@@ -215,7 +216,7 @@ export const createTools = ({ root, call, onChanged, staff }) => {
       show(current?.key ?? tools[0]?.key);
     },
     // Opens a tool with a player already picked, as from a row's button. With no `key`, the player tool open now stays
-    // open, such as Kick or Ban, and otherwise Warn opens.
+    // open, such as Kick or Ban, and otherwise Warn opens. The page brings the tools into view.
     use(key, steamId, name) {
       if (tools.length === 0) return;
       playerValue = steamId;
@@ -227,7 +228,6 @@ export const createTools = ({ root, call, onChanged, staff }) => {
         const input = form.elements.namedItem(option);
         if (input) input.dispatchEvent(new Event('input'));
       }
-      root.scrollIntoView({ block: 'start' });
       const next = [...form.querySelectorAll('input, select, textarea')].find((i) => i.required && i.value === '');
       (next ?? picker).focus({ preventScroll: true });
     },
