@@ -1028,3 +1028,18 @@ export const discordParts = (text) => {
   if (last < text.length) parts.push({ type: 'text', text: unescape(text.slice(last)) });
   return parts;
 };
+
+// The notice for every page in announcement.json, like the server being down. Null when there is nothing to show:
+// "show" is not true, there is no message, or the file is not what we expect. A link is kept only when it has text and
+// goes to a web page or one of ours, never javascript: or the like.
+export const announcement = (json) => {
+  if (json === null || typeof json !== 'object' || json.show !== true) return null;
+  const text = (value) => (typeof value === 'string' ? value.trim() : '');
+  const message = text(json.message);
+  if (message === '') return null;
+  const href = text(json.link?.href);
+  const linkText = text(json.link?.text);
+  const scheme = /^([a-z][a-z\d+.-]*):/i.exec(href)?.[1].toLowerCase();
+  const linked = href !== '' && linkText !== '' && (scheme === undefined || scheme === 'https' || scheme === 'http');
+  return { title: text(json.title), message, link: linked ? { href, text: linkText } : null };
+};

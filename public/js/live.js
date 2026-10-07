@@ -1,5 +1,6 @@
 import { demoStats } from './demo.js';
-import { link } from './views.js';
+import { announcement } from './format.js';
+import { el, link } from './views.js';
 
 // Loads the bot's numbers for each page, and keeps them fresh.
 
@@ -63,6 +64,47 @@ export const showNotice = (...content) => {
   notice.replaceChildren(...content);
   notice.hidden = content.length === 0;
 };
+
+// The notice for every page in announcement.json, like the server being down (see README.md). Checked again every few
+// minutes while the tab is visible, so a page left open picks up a change. Only touches the page when it changes, so
+// screen readers hear it once.
+const ANNOUNCEMENT_MS = 5 * 60_000;
+let announced = 'null';
+const loadAnnouncement = async () => {
+  const box = document.getElementById('announcement');
+  if (!box) return;
+  let shown = null;
+  try {
+    const response = await fetch('announcement.json', { cache: 'no-cache', headers: { accept: 'application/json' } });
+    // No file means no notice. Any other failure keeps what is showing.
+    if (!response.ok && response.status !== 404) return;
+    if (response.ok) shown = announcement(await response.json());
+  } catch (error) {
+    console.error('Could not load announcement.json', error);
+    return;
+  }
+  const key = JSON.stringify(shown);
+  if (key === announced) return;
+  announced = key;
+  box.replaceChildren(
+    ...(shown === null
+      ? []
+      : [
+          el(
+            'div',
+            { className: 'announcement-box' },
+            shown.title ? el('p', { className: 'announcement-title', textContent: shown.title }) : null,
+            el('p', { className: 'announcement-message', textContent: shown.message }),
+            shown.link ? el('p', { className: 'announcement-link' }, link(shown.link.href, shown.link.text)) : null,
+          ),
+        ]),
+  );
+  box.hidden = shown === null;
+};
+loadAnnouncement();
+setInterval(() => {
+  if (!document.hidden) loadAnnouncement();
+}, ANNOUNCEMENT_MS);
 
 // Calls render(data) now and after every refresh: once a minute, and only while the tab is visible. data is null
 // until the first load succeeds. By default it loads /api/stats; a page can load another endpoint with `url` and

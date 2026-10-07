@@ -224,6 +224,27 @@ Open the site and look at the server card and the line under the header.
 Serving the site's files is free and unlimited on Cloudflare. Only the stats requests count towards the bot's
 100,000 requests a day on the free plan.
 
+## Notice for everyone
+
+For news everyone should see, like the server being down, `public/announcement.json` puts a notice at the top of every
+page, centred in a yellow box:
+
+```json
+{
+  "show": true,
+  "title": "Server problems",
+  "message": "Problems at our hosting provider and at Bulkhead, who make WARDOGS, are affecting our server.",
+  "link": { "text": "Updates on our Discord", "href": "https://discord.gg/qsJFYGhSJ4" }
+}
+```
+
+- To change it, edit the file and deploy (with [Option B](#option-b-deploy-automatically-on-every-push-cloudflare),
+  edit it on GitHub and commit to `main`). Pages pick it up when they load, and pages left open within 5 minutes.
+- To take it down, set `"show": false`. The text stays in the file for next time.
+- `title` and `link` are optional. A link must go to a web page (`https://…`) or one of our pages (`seeding`).
+- If the file has a mistake, such as a missing comma, no notice shows and the rest of the site works as normal. Check
+  it with `node -e "JSON.parse(require('fs').readFileSync('public/announcement.json'))"`.
+
 ## Try it locally
 
 ```bash
@@ -454,7 +475,7 @@ opens their history.**
 - If the bot has not read the server for 3 minutes, the server shows as **Offline** with when it was last seen.
 - If a refresh fails, the page keeps the last numbers and says it is retrying.
 - Notices ("Live stats are not connected yet", the retrying one and the `?demo` one) show right under the header on
-  every page, the home page too.
+  every page, the home page too. The [notice for everyone](#notice-for-everyone) shows above them.
 - On a phone the home page's hero is shorter (less copy, a smaller Seeder VIP box and no Server status button), so the
   server card is on the first screen.
 - Each page other than the home page has a "← Home" link at the top. A player's page has "← All players".
@@ -475,7 +496,7 @@ npm test    # Node's built-in test runner; no dependencies to install
 ```
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
-numbers for every page, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
+numbers for every page and the notice in `announcement.json`, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `admin.js` renders the staff page (its live kill feed and History too), `tools.js` its admin tools, and `rotations.js` its
