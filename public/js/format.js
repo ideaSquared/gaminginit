@@ -869,16 +869,24 @@ export const needsLook = (player) =>
   player.headshotsToday?.flagged === true ||
   (player.steam !== null && player.steam.risk !== 'low');
 
-// How far up the list a player in game goes, highest first: banned, then flagged for griefing today (most team kills
-// first), flagged for headshots, a high-risk then a risky Steam account, then anyone with team kills or vehicle
-// suicides today below the flags. 0 for nothing to look at.
-export const lookScore = (player) =>
-  (player.banned ? 1_000_000 : 0) +
-  (player.griefFlags.length > 0 ? 100_000 : 0) +
-  (player.headshotsToday?.flagged === true ? 10_000 : 0) +
-  (player.steam?.risk === 'high' ? 1_000 : player.steam?.risk === 'medium' ? 200 : 0) +
-  player.teamKillsToday * 50 +
-  player.vehicleSuicidesToday * 5;
+// Where a player in game goes in the list, as numbers compared in turn, highest first: banned, then flagged for
+// griefing today (most team kills first), flagged for headshots, a high-risk then a risky Steam account, then anyone
+// with team kills or vehicle suicides today below the flags. Each only decides between players level on those before
+// it, so nothing lower down can lift a player over a higher tier.
+export const lookRank = (player) => [
+  player.banned ? 1 : 0,
+  player.griefFlags.length > 0 ? player.teamKillsToday : -1,
+  player.headshotsToday?.flagged === true ? 1 : 0,
+  player.steam?.risk === 'high' ? 2 : player.steam?.risk === 'medium' ? 1 : 0,
+  player.teamKillsToday,
+  player.vehicleSuicidesToday,
+];
+
+// Most worth a look first; 0 for two players level.
+export const byLook = (a, b) => {
+  const [x, y] = [lookRank(a), lookRank(b)];
+  return x.reduce((order, n, i) => order || y[i] - n, 0);
+};
 
 // Each team in game with how many are on it, biggest first, and players without a team (`name` null) last.
 export const teamCounts = (players) => {
@@ -901,13 +909,13 @@ export const PLAYER_SORTS = {
 
 // The server list as staff asked for it: names or Steam IDs containing `query`, on `team` (a sideKey, '' for every
 // team, or 'none' for no team), only those worth a look when `watch`, in `sort` order: by default the most worth a look
-// first (see lookScore), so staff see a griefer without hunting, then by team.
+// first (see lookRank), so staff see a griefer without hunting, then by team.
 export const filterPlayers = (players, { query = '', team = '', watch = false, sort = 'watch' }) => {
   const q = query.trim().toLowerCase();
   const byName = (a, b) => a.name.localeCompare(b.name);
   const byTeam = (a, b) => Number(a.faction === null) - Number(b.faction === null) || (a.faction ?? '').localeCompare(b.faction ?? '') || byName(a, b);
   const order = {
-    watch: (a, b) => lookScore(b) - lookScore(a) || byTeam(a, b),
+    watch: (a, b) => byLook(a, b) || byTeam(a, b),
     team: byTeam,
     kills: (a, b) => (b.kills ?? -1) - (a.kills ?? -1) || (a.deaths ?? 0) - (b.deaths ?? 0) || byName(a, b),
     today: (a, b) => b.minutesToday - a.minutesToday || byName(a, b),

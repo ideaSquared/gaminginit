@@ -94,7 +94,7 @@ import {
   usualHeadshots,
   watchList,
   needsLook,
-  lookScore,
+  byLook,
   teamCounts,
   filterPlayers,
   alertCount,
@@ -1014,22 +1014,26 @@ describe('the staff page server list', () => {
   });
 
   it('puts the banned first, then griefers with the most team kills, then headshots, then risky Steam accounts', () => {
+    const high = { risk: 'high', score: 6, flags: ['vacBan', 'gameBan'] };
     const list = [
       player('New', { firstSeen: TODAY }),
       player('Risky', { steam: { risk: 'medium', score: 3, flags: ['vacBan'] } }),
       player('Aim', { headshotsToday: { kills: 20, headshots: 15, expected: 5, chance: 1e-7, flagged: true } }),
       player('Few', { teamKillsToday: 2 }),
-      player('Some', { teamKillsToday: 4, griefFlags: ['teamKills'] }),
+      // Team kills in a helicopter crash, which flag nothing, however many.
+      player('Pilot', { teamKillsToday: 30 }),
+      player('Some', { teamKillsToday: 4, griefFlags: ['teamKills'], steam: high }),
       player('Lots', { teamKillsToday: 9, griefFlags: ['teamKills', 'sameTeammate'] }),
-      player('High', { steam: { risk: 'high', score: 6, flags: ['vacBan', 'gameBan'] } }),
+      player('High', { steam: high }),
       player('Gone', { banned: true }),
     ];
 
     assert.deepEqual(
       filterPlayers(list, {}).map((p) => p.name),
-      ['Gone', 'Lots', 'Some', 'Aim', 'High', 'Risky', 'Few', 'New'],
+      ['Gone', 'Lots', 'Some', 'Aim', 'High', 'Risky', 'Pilot', 'Few', 'New'],
     );
-    assert.equal(lookScore(player('Nobody', { firstSeen: TODAY })), 0);
+    // Being new puts nobody ahead of anyone.
+    assert.equal(byLook(player('Nobody', { firstSeen: TODAY }), player('Plain')), 0);
   });
 
   it('shows today’s headshots when they are unlikely by luck, and red once the day is flagged', () => {
