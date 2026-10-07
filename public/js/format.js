@@ -666,13 +666,19 @@ export const sessionExpiry = (token) => {
 export const flagLabel = (flag) =>
   ({ teamKills: 'Team kills', sameTeammate: 'Same teammate', vehicleSuicides: 'Vehicle suicides', suicides: 'Suicides' })[flag] ?? flag;
 
-export const flagRule = (flag, marks) =>
-  ({
-    teamKills: `${marks.teamKills} or more team kills in a day`,
-    sameTeammate: `killed the same teammate ${marks.sameTeammate} or more times in a day`,
-    vehicleSuicides: `${marks.vehicleSuicides} or more suicides in a vehicle in a day (crashing it, or blowing it up)`,
-    suicides: `${marks.suicides} or more suicides of any kind in a day`,
-  })[flag] ?? flag;
+// `crashes`: whether the bot leaves helicopter crashes out of the team kill flags, as a bot that sends `crashTeamKills`
+// does.
+export const flagRule = (flag, marks, crashes = false) => {
+  const notCrashes = crashes ? ', not counting helicopter crashes' : '';
+  return (
+    {
+      teamKills: `${marks.teamKills} or more team kills in a day${notCrashes}`,
+      sameTeammate: `killed the same teammate ${marks.sameTeammate} or more times in a day${notCrashes}`,
+      vehicleSuicides: `${marks.vehicleSuicides} or more suicides in a vehicle in a day (crashing it, or blowing it up)`,
+      suicides: `${marks.suicides} or more suicides of any kind in a day`,
+    }[flag] ?? flag
+  );
+};
 
 // What staff did, as the moderation log names it.
 export const MOD_ACTIONS = {
@@ -712,8 +718,11 @@ export const staffBy = (entry, staff = {}) => {
   return entry.byName ?? `Discord user ${entry.by}`;
 };
 
-// "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were.
-export const withVehicle = (count, vehicle) => (vehicle > 0 ? `${count} (${vehicle} vehicle)` : String(count));
+// "3 (1 vehicle)": a count, with how many of them were with a vehicle when any were, and of those in a helicopter crash.
+export const withVehicle = (count, vehicle, crash = 0) => {
+  const parts = [...(vehicle > 0 ? [`${vehicle} vehicle`] : []), ...(crash > 0 ? [`${crash} crash`] : [])];
+  return parts.length > 0 ? `${count} (${parts.join(', ')})` : String(count);
+};
 
 // Risky Steam accounts: the flags the bot puts on an account, worded with its marks (`steam.flags` in its answer has
 // each flag's points, `steam.marks` the days).

@@ -514,6 +514,7 @@ export const demoAdmin = (days, now) => {
     ...ref(name),
     teamKills: 0,
     vehicleTeamKills: 0,
+    crashTeamKills: 0,
     teamKilled: 0,
     suicides: 0,
     vehicleSuicides: 0,
@@ -531,9 +532,10 @@ export const demoAdmin = (days, now) => {
     row('Vex', {
       teamKills: 7 * scale,
       vehicleTeamKills: 4 * scale,
+      crashTeamKills: 2 * scale,
       suicides: 3 * scale,
       vehicleSuicides: 2 * scale,
-      mostKilledTeammate: { ...ref('Moth'), kills: 3 * scale },
+      mostKilledTeammate: { ...ref('Moth'), kills: 2 * scale },
       flags: ['teamKills', 'sameTeammate', 'vehicleSuicides'],
       flaggedDays: Math.min(days, 2 * scale - 1),
       banned: days > 1,
@@ -696,6 +698,7 @@ export const demoAdmin = (days, now) => {
     totals: {
       teamKills: sum('teamKills'),
       vehicleTeamKills: sum('vehicleTeamKills'),
+      crashTeamKills: sum('crashTeamKills'),
       suicides: sum('suicides'),
       vehicleSuicides: sum('vehicleSuicides'),
       flaggedPlayers: flagged.length,
@@ -933,8 +936,8 @@ const demoTeamKills = (name, now) => {
   if (name === 'Vex') {
     return [
       '🚩 Flagged: team kills, same teammate, vehicle suicides',
-      '**7 team kills** (4 with a vehicle) · 3 suicides (2 in a vehicle)',
-      'Teammates killed: **Moth** ×3, **Rook** ×2, **Sable**, **Pike**',
+      '**7 team kills** (4 with a vehicle, 2 in a helicopter crash) · 3 suicides (2 in a vehicle)',
+      'Teammates killed: **Moth** ×2, **Rook**, **Sable**, **Pike**',
       `${ago(58)} Killed themselves in a vehicle with Humvee on Bakurani`,
       `${ago(11)} Killed teammate **Moth** with MH-6 on Ozeti`,
       `${ago(11)} Killed teammate **Rook** with MH-6 on Ozeti`,

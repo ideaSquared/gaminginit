@@ -501,7 +501,9 @@ const number = (value) => el('td', { className: 'num', textContent: String(value
 const renderGriefers = (overview) => {
   const marks = overview.flags;
   $('flag-rules').replaceChildren(
-    ...Object.keys(marks).map((flag) => el('li', {}, badge(flagLabel(flag), FLAG_KIND[flag]), ` ${flagRule(flag, marks)}`)),
+    ...Object.keys(marks).map((flag) =>
+      el('li', {}, badge(flagLabel(flag), FLAG_KIND[flag]), ` ${flagRule(flag, marks, overview.totals.crashTeamKills !== undefined)}`),
+    ),
   );
   $('griefers-note').textContent = overview.feedSince
     ? 'Everyone who team killed, was team killed or killed themselves, most flagged days first. ' +
@@ -523,7 +525,7 @@ const renderGriefers = (overview) => {
           p.banned ? badge('Banned', 'accent') : null,
         ),
       ),
-      number(withVehicle(p.teamKills, p.vehicleTeamKills)),
+      number(withVehicle(p.teamKills, p.vehicleTeamKills, p.crashTeamKills)),
       cell(p.mostKilledTeammate && p.mostKilledTeammate.kills > 1 ? `${p.mostKilledTeammate.name} ×${p.mostKilledTeammate.kills}` : '–'),
       number(p.teamKilled),
       number(withVehicle(p.suicides, p.vehicleSuicides)),
@@ -1437,7 +1439,8 @@ const renderHistoryGrief = (steamId) => {
   $('history-grief-note').textContent =
     row === null
       ? 'No team kills, team deaths or suicides in this period.'
-      : `${plural(row.teamKills, 'team kill')} (${row.vehicleTeamKills} with a vehicle), killed by a teammate ${plural(row.teamKilled, 'time')}, ` +
+      : `${plural(row.teamKills, 'team kill')} (${row.vehicleTeamKills} with a vehicle` +
+        `${row.crashTeamKills > 0 ? `, ${row.crashTeamKills} in a helicopter crash` : ''}), killed by a teammate ${plural(row.teamKilled, 'time')}, ` +
         `${plural(row.suicides, 'suicide')} (${row.vehicleSuicides} in a vehicle). Newest first, from the latest ${INCIDENTS_NOTE} in the period.`;
   const shown = (data?.incidents ?? []).filter((i) => i.player.steamId === steamId || i.victim?.steamId === steamId);
   table($('history-incidents'), INCIDENT_HEADERS, shown.map(incidentRow), 'None in this period.');
@@ -1625,6 +1628,7 @@ const render = (overview) => {
   $('tile-teamkills').textContent = String(overview.totals.teamKills);
   $('tile-teamkills-note').textContent = [
     overview.totals.vehicleTeamKills > 0 ? `${overview.totals.vehicleTeamKills} with a vehicle` : null,
+    overview.totals.crashTeamKills > 0 ? `${overview.totals.crashTeamKills} in a helicopter crash` : null,
     plural(overview.totals.vehicleSuicides, 'vehicle suicide'),
   ]
     .filter(Boolean)

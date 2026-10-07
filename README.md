@@ -330,7 +330,7 @@ opens their history.**
   and only the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed
   here, those in game first and the rest folded under Not in game. A flag is a reason to look, not proof.
 - **Tiles:** players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
-  vehicle, and vehicle suicides) in the period. The first three say how many of them are in game now.
+  vehicle, in a helicopter crash, and vehicle suicides) in the period. The first three say how many of them are in game now.
 - **In game first.** Each list is in two parts: **In game now** first, as the players staff can still warn, kick or
   move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, as a
   dropdown with its count, closed until staff open it (it stays open through refreshes until they close it), and left
@@ -359,7 +359,9 @@ opens their history.**
   are off.
 - **Possible griefers.** From the bot's kill feed: everyone who team killed, was team killed or killed themselves, with
   flags for a day with 3 or more team kills, killing the same teammate twice or more, 2 or more suicides in a vehicle
-  (crashing it, or blowing it up), or 10 or more suicides. Most flagged days first, with their matches, kills and time
+  (crashing it, or blowing it up), or 10 or more suicides. Teammates killed in a helicopter crash show in the team
+  kills ("crash") but count towards no flag, as pilots crash by accident; a pilot who crashes twice in a day is still
+  flagged for vehicle suicides. Most flagged days first, with their matches, kills and time
   played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
 - **Moderation log.** Every warning, kick, ban, unban, team move and VIP added or removed through the bot, with the
