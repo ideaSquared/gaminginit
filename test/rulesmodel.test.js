@@ -78,6 +78,12 @@ describe('weapons', () => {
     assert.deepEqual(withoutWeapon([MGL, ...M113], m113), [MGL]);
   });
 
+  it('matches tags in any case when adding and taking out', () => {
+    const mglWeapon = weapons[1];
+    assert.deepEqual(withWeapon([MGL.toUpperCase()], mglWeapon), [MGL.toUpperCase()]);
+    assert.deepEqual(withoutWeapon([MGL.toUpperCase(), HUMVEE_M249], mglWeapon), [HUMVEE_M249]);
+  });
+
   it('knows which rule has each weapon, apart from the one being edited', () => {
     assert.deepEqual([...takenWeapons(rules, weapons, 'mgl')], [
       ['Humvee M249', 'Humvee gunner'],

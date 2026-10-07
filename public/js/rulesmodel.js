@@ -51,9 +51,10 @@ export const weaponsOf = (tags, weapons) => {
   return weapons.filter((w) => w.tags.some((tag) => lower.has(tag.toLowerCase())));
 };
 
-// Tags with a weapon's added, or taken out.
-export const withWeapon = (tags, weapon) => [...tags, ...weapon.tags.filter((tag) => !tags.includes(tag))];
-export const withoutWeapon = (tags, weapon) => tags.filter((tag) => !weapon.tags.includes(tag));
+// Tags with a weapon's added, or taken out. Tags match in any case, as in weaponsOf.
+const hasTag = (tags, tag) => tags.some((t) => t.toLowerCase() === tag.toLowerCase());
+export const withWeapon = (tags, weapon) => [...tags, ...weapon.tags.filter((tag) => !hasTag(tags, tag))];
+export const withoutWeapon = (tags, weapon) => tags.filter((tag) => !hasTag(weapon.tags, tag));
 
 // The rule each weapon is in already, other than the one being edited (`id`), by weapon name.
 export const takenWeapons = (rules, weapons, id) => {
