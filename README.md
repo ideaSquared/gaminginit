@@ -281,10 +281,10 @@ get a staff spot instead: the bot keeps you on the server's reserved list for as
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on the Admin tab.
 
-The page has six tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
-staff did) and **History** (any player's record), then **Admin**, **Rotations** and **Lines**. Each tab says what is in it, with a
+The page has seven tabs, for three kinds of work: **Live** (the server now), **Review** (what the bot flagged, and what
+staff did) and **History** (any player's record), then **Admin**, **Rotations**, **Lines** and **Weapon rules**. Each tab says what is in it, with a
 count: how many are in game, and how many flags there are. The address keeps the tab (`/admin#review`,
-`/admin#history`, `/admin#admin`, `/admin#rotations`, `/admin#lines`), and on History the player shown (`/admin#history/<Steam ID>`),
+`/admin#history`, `/admin#admin`, `/admin#rotations`, `/admin#lines`, `/admin#rules`), and on History the player shown (`/admin#history/<Steam ID>`),
 so a link opens the right one, and the browser's Back goes back. Old links (`#alerts`, `#kills`) open Review, and
 `#kills/<Steam ID>` that player's history. ← → move between tabs from the keyboard. **Any player's name, on any tab,
 opens their history.**
@@ -459,6 +459,24 @@ opens their history.**
 - A list that is marked "too long or wrong" was fine when it was saved, but the bot's settings changed since (its
   website, seeder VIP or the winning score). The bot cuts such a line short until it is changed.
 
+### Weapon rules: weapons the bot warns or kicks for
+
+- **The rules.** Each rule is a name, its weapons, and what the bot does when someone kills with one of them: **Off**,
+  **Warn** (a private message in game, each time), **Warn, then kick** (warnings for their first 1 to 5 offences of the
+  day, then a kick for each one after) or **Kick**. The bot starts with three, all off: **Humvee gunner** (the Humvee's
+  M249 and minigun), **Kodiak gunner** (the Kodiak's M249) and **MGL** (the MGL-40). Pick a rule on the left; each
+  shows its weapons, its mode and what the bot did for it today.
+- **The editor.** Click a mode to switch it. Add weapons from "Add a weapon…" (a weapon in another rule is greyed out
+  with that rule's name) and take them out with ×. Write the warning and the kick reason; the one a mode doesn't use is
+  dimmed and kept for later.
+- **In game.** Each message as it goes out, with what the bot adds dimmed: "Warning:" (with warn, then kick, "Warning 1
+  of 2:" and "Last warning:") before the warning, and where the rules are after both. The count is the characters you
+  typed against the most there is room for.
+- Nothing changes until **Save**; the bot uses the rule from the next kill. **+ New rule** adds one, **Take out**
+  removes one. Leaving with unsaved changes asks first.
+- Kills within 30 seconds of the bot acting are one offence, and offences start again each day (UTC). Every warning
+  and kick goes in the moderation log, done by the bot. The bot's README, "Weapon rules", has the details.
+
 ### Everywhere
 
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
@@ -472,7 +490,7 @@ opens their history.**
   page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would
-  do, and its rotations and lines change in the page only.
+  do, and its rotations, lines and weapon rules change in the page only.
 - It only talks to the bot in its own `stats-url` meta tag and ignores `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try it against a local bot, change the meta tag in a local copy.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
@@ -510,5 +528,6 @@ stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboa
 `players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `admin.js` renders the staff page (its live kill feed and History too), `tools.js` its admin tools, and `rotations.js` its
 Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
-Lines tab, with `linesmodel.js` holding its logic, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
+Lines tab, with `linesmodel.js` holding its logic, for tests. `rules.js` renders the Weapon rules tab, with
+`rulesmodel.js` holding its logic, for tests. `livematch.js` renders the live page, which `live.js` keeps up to date over the
 bot's WebSocket, loading `/api/live` every 15 seconds while it cannot connect.
