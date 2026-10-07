@@ -701,6 +701,58 @@ h1 {
   font-weight: 700;
 }
 
+/* The notice for every page, from announcement.json, like the server being down: first thing under the header,
+   centred and in the warning colour so nobody misses it. */
+
+.announcement {
+  margin-top: 24px;
+}
+
+.announcement-box {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.announcement-title {
+  color: var(--warning);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.announcement-title::before {
+  content: '⚠\FE0E';
+  margin-right: 8px;
+}
+
+.announcement-box p + p {
+  margin-top: 8px;
+}
+
+.announcement-link a {
+  font-weight: 700;
+}
+
+/* On the home page the hero comes next: give the notice room above its grid. */
+.announcement:not([hidden]) {
+  padding-bottom: 24px;
+}
+
+.announcement:not([hidden]) ~ .notice:not([hidden]) {
+  margin-top: 0;
+}
+
+.announcement:not([hidden]) + .notice[hidden] + .section {
+  padding-top: 12px;
+}
+
 /* Sections */
 
 .section {

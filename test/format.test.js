@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  announcement,
   busyRuns,
   busyShares,
   clockHour,
@@ -1124,5 +1125,49 @@ describe('the staff page kills tab', () => {
     assert.match(killerSummary({ kills: 20, headshots: 5, expected: 5.2, chance: 0.55 }), /\(26%\)\. Nothing unusual\.$/);
     assert.match(killerSummary({ kills: 1, headshots: 1, expected: null, chance: null }), /^1 headshot in 1 kill \(100%\)\. The server needs more kills/);
     assert.equal(killerSummary({ kills: 0, headshots: 0, expected: null, chance: null }), 'No kills in this period.');
+  });
+});
+
+describe('announcement', () => {
+  const notice = {
+    show: true,
+    title: 'Server problems',
+    message: 'Our server may be offline.',
+    link: { text: 'Updates on our Discord', href: 'https://discord.gg/qsJFYGhSJ4' },
+  };
+
+  it('shows the title, message and link', () => {
+    assert.deepEqual(announcement(notice), {
+      title: 'Server problems',
+      message: 'Our server may be offline.',
+      link: { href: 'https://discord.gg/qsJFYGhSJ4', text: 'Updates on our Discord' },
+    });
+  });
+
+  it('shows nothing unless "show" is true and there is a message', () => {
+    assert.equal(announcement({ ...notice, show: false }), null);
+    assert.equal(announcement({ ...notice, show: 'true' }), null);
+    assert.equal(announcement({ ...notice, show: undefined }), null);
+    assert.equal(announcement({ ...notice, message: '  ' }), null);
+    assert.equal(announcement({ ...notice, message: 42 }), null);
+    assert.equal(announcement(null), null);
+    assert.equal(announcement([]), null);
+    assert.equal(announcement('Server problems'), null);
+  });
+
+  it('trims the text, and leaves the title out when there is none', () => {
+    assert.deepEqual(announcement({ show: true, message: ' Back soon. ' }), { title: '', message: 'Back soon.', link: null });
+  });
+
+  it('keeps links to web pages and our own pages, and drops the rest', () => {
+    const linkTo = (href) => announcement({ ...notice, link: { text: 'More', href } })?.link?.href ?? null;
+    assert.equal(linkTo('http://example.com/'), 'http://example.com/');
+    assert.equal(linkTo('seeding'), 'seeding');
+    assert.equal(linkTo('/#join'), '/#join');
+    assert.equal(linkTo('javascript:alert(1)'), null);
+    assert.equal(linkTo(' JavaScript:alert(1)'), null);
+    assert.equal(linkTo('data:text/html,hi'), null);
+    assert.equal(linkTo(''), null);
+    assert.equal(announcement({ ...notice, link: { href: 'https://example.com/' } }).link, null);
   });
 });
