@@ -648,7 +648,7 @@ const renderPlayers = (overview) => {
   const today = utcDay(overview.generatedAt);
   const colours = sideColours([{ factionScores: overview.server?.factionScores ?? [] }]);
   renderTeamFilter(players, overview.server?.factionScores ?? []);
-  const shown = filterPlayers(players, filters, today);
+  const shown = filterPlayers(players, filters);
   const query = filters.query.trim();
   setStatus(
     $('players-count'),
@@ -663,7 +663,7 @@ const renderPlayers = (overview) => {
     const watch = watchList(p, today);
     return el(
       'tr',
-      { className: needsLook(p, today) ? 'watch' : '' },
+      { className: needsLook(p) ? 'watch' : '' },
       el('td', { className: 'player' }, who(p)),
       labelled('Team', cell(...(p.faction === null ? ['–'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`]))),
       labelled('Kills / deaths', el('td', { className: 'num', textContent: p.kills === null ? '–' : `${p.kills} / ${p.deaths ?? 0}` })),
@@ -1607,13 +1607,12 @@ const render = (overview) => {
     ? `${span} (UTC days). Team kills and suicides come from the kill feed, which the bot has had since ${overview.feedSince}.`
     : `${span} (UTC days).`;
   const players = overview.online?.players ?? [];
-  const today = utcDay(overview.generatedAt);
   onlineIds = new Set(players.map((p) => p.steamId));
   $('count-live').textContent = overview.online ? String(players.length) : '–';
   renderReviewCounts();
   $('tile-ingame').textContent = overview.online ? String(players.length) : '–';
   $('tile-ingame-note').textContent = overview.server ? `of ${overview.server.maxPlayers} slots` : '';
-  $('tile-watch').textContent = String(players.filter((p) => needsLook(p, today)).length);
+  $('tile-watch').textContent = String(players.filter((p) => needsLook(p)).length);
   $('tile-headshots-ingame').textContent = String(players.filter((p) => p.headshotsToday?.flagged).length);
   $('tile-risky-ingame').textContent = overview.steam ? String(players.filter((p) => p.steam && p.steam.risk !== 'low').length) : 'Off';
   $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';

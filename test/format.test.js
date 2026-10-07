@@ -94,6 +94,7 @@ import {
   usualHeadshots,
   watchList,
   needsLook,
+  lookScore,
   teamCounts,
   filterPlayers,
   alertCount,
@@ -1000,15 +1001,35 @@ describe('the staff page server list', () => {
     assert.deepEqual(watchList(ash, TODAY), [{ text: 'High-risk Steam account', kind: 'bad', title: 'VAC ban, Hidden profile' }]);
     assert.deepEqual(watchList(cy, TODAY), [{ text: '3 team kills today', kind: 'bad' }]);
     assert.deepEqual(watchList(dee, TODAY), [{ text: '1 team kill today', kind: '' }, { text: 'VIP', kind: '' }]);
-    assert.deepEqual(watchList(bo, TODAY).map((b) => b.text), ['New today']);
+    // Being new is worth knowing, but no reason to look on its own.
+    assert.deepEqual(watchList(bo, TODAY), [{ text: 'New today', kind: '', title: 'First time on the server in 90 days' }]);
     assert.deepEqual(watchList(player('Eve', { banned: true, vehicleSuicidesToday: 2, griefFlags: ['vehicleSuicides'] }), TODAY), [
       { text: 'Banned', kind: 'bad' },
       { text: '2 vehicle suicides today', kind: 'hot' },
     ]);
   });
 
-  it('knows who is worth a look', () => {
-    assert.deepEqual(all.filter((p) => needsLook(p, TODAY)).map((p) => p.name), ['Cy', 'Bo', 'Ash']);
+  it('knows who is worth a look, and being new is not a reason on its own', () => {
+    assert.deepEqual(all.filter((p) => needsLook(p)).map((p) => p.name), ['Cy', 'Ash']);
+  });
+
+  it('puts the banned first, then griefers with the most team kills, then headshots, then risky Steam accounts', () => {
+    const list = [
+      player('New', { firstSeen: TODAY }),
+      player('Risky', { steam: { risk: 'medium', score: 3, flags: ['vacBan'] } }),
+      player('Aim', { headshotsToday: { kills: 20, headshots: 15, expected: 5, chance: 1e-7, flagged: true } }),
+      player('Few', { teamKillsToday: 2 }),
+      player('Some', { teamKillsToday: 4, griefFlags: ['teamKills'] }),
+      player('Lots', { teamKillsToday: 9, griefFlags: ['teamKills', 'sameTeammate'] }),
+      player('High', { steam: { risk: 'high', score: 6, flags: ['vacBan', 'gameBan'] } }),
+      player('Gone', { banned: true }),
+    ];
+
+    assert.deepEqual(
+      filterPlayers(list, {}).map((p) => p.name),
+      ['Gone', 'Lots', 'Some', 'Aim', 'High', 'Risky', 'Few', 'New'],
+    );
+    assert.equal(lookScore(player('Nobody', { firstSeen: TODAY })), 0);
   });
 
   it('shows today’s headshots when they are unlikely by luck, and red once the day is flagged', () => {
@@ -1017,10 +1038,10 @@ describe('the staff page server list', () => {
     assert.deepEqual(watchList(flagged, TODAY), [
       { text: '15 of 20 kills headshots today', kind: 'bad', title: 'Usual: about 5. Chance by luck: 1 in 10 million.' },
     ]);
-    assert.equal(needsLook(flagged, TODAY), true);
+    assert.equal(needsLook(flagged), true);
     const lucky = player('Gil', { headshotsToday: today({ headshots: 9, chance: 0.02, flagged: false }) });
     assert.deepEqual(watchList(lucky, TODAY).map((b) => [b.text, b.kind]), [['9 of 20 kills headshots today', 'hot']]);
-    assert.equal(needsLook(lucky, TODAY), false);
+    assert.equal(needsLook(lucky), false);
     assert.deepEqual(watchList(player('Hal', { headshotsToday: today({ chance: 0.4, flagged: false }) }), TODAY), []);
     assert.deepEqual(watchList(player('Ivy', { headshotsToday: today({ expected: null, chance: null, flagged: false }) }), TODAY), []);
   });
@@ -1034,21 +1055,22 @@ describe('the staff page server list', () => {
   });
 
   it('searches, filters and sorts the list', () => {
-    const names = (options) => filterPlayers(all, options, TODAY).map((p) => p.name);
+    const names = (options) => filterPlayers(all, options).map((p) => p.name);
 
-    // Those worth a look first, then by team.
-    assert.deepEqual(names({}), ['Bo', 'Ash', 'Cy', 'Dee']);
-    assert.deepEqual(names({ sort: 'watch' }), ['Bo', 'Ash', 'Cy', 'Dee']);
+    // The most worth a look first: Cy's flagged team kills, Ash's high-risk Steam account, Dee's one team kill, then
+    // new Bo with nothing to look at.
+    assert.deepEqual(names({}), ['Cy', 'Ash', 'Dee', 'Bo']);
+    assert.deepEqual(names({ sort: 'watch' }), ['Cy', 'Ash', 'Dee', 'Bo']);
     assert.deepEqual(names({ sort: 'team' }), ['Bo', 'Ash', 'Dee', 'Cy']);
     assert.deepEqual(names({ query: ' a' }), ['Ash']);
     assert.deepEqual(names({ query: ash.steamId.slice(-4) }), ['Ash']);
     assert.deepEqual(names({ team: 'valkyra' }), ['Ash', 'Dee']);
     assert.deepEqual(names({ team: 'none' }), ['Cy']);
-    assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Bo', 'Cy']);
-    assert.deepEqual(names({ watch: true }), ['Bo', 'Ash', 'Cy']);
+    assert.deepEqual(names({ watch: true, sort: 'name' }), ['Ash', 'Cy']);
+    assert.deepEqual(names({ watch: true }), ['Cy', 'Ash']);
     // The team and search still apply, with those worth a look first.
     assert.deepEqual(names({ team: 'valkyra', sort: 'watch' }), ['Ash', 'Dee']);
-    assert.deepEqual(names({ query: '7656119800000' }), ['Bo', 'Ash', 'Cy', 'Dee']);
+    assert.deepEqual(names({ query: '7656119800000' }), ['Cy', 'Ash', 'Dee', 'Bo']);
     // Most kills, then fewest deaths; Cy has no kills reported.
     assert.deepEqual(names({ sort: 'kills' }), ['Ash', 'Bo', 'Dee', 'Cy']);
     assert.deepEqual(names({ sort: 'today' }), ['Ash', 'Bo', 'Cy', 'Dee']);
