@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="js/settings.js"></script>
   </head>
-  <body>
+  <body class="staff">
     <a class="skip" href="#main">Skip to content</a>
 
     <header class="nav">
@@ -81,15 +81,15 @@
           <div id="admin-body" hidden>
             <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Server settings">
               <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="true" data-tab="rotations">
-                <span class="tab-name">Rotations</span>
+                <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 <span class="tab-hint">The maps for each day</span>
               </button>
               <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines">
-                <span class="tab-name">Lines</span>
+                <span class="tab-name">Lines <span class="tab-dirty" id="dirty-lines" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 <span class="tab-hint">What the bot says in game</span>
               </button>
               <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules">
-                <span class="tab-name">Weapon rules</span>
+                <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 <span class="tab-hint">Weapons the bot warns or kicks for</span>
               </button>
               <button type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1" data-tab="admin">

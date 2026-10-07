@@ -130,7 +130,8 @@ export const showTab = (tabs, shown, { focus = false } = {}) => {
 
 // What the page does with the bot's answers, set by start(): `days()` for the overview's period, `show(overview)` to
 // draw it, `loaded()` after each load (for more to load with it), `signedOut()` to forget what the page had,
-// `visible()` and `hidden()` as the browser tab is shown and hidden.
+// `visible()` and `hidden()` as the browser tab is shown and hidden, and `background()`, true while the page should keep
+// loading every minute with its browser tab hidden (such as for alerts).
 const page = {
   days: () => 7,
   show: () => undefined,
@@ -138,7 +139,11 @@ const page = {
   signedOut: () => undefined,
   visible: () => undefined,
   hidden: () => undefined,
+  background: () => false,
 };
+
+// Whether to load again in a minute: while someone is looking, or while the page keeps watching in the background.
+const keepLoading = () => !document.hidden || page.background();
 
 // The staff overview the page last drew (GET /api/admin/overview), for the Steam dialog and the staff names.
 let current = null;
@@ -409,7 +414,7 @@ export const load = async () => {
   } finally {
     if (fresh()) {
       document.body.classList.remove('refreshing');
-      if (!document.hidden && loadToken()) timer = setTimeout(load, REFRESH_MS);
+      if (keepLoading() && loadToken()) timer = setTimeout(load, REFRESH_MS);
     }
   }
 };
@@ -441,11 +446,12 @@ export const start = ({ route, isRoute, ...hooks }) => {
     if (!demo && configured) arrive();
   });
 
-  // Only refresh while someone is looking; catch up straight away when they come back, or when nothing has loaded yet.
+  // Only refresh while someone is looking, or the page keeps watching in the background; catch up straight away when
+  // they come back, or when nothing has loaded yet.
   document.addEventListener('visibilitychange', () => {
     if (demo || !configured || !loadToken()) return;
     if (document.hidden) {
-      clearTimeout(timer);
+      if (!page.background()) clearTimeout(timer);
       page.hidden();
       return;
     }

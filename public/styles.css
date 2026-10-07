@@ -3136,23 +3136,23 @@ body.refreshing .tile-value {
 
 /* The same column widths in both parts of the server list, so they line up. Worth knowing takes the rest. */
 .server-table th:nth-child(1) {
-  width: 22%;
+  width: 24%;
 }
 
 .server-table th:nth-child(2) {
-  width: 15%;
+  width: 124px;
 }
 
 .server-table th:nth-child(3) {
-  width: 13%;
+  width: 96px;
 }
 
 .server-table th:nth-child(4) {
-  width: 9%;
+  width: 72px;
 }
 
 .server-table th:nth-child(6) {
-  width: 88px;
+  width: 84px;
 }
 
 /* Those worth a look, then everyone else. */
@@ -5173,4 +5173,261 @@ body.rot-grabbing * {
 
 .rules-preview .lines-problem {
   margin-top: 6px;
+}
+
+/* Staff pages: wider on a big screen, so the server list and the kill feed fit side by side. */
+@media (min-width: 1440px) {
+  body.staff {
+    --wrap: 1680px;
+  }
+}
+
+.staff-live {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.staff-live > .admin-panel {
+  margin-top: 0;
+}
+
+/* The kill feed beside the list, staying in view under the site's header as the list scrolls. */
+@media (min-width: 1440px) {
+  .staff-live {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas: 'list feed' 'joins feed';
+    align-items: start;
+  }
+
+  .staff-live-list {
+    grid-area: list;
+  }
+
+  .staff-live-joins {
+    grid-area: joins;
+  }
+
+  .staff-live-feed {
+    grid-area: feed;
+    position: sticky;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 96px);
+  }
+
+  .staff-live-feed .kills-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+/* The server list's alerts switch, and what it does. */
+.alerts-note {
+  margin: -4px 0 12px;
+  color: var(--accent);
+}
+
+/* Compact rows: no Steam ID under each name in the server list and the kill feed (it is in the hover and the quick
+   look), and less room around each row in the list. */
+#server-players.compact .server-table td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+#server-players.compact .server-table .steam-id,
+.compact-rows #kill-feed .steam-id {
+  display: none;
+}
+
+#server-players.compact .server-table .badges {
+  margin-top: 0;
+}
+
+/* What is worth knowing about a player: their flags, a check, and what staff did; then, for those worth a look, one
+   click to warn, kick or say they're fine. */
+.row-note {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.row-checked {
+  color: var(--accent);
+}
+
+.quick-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.admin .quick-acts .btn {
+  padding: 3px 10px;
+  font-size: 0.8rem;
+}
+
+.admin button.quick-check {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent);
+}
+
+/* The kill feed showing one player only. */
+.feed-player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.feed-player[hidden] {
+  display: none;
+}
+
+/* A quick look at a player: a panel at the side of the page, the whole screen on a phone. */
+.player-peek {
+  inset: 0 0 0 auto;
+  width: min(440px, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 20px;
+  overflow: auto;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  color: var(--text);
+}
+
+.player-peek::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.player-peek-head {
+  margin-bottom: 4px;
+}
+
+.player-peek-title {
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+}
+
+.player-peek-id {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+
+.player-peek-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.player-peek-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0 0 16px;
+}
+
+.player-peek-fact dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.player-peek-fact dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.player-peek .group-title {
+  margin: 16px 0 6px;
+}
+
+.player-peek-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.player-peek-list .badge {
+  margin-left: 6px;
+}
+
+.player-peek-list .when {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reasons to pick in a warning, kick or ban. */
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.preset {
+  padding: 3px 10px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.preset:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* "How flags work", folded away once read. */
+.how-alerts > summary {
+  margin-bottom: 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.how-alerts > summary::-webkit-details-marker {
+  display: none;
+}
+
+.how-alerts > summary::before {
+  content: '▸ ';
+  color: var(--text-2);
+}
+
+.how-alerts[open] > summary::before {
+  content: '▾ ';
+}
+
+.how-alerts[open] > summary {
+  margin-bottom: 12px;
+}
+
+/* A tab whose changes are not saved yet. */
+.tab-dirty {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+.tab-dirty[hidden] {
+  display: none;
 }

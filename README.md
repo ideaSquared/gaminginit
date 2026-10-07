@@ -98,6 +98,8 @@ You need:
   `/api/live` and its WebSocket `/api/live/socket` (its README, "Live match"), next to `/api/stats`.
   The staff pages need a bot that serves `/auth/login` and `/api/admin/overview`, with staff sign-in set up (its
   README, "Staff page"), and for their kills and headshots `/api/admin/kills` and the live kill feed `/api/admin/live`.
+  "Checked, they're fine" needs `/api/admin/check` (its README, "Checked, they're fine"); without it the button is not
+  shown.
   The list of who has seeder VIP needs a bot that sends `seederVip` (its README, "Website stats"); without it, the
   list is not shown. The teams page needs a bot that sends `teams` (same section); without it, the page says so.
   The 14-day busy times need `hourly`: `{ "days": 14, "players": [24 numbers], "busy": [24 numbers] }`, for each UTC
@@ -284,8 +286,8 @@ tab (`/admin#review`, `/admin#history`, `/server-settings#lines`, `/server-setti
 Live and Rotations, the first tabs, have none), and on History the player shown (`/admin#history/<Steam ID>`), so a
 link opens the right one, and the browser's Back goes back. Old links go where those tabs are now: `/admin#admin`,
 `#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to
-that player's history. ← → move between a page's tabs from the keyboard. **Any player's name, on either page, opens
-their history.**
+that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
+at them; anywhere else, on either page, it opens their history.**
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
 sends you back to the page you were on. Discord only tells the bot who you are and your roles there. The sign-in is
@@ -304,6 +306,9 @@ Admin tab.
 
 ### Moderation: Live, the server, who is on and every kill now
 
+- **Side by side.** On a wide screen (1440 pixels and up) the staff pages use more of it, and the kill feed sits beside
+  the server list, staying in view as the list scrolls, with Joins and leaves under the list. Narrower, they are one
+  above the other.
 - **The server at a glance:** live, seeding or empty, the map, the players, each team's score, and when the bot last
   checked. When the bot cannot reach the server, it says so and when it last could.
 - **The server list:** everyone in game, with their team, kills and deaths this match, time on the server today, and
@@ -314,24 +319,52 @@ Admin tab.
   name. Being new is shown, but is no reason to look on its own.
 - **Worth a look now, always at the top.** The list is in two parts: **Worth a look now** first, with its count in
   yellow when there is anyone in it, and then **Everyone else**. Whatever the order picked, a flagged player is never
-  further down; when nobody is worth a look, the first part says so.
+  further down; when nobody is worth a look, the first part says so. Someone who became worth a look since the page
+  loaded is marked **Just flagged** for 5 minutes.
+- **One click for those worth a look:** **Warn** and **Kick** open that tool over the page with them picked, and
+  **Checked, they're fine** is for a player you looked at and found nothing to act on. It moves them to Everyone else,
+  for all staff, with "✓ Checked by Sarge 4 min ago", until the end of the UTC day, or until more comes up (another
+  team kill or vehicle suicide, or a new flag): then they come back to the top, saying they were checked before. Act's
+  **Take back the check** puts them back straight away. Needs a bot that keeps checks (its README, "Checked, they're
+  fine"); with an older one the button is not there.
+- **What staff did.** A player warned, kicked, banned or moved in the last day says so, with the latest: "Warned 4 min
+  ago by Sarge", and how many in all when more than one. So two staff don't act on the same thing.
 - **Search** by name or Steam ID, pick a **team**, **sort** by worth a look first, team, most kills, longest on today or
   name, and tick **Only players worth a look** to leave out everyone else. The search, team and order apply to both
   parts. It opens sorted by **Worth a look first**: banned players, then those flagged for griefing today with the
   most team kills first, then flagged headshots, then high-risk and risky Steam accounts, then anyone else with team
   kills or vehicle suicides today, then the rest by team. When nobody in game matches a search, "Find" searches
-  everyone the bot knows on the History tab.
-- **Act** on a player opens a menu: their history, warn, kick, move to another team, ban, or make their profile private.
-  History opens the History tab. The rest open that admin tool over the page, with the player picked, so you never
-  leave the list: fill it in, run it, and close it (or Escape) to be back on the same player. It can switch to any other
-  tool for a player, such as Look up or Give VIP. The other tools are on Server settings' Admin tab.
+  everyone the bot knows on the History tab. **Compact rows** leaves out the Steam ID under each name, in the list and
+  the kill feed (hover a name for it), and fits more players on the screen; the page remembers it in this browser.
+- **Alerts.** The browser tab's title says how many in game are worth a look now: "(3) Moderation | …". Tick **Alert me
+  when someone new is worth a look** for a chime when someone becomes worth a look, and a desktop notification while
+  the page's tab is in the background (once the browser is allowed to show them; it asks when you tick it). Clicking
+  the notification opens a quick look at them. With alerts on, the page keeps checking every minute while its tab is in
+  the background (the kill feed still closes); without, it stops until you come back. Browsers only play sound after a
+  click on the page, so after a reload, click anywhere once. The page remembers it in this browser.
+- **A quick look.** Click a player's name in the list, the kill feed or Joins and leaves for a panel at the side (the
+  whole screen on a phone): whether they are in game and on which team, what is worth knowing, their kills and deaths
+  this match, time on today, team kills, vehicle suicides and headshots today, the latest staff actions on them in the
+  period, and their latest kills and deaths in the kill feed. Its buttons warn, kick, move or ban them, check them,
+  show only them in the kill feed, or open their **Full history**. It keeps up with each refresh and each kill of theirs
+  while open; Close, Escape or a click outside it closes it.
+- **Act** on a player opens a menu: their history, only them in the kill feed, warn, kick, move to another team, ban,
+  make their profile private, and "Checked, they're fine" or taking it back. History opens the History tab. Warn, kick,
+  move, ban and private open that admin tool over the page, with the player picked, so you never leave the list: fill
+  it in, run it, and close it (or Escape) to be back on the same player. It can switch to any other tool for a player,
+  such as Look up or Give VIP. The other tools are on Server settings' Admin tab.
+- **Reasons to pick.** Warn, Kick and Ban have buttons for the usual reasons (team killing, team vehicles, toxic chat,
+  racism, and for kicks and bans cheating and ignoring warnings), which fill in the message or reason to change before
+  sending. They are `PRESET_REASONS` in `format.js`. On Server settings' Admin tab too.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what, headshot, team kill,
   wallbangs and the like, how far and on which map, which is only shown when it differs from the kill above, as the
   server stays on one map for a long run of kills. A weapon the bot has no name for is marked
   **Check name** (see Weapons to name, on Review). **Only team kills** and **Only headshots** hide the rest (tick both
-  for team kills by headshot): Only team kills is for watching a player someone in game says is team killing. By its title:
+  for team kills by headshot): Only team kills is for watching a player someone in game says is team killing. **Only
+  them in the kill feed**, from Act or a quick look, shows one player's kills and deaths, as they happen, until **Show
+  everyone**. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
   opens again with the latest kills.
@@ -340,14 +373,16 @@ Admin tab.
   someone on for less than a minute between two checks is missed. After the bot could not read the server for a while,
   a join or leave also says "since" the check before, as it happened some time between the two. Players already on when
   the bot started keeping the log show "–" for their time on. Hidden while the bot does not send it.
-- On a phone each player in the server list is a small card, with Act at the top.
+- On a phone each player in the server list is a small card, with Act at the top and the one-click buttons under what
+  is worth knowing.
 
 ### Moderation: Review, what the bot flagged, and what staff did
 
 - **How flags work**, in three steps: the bot checks every player's Steam account as they join, and every kill in the
   kill feed for headshots, team kills and vehicle suicides; the serious ones (griefing, with the player's Steam risk,
   and only the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything is listed
-  here, those in game first and the rest folded under Not in game. A flag is a reason to look, not proof.
+  here, those in game first and the rest folded under Not in game. A flag is a reason to look, not proof. Open the
+  first time; folded away from the next visit, unless you leave it open (remembered in this browser).
 - **Tiles:** players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
   vehicle, in a helicopter crash, and vehicle suicides) in the period. The first three say how many of them are in game now.
 - **In game first.** Each list is in two parts: **In game now** first, as the players staff can still warn, kick or
@@ -413,6 +448,9 @@ Admin tab.
   opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
 ### Server settings: Rotations, the maps for each day
+
+A tab with changes not saved yet (Rotations, Lines or Weapon rules) has a yellow dot by its name, so they are not
+forgotten while on another tab.
 
 - **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
   being played and the next, with their place in the rotation ("2 of 6"); and a quick swap to another rotation for the

@@ -1,4 +1,4 @@
-import { clockHour, defaultLabel, discordParts, optionLabel, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
+import { clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
@@ -128,6 +128,29 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true })
     }
     input.classList.add('finder-input', 'tool-input');
     const parts = [label, input];
+    // Reasons to pick for a warning, kick or ban, to change before sending if need be.
+    const presets = presetReasons(current.key, o.name);
+    if (presets.length > 0) {
+      parts.push(
+        el(
+          'div',
+          { className: 'presets', role: 'group', ariaLabel: `Pick a ${o.name === 'message' ? 'message' : 'reason'}` },
+          ...presets.map((r) =>
+            el('button', {
+              type: 'button',
+              className: 'preset',
+              textContent: r.label,
+              title: r.text,
+              onclick: () => {
+                input.value = r.text;
+                input.focus();
+                input.setSelectionRange(r.text.length, r.text.length);
+              },
+            }),
+          ),
+        ),
+      );
+    }
     if (o.type === STRING && o.autocomplete && !o.choices) {
       const list = el('datalist', { id: `${id}-list` });
       const hint = el('p', { className: 'tool-hint' });

@@ -661,8 +661,11 @@ export const demoAdmin = (days, now) => {
                 : null,
       banned: false,
       reserved: ['Kestrel', 'Moth', 'Rook', 'Sable'].includes(name),
+      // Kestrel checked Sable's Steam account earlier and found nothing to act on. Checks made in ?demo are kept in the
+      // page (see demoCall).
+      checked: demoCheckOf(name, now),
     };
-  });
+  }).map((p) => (demoChecks.has(p.steamId) ? { ...p, checked: demoChecks.get(p.steamId) } : p));
   // Joins and leaves, newest first. Each leave says how long they were on. Moss was on when the bot started keeping the
   // log, so their time on is not known; Nightjar left while the bot could not read the server.
   const visitor = (name, i) => ({ steamId: `7656119800002${String(i).padStart(4, '0')}`, name });
@@ -1088,9 +1091,23 @@ const DEMO_ROTATIONS = [
 ];
 
 // What the bot answers the admin tools in ?demo: sample players and maps to pick from, and nothing done.
+// "Checked, they're fine" in ?demo, by Steam ID (null for one taken back), kept until the page is closed.
+const demoChecks = new Map();
+const demoCheckOf = (name, now) =>
+  name === 'Sable' ? { by: '100000000000000002', byName: 'Kestrel', at: now - 22 * 60_000, reasons: ['steam'], teamKills: 0, vehicleSuicides: 0 } : null;
+
 export const demoCall = async (path, body) => {
   // Linking or unlinking a Steam account: nothing is saved.
   if (path === 'admin/profile') return { ok: true, json: { steamId: body.action === 'link' ? body.steamId : null, player: null, sample: true } };
+  // A check, as the bot keeps it, by the signed-in sample staff member.
+  if (path === 'admin/check') {
+    const checked =
+      body.action === 'check'
+        ? { by: '100000000000000001', byName: 'Sarge', at: Date.now(), reasons: body.reasons, teamKills: body.teamKills, vehicleSuicides: body.vehicleSuicides }
+        : null;
+    demoChecks.set(body.steamId, checked);
+    return { ok: true, json: { checked } };
+  }
   const { name, options, focused } = body;
   if (path === 'admin/suggest') {
     const typed = (options[focused] ?? '').toLowerCase();

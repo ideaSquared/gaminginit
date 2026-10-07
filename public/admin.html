@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="js/admin.js"></script>
   </head>
-  <body>
+  <body class="staff">
     <a class="skip" href="#main">Skip to content</a>
 
     <header class="nav">
@@ -97,49 +97,60 @@
             <div class="tab-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
               <div class="card server-strip" id="server-strip"></div>
 
-              <article class="card panel admin-panel" aria-labelledby="players-title">
-                <h2 class="panel-title" id="players-title">Server list</h2>
-                <p class="section-note">Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for their history, or use <strong>Act</strong> to warn, kick, move them to another team or ban them, without leaving this page.</p>
-                <div class="list-tools">
-                  <div class="list-search">
-                    <label class="finder-label" for="player-search">Search</label>
-                    <input class="finder-input" id="player-search" type="search" placeholder="Name or Steam ID" autocomplete="off" spellcheck="false" />
+              <!-- On a wide screen the kill feed sits beside the server list, and stays in view as the list scrolls. -->
+              <div class="staff-live">
+                <article class="card panel admin-panel staff-live-list" aria-labelledby="players-title">
+                  <div class="panel-head">
+                    <h2 class="panel-title" id="players-title">Server list</h2>
+                    <label class="check" for="look-alerts"><input type="checkbox" id="look-alerts" /> Alert me when someone new is worth a look</label>
                   </div>
-                  <div class="list-filter">
-                    <p class="finder-label" id="team-filter-label">Team</p>
-                    <div class="period team-filter" id="team-filter" role="group" aria-labelledby="team-filter-label"></div>
+                  <p class="section-note">Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for a quick look at them, or use <strong>Act</strong> to warn, kick, move them to another team or ban them, without leaving this page.</p>
+                  <p class="section-note alerts-note" id="alerts-note" role="status" hidden></p>
+                  <div class="list-tools">
+                    <div class="list-search">
+                      <label class="finder-label" for="player-search">Search</label>
+                      <input class="finder-input" id="player-search" type="search" placeholder="Name or Steam ID" autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="list-filter">
+                      <p class="finder-label" id="team-filter-label">Team</p>
+                      <div class="period team-filter" id="team-filter" role="group" aria-labelledby="team-filter-label"></div>
+                    </div>
+                    <div class="list-filter">
+                      <label class="finder-label" for="player-sort">Sort by</label>
+                      <select class="finder-input" id="player-sort"></select>
+                    </div>
+                    <div class="checks">
+                      <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only players worth a look</label>
+                      <label class="check" for="player-compact"><input type="checkbox" id="player-compact" /> Compact rows</label>
+                    </div>
                   </div>
-                  <div class="list-filter">
-                    <label class="finder-label" for="player-sort">Sort by</label>
-                    <select class="finder-input" id="player-sort"></select>
-                  </div>
-                  <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only players worth a look</label>
-                </div>
-                <p class="finder-count" id="players-count" role="status"></p>
-                <div id="server-players"></div>
-              </article>
+                  <p class="finder-count" id="players-count" role="status"></p>
+                  <div id="server-players"></div>
+                </article>
 
-              <article class="card panel admin-panel" aria-labelledby="feed-title">
-                <div class="panel-head">
-                  <h2 class="panel-title" id="feed-title">Kill feed <span class="feed-state" id="feed-state" data-state="off"></span></h2>
-                  <div class="checks">
-                    <label class="check" for="feed-teamkills"><input type="checkbox" id="feed-teamkills" /> Only team kills</label>
-                    <label class="check" for="feed-headshots"><input type="checkbox" id="feed-headshots" /> Only headshots</label>
+                <article class="card panel admin-panel staff-live-feed" id="feed-card" aria-labelledby="feed-title">
+                  <div class="panel-head">
+                    <h2 class="panel-title" id="feed-title">Kill feed <span class="feed-state" id="feed-state" data-state="off"></span></h2>
+                    <div class="checks">
+                      <label class="check" for="feed-teamkills"><input type="checkbox" id="feed-teamkills" /> Only team kills</label>
+                      <label class="check" for="feed-headshots"><input type="checkbox" id="feed-headshots" /> Only headshots</label>
+                    </div>
                   </div>
-                </div>
-                <p class="section-note" id="feed-note"></p>
-                <div class="admin-scroll kills-scroll">
-                  <table class="admin-table" id="kill-feed"></table>
-                </div>
-              </article>
+                  <p class="feed-player" id="feed-player" hidden></p>
+                  <p class="section-note" id="feed-note"></p>
+                  <div class="admin-scroll kills-scroll">
+                    <table class="admin-table" id="kill-feed"></table>
+                  </div>
+                </article>
 
-              <article class="card panel admin-panel" id="joins-card" aria-labelledby="joins-title" hidden>
-                <h2 class="panel-title" id="joins-title">Joins and leaves</h2>
-                <p class="section-note">Who joined and left the server, newest first: the latest 500, from the bot’s check each minute, so each shows up to a minute late, and someone on for less than a minute between two checks is missed. Click a name for their history.</p>
-                <div class="admin-scroll kills-scroll">
-                  <table class="admin-table joins-table" id="joins" aria-labelledby="joins-title"></table>
-                </div>
-              </article>
+                <article class="card panel admin-panel staff-live-joins" id="joins-card" aria-labelledby="joins-title" hidden>
+                  <h2 class="panel-title" id="joins-title">Joins and leaves</h2>
+                  <p class="section-note">Who joined and left the server, newest first: the latest 500, from the bot’s check each minute, so each shows up to a minute late, and someone on for less than a minute between two checks is missed. Click a name for a quick look at them.</p>
+                  <div class="admin-scroll kills-scroll">
+                    <table class="admin-table joins-table" id="joins" aria-labelledby="joins-title"></table>
+                  </div>
+                </article>
+              </div>
             </div>
 
             <div class="tab-panel" role="tabpanel" id="panel-review" aria-labelledby="tab-review" hidden>
@@ -152,14 +163,15 @@
                 <p class="section-note" id="period-note"></p>
               </div>
 
-              <div class="card panel how-alerts">
-                <h2 class="panel-title">How flags work</h2>
+              <!-- Open the first time; folded away after that, unless staff leave it open. -->
+              <details class="card panel how-alerts" id="how-flags" open>
+                <summary class="panel-title">How flags work</summary>
                 <ol class="alert-steps">
                   <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every kill in the kill feed is checked for headshots, team kills and vehicle suicides.</li>
                   <li><strong>Serious ones go to Discord.</strong> Players passing a griefing mark and the riskiest Steam accounts are posted in the moderation log channel as they happen.</li>
                   <li><strong>Everything is listed here,</strong> those in game first; the rest are folded under <strong>Not in game</strong>. A flag is a reason to look, not proof: check the player’s history before you act.</li>
                 </ol>
-              </div>
+              </details>
 
               <div class="tiles">
                 <div class="tile">
@@ -334,6 +346,15 @@
               </article>
             </div>
           </div>
+
+          <!-- A quick look at a player from the Live tab, at the side of the page (see peek in admin.js). -->
+          <dialog class="card player-peek" id="peek" aria-labelledby="peek-title">
+            <div class="panel-head player-peek-head">
+              <h2 class="player-peek-title" id="peek-title">Player</h2>
+              <button type="button" class="btn btn-ghost btn-small" id="peek-close">Close</button>
+            </div>
+            <div id="peek-body"></div>
+          </dialog>
 
           <!-- Act on a player: the admin tool for it, over the page (see act in admin.js). -->
           <dialog class="card act-dialog" id="act-dialog" aria-labelledby="act-dialog-title">

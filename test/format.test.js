@@ -98,6 +98,15 @@ import {
   teamCounts,
   filterPlayers,
   lookFirst,
+  lookReasons,
+  checkHolds,
+  lookNow,
+  checkOf,
+  recentActions,
+  actedText,
+  checkedText,
+  presetReasons,
+  PRESET_REASONS,
   alertCount,
   discordParts,
   defaultLabel,
@@ -1095,6 +1104,67 @@ describe('the staff page server list', () => {
     assert.deepEqual(lookFirst([]), { look: [], rest: [] });
   });
 
+  it('says why a player is worth a look, and keeps a check until more comes up', () => {
+    const vex = player('Vex', { teamKillsToday: 4, griefFlags: ['teamKills'], steam: { risk: 'medium', score: 3, flags: ['gameBan'] } });
+    const check = { by: '100000000000000001', byName: 'Sarge', at: NOW - 60_000, reasons: ['griefing', 'steam'], teamKills: 4, vehicleSuicides: 0 };
+
+    assert.deepEqual(lookReasons(vex), ['griefing', 'steam']);
+    assert.deepEqual(lookReasons(player('Gone', { banned: true, headshotsToday: { flagged: true } })), ['banned', 'headshots']);
+    assert.deepEqual(checkOf(vex), { reasons: ['griefing', 'steam'], teamKills: 4, vehicleSuicides: 0 });
+    assert.equal(lookNow(vex), true);
+    // Checked: no longer worth a look now, but still flagged.
+    assert.equal(checkHolds({ ...vex, checked: check }), true);
+    assert.equal(lookNow({ ...vex, checked: check }), false);
+    assert.equal(needsLook({ ...vex, checked: check }), true);
+    // Another team kill, a vehicle suicide or a new reason since: worth a look again.
+    assert.equal(lookNow({ ...vex, teamKillsToday: 5, checked: check }), true);
+    assert.equal(lookNow({ ...vex, vehicleSuicidesToday: 1, checked: check }), true);
+    assert.equal(lookNow({ ...vex, banned: true, checked: check }), true);
+    // Nothing checked (or an older bot, which sends no checks).
+    assert.equal(checkHolds({ ...vex, checked: null }), false);
+    assert.equal(checkHolds(vex), false);
+  });
+
+  it('leaves checked players out of the first part, and out of "Only players worth a look"', () => {
+    const check = { by: '1', byName: 'Sarge', at: NOW, reasons: ['steam'], teamKills: 0, vehicleSuicides: 0 };
+    const list = [{ ...ash, checked: check }, cy, dee, bo];
+
+    const { look, rest } = lookFirst(filterPlayers(list, {}));
+    assert.deepEqual(look.map((p) => p.name), ['Cy']);
+    assert.deepEqual(rest.map((p) => p.name), ['Ash', 'Dee', 'Bo']);
+    assert.deepEqual(filterPlayers(list, { watch: true }).map((p) => p.name), ['Cy']);
+  });
+
+  it('says what staff last did to each player in the last day', () => {
+    const SARGE = '100000000000000001';
+    const entry = (minutes, action, steamId, by = SARGE, extra = {}) => ({ at: NOW - minutes * 60_000, action, player: { steamId, name: steamId }, by, ...extra });
+    const log = [entry(4, 'warn', 'vex'), entry(13, 'kick', 'vex'), entry(30, 'vip-add', 'moth'), entry(2, 'warn', 'pike', 'bot'), entry(26 * 60, 'ban', 'gone')];
+    const recent = recentActions(log, NOW);
+    const staff = { [SARGE]: { name: 'Sarge', username: 'sarge_gi' } };
+
+    assert.deepEqual([...recent.keys()], ['vex', 'pike']);
+    assert.equal(recent.get('vex').count, 2);
+    assert.equal(actedText(recent.get('vex'), NOW, staff), 'Warned 4 min ago by Sarge (@sarge_gi) · 2 actions in 24 h');
+    assert.equal(actedText(recent.get('pike'), NOW, staff), 'Warned 2 min ago by the bot');
+    // The latest, whatever order the log is in.
+    assert.equal(recentActions([...log].reverse(), NOW).get('vex').entry.action, 'warn');
+    assert.equal(
+      checkedText({ by: SARGE, byName: 'Sarge', at: NOW - 5 * 60_000 }, NOW, {}),
+      'Checked by Sarge 5 min ago',
+    );
+  });
+
+  it('offers reasons for warnings, kicks and bans only', () => {
+    const warn = presetReasons('warn', 'message');
+    assert.equal(warn[0].text, 'Stop team killing, or you will be kicked.');
+    assert.ok(warn.every((r) => r.text.length <= 140));
+    assert.ok(!warn.some((r) => r.label === 'Cheating'));
+    assert.equal(presetReasons('kick', 'reason').length, PRESET_REASONS.length);
+    assert.deepEqual(presetReasons('ban', 'reason').at(-1), { label: 'Ignoring warnings', text: 'Ignoring staff warnings' });
+    assert.deepEqual(presetReasons('broadcast', 'message'), []);
+    assert.deepEqual(presetReasons('kick', 'player'), []);
+  });
+
   it("filters the live kill feed to headshots, team kills or both, and says when that leaves none", () => {
     const feed = [
       { id: 'a', headshot: true, teamKill: false },
@@ -1113,6 +1183,18 @@ describe('the staff page server list', () => {
     assert.equal(feedEmpty(5, { headshots: true }), 'No headshots among them.');
     assert.equal(feedEmpty(5, { teamKills: true }), 'No team kills among them.');
     assert.equal(feedEmpty(5, { headshots: true, teamKills: true }), 'No team kills by headshot among them.');
+
+    // Only one player's kills and deaths.
+    const theirs = [
+      { id: 'e', killer: { steamId: 'vex' }, victim: { steamId: 'ash' }, headshot: true, teamKill: false },
+      { id: 'f', killer: { steamId: 'ash' }, victim: { steamId: 'vex' }, headshot: false, teamKill: true },
+      { id: 'g', killer: { steamId: 'ash' }, victim: { steamId: 'bo' }, headshot: false, teamKill: false },
+    ];
+    const of = (filters) => theirs.filter((k) => feedKillShown(k, filters)).map((k) => k.id);
+    assert.deepEqual(of({ player: 'vex' }), ['e', 'f']);
+    assert.deepEqual(of({ player: 'vex', teamKills: true }), ['f']);
+    assert.equal(feedEmpty(5, { player: 'vex', playerName: 'Vex' }), 'No kills or deaths with Vex among them.');
+    assert.equal(feedEmpty(5, { player: 'vex', playerName: 'Vex', headshots: true }), 'No headshots with Vex among them.');
   });
 
   it('counts the alerts worth a look', () => {

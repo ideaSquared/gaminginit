@@ -72,6 +72,20 @@ const rules = createRules({
 
 const EDITORS = { rotations, lines, rules };
 
+// A dot on the tab of each editor with changes not saved yet, so they are not forgotten on another tab. Looked at again
+// after anything in an editor changes, at most once a frame.
+const markUnsaved = () => {
+  for (const [name, editor] of Object.entries(EDITORS)) $(`dirty-${name}`).hidden = !editor.dirty;
+};
+let unsavedFrame = 0;
+const unsavedSoon = () => {
+  cancelAnimationFrame(unsavedFrame);
+  unsavedFrame = requestAnimationFrame(markUnsaved);
+};
+const editorChanges = new MutationObserver(unsavedSoon);
+for (const name of Object.keys(EDITORS)) editorChanges.observe($(name), { subtree: true, childList: true, attributes: true, characterData: true });
+for (const type of ['input', 'change']) document.addEventListener(type, unsavedSoon, true);
+
 const tools = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames });
 
 const selectTab = (name, { focus = false } = {}) => {
