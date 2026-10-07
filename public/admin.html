@@ -97,6 +97,10 @@
                 <span class="tab-name">Lines</span>
                 <span class="tab-hint">What the bot says in game</span>
               </button>
+              <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules">
+                <span class="tab-name">Weapon rules</span>
+                <span class="tab-hint">Weapons the bot warns or kicks for</span>
+              </button>
             </div>
 
             <div class="tab-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
@@ -408,6 +412,10 @@
 
             <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
               <div id="lines"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
+              <div id="rules"></div>
             </div>
           </div>
 

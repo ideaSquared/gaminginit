@@ -1,5 +1,6 @@
 import { FACTION_HEX } from './format.js';
 import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
+import { ruleProblem, tidy } from './rulesmodel.js';
 
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
 
@@ -1387,4 +1388,118 @@ export const demoLinesChange = async (body) => {
   if (sameLines(lines, list.lines)) delete demoLineState[list.id];
   else demoLineState[list.id] = { lines, changed: { at: Date.now(), by: 'demo', byName: 'Sarge' } };
   return { ok: true, json: demoLinesPage() };
+};
+
+// The Weapon rules tab: some of the weapons the bot names, with their kill feed tags, as the bot sends them, and its
+// three ready-made rules, one of them turned on.
+const DEMO_WEAPONS = [
+  ...[
+    ['AK74', 'Id.Item.AK74M'],
+    ['AMR 50', 'Id.Item.SR_04'],
+    ['BMR-308', 'Id.Item.RFB'],
+    ['Galil', 'Id.Item.WEPN_029'],
+    ['M249 SAW', 'Id.Item.M249'],
+    ['M4', 'Id.Item.M4'],
+    ['MAAWS', 'Id.Item.CGM4'],
+    ['MGL-40', 'Id.Item.MMGL'],
+    ['PKM', 'Id.Item.LMG_02'],
+    ['RPG-7', 'Id.Item.RPG7'],
+  ].map(([name, tag]) => ({ name, kind: 'weapon', tags: [tag] })),
+  { name: 'AT mine', kind: 'placed', tags: ['Id.Item.ATMine'] },
+  { name: 'Claymore', kind: 'placed', tags: ['Id.Item.Claymore'] },
+  { name: 'Humvee M249', kind: 'vehicle-weapon', tags: ['Id.Vehicle.WeaponExtension.WHL_05.RingTurret'] },
+  { name: 'Humvee minigun', kind: 'vehicle-weapon', tags: ['Id.Vehicle.WeaponExtension.WHL_05.RingMinigun'] },
+  { name: 'Kodiak M249', kind: 'vehicle-weapon', tags: ['Id.Vehicle.WeaponExtension.WHL_02.SUV.RingTurret'] },
+  { name: 'L2A6 cannon', kind: 'vehicle-weapon', tags: ['Id.Vehicle.WeaponExtension.TNK_01.Heavy'] },
+  { name: 'Ural Defender M249', kind: 'vehicle-weapon', tags: ['Id.Vehicle.WeaponExtension.WHL_07.MachineGun'] },
+  { name: 'L81 mortar', kind: 'emplacement', tags: ['Vehicle.Variant.Stationary.Mortar', 'Id.Vehicle.WeaponExtension.STN_03.MainBarrel'] },
+  { name: 'Humvee', kind: 'vehicle', tags: ['Vehicle.Variant.Land.Wheeled.Humvee.Default'] },
+  {
+    name: 'M113 APC',
+    kind: 'vehicle',
+    tags: [
+      'Vehicle.Variant.Land.Tracked.SpawnVehicle.Lonestar',
+      'Vehicle.Variant.Land.Tracked.SpawnVehicle.Valkyra',
+      'Vehicle.Variant.Land.Tracked.SpawnVehicle.Manticore',
+    ],
+  },
+];
+
+const DEMO_AFTER = ' | Rules: our Discord at gaminginit.com';
+const DEMO_LIMITS = { warning: 200 - 'Warning 4 of 5: '.length - DEMO_AFTER.length, kick: 200 - DEMO_AFTER.length };
+
+const demoRuleState = {
+  rules: [
+    {
+      id: 'humvee-gunner',
+      name: 'Humvee gunner',
+      weapons: ['Id.Vehicle.WeaponExtension.WHL_05.RingTurret', 'Id.Vehicle.WeaponExtension.WHL_05.RingMinigun'],
+      mode: 'warn-kick',
+      warnings: 1,
+      warning: 'No kills from the Humvee gun. It is not allowed on this server.',
+      kick: 'Kills from the Humvee gun, which is not allowed on this server',
+      changed: { at: Date.now() - 2 * HOUR, by: 'demo', byName: 'Sarge' },
+    },
+    {
+      id: 'kodiak-gunner',
+      name: 'Kodiak gunner',
+      weapons: ['Id.Vehicle.WeaponExtension.WHL_02.SUV.RingTurret'],
+      mode: 'off',
+      warnings: 1,
+      warning: 'No kills from the Kodiak gun. It is not allowed on this server.',
+      kick: 'Kills from the Kodiak gun, which is not allowed on this server',
+      changed: null,
+    },
+    {
+      id: 'mgl',
+      name: 'MGL',
+      weapons: ['Id.Item.MMGL'],
+      mode: 'off',
+      warnings: 1,
+      warning: 'The MGL is not allowed on this server. Switch weapon.',
+      kick: 'Using the MGL, which is not allowed on this server',
+      changed: null,
+    },
+  ],
+  today: { 'humvee-gunner': { warned: 3, kicked: 1 } },
+  made: 0,
+};
+
+const demoRulesPage = () => ({
+  feed: true,
+  after: DEMO_AFTER,
+  limits: DEMO_LIMITS,
+  maxRules: 20,
+  maxWeapons: 20,
+  maxWarnings: 5,
+  maxName: 40,
+  weapons: DEMO_WEAPONS,
+  rules: demoRuleState.rules.map((r) => ({ ...r, weapons: [...r.weapons], today: demoRuleState.today[r.id] ?? { warned: 0, kicked: 0 } })),
+});
+
+export const demoRules = async () => ({ ok: true, status: 200, json: demoRulesPage() });
+
+// A change, as the bot makes it: refused with a reason, or the page as it is after it.
+export const demoRulesChange = async (body) => {
+  const refuse = (error) => ({ ok: false, json: { error } });
+  if (body.action === 'remove') {
+    if (!demoRuleState.rules.some((r) => r.id === body.id)) return refuse('That rule is gone already. Reload the page.');
+    demoRuleState.rules = demoRuleState.rules.filter((r) => r.id !== body.id);
+    return { ok: true, json: demoRulesPage() };
+  }
+  const page = demoRulesPage();
+  const why = ruleProblem(body, page.rules, page);
+  if (why) return refuse(why);
+  const rule = {
+    id: body.id ?? `demo-${(demoRuleState.made += 1)}`,
+    name: tidy(body.name),
+    weapons: [...body.weapons],
+    mode: body.mode,
+    warnings: body.warnings,
+    warning: tidy(body.warning),
+    kick: tidy(body.kick),
+    changed: { at: Date.now(), by: 'demo', byName: 'Sarge' },
+  };
+  demoRuleState.rules = body.id === null ? [...demoRuleState.rules, rule] : demoRuleState.rules.map((r) => (r.id === rule.id ? rule : r));
+  return { ok: true, json: demoRulesPage() };
 };

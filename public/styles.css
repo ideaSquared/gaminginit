@@ -2916,7 +2916,7 @@ body.refreshing .tile-value {
 /* Staff page tabs: Players, Alerts, Kills, Admin, Rotations. Each says what is in it, so the page reads at a glance. */
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -2981,9 +2981,9 @@ body.refreshing .tile-value {
   color: #1d1400;
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   .admin-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -5003,4 +5003,87 @@ body.rot-grabbing * {
     grid-column: 2;
     grid-row: 1;
   }
+}
+
+/* The Weapon rules tab: weapons the bot warns or kicks for. It shares the Rotations and Lines tabs' layout, cards and
+   messages. */
+
+.rules-field {
+  display: grid;
+  gap: 8px;
+}
+
+.rules-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rules-choices {
+  flex-wrap: wrap;
+  justify-self: start;
+}
+
+.rules-choices button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.rules-warnings {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.rules-weapons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-weapon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+.rules-weapon-kind {
+  font-size: 0.75rem;
+}
+
+.rules .rules-weapon-remove {
+  font-size: 1.1rem;
+}
+
+.rules .rules-input {
+  max-width: none;
+  margin-top: 0;
+}
+
+.rules .rules-picker {
+  max-width: 320px;
+  margin-top: 0;
+}
+
+.rules-unused .rules-input,
+.rules-unused .rules-preview {
+  opacity: 0.6;
+}
+
+.rules-preview .lines-count {
+  min-width: 0;
+  padding-top: 0;
+}
+
+.rules-preview .lines-problem {
+  margin-top: 6px;
 }
