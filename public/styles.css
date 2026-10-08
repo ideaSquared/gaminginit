@@ -701,27 +701,32 @@ h1 {
   font-weight: 700;
 }
 
-/* The notice for every page, from announcement.json, like the server being down: first thing under the header,
-   centred and in the warning colour so nobody misses it. */
+/* The notice for every page, from announcement.json, like the server being down: first thing under the header, a
+   slim strip across the page in the warning colour so nobody misses it. Title, message and link sit on one row on wide
+   screens and stack on phones. */
 
 .announcement {
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .announcement-box {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 10px 16px;
   border: 1px solid var(--warning);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--warning) 10%, var(--surface));
-  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.45;
   text-wrap: pretty;
 }
 
 .announcement-title {
+  flex: none;
   color: var(--warning);
-  font-size: 1.15rem;
+  font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -729,11 +734,16 @@ h1 {
 
 .announcement-title::before {
   content: '⚠\FE0E';
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
-.announcement-box p + p {
-  margin-top: 8px;
+.announcement-message {
+  flex: 1 1 360px;
+  color: var(--text-2);
+}
+
+.announcement-link {
+  flex: none;
 }
 
 .announcement-link a {
@@ -742,7 +752,7 @@ h1 {
 
 /* On the home page the hero comes next: give the notice room above its grid. */
 .announcement:not([hidden]) {
-  padding-bottom: 24px;
+  padding-bottom: 16px;
 }
 
 .announcement:not([hidden]) ~ .notice:not([hidden]) {

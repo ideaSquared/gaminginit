@@ -236,7 +236,7 @@ Serving the site's files is free and unlimited on Cloudflare. Only the stats req
 ## Notice for everyone
 
 For news everyone should see, like the server being down, `public/announcement.json` puts a notice at the top of every
-page, centred in a yellow box:
+page, in a slim yellow strip:
 
 ```json
 {
