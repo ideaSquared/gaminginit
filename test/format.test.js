@@ -186,13 +186,13 @@ describe('text', () => {
     assert.equal(kd(4, 0), '4.00');
   });
 
-  it('names the winner, or a draw', () => {
+  it('names the winner, or no result when the top two are level', () => {
     const scores = [
       { name: 'Kharr', score: 255 },
       { name: 'Valkyra', score: 300 },
     ];
     assert.deepEqual(result(scores), { winner: 'Valkyra', text: 'Valkyra won 300–255' });
-    assert.equal(result([{ name: 'A', score: 5 }, { name: 'B', score: 5 }]).text, 'Draw 5–5');
+    assert.equal(result([{ name: 'A', score: 5 }, { name: 'B', score: 5 }]).text, 'No result: 5–5');
     assert.equal(result([]), null);
     assert.equal(scoreLine(scores), 'Kharr 255–300 Valkyra');
     assert.equal(scoreLine([]), '');
@@ -208,7 +208,7 @@ describe('text', () => {
     assert.deepEqual(result(three), { winner: 'Valkyra', text: 'Valkyra won 100, Kharr 67, Haldor 41' });
     assert.deepEqual(result([{ name: 'A', score: 9 }, { name: 'B', score: 9 }, { name: 'C', score: 2 }]), {
       winner: null,
-      text: 'Draw: A 9, B 9, C 2',
+      text: 'No result: A 9, B 9, C 2',
     });
     assert.equal(scoreLine(three), 'Kharr 67 · Valkyra 100 · Haldor 41');
   });
@@ -483,9 +483,9 @@ describe('player pages', () => {
   });
 
   it('counts wins over the matches whose result is known', () => {
-    const list = [match(1), match(2, { result: 'lost' }), match(3, { result: 'draw' }), match(4, { result: null }), match(5)];
+    const list = [match(1), match(2, { result: 'lost' }), match(3, { result: null }), match(4, { result: 'lost' }), match(5)];
 
-    assert.deepEqual(results(list), { won: 2, lost: 1, draw: 1, decided: 4, share: 0.5 });
+    assert.deepEqual(results(list), { won: 2, lost: 2, decided: 4, share: 0.5 });
     assert.equal(results([match(1, { result: null })]).share, null);
     assert.equal(percent(0.666), '67%');
     assert.equal(percent(null), '–');
@@ -966,18 +966,18 @@ describe('admin tools', () => {
 describe('mapSegments', () => {
   const teams = [{ name: 'Valkyra' }, { name: 'Kharr' }, { name: 'Haldor' }];
 
-  it('keeps the overall order of the teams on every map, then the draws', () => {
-    const map = { map: 'Ozeti', matches: 10, draws: 2, teams: [{ name: 'KHARR', wins: 5 }, { name: 'Valkyra', wins: 3 }, { name: 'Haldor', wins: 0 }] };
+  it('keeps the overall order of the teams on every map', () => {
+    const map = { map: 'Ozeti', matches: 10, teams: [{ name: 'KHARR', wins: 5 }, { name: 'Valkyra', wins: 3 }, { name: 'Haldor', wins: 2 }] };
 
     assert.deepEqual(mapSegments(map, teams), [
       { name: 'Valkyra', count: 3, share: 0.3 },
       { name: 'Kharr', count: 5, share: 0.5 },
-      { name: null, count: 2, share: 0.2 },
+      { name: 'Haldor', count: 2, share: 0.2 },
     ]);
   });
 
-  it('leaves out teams with no wins there, and draws when there were none', () => {
-    const map = { map: 'Bakurani', matches: 1, draws: 0, teams: [{ name: 'Haldor', wins: 1 }] };
+  it('leaves out teams with no wins there', () => {
+    const map = { map: 'Bakurani', matches: 1, teams: [{ name: 'Haldor', wins: 1 }] };
 
     assert.deepEqual(mapSegments(map, teams), [{ name: 'Haldor', count: 1, share: 1 }]);
   });

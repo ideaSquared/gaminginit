@@ -98,8 +98,8 @@ export const sideName = (name, colours, className = 'side') => {
 };
 
 // A finished match's map and every side's score, highest first, each name in its colour: "OZETI  Valkyra 100 · Lonestar
-// 72 · Manticore 41". The winner is in bold, and a draw says so. A side with no colour from the server gets its
-// faction's usual one.
+// 72 · Manticore 41". The winner is in bold. Teams never draw, so level at the top says "No result" (the bot missed who
+// won, or the match was cut short). A side with no colour from the server gets its faction's usual one.
 export const matchHeadline = (match) => {
   const outcome = result(match.factionScores);
   if (!outcome) return el('p', { className: 'match-headline' }, mapTag(match.map), el('span', { className: 'match-score', textContent: 'No score recorded' }));
@@ -112,7 +112,7 @@ export const matchHeadline = (match) => {
     el(
       'span',
       { className: 'scores' },
-      outcome.winner ? null : el('span', { className: 'muted', textContent: 'Draw: ' }),
+      outcome.winner ? null : el('span', { className: 'muted', textContent: 'No result: ' }),
       ...scores.flatMap((s, i) => {
         const won = outcome.winner !== null && i === 0;
         return [

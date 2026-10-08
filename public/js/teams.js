@@ -10,10 +10,9 @@ const $ = (id) => document.getElementById(id);
 const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 
 // Teams the game gave no colour to still need telling apart in the bars: the first three, by name, get these (checked
-// together for colour-blind readers on the cards), any more the muted ink. Draws are the quiet grey.
+// together for colour-blind readers on the cards), any more the muted ink.
 const FALLBACK = ['#3987e5', '#d95926', '#199e70'];
 const NO_COLOUR = 'var(--muted)';
-const DRAW_COLOUR = 'var(--series-quiet)';
 
 // Each team's colour in game, lightened to read on the cards: for its name and its marks.
 let colours = new Map();
@@ -35,14 +34,14 @@ const renderTiles = (board) => {
   setText($('tile-matches'), board ? compact(board.matches) : '–');
   setText(
     $('tile-matches-sub'),
-    board && board.matches > 0 ? `${board.draws} draw${board.draws === 1 ? '' : 's'} · ${formatDuration(board.averageMs)} on average` : '',
+    board && board.matches > 0 ? `${formatDuration(board.averageMs)} on average` : '',
   );
   const [leader] = board?.teams ?? [];
   $('tile-leader').replaceChildren(leader && leader.wins > 0 ? sideName(leader.name, colours) : '–');
   setText($('tile-leader-sub'), leader && leader.wins > 0 ? `${wins(leader.wins)}, ${percent(leader.wins / leader.matches)} of their matches` : '');
   const streak = board?.streak ?? null;
   $('tile-streak').replaceChildren(streak ? sideName(streak.name, colours) : '–');
-  setText($('tile-streak-sub'), streak ? `${wins(streak.wins)} in a row` : board && board.matches > 0 ? 'The latest match was a draw' : '');
+  setText($('tile-streak-sub'), streak ? `${wins(streak.wins)} in a row` : '');
 };
 
 // Each team, most wins first, with a bar for its wins against the leader's.
@@ -84,18 +83,14 @@ const renderStandings = (board) => {
   );
 };
 
-// One swatch and name for each team, and one for draws, in the order the bars use.
+// One swatch and name for each team, in the order the bars use.
 const renderKey = (board) => {
   const swatch = (colour) => {
     const node = el('span', { className: 'team-swatch', ariaHidden: 'true' });
     node.style.setProperty('--team', colour);
     return node;
   };
-  const draws = board.maps.some((m) => m.draws > 0);
-  $('team-key').replaceChildren(
-    ...board.teams.map((t) => el('li', {}, swatch(colourOf(t.name)), t.name)),
-    ...(draws ? [el('li', {}, swatch(DRAW_COLOUR), 'Draw')] : []),
-  );
+  $('team-key').replaceChildren(...board.teams.map((t) => el('li', {}, swatch(colourOf(t.name)), t.name)));
 };
 
 // A team's first letter, for a segment too narrow for its name.
@@ -108,23 +103,21 @@ const mapBar = (map, board) => {
   const bar = el('span', { className: 'map-bar', role: 'group', ariaLabel: `${map.map}: wins by team` });
   bar.append(
     ...mapSegments(map, board.teams).map((s) => {
-      const draw = s.name === null;
-      const name = draw ? 'Draw' : s.name;
-      const label = `${draw ? `Draws: ${matchCount(s.count)}` : `${name}: ${wins(s.count)}`} (${percent(s.share)})`;
+      const label = `${s.name}: ${wins(s.count)} (${percent(s.share)})`;
       const part = el(
         'span',
-        { className: draw ? 'map-bar-part map-bar-draw' : 'map-bar-part', role: 'img', ariaLabel: label, title: label },
+        { className: 'map-bar-part', role: 'img', ariaLabel: label, title: label },
         el(
           'span',
           { className: 'map-bar-label' },
-          el('span', { className: 'map-bar-name', textContent: name }),
-          el('span', { className: 'map-bar-initial', textContent: initial(name) }),
+          el('span', { className: 'map-bar-name', textContent: s.name }),
+          el('span', { className: 'map-bar-initial', textContent: initial(s.name) }),
           el('span', { className: 'map-bar-count', textContent: String(s.count) }),
         ),
       );
       part.style.flexGrow = String(s.count);
       part.style.setProperty('--digits', String(String(s.count).length));
-      part.style.setProperty('--team', draw ? DRAW_COLOUR : colourOf(s.name));
+      part.style.setProperty('--team', colourOf(s.name));
       return part;
     }),
   );
@@ -152,7 +145,7 @@ const renderMaps = (board) => {
           leads ? el('span', { className: 'match-score' }, sideName(top.name, colours), ` wins most here`) : el('span', { className: 'match-score muted', textContent: 'No team ahead' }),
         ),
         mapBar(m, board),
-        matchMeta(matchCount(m.matches), `${formatDuration(m.averageMs)} on average`, ...(m.draws > 0 ? [`${m.draws} draw${m.draws === 1 ? '' : 's'}`] : [])),
+        matchMeta(matchCount(m.matches), `${formatDuration(m.averageMs)} on average`),
       );
     }),
   );
@@ -161,7 +154,7 @@ const renderMaps = (board) => {
     el(
       'thead',
       {},
-      el('tr', {}, ...['Map', 'Matches', ...board.teams.map((t) => `${t.name} wins`), 'Draws', 'Average length'].map((h) => el('th', { scope: 'col', textContent: h }))),
+      el('tr', {}, ...['Map', 'Matches', ...board.teams.map((t) => `${t.name} wins`), 'Average length'].map((h) => el('th', { scope: 'col', textContent: h }))),
     ),
     el(
       'tbody',
@@ -170,7 +163,7 @@ const renderMaps = (board) => {
         el(
           'tr',
           {},
-          ...[m.map, m.matches, ...board.teams.map((t) => winsOn(m, t.name)), m.draws, formatDuration(m.averageMs)].map((cell) =>
+          ...[m.map, m.matches, ...board.teams.map((t) => winsOn(m, t.name)), formatDuration(m.averageMs)].map((cell) =>
             el('td', { textContent: String(cell) }),
           ),
         ),

@@ -159,7 +159,7 @@ const renderStats = (now) => {
     tile('Matches', String(totals.matches), subline(best.podiums > 0 ? `top 3 in ${best.podiums}` : null)),
     tile('Kills', String(totals.kills), subline(place('kills'), totals.matches > 0 ? `${(totals.kills / totals.matches).toFixed(1)} a match` : null)),
     tile('K/D', totals.kills + totals.deaths > 0 ? kd(totals.kills, totals.deaths) : '–', subline(kdRank ?? kdNote, plural(totals.deaths, 'death'))),
-    tile('Win rate', percent(record.share), record.decided > 0 ? subline(`${record.won} won`, `${record.lost} lost`, record.draw > 0 ? `${record.draw} drawn` : null) : 'No sides recorded yet'),
+    tile('Win rate', percent(record.share), record.decided > 0 ? subline(`${record.won} won`, `${record.lost} lost`) : 'No sides recorded yet'),
     tile('Seed days', String(totals.seedDays), subline(place('seeding'), `${formatHours(totals.seedingMinutes)} seeding`)),
   );
 
@@ -315,7 +315,7 @@ const scoreList = (match) => {
   );
 };
 
-const RESULT_LABELS = { won: 'Won', lost: 'Lost', draw: 'Draw' };
+const RESULT_LABELS = { won: 'Won', lost: 'Lost' };
 
 const renderMatches = () => {
   const list = $('player-matches');
@@ -337,7 +337,7 @@ const renderMatches = () => {
             'p',
             { className: 'match-headline' },
             mapTag(m.map),
-            m.result ? el('span', { className: `result result-${m.result}`, textContent: RESULT_LABELS[m.result] }) : null,
+            RESULT_LABELS[m.result] ? el('span', { className: `result result-${m.result}`, textContent: RESULT_LABELS[m.result] }) : null,
             m.factionScores.length > 0 ? scoreList(m) : el('span', { className: 'muted', textContent: 'No score recorded' }),
           ),
           el('p', { className: 'match-meta', textContent: [m.faction ? `As ${m.faction}` : null, ended.format(m.endedAt), formatDuration(m.durationMs)].filter(Boolean).join(' · ') }),
@@ -377,7 +377,7 @@ const renderActivity = (now) => {
 
   const latest = profile.matches.slice(0, FORM_MATCHES).reverse();
   form.update({ matches: latest });
-  setText($('form-sub'), `Their last ${plural(latest.length, 'match', 'matches')}, oldest first. Under each: W won, L lost, D draw.`);
+  setText($('form-sub'), `Their last ${plural(latest.length, 'match', 'matches')}, oldest first. Under each: W won, L lost.`);
   tableOf(
     $('form-table'),
     ['Ended', 'Map', 'Kills', 'Deaths', 'Result', 'Place'],

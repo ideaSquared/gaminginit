@@ -1487,7 +1487,7 @@ tbody tr:last-child td {
    say whose it is). A part is never narrower than its initial and its whole count (--digits, set with the count), so
    a team with few wins takes a little more of the bar than its share rather than lose its label. The dark ink is for
    the team colours, which are all lightened to at least 4.5:1 against the dark cards, so it reads on every one of
-   them; the draws' grey takes the light ink. */
+   them. */
 .map-bar-part {
   container-type: inline-size;
   display: grid;
@@ -1502,10 +1502,6 @@ tbody tr:last-child td {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.map-bar-draw {
-  color: var(--text);
 }
 
 .map-bar-label {
@@ -2422,10 +2418,6 @@ tbody tr:last-child td {
 
 .result-lost {
   background: rgb(208 59 59 / 0.18);
-}
-
-.result-draw {
-  background: var(--surface-2);
 }
 
 /* Sides are named in their own colour in game, lightened where needed to stay readable. */
