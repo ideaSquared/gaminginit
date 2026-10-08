@@ -49,10 +49,9 @@ const scores = (seed) => [
   { name: 'Kharr', score: 255 + (seed % 2) * 45 },
 ];
 
-// A finished match's scores: three sides in their colours in game, a different winner each time, and a draw every
-// fourth match.
+// A finished match's scores: three sides in their colours in game, a different winner each time.
 const finalScores = (seed) => {
-  const points = seed % 4 === 3 ? [300, 300, 118] : [300, 255 - (seed % 3) * 20, 140 + (seed % 4) * 10];
+  const points = [300, 255 - (seed % 3) * 20, 140 + (seed % 4) * 10];
   return SIDES.map((name, i) => ({ name, score: points[(i + seed) % 3], colorHex: SIDE_COLOURS[name] }));
 };
 
@@ -149,19 +148,18 @@ const leaderboard = () => {
 const seederVip = (now) =>
   [6, 0, 2, 4, 8].map((i, k) => ({ id: demoId(i), name: NAMES[i], until: now + (6 - k) * DAY + 3 * HOUR }));
 
-// Thirty days of made-up results: each map's matches, wins by team (in SIDES order), draws and average minutes.
+// Thirty days of made-up results: each map's wins by team (in SIDES order) and average minutes.
 const TEAM_MAPS = [
-  ['Ozeti', [28, 21, 13], 2, 41],
-  ['Bakurani', [15, 22, 14], 1, 38],
-  ['Zestafona', [12, 9, 9], 1, 46],
+  ['Ozeti', [28, 21, 13], 41],
+  ['Bakurani', [15, 22, 14], 38],
+  ['Zestafona', [12, 9, 9], 46],
 ];
 
 const teamBoard = (now) => {
   const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
-  const maps = TEAM_MAPS.map(([map, wins, draws, minutes]) => ({
+  const maps = TEAM_MAPS.map(([map, wins, minutes]) => ({
     map,
-    matches: wins.reduce((a, b) => a + b, 0) + draws,
-    draws,
+    matches: wins.reduce((a, b) => a + b, 0),
     averageMs: minutes * MINUTE,
     teams: SIDES.map((name, i) => ({ name, wins: wins[i] })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
   }));
@@ -170,7 +168,6 @@ const teamBoard = (now) => {
   return {
     days: 30,
     matches,
-    draws: maps.reduce((sum, m) => sum + m.draws, 0),
     averageMs: Math.round(maps.reduce((sum, m) => sum + m.averageMs * m.matches, 0) / matches),
     teams: SIDES.map((name, i) => ({
       name,

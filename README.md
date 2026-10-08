@@ -26,14 +26,14 @@ What it shows:
   14, so one bad day, like a quiet evening, does not take an hour off the busy times, and it leaves crashes out until
   the players are back.
 - A matches page (`/matches`) with the last 10 matches, each with every side's score, highest first, with the side
-  names in their colour in game (the winner in bold, and "Draw:" for a draw; a side the bot sent no colour for gets its
-  faction's usual one), and its top 5. Each match is also a link
+  names in their colour in game (the winner in bold, and "No result:" when the top sides were level, as teams never
+  draw; a side the bot sent no colour for gets its faction's usual one), and its top 5. Each match is also a link
   target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
   it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
   link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
   the latest winner's streak; each team's wins and win rate (and matches played, only when the teams played different
-  numbers of them); each map's matches split by the team that won them, with draws and the average length (also as a
+  numbers of them); each map's matches split by the team that won them, with the average length (also as a
   table); and the closest finish and the biggest win. Teams are in their colour in game; teams without one get colours
   checked to tell apart for colour-blind readers. On the map bars each part also has its team's name (or its initial
   when it is narrow) and its count, so the colour is not the only way to tell the teams apart.

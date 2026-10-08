@@ -513,10 +513,10 @@ export const activityCalendar = (root) => {
   };
 };
 
-const RESULT_MARK = { won: 'W', lost: 'L', draw: 'D' };
+const RESULT_MARK = { won: 'W', lost: 'L' };
 
 // Kills in each of a player's latest matches, oldest on the left, with their average as a line and each match's
-// result (W, L or D) under its column.
+// result (W or L) under its column.
 // data: { matches: player matches, oldest first }
 export const formChart = (root) => {
   let data = null;

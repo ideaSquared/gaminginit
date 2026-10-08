@@ -52,18 +52,19 @@ export const kd = (kills, deaths) => (kills / Math.max(deaths, 1)).toFixed(2);
 
 const byScore = (scores) => [...scores].sort((a, b) => b.score - a.score);
 
-// "Valkyra won 300–255", "Draw 100–100", or null when the bot has no scores. With three or more factions, it names
-// them all: "Valkyra won 100, Kharr 67, Haldor 41".
+// "Valkyra won 300–255", or null when the bot has no scores. With three or more factions, it names them all: "Valkyra
+// won 100, Kharr 67, Haldor 41". Teams never draw, so level at the top is no result (the bot missed who won, or the
+// match was cut short): "No result: 100–100".
 export const result = (scores) => {
   const ranked = byScore(scores ?? []);
   const [first, second, ...rest] = ranked;
   if (!first || !second) return null;
   const winner = first.score === second.score ? null : first.name;
   if (rest.length === 0) {
-    return { winner, text: winner ? `${first.name} won ${first.score}–${second.score}` : `Draw ${first.score}–${second.score}` };
+    return { winner, text: winner ? `${first.name} won ${first.score}–${second.score}` : `No result: ${first.score}–${second.score}` };
   }
   const others = ranked.slice(1).map((s) => `${s.name} ${s.score}`).join(', ');
-  return { winner, text: winner ? `${first.name} won ${first.score}, ${others}` : `Draw: ${first.name} ${first.score}, ${others}` };
+  return { winner, text: winner ? `${first.name} won ${first.score}, ${others}` : `No result: ${first.name} ${first.score}, ${others}` };
 };
 
 // The newest finished matches first, at most `count` of them.
@@ -304,14 +305,13 @@ export const sumDays = (activity) =>
     { days: 0, seedingMinutes: 0, liveMinutes: 0, seedDays: 0, matches: 0, kills: 0, deaths: 0 },
   );
 
-// Wins, losses and draws, from the matches whose result is known. The share is null when none is.
+// Wins and losses, from the matches whose result is known. The share is null when none is.
 export const results = (matches) => {
   const count = (result) => matches.filter((m) => m.result === result).length;
   const won = count('won');
   const lost = count('lost');
-  const draw = count('draw');
-  const decided = won + lost + draw;
-  return { won, lost, draw, decided, share: decided === 0 ? null : won / decided };
+  const decided = won + lost;
+  return { won, lost, decided, share: decided === 0 ? null : won / decided };
 };
 
 // "Lonestar", "LONESTAR" and "Lone Star" are the same side.
@@ -353,10 +353,10 @@ export const readableColour = (hex, background = '#13161b') => {
 };
 
 // A map's matches as one bar: each team's wins, in the order of `teams` (the overall standings, so a team keeps its
-// place and colour on every map), then the draws. Each share is of the map's matches; teams with no wins are left out.
+// place and colour on every map). Each share is of the map's matches; teams with no wins are left out.
 export const mapSegments = (map, teams) => {
   const wins = new Map(map.teams.map((t) => [sideKey(t.name), t.wins]));
-  const segments = [...teams.map((t) => ({ name: t.name, count: wins.get(sideKey(t.name)) ?? 0 })), { name: null, count: map.draws }];
+  const segments = teams.map((t) => ({ name: t.name, count: wins.get(sideKey(t.name)) ?? 0 }));
   return segments.filter((s) => s.count > 0).map((s) => ({ ...s, share: s.count / map.matches }));
 };
 
