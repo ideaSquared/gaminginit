@@ -1,7 +1,7 @@
 import { clockHour, formatHours, heatLevel, kd, monthStarts, niceScale, ordinal, played, playerCount, segments, timeRange } from './format.js';
 
-// Small hand-drawn SVG charts: a 24-hour population line, daily-peak and busy-times columns, and on player pages an
-// activity calendar and kills per match. Each redraws at its container's real width so text stays crisp, and each
+// Small hand-drawn SVG charts: a 24-hour population line, daily-peak and busy-times columns, players each day of a
+// season, and on player pages an activity calendar and kills per match. Each redraws at its container's real width so text stays crisp, and each
 // works with a keyboard.
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -277,6 +277,94 @@ export const dailyChart = (root) => {
       const show = () => {
         group.classList.add('active');
         tip.show(cx, slot.stats ? y(slot.stats.peak) : y(0), slot.stats ? `${slot.stats.peak} peak${sofar}` : 'No data', `${dayLong.format(slot.at)}${slot.stats ? ` · live ${formatHours(slot.stats.liveMinutes)}` : ''}`);
+      };
+      const hide = () => {
+        group.classList.remove('active');
+        tip.hide();
+      };
+      group.addEventListener('pointerenter', show);
+      group.addEventListener('pointerleave', hide);
+      group.addEventListener('focus', show);
+      group.addEventListener('blur', hide);
+    });
+  };
+
+  onResize(root, draw);
+  return {
+    update(next) {
+      data = next;
+      draw();
+    },
+  };
+};
+
+// Players on the server each day of a season, from the bot's season roundup, the best day labelled. While the season
+// is still going (a staff preview), its last day is not over, so it is dashed and lighter, like today on the daily chart.
+// data: { days: {day, players, minutes, matches, peak}[], partial }
+export const seasonChart = (root) => {
+  let data = null;
+  const people = (n) => `${n.toLocaleString('en-GB')} player${n === 1 ? '' : 's'}`;
+
+  const draw = () => {
+    if (data === null) return;
+    const { days, partial } = data;
+    if (days.every((d) => d.players === 0)) {
+      emptyMessage(root, 'Nobody on the server this season.');
+      return;
+    }
+    const count = days.length;
+    const width = root.clientWidth;
+    const height = width < 480 ? 180 : 220;
+    const m = { top: 20, right: 8, bottom: 28, left: 40 };
+    const plotW = width - m.left - m.right;
+    const plotH = height - m.top - m.bottom;
+    const values = days.map((d) => d.players);
+    const { max, ticks } = niceScale(Math.max(...values), 3);
+    const band = plotW / count;
+    const barW = Math.min(24, band * 0.6);
+    const y = (v) => m.top + plotH - (v / max) * plotH;
+    // The busiest day gets a label once, even when several days tie; the latest of them wins.
+    const best = values.lastIndexOf(Math.max(...values));
+    const at = days.map((d) => Date.parse(`${d.day}T00:00:00Z`));
+
+    const chart = svg('svg', { width, height, viewBox: `0 0 ${width} ${height}` });
+    chart.setAttribute('role', 'group');
+    chart.setAttribute('aria-label', 'Players each day');
+
+    for (const tick of ticks) {
+      svg('line', { class: 'grid', x1: m.left, x2: m.left + plotW, y1: y(tick), y2: y(tick) }, chart);
+      text(chart, { class: 'tick', x: m.left - 8, y: y(tick), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, tick.toLocaleString('en-GB'));
+    }
+    svg('line', { class: 'baseline', x1: m.left, x2: m.left + plotW, y1: y(0), y2: y(0) }, chart);
+
+    // As many day labels as fit, counting back from the last day so it is always labelled, each with its month where
+    // the month starts.
+    const labelEvery = Math.max(1, Math.ceil(44 / band));
+    const shown = days.map((_, i) => (count - 1 - i) % labelEvery === 0);
+    const withMonth = monthStarts(at, shown);
+    root.replaceChildren(chart);
+    const tip = makeTooltip(root);
+
+    days.forEach((d, i) => {
+      const cx = m.left + band * i + band / 2;
+      const going = partial && i === count - 1;
+      if (shown[i]) {
+        text(chart, { class: i === count - 1 ? 'tick tick-strong' : 'tick', x: cx, y: height - 8, 'text-anchor': 'middle' }, (withMonth[i] ? dayMonth : dayNumber).format(at[i]));
+      }
+      const group = svg('g', { class: 'bar', tabindex: 0 }, chart);
+      const sofar = going ? ' so far' : '';
+      const matches = `${d.matches} match${d.matches === 1 ? '' : 'es'}`;
+      const detail = [matches, d.peak === null ? null : `peak ${d.peak}`, `${formatHours(d.minutes)} played`].filter(Boolean).join(' · ');
+      group.setAttribute('aria-label', `${dayLong.format(at[i])}: ${people(d.players)}${sofar}, ${detail}`);
+      svg('rect', { class: 'hit', x: cx - band / 2, y: m.top, width: band, height: plotH }, group);
+      if (d.players > 0) {
+        const h = Math.max(1, y(0) - y(d.players));
+        svg('path', { class: going ? 'column column-partial' : 'column', d: columnPath(cx - barW / 2, y(d.players), barW, h) }, group);
+        if (i === best) text(chart, { class: 'cap-label', x: cx, y: y(d.players) - 6, 'text-anchor': 'middle' }, d.players.toLocaleString('en-GB'));
+      }
+      const show = () => {
+        group.classList.add('active');
+        tip.show(cx, y(d.players), `${people(d.players)}${sofar}`, `${dayLong.format(at[i])} · ${detail}`);
       };
       const hide = () => {
         group.classList.remove('active');

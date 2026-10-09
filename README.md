@@ -72,6 +72,39 @@ What it shows:
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
+- A season page (`/season`, "Season 1" in the menu, and a box under the home page's intro): the roundup of Season 1,
+  from the bot's `GET /api/season`. **It stays shut until the season ends with the wipe on 15 October 2026, 00:00 UTC**
+  (1am in the UK): the bot does not send the roundup to anyone before then, so the page shows a countdown and what the
+  roundup will have. It loads the bot again every minute, so a page left open opens by itself, within about a minute
+  of the wipe. Then it has:
+  - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One
+    slide at a time over the page (a full screen on a phone, a tall card on a computer): tap or click the right of a
+    slide, Next, → or Space for the next one, the left, Back or ← for the one before, swipe on a phone, and Esc or ✕ to
+    close. Nothing moves on its own. The server's story has the matches, players, hours and kills, the busiest day, the
+    team of the season and the wooden spoon (the team with the fewest wins), the longest streak, the map played most,
+    the top player of each board, the most deaths and the friendly fire award (most team kills), the role awards and
+    shout-outs, the weapon of the season, and the closest and biggest wins. **Your season**: find your name and get your
+    own story: hours, wins, kills and K/D, your best match, your weapon, map and side, seeding, and your places in the
+    top 10s. Each joke depends on the numbers, and each player always gets the same one. The last slide shares the
+    story (the phone's share sheet, or the link copied); a shared `/season?player=<id>` opens that player's story. Your
+    season comes from your player page, which covers the last 90 days, so from 29 December the days at the start of
+    the season drop out, and the story says from which day it counts.
+  - By the numbers: matches (and their hours), players, kills and deaths from the scoreboards, time played, the peak
+    and the busiest day, and seed days; and players each day as a chart, with a table view.
+  - Teams: the team of the season (the best win rate from 3 matches, in its colour in game), each team's wins, losses
+    and win rate, each map's wins by team as on the teams page, and the longest winning streak.
+  - The hall of fame: the top 10 for most kills, best K/D (from the leaderboard's share of time played for the
+    season's days), most kills in a match, most wins, most MVPs, most time played and top seeders.
+  - Awards from the game's kill feed: the best at each role (assault, support, machine gun, marksman, demolitions,
+    vehicle crew) with the next two, and shout-outs (headhunter, longest shot, jack of all trades, road rage, bonk,
+    quickdraw and ever-present). When the feed started during the season, it says the day.
+  - The weapons of the season, as on the leaderboard, and the matches to remember: the biggest win, the closest
+    finish, the quickest win to the winning score, the longest match, the map played most and the busiest day.
+  - **Staff preview:** staff signed in on a staff page see "Staff: see the season so far" under the countdown, which
+    opens `/season?preview`: the season up to now, from the bot's `GET /api/admin/season`, so they can check the page
+    before it opens. It says it is a preview, and links back to the public page. Without a sign-in, it says to sign
+    in on the staff page first. `?demo` shows a sample season, and `?demo=locked` the page before it opens.
+  - The season's end is set in the bot (`SEASON` in its `src/season.ts`); the page takes it from the bot.
 - Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
@@ -568,8 +601,9 @@ forgotten while on another tab.
 - Player and server names are inserted as text, never as HTML.
 - Times of day follow the reader's locale: no leading zero on a 12-hour clock ("7:00 PM"), two digits on a 24-hour one
   ("07:00"). A range says AM or PM once when both ends share it ("7:00 – 10:00 PM").
-- Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars. On a
-  player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills chart and use ← →.
+- Charts work with a keyboard: tab to the 24-hour chart and use ← →, Home and End; tab through the daily bars, and the
+  season page's days. On a player page, tab to the calendar and use ← → for weeks and ↑ ↓ for days, or to the kills
+  chart and use ← →.
 - Player pages are marked `noindex`, so search engines leave individual players out. The players page is indexed.
 - A player page shows days as UTC dates, like the bot's records, and match times in the reader's own time. A match
   counts on the day it ended. Win rates and sides only cover matches the bot recorded since it started keeping each
@@ -584,9 +618,11 @@ npm test    # Node's built-in test runner; no dependencies to install
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page and the notice in `announcement.json`, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
-`players.js` the players page and `player.js` a player's page. `charts.js` draws the SVG charts and
-`demo.js` makes the sample data. `staff.js` has what the two staff pages share: signing in, the Steam account, Act and
-loading the bot's staff overview. `admin.js` renders the Moderation page (its live kill feed and History too),
+`players.js` the players page, `player.js` a player's page and `season.js` the season page, with `wrapped.js` making its
+Season in Review's slides (and their jokes) and `story.js` showing them. `charts.js` draws the SVG charts and
+`demo.js` makes the sample data. `session.js` keeps the staff sign-in, for the staff pages and the season page's staff
+preview. `staff.js` has what the two staff pages share: signing in, the Steam account, Act and loading the bot's staff
+overview. `admin.js` renders the Moderation page (its live kill feed and History too),
 `settings.js` the Server settings page, `tools.js` the admin tools (on Commands, and over either page from Act), and
 `rotations.js` the Rotations tab, with `rotationmodel.js` holding the tab's logic apart from the page, for tests. `lines.js` renders the
 Lines tab, with `linesmodel.js` holding its logic, for tests. `rules.js` renders the Weapon rules tab, with

@@ -219,6 +219,101 @@ const weapons = (now) => {
   };
 };
 
+// A made-up Season 1, the same shape as the bot's /api/season once the season is over. `locked` gives the page before
+// it opens instead, with the season ending in 3 days.
+export const demoSeason = (now, { locked = false } = {}) => {
+  const page = { number: 1, name: 'Season 1' };
+  if (locked) return { ...page, endsAt: Math.ceil((now + 3 * DAY) / HOUR) * HOUR, open: false, roundup: null };
+  const start = Date.UTC(2026, 8, 30);
+  const end = Date.UTC(2026, 9, 15);
+  const player = (i) => ({ name: NAMES[i % NAMES.length], id: demoId(i % NAMES.length) });
+  // Each board: the regulars in a different order, falling away down the board.
+  const board = (offset, row) => NAMES.map((_, i) => ({ ...player((i * 3 + offset) % NAMES.length), ...row(i) }));
+  const scores = (list) => list.map(([name, score]) => ({ name, score, colorHex: SIDE_COLOURS[name] }));
+  const days = Array.from({ length: 15 }, (_, i) => {
+    const players = 640 + Math.round(wobble(i * 9 + 4) * 260) + (i % 7 >= 5 ? 180 : 0);
+    const matches = 5 + Math.round(wobble(i * 5 + 1) * 2 + 1);
+    return { day: new Date(start + i * DAY).toISOString().slice(0, 10), players, minutes: players * 96, matches, peak: 60 + (i % 5) };
+  });
+  const matches = days.reduce((sum, d) => sum + d.matches, 0);
+  const busiest = days.reduce((best, d) => (d.players > best.players ? d : best));
+  // The season's matches with a result, by map: two of them ended level, so they have none.
+  const seasonMaps = [
+    ['Ozeti', [20, 15, 9], 41],
+    ['Bakurani', [11, 16, 10], 38],
+    ['Zestafona', [8, 6, 5], 46],
+  ];
+  const maps = seasonMaps.map(([map, wins, minutes]) => ({
+    map,
+    matches: wins.reduce((a, b) => a + b, 0),
+    averageMs: minutes * MINUTE,
+    teams: SIDES.map((name, i) => ({ name, wins: wins[i] })).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
+  }));
+  const decided = maps.reduce((sum, m) => sum + m.matches, 0);
+  const teams = SIDES.map((name, i) => {
+    const wins = seasonMaps.reduce((sum, [, w]) => sum + w[i], 0);
+    return { name, colorHex: SIDE_COLOURS[name], matches: decided, wins, losses: decided - wins };
+  }).sort((a, b) => b.wins - a.wins);
+  const ended = (day, hour) => start + day * DAY + hour * HOUR;
+  const totalPlayers = days.reduce((sum, d) => sum + d.players, 0);
+  const kills = WEAPONS.reduce((sum, w) => sum + w[2], 0) * 2;
+  return {
+    ...page,
+    endsAt: end,
+    open: true,
+    roundup: {
+      kind: 'season',
+      start,
+      end,
+      partial: false,
+      matches,
+      playedMs: matches * 43 * MINUTE,
+      players: 2418,
+      peakPlayers: 64,
+      busiestDay: { day: busiest.day, players: busiest.players },
+      teams,
+      bestTeam: teams[0],
+      teamMinMatches: 3,
+      kdMinHours: 5,
+      kills: board(0, (i) => ({ kills: 1210 - i * 83 })),
+      kd: board(4, (i) => ({ kd: 3.42 - i * 0.21 })),
+      bestMatch: board(2, (i) => ({ kills: 48 - i * 3, deaths: 6 + (i % 4), map: MAPS[i % MAPS.length] })),
+      wins: board(6, (i) => ({ wins: 44 - i * 3, played: 70 - i * 4 })),
+      mvps: board(1, (i) => ({ mvps: 17 - i })),
+      playtime: board(8, (i) => ({ minutes: 9200 - i * 610 })),
+      seeding: board(5, (i) => ({ seedDays: 12 - i, minutes: 940 - i * 70 })),
+      biggestWin: { map: 'Bakurani', endedAt: ended(3, 21), factionScores: scores([['Lonestar', 100], ['Valkyra', 12], ['Manticore', 8]]) },
+      closestMatch: { map: 'Ozeti', endedAt: ended(9, 22), factionScores: scores([['Valkyra', 100], ['Manticore', 99], ['Lonestar', 61]]) },
+      topMap: { map: 'Ozeti', matches: maps[0].matches },
+      regular: { ...player(6), days: 15, of: 15 },
+      rookie: null,
+      awards: {
+        from: '2026-10-04',
+        roles: ['assault', 'support', 'machine-gun', 'marksman', 'demolition', 'vehicle-gun'].map((role, r) => ({
+          role,
+          top: NAMES.slice(0, 10).map((_, i) => ({ ...player(i + r * 2), kills: Math.round((540 - r * 70) * (1 - i * 0.09)) })),
+        })),
+        headshots: { ...player(3), headshots: 412 },
+        longest: { ...player(7), distance: 977.4, weapon: 'Mosin Nagant' },
+        variety: { ...player(5), weapons: 29 },
+        roadKills: { ...player(2), kills: 37 },
+        melee: { ...player(9), kills: 21 },
+        sidearm: { ...player(4), kills: 66 },
+      },
+      days,
+      totals: { kills, deaths: Math.round(kills * 1.08), minutes: totalPlayers * 96, seedingMinutes: 61_400, seedDays: 812 },
+      averageMs: Math.round(maps.reduce((sum, m) => sum + m.averageMs * m.matches, 0) / decided),
+      maps,
+      streak: { name: 'Valkyra', colorHex: SIDE_COLOURS.Valkyra, wins: 9, from: ended(5, 18), to: ended(6, 23) },
+      longestMatch: { map: 'Zestafona', endedAt: ended(12, 23), durationMs: 97 * MINUTE, factionScores: scores([['Manticore', 100], ['Valkyra', 94], ['Lonestar', 88]]) },
+      quickestWin: { map: 'Bakurani', endedAt: ended(3, 21), durationMs: 19 * MINUTE, factionScores: scores([['Lonestar', 100], ['Valkyra', 12], ['Manticore', 8]]) },
+      deaths: board(7, (i) => ({ deaths: 812 - i * 47, kills: 390 - i * 21 })),
+      teamKills: board(3, (i) => ({ teamKills: 17 - i })),
+      weapons: { ...weapons(end - DAY), days: 15, since: '2026-10-04', top: weapons(end - DAY).top.map((w) => ({ ...w, kills: w.kills * 2, headshots: w.headshots * 2 })), kills, headshots: Math.round(kills * 0.24) },
+    },
+  };
+};
+
 const SIDES = ['Valkyra', 'Lonestar', 'Manticore'];
 // Made-up colours for the sample; the real ones come from the game server.
 const SIDE_COLOURS = FACTION_HEX;

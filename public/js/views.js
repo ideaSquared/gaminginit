@@ -1,4 +1,4 @@
-import { factionColours, kd, mapKey, result, sideColours, sideKey } from './format.js';
+import { factionColours, kd, mapKey, mapSegments, metres, percent, result, sideColours, sideKey, WEAPON_KINDS } from './format.js';
 
 // DOM building blocks shared by the pages.
 
@@ -132,3 +132,106 @@ export const matchHeadline = (match) => {
 };
 
 export const matchMeta = (...parts) => el('p', { className: 'match-meta', textContent: parts.join(' · ') });
+
+// Teams the game gave no colour to still need telling apart in the bars: the first three, by name, get these (checked
+// together for colour-blind readers on the cards), any more the muted ink.
+const FALLBACK = ['#3987e5', '#d95926', '#199e70'];
+const NO_COLOUR = 'var(--muted)';
+
+// Each team's colour in game, lightened to read on the cards, for its name (`colours`, for sideName) and its marks
+// (`colourOf`, which has a colour for every team).
+export const teamColours = (teams) => {
+  const colours = sideColours([{ factionScores: teams }]);
+  const missing = teams.map((t) => sideKey(t.name)).filter((key) => !colours.has(key)).sort();
+  const fallback = new Map(missing.slice(0, FALLBACK.length).map((key, i) => [key, FALLBACK[i]]));
+  return { colours, colourOf: (name) => colours.get(sideKey(name)) ?? fallback.get(sideKey(name)) ?? NO_COLOUR };
+};
+
+// A team's first letter, for a segment too narrow for its name.
+const initial = (name) => Array.from(name)[0]?.toUpperCase() ?? '';
+
+const winCount = (n) => `${n.toLocaleString('en-GB')} win${n === 1 ? '' : 's'}`;
+
+// A map's matches as one bar, split by the team that won them, in the order of `teams` (the overall standings). Each
+// part says whose it is as well as how many, so the colours are not the only way to tell the teams apart: the name when
+// there is room, else the initial (the styles pick by the part's own width, and keep every part wide enough for its
+// initial and count).
+export const mapBar = (map, teams, colourOf) => {
+  const bar = el('span', { className: 'map-bar', role: 'group', ariaLabel: `${map.map}: wins by team` });
+  bar.append(
+    ...mapSegments(map, teams).map((s) => {
+      const label = `${s.name}: ${winCount(s.count)} (${percent(s.share)})`;
+      const part = el(
+        'span',
+        { className: 'map-bar-part', role: 'img', ariaLabel: label, title: label },
+        el(
+          'span',
+          { className: 'map-bar-label' },
+          el('span', { className: 'map-bar-name', textContent: s.name }),
+          el('span', { className: 'map-bar-initial', textContent: initial(s.name) }),
+          el('span', { className: 'map-bar-count', textContent: String(s.count) }),
+        ),
+      );
+      part.style.flexGrow = String(s.count);
+      part.style.setProperty('--digits', String(String(s.count).length));
+      part.style.setProperty('--team', colourOf(s.name));
+      return part;
+    }),
+  );
+  return bar;
+};
+
+// A weapon's name, with what it is when it is not carried by hand: "Humvee minigun  VEHICLE GUN".
+const weaponName = (w) =>
+  el('span', { className: 'weapon-name' }, w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null);
+
+const weaponBar = (kills, most) => {
+  const bar = el('span', { className: 'weapon-bar', ariaHidden: 'true' });
+  bar.style.setProperty('--share', String(most > 0 ? kills / most : 0));
+  return bar;
+};
+
+// Who made a longest kill, linking to their page when the bot sent their id.
+export const longestHolder = (holder) => (holder.name ? playerName(holder) : 'a player');
+
+// The bot's top weapons, most kills first: each with a bar for its kills against the first's, its share of headshots,
+// average distance and longest kill.
+export const weaponsTable = (top) => {
+  const most = top[0]?.kills ?? 0;
+  return el(
+    'table',
+    { className: 'players-table weapons-table' },
+    el('thead', {}, el('tr', {}, ...['#', 'Weapon', 'Kills'].map((h) => el('th', { scope: 'col', textContent: h })))),
+    el(
+      'tbody',
+      {},
+      ...top.map((w, i) =>
+        el(
+          'tr',
+          {},
+          el('td', { className: 'rank', textContent: String(i + 1) }),
+          el(
+            'td',
+            { className: 'weapon' },
+            weaponName(w),
+            weaponBar(w.kills, most),
+            el(
+              'p',
+              { className: 'weapon-detail' },
+              ...[
+                el('span', { className: 'weapon-stat', textContent: `${percent(w.headshots / w.kills)} headshots` }),
+                w.averageDistance === null ? null : el('span', { className: 'weapon-stat', textContent: `${metres(w.averageDistance)} on average` }),
+                w.longest
+                  ? el('span', {}, el('span', { className: 'weapon-stat', textContent: `longest ${metres(w.longest.distance)}` }), ' by ', longestHolder(w.longest))
+                  : null,
+              ]
+                .filter(Boolean)
+                .flatMap((part, i) => (i === 0 ? [part] : [' · ', part])),
+            ),
+          ),
+          el('td', { textContent: w.kills.toLocaleString('en-GB') }),
+        ),
+      ),
+    ),
+  );
+};
