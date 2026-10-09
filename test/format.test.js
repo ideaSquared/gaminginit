@@ -336,6 +336,11 @@ describe('leaderboard boards', () => {
   it('says what the K/D board needs, including from a bot that still counts time played', () => {
     assert.equal(kdNeeds({ kdMinMatches: 10 }, '+'), '10+ matches');
     assert.equal(kdNeeds({ kdMinHours: 10 }), '10 hours played');
+    // A bot sending both, while it moves from one to the other, means matches.
+    assert.equal(kdNeeds({ kdMinMatches: 10, kdMinHours: 5 }), '10 matches');
+    assert.equal(kdNeeds({ kdMinMatches: 1 }), '1 match');
+    assert.equal(kdNeeds({ kdMinHours: 1 }), '1 hour played');
+    assert.equal(kdNeeds({ kdMinMatches: 1 }, '+'), '1+ matches');
     assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinHours: 10 }), 'At least 10 hours played.');
   });
 

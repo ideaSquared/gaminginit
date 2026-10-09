@@ -120,8 +120,11 @@ export const vipDetail = (vip) =>
 
 // What the K/D board needs to list a player, as "10 matches", with `plus` after the number. A bot from while the board
 // needed time played sends kdMinHours instead.
-export const kdNeeds = (rule, plus = '') =>
-  rule.kdMinMatches === undefined ? `${rule.kdMinHours}${plus} hours played` : `${rule.kdMinMatches}${plus} matches`;
+export const kdNeeds = (rule, plus = '') => {
+  const [count, one, many] =
+    rule.kdMinMatches === undefined ? [rule.kdMinHours, 'hour played', 'hours played'] : [rule.kdMinMatches, 'match', 'matches'];
+  return `${count}${plus} ${count === 1 && plus === '' ? one : many}`;
+};
 
 // The leaderboard's boards: what each one shows, besides the rank and the name. A board with `keep` leaves out the
 // rows it returns false for.
