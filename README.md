@@ -325,7 +325,7 @@ at them; anywhere else, on either page, it opens their history.**
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
 sends you back to the page you were on. Discord only tells the bot who you are and your roles there. The sign-in is
-kept in this browser for 8 hours, for both pages; "Sign out" forgets it. Anyone else is told the pages are for staff
+kept in this browser for 36 hours, for both pages; "Sign out" forgets it. Anyone else is told the pages are for staff
 only.
 
 **Your Steam account.** Seeder VIP and the top seeders are for the players who seed, not for staff. The first time you
