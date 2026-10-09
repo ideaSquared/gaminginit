@@ -45,8 +45,8 @@ What it shows:
   Without the bot's kill feed it shows the score and the server's top 5, read once a minute. On a wide screen the kill
   feed scrolls inside its card; on a phone (under 900 px wide) it is a short list in the page, the latest 15 kills with
   "Show more" for 15 more at a time, so scrolling the page is never caught in a box of its own.
-- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D, most time played and top seeders
-  (players with no seed days are left out).
+- A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D (from the bot's number of matches,
+  10), most time played and top seeders (players with no seed days are left out).
   Under it, the weapons: the 10 with the most kills over the last 30 days, each with its share of headshots, average
   distance and longest kill, plus the kills recorded, the share of headshots and the longest kill of all with a
   hand-held weapon (not mines, emplacements, vehicles, anything built or lock-on launchers such as the 9K333 Verba).
@@ -93,8 +93,8 @@ What it shows:
     and the busiest day, and seed days; and players each day as a chart, with a table view.
   - Teams: the team of the season (the best win rate from 3 matches, in its colour in game), each team's wins, losses
     and win rate, each map's wins by team as on the teams page, and the longest winning streak.
-  - The hall of fame: the top 10 for most kills, best K/D (from the leaderboard's share of time played for the
-    season's days), most kills in a match, most wins, most MVPs, most time played and top seeders.
+  - The hall of fame: the top 10 for most kills, best K/D (from the leaderboard's share of matches for the season's
+    days), most kills in a match, most wins, most MVPs, most time played and top seeders.
   - Awards from the game's kill feed: the best at each role (assault, support, machine gun, marksman, demolitions,
     vehicle crew) with the next two, and shout-outs (headhunter, longest shot, jack of all trades, road rage, bonk,
     quickdraw and ever-present). When the feed started during the season, it says the day.

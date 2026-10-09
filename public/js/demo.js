@@ -12,8 +12,8 @@ const DAY = 24 * HOUR;
 const CURVE = [38, 24, 10, 4, 0, 0, 0, 0, 2, 4, 6, 9, 14, 18, 22, 26, 31, 40, 52, 61, 64, 60, 55, 46];
 const NAMES = ['Kestrel', 'Bravo_Six', 'Moth', 'Nightjar', 'Pike', 'Rook', 'Sable', 'Tusk', 'Vex', 'Ash'];
 const MAPS = ['Bakurani', 'Ozeti', 'Zestafona'];
-// As on the bot: the K/D board only lists players with this much time played over 30 days.
-const KD_MIN_HOURS = 10;
+// As on the bot: the K/D board only lists players with this many matches over 30 days.
+const KD_MIN_MATCHES = 10;
 const CAPACITY = 64;
 const LIVE = 20;
 // Busy near full, like the real server's 97+ of its slots.
@@ -136,9 +136,9 @@ const leaderboard = () => {
   const by = (value) => [...players].sort((a, b) => value(b) - value(a));
   return {
     days: 30,
-    kdMinHours: KD_MIN_HOURS,
+    kdMinMatches: KD_MIN_MATCHES,
     kills: by((p) => p.kills),
-    kd: by((p) => p.kills / Math.max(p.deaths, 1)).filter((p) => p.seedingMinutes + p.liveMinutes >= KD_MIN_HOURS * 60),
+    kd: by((p) => p.kills / Math.max(p.deaths, 1)).filter((p) => p.matches >= KD_MIN_MATCHES),
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
   };
@@ -274,7 +274,7 @@ export const demoSeason = (now, { locked = false } = {}) => {
       teams,
       bestTeam: teams[0],
       teamMinMatches: 3,
-      kdMinHours: 5,
+      kdMinMatches: 5,
       kills: board(0, (i) => ({ kills: 1210 - i * 83 })),
       kd: board(4, (i) => ({ kd: 3.42 - i * 0.21 })),
       bestMatch: board(2, (i) => ({ kills: 48 - i * 3, deaths: 6 + (i % 4), map: MAPS[i % MAPS.length] })),
@@ -393,7 +393,7 @@ export const demoProfile = (id, now) => {
   }
   matches.sort((a, b) => b.endedAt - a.endedAt);
   const ranked = new Date(today - 29 * DAY).toISOString().slice(0, 10);
-  const playedRanked = activity.filter((d) => d.day >= ranked).reduce((sum, d) => sum + d.seedingMinutes + d.liveMinutes, 0);
+  const matchesRanked = activity.filter((d) => d.day >= ranked).reduce((sum, d) => sum + d.matches, 0);
   const online = demoPlayers(now).players[index].online;
   // Their kills each day since the sample's kill feed started, shared out over a few favourite weapons.
   const since = new Date(now - 12 * DAY).toISOString().slice(0, 10);
@@ -419,10 +419,10 @@ export const demoProfile = (id, now) => {
     matches,
     ranks: {
       days: 30,
-      kdMinHours: KD_MIN_HOURS,
+      kdMinMatches: KD_MIN_MATCHES,
       players: 214,
       kills: index + 1,
-      kd: playedRanked < KD_MIN_HOURS * 60 ? null : index < 5 ? 5 - index : 14 + index,
+      kd: matchesRanked < KD_MIN_MATCHES ? null : index < 5 ? 5 - index : 14 + index,
       playtime: index * 2 + 2,
       seeding: index === 0 ? 1 : null,
     },
