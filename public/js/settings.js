@@ -28,7 +28,7 @@ import {
 } from './staff.js';
 import { el } from './views.js';
 
-// The staff page for the server's settings, in four tabs. Bans and VIP: the bans on the server, the reserved slots and
+// The staff page for the server's settings, in four tabs. Bans and VIP: the bans on the server, the whitelist slots and
 // staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see rotations.js). Lines:
 // what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see rules.js). Watching the
 // server, acting on players and the staff commands are on the Moderation page (admin.js); any player's name here opens
@@ -157,7 +157,7 @@ const renderBans = (overview) => {
 const renderReserved = (overview) => {
   const reserved = overview.reserved;
   if (reserved === undefined) {
-    $('reserved-note').textContent = 'The bot does not send the reserved list yet. Deploy the latest bot.';
+    $('reserved-note').textContent = 'The bot does not send the whitelist yet. Deploy the latest bot.';
     $('reserved').replaceChildren();
     return;
   }
@@ -170,7 +170,7 @@ const renderReserved = (overview) => {
   // Staff spots: the bot keeps one for each staff member who linked their Steam account.
   const staffCount = reserved.players.filter((r) => r.staff).length;
   $('reserved-note').textContent = [
-    `${count} ${count === 1 ? 'player is' : 'players are'} on the reserved list in ServerSettings.ini, so they skip the queue when the server is full.`,
+    `${count} ${count === 1 ? 'player is' : 'players are'} on the whitelist in ServerSettings.ini, so they skip the queue when the server is full.`,
     staffNote(staffCount, count),
     reserved.maxSlots === null ? '' : `MaxReservedSlots holds ${reserved.maxSlots} of the server’s slots back for them.`,
     'Changes take effect when the server next restarts.',
@@ -189,15 +189,15 @@ const renderReserved = (overview) => {
       el('td', { className: 'row-actions' }, r.staff ? null : actButton('Remove VIP', 'vip:remove', r.player)),
     ),
   );
-  table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the reserved list.');
+  table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the whitelist.');
 };
 
 const ghostButton = (text, onclick) => el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick });
 
 const unlinkSteam = async (profile, mine) => {
   const question = mine
-    ? 'Unlink your Steam account? Your staff spot comes off the reserved list, and your time on the server counts as seeding again.'
-    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their staff spot comes off the reserved list, and their time on the server counts as seeding again.`;
+    ? 'Unlink your Steam account? Your staff spot comes off the whitelist, and your time on the server counts as seeding again.'
+    : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their staff spot comes off the whitelist, and their time on the server counts as seeding again.`;
   if (!window.confirm(question)) return;
   try {
     const { ok, json } = await call('admin/profile', { action: 'unlink', ...(mine ? {} : { userId: profile.userId }) });

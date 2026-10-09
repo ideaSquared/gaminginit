@@ -109,13 +109,13 @@ export const emptyNote = ({ seeding }) =>
     ? 'Nobody is on. The first player to join starts the seed.'
     : `Fewer than ${seeding} players on. Seeding starts once ${seeding} are in.`;
 
-// What seeding earns, from the bot's `vip` rule: "Seed on 3 days in a week and get a reserved slot for a week."
+// What seeding earns, from the bot's `vip` rule: "Seed on 3 days in a week and get a whitelist slot for a week."
 export const vipOffer = (vip) =>
-  `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a reserved slot for ${span(vip.lengthDays)}.`;
+  `Seed on ${plural(vip.seedDays, 'day')} in ${span(vip.windowDays)} and get a whitelist slot for ${span(vip.lengthDays)}.`;
 
 export const vipDetail = (vip) =>
   `A day counts when you're on for more than ${vip.seedMinutes} minutes while the server seeds, and it goes live. ` +
-  'A reserved slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
+  'A whitelist slot lets you skip the queue when the server is full. Our bot adds you automatically from the ' +
   "server's next daily restart. Keep seeding to keep it.";
 
 // What the K/D board needs to list a player, as "10 matches", with `plus` after the number. A bot from while the board
@@ -487,7 +487,7 @@ export const daysAgo = (day, today) => {
 // renews it for players who earned it again by the time it ends.
 export const seedProgress = ({ rule, seedDays }, hasVip = false) => {
   const days = `in the last ${plural(rule.windowDays, 'day')}`;
-  const goal = hasVip ? `keeps the reserved slot for another ${span(rule.lengthDays).replace(/^a /, '')}` : 'earns a reserved slot';
+  const goal = hasVip ? `keeps the whitelist slot for another ${span(rule.lengthDays).replace(/^a /, '')}` : 'earns a whitelist slot';
   const left = rule.seedDays - seedDays;
   if (left <= 0) return `${plural(seedDays, 'seed day')} ${days}. That ${goal}.`;
   if (seedDays === 0) return `No seed days ${days} yet. Seeding on ${plural(rule.seedDays, 'day')} in ${span(rule.windowDays)} ${goal}.`;
@@ -638,7 +638,7 @@ export const readSteamId = (input) => {
   return /^7656119\d{10}$/.test(id) ? id : null;
 };
 
-// How many on the reserved list have staff spots, for its note. Nothing when none do.
+// How many on the whitelist have staff spots, for its note. Nothing when none do.
 export const staffNote = (staffCount, count) => {
   if (staffCount === 0) return '';
   if (staffCount === count) return count === 1 ? 'They are staff.' : 'All of them are staff.';

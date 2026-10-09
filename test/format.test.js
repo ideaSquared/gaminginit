@@ -304,8 +304,8 @@ const vip = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
 
 describe('seeder VIP', () => {
   it('says what seeding earns, from the bot’s rule', () => {
-    assert.equal(vipOffer(vip), 'Seed on 3 days in a week and get a reserved slot for a week.');
-    assert.equal(vipOffer({ ...vip, seedDays: 1, windowDays: 14 }), 'Seed on 1 day in 14 days and get a reserved slot for a week.');
+    assert.equal(vipOffer(vip), 'Seed on 3 days in a week and get a whitelist slot for a week.');
+    assert.equal(vipOffer({ ...vip, seedDays: 1, windowDays: 14 }), 'Seed on 1 day in 14 days and get a whitelist slot for a week.');
     assert.match(vipDetail(vip), /^A day counts when you're on for more than 10 minutes while the server seeds, and it goes live\./);
   });
 
@@ -579,11 +579,11 @@ describe('player pages', () => {
   it('words seeder VIP progress from the bot’s rule', () => {
     const rule = { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 };
 
-    assert.equal(seedProgress({ rule, seedDays: 1 }), '1 of 3 seed days in the last 7 days. 2 more earns a reserved slot.');
-    assert.equal(seedProgress({ rule, seedDays: 3 }), '3 seed days in the last 7 days. That earns a reserved slot.');
+    assert.equal(seedProgress({ rule, seedDays: 1 }), '1 of 3 seed days in the last 7 days. 2 more earns a whitelist slot.');
+    assert.equal(seedProgress({ rule, seedDays: 3 }), '3 seed days in the last 7 days. That earns a whitelist slot.');
     assert.equal(
       seedProgress({ rule, seedDays: 0 }, true),
-      'No seed days in the last 7 days yet. Seeding on 3 days in a week keeps the reserved slot for another week.',
+      'No seed days in the last 7 days yet. Seeding on 3 days in a week keeps the whitelist slot for another week.',
     );
   });
 
@@ -768,7 +768,7 @@ describe('staff page', () => {
     assert.equal(readSteamId(undefined), null);
   });
 
-  it('says how many on the reserved list have staff spots', () => {
+  it('says how many on the whitelist have staff spots', () => {
     assert.equal(staffNote(0, 4), '');
     assert.equal(staffNote(1, 4), '1 of them is staff.');
     assert.equal(staffNote(2, 4), '2 of them are staff.');
@@ -910,10 +910,10 @@ describe('admin tools', () => {
     { name: 'kick', description: 'Remove a player from the server; they can rejoin (staff only)', options: [{ type: 3, name: 'player', required: true }] },
     {
       name: 'vip',
-      description: 'Give or take away a reserved slot (staff only)',
+      description: 'Give or take away a whitelist slot (staff only)',
       options: [
-        { type: 1, name: 'add', description: 'Give a player a reserved slot', options: [{ type: 3, name: 'steam_id' }, { type: 4, name: 'days' }] },
-        { type: 1, name: 'remove', description: 'Take a player off the reserved list', options: [{ type: 3, name: 'steam_id' }] },
+        { type: 1, name: 'add', description: 'Give a player a whitelist slot', options: [{ type: 3, name: 'steam_id' }, { type: 4, name: 'days' }] },
+        { type: 1, name: 'remove', description: 'Take a player off the whitelist', options: [{ type: 3, name: 'steam_id' }] },
       ],
     },
     { name: 'newthing', description: 'Something new (staff only)', options: [] },
