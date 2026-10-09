@@ -25,7 +25,7 @@ export const arpeggio = (chord) => {
 
 export const supported = () => typeof window !== 'undefined' && Boolean(window.AudioContext || window.webkitAudioContext);
 
-// Music for one story. `start()` and `stop()` fade it in and out; `cue()` plays a small chime for a new slide.
+// Music for one story. `start()` (which says whether it could) and `stop()` fade it in and out; `cue()` plays a small chime for a new slide.
 export const createMusic = () => {
   const Context = window.AudioContext || window.webkitAudioContext;
   let ctx = null;
@@ -36,6 +36,16 @@ export const createMusic = () => {
   let next = 0; // time of the next step
   let step = 0;
   let playing = false;
+  let starting = false;
+  let closing = 0;
+
+  // Lets go of the audio context and everything scheduled in it.
+  const discard = () => {
+    clearInterval(timer);
+    clearTimeout(closing);
+    ctx?.close().catch(() => {});
+    ctx = null;
+  };
 
   const build = () => {
     ctx = new Context();
@@ -147,18 +157,30 @@ export const createMusic = () => {
     get playing() {
       return playing;
     },
-    start() {
-      if (playing) return;
-      if (!ctx) build();
-      ctx.resume();
-      playing = true;
-      next = ctx.currentTime + 0.08;
-      step = 0;
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.5);
-      timer = setInterval(tick, 60);
-      tick();
+    // Resolves true once the music is playing. A browser that has not had a tap or click yet keeps the audio shut: then
+    // nothing starts, and it resolves false.
+    async start() {
+      if (playing || starting) return playing;
+      starting = true;
+      try {
+        // A fade-out still running is cut short, so its last notes never play under the new loop.
+        discard();
+        build();
+        await Promise.race([ctx.resume(), new Promise((done) => setTimeout(done, 400))]);
+        if (ctx.state !== 'running') {
+          discard();
+          return false;
+        }
+        playing = true;
+        next = ctx.currentTime + 0.08;
+        step = 0;
+        master.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.5);
+        timer = setInterval(tick, 60);
+        tick();
+        return true;
+      } finally {
+        starting = false;
+      }
     },
     stop() {
       if (!playing) return;
@@ -168,8 +190,11 @@ export const createMusic = () => {
       master.gain.cancelScheduledValues(now);
       master.gain.setValueAtTime(master.gain.value, now);
       master.gain.linearRampToValueAtTime(0, now + 0.6);
-      // Notes already scheduled die away with the fade, then the audio hardware is let go.
-      setTimeout(() => !playing && ctx.suspend(), 800);
+      // Once it has faded, the whole audio context goes, with every note still scheduled in it.
+      const finished = ctx;
+      closing = setTimeout(() => {
+        if (ctx === finished) discard();
+      }, 700);
     },
     // A small rising chime, for a new slide.
     cue() {
@@ -186,10 +211,8 @@ export const createMusic = () => {
       if (playing) ctx.resume();
     },
     close() {
-      clearInterval(timer);
       playing = false;
-      ctx?.close();
-      ctx = null;
+      discard();
     },
   };
 };

@@ -190,13 +190,17 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
 
   // The music is optional: off until someone turns it on (and then on again next time, until they turn it off).
   const music = musicSupported() ? createMusic() : null;
-  const setMusic = (on) => {
-    if (on) music.start();
-    else music.stop();
+  const setMusic = async (on, remember = true) => {
+    // The browser may keep the sound shut (no tap or click lately): then the button stays as it was.
+    if (on) {
+      if (!(await music.start())) return;
+    } else {
+      music.stop();
+    }
     musicButton.ariaPressed = String(on);
     musicButton.ariaLabel = on ? 'Turn music off' : 'Play music';
     chipText(musicButton, on ? '♫' : '♪', on ? 'Music on' : 'Music');
-    rememberMusic(on);
+    if (remember) rememberMusic(on);
   };
   musicButton.addEventListener('click', () => setMusic(!music.playing));
   const onVisibility = () => (document.hidden ? music?.pause() : music?.resume());
@@ -215,7 +219,7 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
     card.dataset.direction = to < previous ? 'back' : 'forward';
     stage.replaceChildren(node);
     previous = index;
-    if (shown) music?.cue();
+    if (shown && index !== previous) music?.cue();
     shown = true;
     restartTimer();
     [...progress.children].forEach((li, i) => {
@@ -289,5 +293,5 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   dialog.showModal();
   next.focus();
   // Opening the story was a tap or click, which is what lets the browser play sound.
-  if (music && musicWanted()) setMusic(true);
+  if (music && musicWanted()) setMusic(true, false);
 };
