@@ -195,20 +195,23 @@ const WEAPONS = [
   ['Mosin Nagant', 'weapon', 142, 0.58, 211, 977],
   ['Barbed wire', 'buildable', 66, 0, 1.2, 3.1],
 ];
+// The sample's guns, as the bot marks them (`gun`): only a gun's kill can be a longest kill.
+const GUNS = new Set(['AK74', 'M4', 'PKM', 'SVD', 'M249 SAW', 'Mosin Nagant']);
 
 // The last 30 days by weapon, as the bot adds up the kill feed. The feed started 12 days ago, so the page says so.
 const weapons = (now) => {
   const top = WEAPONS.map(([name, kind, kills, share, average, longest], i) => ({
     name,
     kind,
+    gun: GUNS.has(name),
     kills,
     headshots: Math.round(kills * share),
     averageDistance: average,
     longest: { distance: longest, name: NAMES[(i * 3) % NAMES.length], id: demoId((i * 3) % NAMES.length) },
   }));
   const kills = top.reduce((sum, w) => sum + w.kills, 0) + 412;
-  // Hand-held weapons only, as the bot does.
-  const longest = top.filter((w) => w.kind === 'weapon').reduce((best, w) => (w.longest.distance > best.longest.distance ? w : best));
+  // Guns only, as the bot does.
+  const longest = top.filter((w) => w.gun).reduce((best, w) => (w.longest.distance > best.longest.distance ? w : best));
   return {
     days: 30,
     since: new Date(now - 12 * DAY).toISOString().slice(0, 10),
@@ -312,7 +315,7 @@ export const demoProfile = (id, now) => {
         left -= kills;
         if (kills <= 0) return [];
         const far = Math.round(average + ((longest - average) * ((n * 7 + w * 3) % 10)) / 10);
-        return [{ day: d.day, name, kind, kills, headshots: Math.round(kills * share), longest: far }];
+        return [{ day: d.day, name, kind, gun: GUNS.has(name), kills, headshots: Math.round(kills * share), longest: far }];
       });
     });
   return {
@@ -412,7 +415,7 @@ export const demoLive = (now) => {
         killer.chain = killer.chainTime !== null && time - killer.chainTime <= MULTI_SECONDS ? killer.chain + 1 : 1;
         killer.chainTime = time;
         killer.bestChain = Math.max(killer.bestChain, killer.chain);
-        if (kind === 'weapon' && (killer.longest === null || capped > killer.longest)) {
+        if (GUNS.has(weapon) && (killer.longest === null || capped > killer.longest)) {
           killer.longest = capped;
           killer.longestWeapon = weapon;
         }
