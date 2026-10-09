@@ -1,5 +1,5 @@
 {
-  "show": true,
+  "show": false,
   "title": "Server problems",
   "message": "Problems at our hosting provider and at Bulkhead, who make WARDOGS, are affecting our server. It may be offline or unreliable until they fix them, and the live numbers on this site may be missing or out of date.",
   "link": { "text": "Updates on our Discord", "href": "https://discord.gg/qsJFYGhSJ4" }
