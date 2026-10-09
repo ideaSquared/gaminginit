@@ -8,7 +8,8 @@ import { readableColour, sideKey } from './format.js';
 // reads at their own pace. Numbers count up, the background drifts and the last slide throws confetti, all switched off
 // for people who ask for less motion. Each new slide is read out by screen readers.
 
-const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motion = () => window.matchMedia('(prefers-reduced-motion: reduce)');
+const reduced = () => motion().matches;
 const AUTOPLAY_MS = 6500;
 
 // "1,234" or "2.50" count up from zero; anything else ("Fri 3 Oct", "GG", "#3") is shown as it is.
@@ -124,7 +125,7 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
     { className: 'story-card' },
     orbs,
     progress,
-    el('div', { className: 'story-bar' }, el('p', { className: 'story-title', textContent: title }), reduced() ? null : auto, close),
+    el('div', { className: 'story-bar' }, el('p', { className: 'story-title', textContent: title }), auto, close),
     stage,
     el('div', { className: 'story-nav' }, back, count, next),
   );
@@ -153,6 +154,14 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
     restartTimer();
   };
   auto.addEventListener('click', () => setAuto(!playing));
+  // Autoplay is for people who haven't asked for less motion, even if they ask while the story is open.
+  const lessMotion = motion();
+  const checkMotion = () => {
+    auto.hidden = lessMotion.matches;
+    if (lessMotion.matches) setAuto(false);
+  };
+  lessMotion.addEventListener('change', checkMotion);
+  auto.hidden = lessMotion.matches;
 
   const show = (to) => {
     index = Math.max(0, Math.min(slides.length - 1, to));
@@ -225,6 +234,7 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   });
   dialog.addEventListener('close', () => {
     clearTimeout(timer);
+    lessMotion.removeEventListener('change', checkMotion);
     lockPage(false);
     dialog.remove();
     dialog = null;

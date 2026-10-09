@@ -2276,7 +2276,7 @@ html.story-open {
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.14);
+  background: rgb(0 0 0 / 0.32);
   color: #fff;
   font: inherit;
   font-size: 0.85rem;
@@ -2284,9 +2284,13 @@ html.story-open {
   cursor: pointer;
 }
 
+.story-auto[hidden] {
+  display: none;
+}
+
 .story-auto:hover,
 .story-close:hover {
-  background: rgb(255 255 255 / 0.26);
+  background: rgb(0 0 0 / 0.5);
 }
 
 .story-bar {
@@ -2310,7 +2314,7 @@ html.story-open {
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: rgb(255 255 255 / 0.14);
+  background: rgb(0 0 0 / 0.32);
   color: #fff;
   font: inherit;
   font-size: 1.1rem;
@@ -2456,7 +2460,7 @@ html.story-open {
   margin-top: 18px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.16);
+  background: rgb(0 0 0 / 0.3);
   border: 1px solid rgb(255 255 255 / 0.22);
   font-size: 0.78rem;
   font-weight: 800;
@@ -2650,7 +2654,7 @@ html.story-open {
   min-height: 40px;
   border: 0;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.16);
+  background: rgb(0 0 0 / 0.32);
   color: #fff;
   font: inherit;
   font-weight: 700;
