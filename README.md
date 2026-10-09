@@ -487,8 +487,7 @@ Bans and VIP tab.
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
-  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
-  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log. To warn, kick or move someone in game, Act on Live is quicker.
 
