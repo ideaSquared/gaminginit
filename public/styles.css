@@ -2270,6 +2270,14 @@ html.story-open {
   }
 }
 
+.story-music {
+  margin-left: auto;
+}
+
+.story-music + .story-auto {
+  margin-left: 0;
+}
+
 .story-auto {
   margin-left: auto;
   min-height: 40px;
@@ -2282,6 +2290,24 @@ html.story-open {
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+@media (max-width: 479px) {
+  .story-label {
+    display: none;
+  }
+
+  .story-auto {
+    padding: 0;
+    width: 40px;
+  }
+
+  .story-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .story-auto[hidden] {
