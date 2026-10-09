@@ -1,5 +1,6 @@
 import { el, setText, sideName } from './views.js';
 import { readableColour, sideKey } from './format.js';
+import { createMusic, supported as musicSupported } from './music.js';
 
 // The Season in Review's slideshow: a story of slides (see wrapped.js) in a dialog over the page, one slide at a time,
 // like a year in review. Tap or click the right of a slide (or Next, →, Space) for the next one, the left (or Back, ←)
@@ -11,6 +12,26 @@ import { readableColour, sideKey } from './format.js';
 const motion = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 const reduced = () => motion().matches;
 const AUTOPLAY_MS = 6500;
+const MUSIC_KEY = 'story-music';
+
+// Whether the listener left the music on last time. Storage can be blocked, so it is only ever a convenience.
+const musicWanted = () => {
+  try {
+    return localStorage.getItem(MUSIC_KEY) === 'on';
+  } catch {
+    return false;
+  }
+};
+const rememberMusic = (on) => {
+  try {
+    localStorage.setItem(MUSIC_KEY, on ? 'on' : 'off');
+  } catch {
+    // Not remembered, which is fine.
+  }
+};
+
+// A control's icon, with its words hidden on a phone, where the bar is tight.
+const chipText = (node, icon, label) => node.replaceChildren(el('span', { ariaHidden: 'true', textContent: icon }), el('span', { className: 'story-label', textContent: ` ${label}` }));
 
 // "1,234" or "2.50" count up from zero; anything else ("Fri 3 Oct", "GG", "#3") is shown as it is.
 const COUNTABLE = /^\d[\d,]*(\.\d+)?$/;
@@ -118,14 +139,17 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   const back = el('button', { type: 'button', className: 'story-step story-back', textContent: '‹ Back' });
   const next = el('button', { type: 'button', className: 'story-step story-next', textContent: 'Next ›' });
   const close = el('button', { type: 'button', className: 'story-close', ariaLabel: 'Close', textContent: '✕' });
-  const auto = el('button', { type: 'button', className: 'story-auto', ariaPressed: 'false', ariaLabel: 'Autoplay', textContent: '▶ Autoplay' });
+  const auto = el('button', { type: 'button', className: 'story-auto', ariaPressed: 'false', ariaLabel: 'Autoplay' });
+  chipText(auto, '▶', 'Autoplay');
+  const musicButton = el('button', { type: 'button', className: 'story-auto story-music', ariaPressed: 'false', ariaLabel: 'Play music' });
+  chipText(musicButton, '♪', 'Music');
   const orbs = el('div', { className: 'story-orbs', ariaHidden: 'true' }, el('span'), el('span'), el('span'));
   const card = el(
     'div',
     { className: 'story-card' },
     orbs,
     progress,
-    el('div', { className: 'story-bar' }, el('p', { className: 'story-title', textContent: title }), auto, close),
+    el('div', { className: 'story-bar' }, el('p', { className: 'story-title', textContent: title }), musicSupported() ? musicButton : null, auto, close),
     stage,
     el('div', { className: 'story-nav' }, back, count, next),
   );
@@ -133,6 +157,7 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   document.body.append(dialog);
 
   let previous = 0;
+  let shown = false;
   let timer = 0;
   let playing = false;
   // Autoplay moves on after a while, and stops on the last slide or when anyone moves by hand.
@@ -149,7 +174,7 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   const setAuto = (on) => {
     playing = on;
     auto.ariaPressed = String(on);
-    auto.textContent = on ? '⏸ Pause' : '▶ Autoplay';
+    chipText(auto, on ? '⏸' : '▶', on ? 'Pause' : 'Autoplay');
     auto.ariaLabel = on ? 'Pause autoplay' : 'Autoplay';
     restartTimer();
   };
@@ -162,6 +187,20 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   };
   lessMotion.addEventListener('change', checkMotion);
   auto.hidden = lessMotion.matches;
+
+  // The music is optional: off until someone turns it on (and then on again next time, until they turn it off).
+  const music = musicSupported() ? createMusic() : null;
+  const setMusic = (on) => {
+    if (on) music.start();
+    else music.stop();
+    musicButton.ariaPressed = String(on);
+    musicButton.ariaLabel = on ? 'Turn music off' : 'Play music';
+    chipText(musicButton, on ? '♫' : '♪', on ? 'Music on' : 'Music');
+    rememberMusic(on);
+  };
+  musicButton.addEventListener('click', () => setMusic(!music.playing));
+  const onVisibility = () => (document.hidden ? music?.pause() : music?.resume());
+  document.addEventListener('visibilitychange', onVisibility);
 
   const show = (to) => {
     index = Math.max(0, Math.min(slides.length - 1, to));
@@ -176,6 +215,8 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
     card.dataset.direction = to < previous ? 'back' : 'forward';
     stage.replaceChildren(node);
     previous = index;
+    if (shown) music?.cue();
+    shown = true;
     restartTimer();
     [...progress.children].forEach((li, i) => {
       li.classList.toggle('seen', i < index);
@@ -235,6 +276,8 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   dialog.addEventListener('close', () => {
     clearTimeout(timer);
     lessMotion.removeEventListener('change', checkMotion);
+    document.removeEventListener('visibilitychange', onVisibility);
+    music?.close();
     lockPage(false);
     dialog.remove();
     dialog = null;
@@ -245,4 +288,6 @@ export const openStory = (slides, { title, actions = () => [], onClose = () => {
   lockPage(true);
   dialog.showModal();
   next.focus();
+  // Opening the story was a tap or click, which is what lets the browser play sound.
+  if (music && musicWanted()) setMusic(true);
 };
