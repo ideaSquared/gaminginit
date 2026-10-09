@@ -330,13 +330,18 @@ describe('leaderboard boards', () => {
       playtime: ['4.0 h', '7'],
       seeding: ['4', '1.5 h'],
     });
-    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinHours: 10 }), 'At least 10 hours played.');
+    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 10 }), 'At least 10 matches.');
   });
 
-  it('says what the K/D board needs, including from a bot that still counts matches', () => {
-    assert.equal(kdNeeds({ kdMinHours: 10 }, '+'), '10+ hours played');
-    assert.equal(kdNeeds({ kdMinMatches: 3 }), '3 matches');
-    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinMatches: 3 }), 'At least 3 matches.');
+  it('says what the K/D board needs, including from a bot that still counts time played', () => {
+    assert.equal(kdNeeds({ kdMinMatches: 10 }, '+'), '10+ matches');
+    assert.equal(kdNeeds({ kdMinHours: 10 }), '10 hours played');
+    // A bot sending both, while it moves from one to the other, means matches.
+    assert.equal(kdNeeds({ kdMinMatches: 10, kdMinHours: 5 }), '10 matches');
+    assert.equal(kdNeeds({ kdMinMatches: 1 }), '1 match');
+    assert.equal(kdNeeds({ kdMinHours: 1 }), '1 hour played');
+    assert.equal(kdNeeds({ kdMinMatches: 1 }, '+'), '1+ matches');
+    assert.equal(BOARDS.find((b) => b.key === 'kd').sub({ kdMinHours: 10 }), 'At least 10 hours played.');
   });
 
   it('leaves players with no seed days off the top seeders, and keeps the rest in the bot’s order', () => {
@@ -1358,7 +1363,7 @@ describe('the season page', () => {
     const cells = Object.fromEntries(SEASON_BOARDS.map((b) => [b.key, b]));
     assert.deepEqual(cells.kills.cells({ kills: 1054 }), ['1,054']);
     assert.deepEqual(cells.kd.cells({ kd: 2.876 }), ['2.88']);
-    assert.equal(cells.kd.sub({ kdMinHours: 5 }), 'At least 5 hours played.');
+    assert.equal(cells.kd.sub({ kdMinMatches: 5 }), 'At least 5 matches.');
     assert.deepEqual(cells.bestMatch.cells({ kills: 41, map: 'Ozeti' }), ['41', 'Ozeti']);
     assert.deepEqual(cells.wins.cells({ wins: 30, played: 41 }), ['30', '41']);
     assert.deepEqual(cells.playtime.cells({ minutes: 7562 }), ['126 h']);

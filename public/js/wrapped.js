@@ -1,4 +1,4 @@
-import { kd, longestKill, metres, percent, plural, sideKey, weaponTotals } from './format.js';
+import { kd, kdNeeds, longestKill, metres, percent, plural, sideKey, weaponTotals } from './format.js';
 
 // The Season in Review: the season page's slideshow, like a year in review, with jokes. One story for the whole server,
 // from the bot's season roundup, and one for each player, from their player page. No DOM here, so it can be tested in
@@ -216,7 +216,7 @@ export const seasonStory = (page) => {
         `${sharp.name} died so rarely the respawn screen forgot what they look like.`,
         `Either cracked or camping. ${sharp.name} isn’t saying which.`,
       ]),
-      small: `From ${plural(r.kdMinHours, 'hour')} played.`,
+      small: `From ${kdNeeds(r)}.`,
     });
   }
 

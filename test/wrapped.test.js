@@ -27,7 +27,7 @@ const roundup = (values = {}) => ({
   ],
   bestTeam: { name: 'Valkyra', colorHex: '#FA503E', matches: 40, wins: 25, losses: 15 },
   teamMinMatches: 3,
-  kdMinHours: 5,
+  kdMinMatches: 5,
   kills: [{ ...ash, kills: 900 }, { ...bo, kills: 400 }],
   kd: [{ ...ash, kd: 2.5 }],
   bestMatch: [{ ...ash, kills: 40, deaths: 3, map: 'Ozeti' }],
@@ -99,6 +99,7 @@ describe('seasonStory', () => {
     const deaths = slides.find((s) => s.key === 'most-deaths');
     assert.deepEqual([deaths.who.name, deaths.big], ['Bo', '700']);
     assert.match(slides.find((s) => s.key === 'kills-total').line, /More deaths than kills/);
+    assert.equal(slides.find((s) => s.key === 'best-kd').small, 'From 5 matches.');
   });
 
   it('leaves out what the roundup does not have', () => {
