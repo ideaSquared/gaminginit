@@ -105,11 +105,11 @@ What it shows:
     before it opens. It says it is a preview, and links back to the public page. Without a sign-in, it says to sign
     in on the staff page first. `?demo` shows a sample season, and `?demo=locked` the page before it opens.
   - The season's end is set in the bot (`SEASON` in its `src/season.ts`); the page takes it from the bot.
-- Seeder VIP: what seeding earns (a reserved slot), under the intro and as step 4 of "Play with us".
+- Seeder VIP: what seeding earns (a whitelist slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
   anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged, any player's history
-  and every staff command. **Server settings** (`/server-settings`): the bans and reserved slots, the map rotations,
+  and every staff command. **Server settings** (`/server-settings`): the bans and whitelist slots, the map rotations,
   what the bot says in game and the weapon rules. See [Staff pages](#staff-pages).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
@@ -312,7 +312,7 @@ There are two, one for each kind of work, with a switch between them by the titl
 - **Moderation** (`/admin`), the page to keep open while the server is busy: **Live** (who is on, with those worth a
   look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did), **History** (any
   player's record) and **Commands** (every staff command).
-- **Server settings** (`/server-settings`), for setting the server up: **Bans and VIP** (the bans, reserved slots and
+- **Server settings** (`/server-settings`), for setting the server up: **Bans and VIP** (the bans, whitelist slots and
   staff Steam accounts), **Rotations**, **Lines** and **Weapon rules**.
 
 Each tab says what is in it, with a count: how many are in game, and how many flags there are. The address keeps the
@@ -333,7 +333,7 @@ sign in without a Steam account linked, the page asks for your Steam64 ID (17 di
 it: Steam's **Account details**, your profile's link when it has `/profiles/` and the number in it, or steamid.io for a
 custom link. Once linked, the bot counts your time on the server as playing, not seeding: you don't earn seeder VIP or
 show as a top seeder, and your player page shows no seed days. Your kills, matches and time played show as before. You
-get a staff spot instead: the bot keeps you on the server's reserved list for as long as you're linked, in place of a
+get a staff spot instead: the bot keeps you on the server's whitelist for as long as you're linked, in place of a
 slot added by hand.
 "Later" asks again at your next sign-in. Change it any time from "Steam: …" next to your name, or on Server settings'
 Bans and VIP tab.
@@ -487,8 +487,7 @@ Bans and VIP tab.
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
-  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the reserved
-  list, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log. To warn, kick or move someone in game, Act on Live is quicker.
 
@@ -496,13 +495,13 @@ Bans and VIP tab.
 
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   tool over the page with them picked, as Act does on Moderation.
-- **Reserved slots.** Everyone on the reserved list in the server's settings, with VIP from the bot and when it ends,
+- **Whitelist slots.** Everyone on the whitelist in the server's settings, with VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked, the same way.
   Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
   unlinking them takes it away.
 - **Staff Steam accounts.** Every staff member who linked their Steam account, with their name in game and when they
   linked it, marked when the bot has not seen the account in the last 90 days. "Unlink" (after asking) is for someone
-  who linked the wrong account or is no longer staff: their staff spot comes off the reserved list, and their time
+  who linked the wrong account or is no longer staff: their staff spot comes off the whitelist, and their time
   counts as seeding again. Needs the bot's staff Steam
   accounts (its README, "Staff Steam accounts").
 

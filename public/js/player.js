@@ -285,7 +285,7 @@ const renderSeeding = () => {
   const seeding = profile.seeding;
   $('seed-panel').hidden = !seeding && !profile.vip;
   $('vip-status').hidden = !profile.vip;
-  if (profile.vip) setText($('vip-status'), `Has a reserved slot until ${dateLong.format(profile.vip.until)}.`);
+  if (profile.vip) setText($('vip-status'), `Has a whitelist slot until ${dateLong.format(profile.vip.until)}.`);
   if (!seeding) {
     $('seed-pips').replaceChildren();
     setText($('seed-progress'), '');

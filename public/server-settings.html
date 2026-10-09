@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Server settings | Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: our WARDOGS server's bans and reserved slots, its map rotations, what the bot says in game and the weapon rules." />
+    <meta name="description" content="For gaminginit staff: our WARDOGS server's bans and whitelist slots, its map rotations, what the bot says in game and the weapon rules." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -70,7 +70,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>The bans and reserved slots, the map rotations, what the bot says in game and the weapon rules. On Moderation: who is on the server, with anyone worth a look at the top, every kill live, what the bot flagged, any player’s history and every staff command. For Discord Administrators and members with a staff role in our server.</p>
+            <p>The bans and whitelist slots, the map rotations, what the bot says in game and the weapon rules. On Moderation: who is on the server, with anyone worth a look at the top, every kill live, what the bot flagged, any player’s history and every staff command. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -83,7 +83,7 @@
             <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Server settings">
               <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans">
                 <span class="tab-name">Bans and VIP</span>
-                <span class="tab-hint">Bans, reserved slots and staff spots</span>
+                <span class="tab-hint">Bans, whitelist slots and staff spots</span>
               </button>
               <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
                 <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
@@ -109,7 +109,7 @@
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="reserved-title">
-                <h2 class="panel-title" id="reserved-title">Reserved slots</h2>
+                <h2 class="panel-title" id="reserved-title">Whitelist slots</h2>
                 <p class="section-note" id="reserved-note"></p>
                 <div class="admin-scroll">
                   <table class="admin-table" id="reserved"></table>
@@ -121,7 +121,7 @@
                   <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
                   <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
                 </div>
-                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the reserved list while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
+                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the whitelist while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
                 <div class="admin-scroll">
                   <table class="admin-table" id="staff-steam"></table>
                 </div>
@@ -154,7 +154,7 @@
           <dialog class="card steam-dialog" id="steam-dialog" aria-labelledby="steam-dialog-title">
             <form class="steam-form" id="steam-form" novalidate>
               <h2 class="panel-title" id="steam-dialog-title">Link your Steam account</h2>
-              <p>Seeder VIP and the top seeders are for the players who seed, so staff are not counted. Link the Steam account you play on, and the bot counts your time on the server as playing, not seeding. You won’t earn seeder VIP or show as a top seeder. Your kills, matches and time played show as before. You get a staff spot instead: a reserved slot on the server for as long as you’re linked.</p>
+              <p>Seeder VIP and the top seeders are for the players who seed, so staff are not counted. Link the Steam account you play on, and the bot counts your time on the server as playing, not seeding. You won’t earn seeder VIP or show as a top seeder. Your kills, matches and time played show as before. You get a staff spot instead: a whitelist slot on the server for as long as you’re linked.</p>
               <div class="tool-field">
                 <label class="tool-label" for="steam-input">Your Steam64 ID</label>
                 <input class="finder-input tool-input" id="steam-input" name="steamId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="7656119…" aria-describedby="steam-input-note steam-error" />
