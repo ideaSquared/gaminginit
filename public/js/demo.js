@@ -307,6 +307,8 @@ export const demoSeason = (now, { locked = false } = {}) => {
       streak: { name: 'Valkyra', colorHex: SIDE_COLOURS.Valkyra, wins: 9, from: ended(5, 18), to: ended(6, 23) },
       longestMatch: { map: 'Zestafona', endedAt: ended(12, 23), durationMs: 97 * MINUTE, factionScores: scores([['Manticore', 100], ['Valkyra', 94], ['Lonestar', 88]]) },
       quickestWin: { map: 'Bakurani', endedAt: ended(3, 21), durationMs: 19 * MINUTE, factionScores: scores([['Lonestar', 100], ['Valkyra', 12], ['Manticore', 8]]) },
+      deaths: board(7, (i) => ({ deaths: 812 - i * 47, kills: 390 - i * 21 })),
+      teamKills: board(3, (i) => ({ teamKills: 17 - i })),
       weapons: { ...weapons(end - DAY), days: 15, since: '2026-10-04', top: weapons(end - DAY).top.map((w) => ({ ...w, kills: w.kills * 2, headshots: w.headshots * 2 })), kills, headshots: Math.round(kills * 0.24) },
     },
   };

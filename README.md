@@ -77,6 +77,18 @@ What it shows:
   (1am in the UK): the bot does not send the roundup to anyone before then, so the page shows a countdown and what the
   roundup will have. It loads the bot again every minute, so a page left open opens by itself, within about a minute
   of the wipe. Then it has:
+  - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One
+    slide at a time over the page (a full screen on a phone, a tall card on a computer): tap or click the right of a
+    slide, Next, → or Space for the next one, the left, Back or ← for the one before, swipe on a phone, and Esc or ✕ to
+    close. Nothing moves on its own. The server's story has the matches, players, hours and kills, the busiest day, the
+    team of the season and the wooden spoon (the team with the fewest wins), the longest streak, the map played most,
+    the top player of each board, the most deaths and the friendly fire award (most team kills), the role awards and
+    shout-outs, the weapon of the season, and the closest and biggest wins. **Your season**: find your name and get your
+    own story: hours, wins, kills and K/D, your best match, your weapon, map and side, seeding, and your places in the
+    top 10s. Each joke depends on the numbers, and each player always gets the same one. The last slide shares the
+    story (the phone's share sheet, or the link copied); a shared `/season?player=<id>` opens that player's story. Your
+    season comes from your player page, which covers the last 90 days, so from 29 December the days at the start of
+    the season drop out, and the story says from which day it counts.
   - By the numbers: matches (and their hours), players, kills and deaths from the scoreboards, time played, the peak
     and the busiest day, and seed days; and players each day as a chart, with a table view.
   - Teams: the team of the season (the best win rate from 3 matches, in its colour in game), each team's wins, losses
@@ -606,7 +618,8 @@ npm test    # Node's built-in test runner; no dependencies to install
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. `live.js` fetches the bot's
 numbers for every page and the notice in `announcement.json`, `views.js` has the DOM pieces they share, `app.js` renders the home page, `stats.js` the
 stats page, `matches.js` the matches page, `teams.js` the teams page, `leaderboard.js` the leaderboard page, `seeding.js` the seeding page,
-`players.js` the players page, `player.js` a player's page and `season.js` the season page. `charts.js` draws the SVG charts and
+`players.js` the players page, `player.js` a player's page and `season.js` the season page, with `wrapped.js` making its
+Season in Review's slides (and their jokes) and `story.js` showing them. `charts.js` draws the SVG charts and
 `demo.js` makes the sample data. `session.js` keeps the staff sign-in, for the staff pages and the season page's staff
 preview. `staff.js` has what the two staff pages share: signing in, the Steam account, Act and loading the bot's staff
 overview. `admin.js` renders the Moderation page (its live kill feed and History too),

@@ -96,6 +96,7 @@
               <li>The hall of fame: the top 10 for kills, K/D, kills in a match, wins, MVPs, time played and seeding</li>
               <li>Awards for each role, and shout-outs: headhunter, longest shot, road rage and more</li>
               <li>The weapons of the season, and the matches to remember</li>
+              <li>The Season in Review: the whole season as a slideshow, roasting included, and one about your own season</li>
             </ul>
             <p class="season-staff" id="staff-preview" hidden></p>
           </div>
@@ -104,6 +105,27 @@
 
       <!-- The roundup, once the season is over (or for staff, the season so far). -->
       <div id="roundup" hidden>
+        <section class="section season-review" aria-labelledby="review-title">
+          <div class="wrap">
+            <div class="card review-card">
+              <div class="review-copy">
+                <p class="eyebrow">The Season in Review</p>
+                <h2 class="review-title" id="review-title">The season, roasted</h2>
+                <p class="review-text" id="review-text">The best, the worst and the frankly embarrassing, one slide at a time.</p>
+                <button type="button" class="btn btn-play" id="play-season"><span aria-hidden="true">▶</span> Play the Season in Review</button>
+              </div>
+              <div class="review-you">
+                <h3 class="review-you-title" id="you-title">Your season</h3>
+                <p class="review-you-text">Find your name for slides about you. Nowhere to hide.</p>
+                <label class="visually-hidden" for="you-search">Your name in game</label>
+                <input class="review-search" id="you-search" type="search" placeholder="Your name in game" autocomplete="off" spellcheck="false" />
+                <ul class="review-results" id="you-results" aria-labelledby="you-title"></ul>
+                <p class="review-status" id="you-status" role="status"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="section" aria-labelledby="numbers-title">
           <div class="wrap">
             <div class="section-head">

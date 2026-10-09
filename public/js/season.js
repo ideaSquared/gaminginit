@@ -1,5 +1,5 @@
 import { seasonChart } from './charts.js';
-import { demoSeason } from './demo.js';
+import { demoPlayers, demoProfile, demoSeason } from './demo.js';
 import {
   clockHour,
   compact,
@@ -14,11 +14,13 @@ import {
   plural,
   ROLE_AWARDS,
   SEASON_BOARDS,
+  searchPlayers,
   shoutOuts,
   sideKey,
 } from './format.js';
 import { apiUrl, demo, showNotice, startLive, thisPage } from './live.js';
 import { botUrl, configured as staffConfigured, loadToken } from './session.js';
+import { openStory } from './story.js';
 import {
   boardTable,
   el,
@@ -34,17 +36,20 @@ import {
   teamColours,
   weaponsTable,
 } from './views.js';
+import { playerSeason, playerStory, seasonStory } from './wrapped.js';
 
 // The season page: the roundup of a whole game season, from the bot's /api/season. The bot only sends it once the season
 // is over; until then it sends when the season ends, and the page counts down to it. Staff signed in on the staff pages
 // can see the season so far with ?preview, from the bot's staff API. ?demo shows a sample season, and ?demo=locked the
-// page before it opens.
+// page before it opens. Once it has the roundup, the page plays the Season in Review: the season as a slideshow, and a
+// player's own season from their player page (see wrapped.js and story.js). ?player=<id> opens that player's.
 
 const $ = (id) => document.getElementById(id);
 
 const params = new URLSearchParams(location.search);
 const preview = params.has('preview') && !demo;
 const lockedDemo = params.get('demo') === 'locked';
+const sharedPlayer = params.get('player');
 
 // Days are UTC dates, like the bot's records; when the season ends and when a match ended, in the reader's own time.
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -375,8 +380,142 @@ const renderMoments = (r) => {
   $('moments').replaceChildren(...(moments.length > 0 ? moments : [el('li', { className: 'muted', textContent: 'No matches this season.' })]));
 };
 
+// The Season in Review. `current` is the page shown now, with its roundup.
+let current = null;
+
+// This page's address to share: the season's, or a player's own season.
+const shareUrl = (id = null) =>
+  new URL(
+    thisPage((p) => {
+      p.delete('preview');
+      if (id) p.set('player', id);
+      else p.delete('player');
+    }),
+    location.href,
+  ).href;
+
+// Shares with the phone's own sheet where there is one, or copies the link.
+const shareButton = (url, title) => {
+  const button = el('button', { type: 'button', className: 'btn story-share', textContent: 'Share' });
+  button.addEventListener('click', async () => {
+    try {
+      if (navigator.share) await navigator.share({ title, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        button.textContent = 'Link copied';
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') button.textContent = 'Couldn’t share';
+    }
+  });
+  return button;
+};
+
+const storyButton = (text, action, className = 'btn btn-ghost') => {
+  const button = el('button', { type: 'button', className, textContent: text });
+  button.addEventListener('click', action);
+  return button;
+};
+
+const playSeason = () => {
+  if (!current) return;
+  const title = `${current.name} in review`;
+  openStory(seasonStory(current), {
+    title,
+    actions: (close) => [
+      shareButton(shareUrl(), title),
+      storyButton('Now do mine', () => {
+        close();
+        $('you-search').focus();
+      }),
+      storyButton('Every stat', close),
+    ],
+  });
+};
+
+// Everyone to find a name in, loaded the first time someone looks.
+let directory = null;
+const loadDirectory = async () => {
+  if (directory) return directory;
+  if (demo) return (directory = demoPlayers(Date.now()).players);
+  const response = await fetch(apiUrl('players'), { headers: { accept: 'application/json' } });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  directory = (await response.json()).players;
+  return directory;
+};
+
+const findYou = async () => {
+  const query = $('you-search').value;
+  const results = $('you-results');
+  if (query.trim() === '') {
+    results.replaceChildren();
+    setText($('you-status'), '');
+    return;
+  }
+  let players;
+  try {
+    players = await loadDirectory();
+  } catch (error) {
+    console.error('Could not load the players', error);
+    setText($('you-status'), 'Couldn’t load the players just now. Try again in a minute.');
+    return;
+  }
+  // The box may have changed while the players loaded.
+  if ($('you-search').value !== query) return;
+  const found = searchPlayers(players, query).slice(0, 6);
+  setText($('you-status'), found.length === 0 ? `Nobody called “${query.trim()}” has played in the last 90 days.` : '');
+  results.replaceChildren(
+    ...found.map((p) => el('li', {}, storyButton(p.name, () => playYours(p.id), 'review-result'))),
+  );
+};
+
+// A player's own season, from their player page. In ?demo the sample players' days run up to today, so their season is
+// the last 15 days.
+const playYours = async (id) => {
+  if (!current) return;
+  setText($('you-status'), 'Loading your season…');
+  let profile = null;
+  try {
+    if (demo) profile = demoProfile(id, Date.now());
+    else {
+      const response = await fetch(apiUrl(`player?id=${encodeURIComponent(id)}`), { headers: { accept: 'application/json' } });
+      if (response.ok) profile = await response.json();
+      else if (response.status !== 404) throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Could not load the player', error);
+    setText($('you-status'), 'Couldn’t load that player just now. Try again in a minute.');
+    return;
+  }
+  if (!profile) {
+    setText($('you-status'), 'There’s no player page for that player: nobody has it in the last 90 days, or it’s private.');
+    return;
+  }
+  setText($('you-status'), '');
+  const r = current.roundup;
+  const [start, end] = demo ? [Date.now() - 15 * 86_400_000, Date.now()] : [r.start, r.end];
+  const stats = playerSeason(profile, start, end);
+  const title = `${profile.name}’s ${current.name}`;
+  openStory(playerStory(stats, current, r.days.length), {
+    title,
+    actions: (close) => [
+      shareButton(shareUrl(id), title),
+      storyButton('The whole server’s', () => {
+        close();
+        playSeason();
+      }),
+      storyButton('Close', close),
+    ],
+  });
+};
+
+$('play-season').addEventListener('click', playSeason);
+$('you-search').addEventListener('input', findYou);
+$('you-search').addEventListener('focus', () => loadDirectory().catch(() => {}), { once: true });
+
 const showRoundup = (page) => {
   stopTicker();
+  current = page;
   $('locked').hidden = true;
   $('roundup').hidden = false;
   const r = page.roundup;
@@ -387,6 +526,17 @@ const showRoundup = (page) => {
   renderAwards(r);
   renderWeapons(r);
   renderMoments(r);
+  setText(
+    $('review-text'),
+    r.partial
+      ? 'Staff preview: the season so far, one slide at a time, roasting included.'
+      : `The best, the worst and the frankly embarrassing of ${page.name}, one slide at a time.`,
+  );
+  // A shared link to a player's own season opens it, once.
+  if (sharedPlayer && !openedShared) {
+    openedShared = true;
+    playYours(sharedPlayer);
+  }
   setText($('next-title'), r.partial ? `${page.name} so far` : `That’s ${page.name}`);
   setText(
     $('next-text'),
@@ -395,6 +545,8 @@ const showRoundup = (page) => {
       : `Thanks to everyone who played, seeded and squadded up in ${page.name}. The records start again now: see who leads the new season on the leaderboard.`,
   );
 };
+
+let openedShared = false;
 
 // Only redraws when the bot's answer changes, so a refresh never closes an open table or moves the page.
 let shown = null;
