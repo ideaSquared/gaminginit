@@ -236,7 +236,14 @@ export const demoSeason = (now, { locked = false } = {}) => {
     return { day: new Date(start + i * DAY).toISOString().slice(0, 10), players, minutes: players * 96, matches, peak: 60 + (i % 5) };
   });
   const matches = days.reduce((sum, d) => sum + d.matches, 0);
-  const maps = TEAM_MAPS.map(([map, wins, minutes]) => ({
+  const busiest = days.reduce((best, d) => (d.players > best.players ? d : best));
+  // The season's matches with a result, by map: two of them ended level, so they have none.
+  const seasonMaps = [
+    ['Ozeti', [20, 15, 9], 41],
+    ['Bakurani', [11, 16, 10], 38],
+    ['Zestafona', [8, 6, 5], 46],
+  ];
+  const maps = seasonMaps.map(([map, wins, minutes]) => ({
     map,
     matches: wins.reduce((a, b) => a + b, 0),
     averageMs: minutes * MINUTE,
@@ -244,7 +251,7 @@ export const demoSeason = (now, { locked = false } = {}) => {
   }));
   const decided = maps.reduce((sum, m) => sum + m.matches, 0);
   const teams = SIDES.map((name, i) => {
-    const wins = TEAM_MAPS.reduce((sum, [, w]) => sum + w[i], 0);
+    const wins = seasonMaps.reduce((sum, [, w]) => sum + w[i], 0);
     return { name, colorHex: SIDE_COLOURS[name], matches: decided, wins, losses: decided - wins };
   }).sort((a, b) => b.wins - a.wins);
   const ended = (day, hour) => start + day * DAY + hour * HOUR;
@@ -263,7 +270,7 @@ export const demoSeason = (now, { locked = false } = {}) => {
       playedMs: matches * 43 * MINUTE,
       players: 2418,
       peakPlayers: 64,
-      busiestDay: { day: days[11].day, players: Math.max(...days.map((d) => d.players)) },
+      busiestDay: { day: busiest.day, players: busiest.players },
       teams,
       bestTeam: teams[0],
       teamMinMatches: 3,

@@ -109,6 +109,7 @@ const showLocked = (page, problem) => {
   $('locked').hidden = false;
   $('roundup').hidden = true;
   endsAt = page.endsAt;
+  setText($('season-eyebrow'), 'Opens at the wipe');
   setText($('season-lede'), `The best of ${page.name} on our server, from the first match our bot recorded up to the wipe.`);
   setText($('season-note'), `Opens ${dateLong.format(page.endsAt)}`);
   setText(
@@ -122,6 +123,7 @@ const showLocked = (page, problem) => {
 };
 
 const renderHead = (page, r) => {
+  setText($('season-eyebrow'), r.partial ? 'Staff preview' : 'The season is over');
   setText(
     $('season-lede'),
     r.partial
@@ -385,6 +387,7 @@ const showRoundup = (page) => {
   renderAwards(r);
   renderWeapons(r);
   renderMoments(r);
+  setText($('next-title'), r.partial ? `${page.name} so far` : `That’s ${page.name}`);
   setText(
     $('next-text'),
     r.partial

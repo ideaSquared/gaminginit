@@ -1343,6 +1343,8 @@ describe('the season page', () => {
     // A season of one day, or one still going part of the way through its first day.
     assert.equal(dayRange(start, start + DAY, 'en-US'), 'Sep 30, 2026');
     assert.equal(dayRange(start, start + 5 * HOUR, 'en-US'), 'Sep 30, 2026');
+    // A season still going, part of the way through its tenth day, has that day.
+    assert.equal(range(start, start + 9 * DAY + 8 * HOUR, 'en-US'), 'Sep 30 – Oct 9, 2026');
   });
 
   it('writes a lot of hours in whole hours', () => {

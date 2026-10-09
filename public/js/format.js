@@ -1169,10 +1169,10 @@ export const countdownText = (ms) => {
 };
 
 // A season's UTC days, from `start` up to, not including, `end`, as the reader's locale writes a range: "30 Sep – 14 Oct
-// 2026" in English.
+// 2026" in English. An `end` at midnight leaves that day out; one part way through a day (a season still going) has it.
 export const dayRange = (start, end, locale) => {
   const formatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-  const last = Math.max(start, end - DAY);
+  const last = Math.max(start, end - 1);
   return utcDay(start) === utcDay(last) ? formatter.format(start) : timeRange(formatter, start, last);
 };
 
