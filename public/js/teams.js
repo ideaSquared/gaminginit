@@ -1,6 +1,6 @@
-import { compact, formatDuration, mapSegments, percent, sideColours, sideKey } from './format.js';
+import { compact, formatDuration, percent, sideKey } from './format.js';
 import { startLive } from './live.js';
-import { el, mapTag, matchMeta, setText, sideName } from './views.js';
+import { el, mapBar, mapTag, matchMeta, setText, sideName, teamColours } from './views.js';
 
 // The teams page: which team wins most over the last 30 days, overall and on each map, from the bot's match records.
 
@@ -9,20 +9,12 @@ const $ = (id) => document.getElementById(id);
 // When a match ended, in the reader's own time: "Fri 3 Oct".
 const ended = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 
-// Teams the game gave no colour to still need telling apart in the bars: the first three, by name, get these (checked
-// together for colour-blind readers on the cards), any more the muted ink.
-const FALLBACK = ['#3987e5', '#d95926', '#199e70'];
-const NO_COLOUR = 'var(--muted)';
-
 // Each team's colour in game, lightened to read on the cards: for its name and its marks.
 let colours = new Map();
-let fallback = new Map();
-const colourOf = (name) => colours.get(sideKey(name)) ?? fallback.get(sideKey(name)) ?? NO_COLOUR;
+let colourOf = () => 'var(--muted)';
 
 const setColours = (board) => {
-  colours = sideColours([{ factionScores: board?.teams ?? [] }]);
-  const missing = (board?.teams ?? []).map((t) => sideKey(t.name)).filter((key) => !colours.has(key)).sort();
-  fallback = new Map(missing.slice(0, FALLBACK.length).map((key, i) => [key, FALLBACK[i]]));
+  ({ colours, colourOf } = teamColours(board?.teams ?? []));
 };
 
 const wins = (n) => `${compact(n)} win${n === 1 ? '' : 's'}`;
@@ -93,37 +85,6 @@ const renderKey = (board) => {
   $('team-key').replaceChildren(...board.teams.map((t) => el('li', {}, swatch(colourOf(t.name)), t.name)));
 };
 
-// A team's first letter, for a segment too narrow for its name.
-const initial = (name) => Array.from(name)[0]?.toUpperCase() ?? '';
-
-// A map's matches as one bar, split by the team that won them. Each part says whose it is as well as how many, so the
-// colours are not the only way to tell the teams apart: the name when there is room, else the initial (the styles pick
-// by the part's own width, and keep every part wide enough for its initial and count).
-const mapBar = (map, board) => {
-  const bar = el('span', { className: 'map-bar', role: 'group', ariaLabel: `${map.map}: wins by team` });
-  bar.append(
-    ...mapSegments(map, board.teams).map((s) => {
-      const label = `${s.name}: ${wins(s.count)} (${percent(s.share)})`;
-      const part = el(
-        'span',
-        { className: 'map-bar-part', role: 'img', ariaLabel: label, title: label },
-        el(
-          'span',
-          { className: 'map-bar-label' },
-          el('span', { className: 'map-bar-name', textContent: s.name }),
-          el('span', { className: 'map-bar-initial', textContent: initial(s.name) }),
-          el('span', { className: 'map-bar-count', textContent: String(s.count) }),
-        ),
-      );
-      part.style.flexGrow = String(s.count);
-      part.style.setProperty('--digits', String(String(s.count).length));
-      part.style.setProperty('--team', colourOf(s.name));
-      return part;
-    }),
-  );
-  return bar;
-};
-
 const renderMaps = (board) => {
   const list = $('map-wins');
   if (board.maps.length === 0) {
@@ -144,7 +105,7 @@ const renderMaps = (board) => {
           mapTag(m.map),
           leads ? el('span', { className: 'match-score' }, sideName(top.name, colours), ` wins most here`) : el('span', { className: 'match-score muted', textContent: 'No team ahead' }),
         ),
-        mapBar(m, board),
+        mapBar(m, board.teams, colourOf),
         matchMeta(matchCount(m.matches), `${formatDuration(m.averageMs)} on average`),
       );
     }),

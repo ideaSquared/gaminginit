@@ -1,6 +1,7 @@
 import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import { clockHour, readSteamId, sessionExpiry, signInResult, staffBy, steamLinkedText } from './format.js';
 import { demo, keepQuery, showNotice, thisPage } from './live.js';
+import { botUrl, configured, forgetToken, loadToken, saveToken } from './session.js';
 import { createTools } from './tools.js';
 import { el, link } from './views.js';
 
@@ -11,16 +12,10 @@ import { el, link } from './views.js';
 // so the bot never counts them as seeders: whichever page they open asks once each sign-in until they have. ?demo shows
 // sample data without signing in.
 
-// The bot named in this page's own settings, never one named in the address (?stats=): a link could otherwise send a
-// signed-in staff member's session to another site. To try a local bot, edit the meta tag in a local copy.
-const botBase = document.querySelector('meta[name="stats-url"]')?.content ?? '';
-export const configured = botBase !== '' && !botBase.includes('YOUR-SUBDOMAIN');
-export const botUrl = (path) => new URL(path, botBase).href;
+// The session and the bot's address, for the staff pages' modules (see session.js).
+export { botUrl, configured, loadToken };
 
 export const REFRESH_MS = 60_000;
-const SESSION_KEY = 'gaminginit-staff-session';
-// A session this close to running out is dropped, so a request never goes out with one that has.
-const EXPIRY_MARGIN_MS = 60_000;
 
 export const $ = (id) => document.getElementById(id);
 
@@ -36,35 +31,6 @@ export const replaceButtons = (row, buttons) => {
   const focused = row.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
   row.replaceChildren(...buttons);
   if (focused !== undefined) buttons.find((b) => b.dataset.key === focused)?.focus({ preventScroll: true });
-};
-
-// Storage can be off (a private window, blocked site data): then the sign-in lasts until the page is closed.
-let memoryToken = null;
-const saveToken = (token) => {
-  memoryToken = token;
-  try {
-    localStorage.setItem(SESSION_KEY, token);
-  } catch {
-    // Kept in memory only.
-  }
-};
-export const loadToken = () => {
-  let token = memoryToken;
-  try {
-    token = localStorage.getItem(SESSION_KEY) ?? token;
-  } catch {
-    // Kept in memory only.
-  }
-  const expiresAt = token ? sessionExpiry(token) : null;
-  return expiresAt !== null && expiresAt - EXPIRY_MARGIN_MS > Date.now() ? token : null;
-};
-const forgetToken = () => {
-  memoryToken = null;
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch {
-    // Nothing kept.
-  }
 };
 
 // In the reader's own time: "Fri 3 Oct, 21:40".

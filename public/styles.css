@@ -1674,6 +1674,297 @@ tbody tr:last-child td {
   font-size: 0.85rem;
 }
 
+/* Season roundup */
+
+.season-lede {
+  margin-top: 12px;
+  max-width: 44em;
+  color: var(--text-2);
+  font-size: 1.05rem;
+}
+
+.season-head .section-note {
+  margin-top: 6px;
+}
+
+/* The season head is the page's top: the sections after it sit closer. */
+.season-head {
+  padding-bottom: 0;
+}
+
+.season-gate,
+.season-next {
+  padding: 24px;
+  border-top: 3px solid var(--accent);
+}
+
+@media (min-width: 760px) {
+  .season-gate,
+  .season-next {
+    padding: 32px;
+  }
+}
+
+.season-gate-text {
+  margin-top: 12px;
+  max-width: 44em;
+  color: var(--text-2);
+}
+
+/* Four boxes, one row on every screen: the numbers shrink with it. */
+.countdown {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 560px;
+  margin-top: 24px;
+}
+
+.countdown-part {
+  padding: 12px 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.countdown-value {
+  display: block;
+  color: var(--accent);
+  font-size: clamp(1.6rem, 1rem + 3vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-unit {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* "Seconds" has to fit a quarter of the smallest phones. */
+@media (max-width: 400px) {
+  .countdown-unit {
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+.season-coming-title,
+.shout-title {
+  margin-top: 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.season-coming {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+  color: var(--text-2);
+}
+
+.season-coming li + li {
+  margin-top: 4px;
+}
+
+.season-staff {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+/* Six numbers: two across on phones, three on wider screens. */
+@media (min-width: 760px) {
+  .season-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.season-tiles .tile-value {
+  overflow-wrap: anywhere;
+}
+
+.season-chart-card {
+  margin-top: 16px;
+}
+
+/* The team of the season, in its colour in game. */
+.team-of-season {
+  padding: 24px;
+  border-left: 4px solid var(--team, var(--muted));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--team, var(--muted)) 14%, var(--surface)), var(--surface) 70%);
+}
+
+.team-of-season-label {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.team-of-season-name {
+  margin-top: 4px;
+  font-size: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.team-of-season-detail {
+  margin-top: 10px;
+  color: var(--text-2);
+}
+
+.streak-wins {
+  margin-top: 12px;
+  color: var(--text-2);
+}
+
+.streak-count {
+  color: var(--text);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.streak-wins + .match-headline {
+  margin-top: 6px;
+  font-size: 1.15rem;
+}
+
+/* The awards and the matches to remember: a card each, more to a row on wider screens. */
+.award-grid,
+.shout-grid,
+.moments {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shout-grid {
+  margin-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .award-grid,
+  .shout-grid,
+  .moments {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .award-grid,
+  .moments {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .shout-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.award,
+.shout,
+.moment {
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.award-title {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.award-weapons {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.award-winner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin-top: 12px;
+}
+
+.award-name,
+.shout-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.award-count {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.award-runners {
+  margin: 10px 0 0;
+  padding: 10px 0 0 1.4em;
+  border-top: 1px solid var(--hairline);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.award-runners li {
+  display: list-item;
+}
+
+.award-runners li + li {
+  margin-top: 2px;
+}
+
+.award-runner-count {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.shout-name {
+  margin-top: 10px;
+}
+
+.shout-detail {
+  color: var(--text-2);
+}
+
+.shout .award-weapons {
+  margin-top: 8px;
+}
+
+.moment .match-headline {
+  margin-top: 12px;
+}
+
+.season-next p {
+  margin-top: 12px;
+  max-width: 44em;
+  color: var(--text-2);
+}
+
 /* Seeder VIP */
 
 .vip-cta {

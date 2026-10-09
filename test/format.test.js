@@ -2,6 +2,13 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   announcement,
+  countdown,
+  countdownText,
+  dayRange,
+  manyHours,
+  ROLE_AWARDS,
+  SEASON_BOARDS,
+  shoutOuts,
   busyRuns,
   busyShares,
   clockHour,
@@ -1303,5 +1310,87 @@ describe('announcement', () => {
     assert.equal(linkTo('data:text/html,hi'), null);
     assert.equal(linkTo(''), null);
     assert.equal(announcement({ ...notice, link: { href: 'https://example.com/' } }).link, null);
+  });
+});
+
+describe('the season page', () => {
+  const MINUTE = 60_000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  it('counts down in days, hours, minutes and seconds, and stops at 0', () => {
+    assert.deepEqual(countdown(2 * DAY + 3 * HOUR + 4 * MINUTE + 5_900), { days: 2, hours: 3, minutes: 4, seconds: 5 });
+    assert.deepEqual(countdown(-5_000), { days: 0, hours: 0, minutes: 0, seconds: 0 });
+  });
+
+  it('says the countdown in words, to the minute', () => {
+    assert.equal(countdownText(5 * DAY + 3 * HOUR + 20 * MINUTE), '5 days 3 hours');
+    assert.equal(countdownText(DAY + 30 * MINUTE), '1 day');
+    assert.equal(countdownText(3 * HOUR + 20 * MINUTE), '3 hours 20 minutes');
+    assert.equal(countdownText(HOUR), '1 hour');
+    assert.equal(countdownText(4 * MINUTE + 59_000), '4 minutes');
+    // Under a minute is still a minute away, not 0.
+    assert.equal(countdownText(10_000), '1 minute');
+  });
+
+  it("writes a season's UTC days, the end not included", () => {
+    const start = Date.UTC(2026, 8, 30);
+    const end = Date.UTC(2026, 9, 15);
+    // The browser may put thin spaces around the dash.
+    const range = (from, to, locale) => dayRange(from, to, locale).replace(/\s/g, ' ');
+    assert.equal(range(start, end, 'en-US'), 'Sep 30 – Oct 14, 2026');
+    assert.match(range(start, end, 'en-GB'), /^30 Sept? – 14 Oct 2026$/);
+    // A season of one day, or one still going part of the way through its first day.
+    assert.equal(dayRange(start, start + DAY, 'en-US'), 'Sep 30, 2026');
+    assert.equal(dayRange(start, start + 5 * HOUR, 'en-US'), 'Sep 30, 2026');
+  });
+
+  it('writes a lot of hours in whole hours', () => {
+    assert.equal(manyHours(45), '45 min');
+    assert.equal(manyHours(90), '2 h');
+    assert.equal(manyHours(5_000 * 60), '5,000 h');
+    assert.equal(manyHours(12_345 * 60), '12.3K h');
+  });
+
+  it("shows each board's numbers from the roundup's rows", () => {
+    const cells = Object.fromEntries(SEASON_BOARDS.map((b) => [b.key, b]));
+    assert.deepEqual(cells.kills.cells({ kills: 1054 }), ['1,054']);
+    assert.deepEqual(cells.kd.cells({ kd: 2.876 }), ['2.88']);
+    assert.equal(cells.kd.sub({ kdMinHours: 5 }), 'At least 5 hours played.');
+    assert.deepEqual(cells.bestMatch.cells({ kills: 41, map: 'Ozeti' }), ['41', 'Ozeti']);
+    assert.deepEqual(cells.wins.cells({ wins: 30, played: 41 }), ['30', '41']);
+    assert.deepEqual(cells.playtime.cells({ minutes: 7562 }), ['126 h']);
+    assert.deepEqual(cells.seeding.cells({ seedDays: 5, minutes: 280 }), ['5', '4.7 h']);
+    assert.deepEqual(Object.keys(ROLE_AWARDS), ['assault', 'support', 'machine-gun', 'marksman', 'demolition', 'vehicle-gun']);
+  });
+
+  it('lists the shout-outs somebody earned, in order', () => {
+    const ash = { name: 'Ash', id: 'aaaaaaaaaaaa' };
+    const roundup = {
+      awards: {
+        headshots: { ...ash, headshots: 1 },
+        longest: { ...ash, distance: 642.4, weapon: 'SV98' },
+        variety: null,
+        roadKills: null,
+        melee: { ...ash, kills: 3 },
+        sidearm: null,
+      },
+      regular: { ...ash, days: 14, of: 15 },
+      rookie: null,
+    };
+    assert.deepEqual(
+      shoutOuts(roundup).map((s) => [s.title, s.player.name, s.detail]),
+      [
+        ['Headhunter', 'Ash', '1 headshot'],
+        ['Longest shot', 'Ash', '642 m with the SV98'],
+        ['Bonk', 'Ash', '3 melee kills'],
+        ['Ever-present', 'Ash', 'On 14 of 15 days'],
+      ],
+    );
+    // Without the kill feed, only the player records' shout-outs.
+    assert.deepEqual(
+      shoutOuts({ ...roundup, awards: null }).map((s) => s.title),
+      ['Ever-present'],
+    );
   });
 });

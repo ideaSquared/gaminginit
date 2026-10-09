@@ -1150,3 +1150,91 @@ export const announcement = (json) => {
   const linked = href !== '' && linkText !== '' && (scheme === undefined || scheme === 'https' || scheme === 'http');
   return { title: text(json.title), message, link: linked ? { href, text: linkText } : null };
 };
+
+// The season page. The bot sends the season roundup (GET /api/season) once the season is over: everything it recorded
+// from the first day of its records up to the wipe.
+
+// How long is left, as the countdown shows it: whole days, hours, minutes and seconds, all 0 once it has passed.
+export const countdown = (ms) => {
+  const left = Math.max(0, Math.floor(ms / 1000));
+  return { days: Math.floor(left / 86_400), hours: Math.floor(left / 3600) % 24, minutes: Math.floor(left / 60) % 60, seconds: left % 60 };
+};
+
+// The countdown in words, for screen readers and the page title: "5 days 3 hours", "3 hours 20 minutes", "4 minutes".
+export const countdownText = (ms) => {
+  const { days, hours, minutes } = countdown(ms);
+  if (days > 0) return [plural(days, 'day'), hours > 0 ? plural(hours, 'hour') : null].filter(Boolean).join(' ');
+  if (hours > 0) return [plural(hours, 'hour'), minutes > 0 ? plural(minutes, 'minute') : null].filter(Boolean).join(' ');
+  return plural(Math.max(1, minutes), 'minute');
+};
+
+// A season's UTC days, from `start` up to, not including, `end`, as the reader's locale writes a range: "30 Sep – 14 Oct
+// 2026" in English.
+export const dayRange = (start, end, locale) => {
+  const formatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const last = Math.max(start, end - DAY);
+  return utcDay(start) === utcDay(last) ? formatter.format(start) : timeRange(formatter, start, last);
+};
+
+// Whole hours, for a lot of them: "12,345 h". Under an hour, minutes.
+export const manyHours = (minutes) => (minutes < 60 ? `${Math.round(minutes)} min` : `${compact(Math.round(minutes / 60))} h`);
+
+// The season's boards: what each one shows, besides the rank and the name, from the roundup's rows.
+export const SEASON_BOARDS = [
+  { key: 'kills', title: 'Most kills', headings: ['Kills'], cells: (p) => [p.kills.toLocaleString('en-GB')] },
+  {
+    key: 'kd',
+    title: 'Best K/D',
+    sub: (roundup) => `At least ${plural(roundup.kdMinHours, 'hour')} played.`,
+    headings: ['K/D'],
+    cells: (p) => [p.kd.toFixed(2)],
+  },
+  { key: 'bestMatch', title: 'Most kills in a match', headings: ['Kills', 'Map'], cells: (p) => [String(p.kills), p.map] },
+  {
+    key: 'wins',
+    title: 'Most wins',
+    sub: () => 'Matches won, out of the matches they played with a result.',
+    headings: ['Wins', 'Played'],
+    cells: (p) => [String(p.wins), String(p.played)],
+  },
+  { key: 'mvps', title: 'Most MVPs', sub: () => 'Times top of a match’s scoreboard: most kills, then fewest deaths.', headings: ['MVPs'], cells: (p) => [String(p.mvps)] },
+  { key: 'playtime', title: 'Most time played', sub: () => 'Seeding and live.', headings: ['Time'], cells: (p) => [formatHours(p.minutes)] },
+  {
+    key: 'seeding',
+    title: 'Top seeders',
+    sub: () => 'Seed days, then time seeding. Thanks for getting us live!',
+    headings: ['Seed days', 'Seeding'],
+    cells: (p) => [String(p.seedDays), formatHours(p.minutes)],
+  },
+];
+
+// The awards for each role, from the game's kill feed, in the bot's order: who got the most kills with its weapons.
+export const ROLE_AWARDS = {
+  assault: { title: 'Best assaulter', weapons: 'Assault rifles, SMGs and shotguns' },
+  support: { title: 'Best support', weapons: 'Mortars, artillery and emplacements' },
+  'machine-gun': { title: 'Best machine gunner', weapons: 'Machine guns: the M249 SAW and PKM' },
+  marksman: { title: 'Best marksman', weapons: 'Marksman and sniper rifles, and the bow' },
+  demolition: { title: 'Best demolitions', weapons: 'Launchers, grenades, mines, IEDs and C4' },
+  'vehicle-gun': { title: 'Best vehicle crew', weapons: 'Vehicle guns: tanks, helicopters and mounted guns' },
+};
+
+// The shout-outs, one player each, in the bot's order, leaving out those nobody earned. The first six come from the
+// kill feed; the last two from the player records.
+export const shoutOuts = (roundup) => {
+  const a = roundup.awards;
+  return [
+    a?.headshots && { title: 'Headhunter', why: 'Most headshots', player: a.headshots, detail: plural(a.headshots.headshots, 'headshot') },
+    a?.longest && { title: 'Longest shot', why: 'With a hand-held weapon', player: a.longest, detail: `${metres(a.longest.distance)} with the ${a.longest.weapon}` },
+    a?.variety && { title: 'Jack of all trades', why: 'Kills with the most weapons', player: a.variety, detail: `Kills with ${plural(a.variety.weapons, 'weapon')}` },
+    a?.roadKills && { title: 'Road rage', why: 'Most run over or blown up in a vehicle', player: a.roadKills, detail: plural(a.roadKills.kills, 'kill') },
+    a?.melee && { title: 'Bonk', why: 'Most melee kills', player: a.melee, detail: plural(a.melee.kills, 'melee kill') },
+    a?.sidearm && { title: 'Quickdraw', why: 'Most pistol kills', player: a.sidearm, detail: plural(a.sidearm.kills, 'pistol kill') },
+    roundup.regular && {
+      title: 'Ever-present',
+      why: 'On the server on the most days',
+      player: roundup.regular,
+      detail: `On ${roundup.regular.days} of ${plural(roundup.regular.of, 'day')}`,
+    },
+    roundup.rookie && { title: 'Rookie of the season', why: 'New this season, and played the most', player: roundup.rookie, detail: `${formatHours(roundup.rookie.minutes)} played` },
+  ].filter(Boolean);
+};

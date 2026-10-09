@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Season 1 roundup | gaminginit WARDOGS server</title>
+    <meta name="description" content="Season 1 on the gaminginit WARDOGS server: the team of the season, the top players, awards for every role, the weapons and the matches to remember, before the wipe on 15 October." />
+    <link rel="canonical" href="https://gaminginit.com/season" />
+    <meta property="og:site_name" content="gaminginit" />
+    <meta property="og:title" content="Season 1 roundup | gaminginit WARDOGS server" />
+    <meta property="og:description" content="The best of Season 1 on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
+    <meta property="og:url" content="https://gaminginit.com/season" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://gaminginit.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Season 1 roundup | gaminginit WARDOGS server" />
+    <meta name="twitter:description" content="The best of Season 1 on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
+    <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
+    <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta name="theme-color" content="#0b0d10" />
+    <!-- Where the bot serves its stats. Keep it the same as in index.html. See README.md. -->
+    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="js/season.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
+        </a>
+        <nav class="nav-sections" aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="stats" data-keep-query>Stats</a></li>
+            <li><a href="live" data-keep-query>Live</a></li>
+            <li><a href="matches" data-keep-query>Matches</a></li>
+            <li><a href="teams" data-keep-query>Teams</a></li>
+            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
+            <li><a href="players" data-keep-query>Players</a></li>
+            <li><a href="seeding" data-keep-query>Seeding</a></li>
+            <li><a href="season" data-keep-query aria-current="page">Season 1</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+          <span>Discord</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- The notice for every page, like the server being down. Set in announcement.json; see README.md. -->
+      <div class="announcement wrap" id="announcement" role="status" hidden></div>
+      <div class="notice wrap" id="notice" role="status" hidden></div>
+
+      <section class="section season-head" aria-labelledby="season-title">
+        <div class="wrap">
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
+          <p class="eyebrow">Before the wipe</p>
+          <h1 class="page-title" id="season-title">Season 1 roundup</h1>
+          <p class="season-lede" id="season-lede">Everything our bot recorded on our server in Season 1.</p>
+          <p class="section-note" id="season-note">Loading…</p>
+        </div>
+      </section>
+
+      <!-- Until the season is over. The bot does not send the roundup before then; staff can preview it. -->
+      <section class="section season-locked" id="locked" aria-labelledby="locked-title" hidden>
+        <div class="wrap">
+          <div class="card season-gate">
+            <h2 class="season-gate-title" id="locked-title">Opens when the season ends</h2>
+            <p class="season-gate-text" id="locked-text"></p>
+            <div class="countdown" id="countdown" role="timer" aria-labelledby="countdown-label">
+              <p class="visually-hidden" id="countdown-label"></p>
+              <p class="countdown-part" aria-hidden="true"><span class="countdown-value" id="cd-days">–</span><span class="countdown-unit">days</span></p>
+              <p class="countdown-part" aria-hidden="true"><span class="countdown-value" id="cd-hours">–</span><span class="countdown-unit">hours</span></p>
+              <p class="countdown-part" aria-hidden="true"><span class="countdown-value" id="cd-minutes">–</span><span class="countdown-unit">minutes</span></p>
+              <p class="countdown-part" aria-hidden="true"><span class="countdown-value" id="cd-seconds">–</span><span class="countdown-unit">seconds</span></p>
+            </div>
+            <h3 class="season-coming-title">What’s in it</h3>
+            <ul class="season-coming">
+              <li>The season by the numbers: matches, players, kills and hours played, and every day’s players</li>
+              <li>The team of the season, every team’s wins on each map, and the longest winning streak</li>
+              <li>The hall of fame: the top 10 for kills, K/D, kills in a match, wins, MVPs, time played and seeding</li>
+              <li>Awards for each role, and shout-outs: headhunter, longest shot, road rage and more</li>
+              <li>The weapons of the season, and the matches to remember</li>
+            </ul>
+            <p class="season-staff" id="staff-preview" hidden></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- The roundup, once the season is over (or for staff, the season so far). -->
+      <div id="roundup" hidden>
+        <section class="section" aria-labelledby="numbers-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="numbers-title">By the numbers</h2>
+              <p class="section-note" id="numbers-note"></p>
+            </div>
+            <div class="tiles season-tiles">
+              <div class="tile">
+                <p class="tile-label">Matches</p>
+                <p class="tile-value" id="tile-matches">–</p>
+                <p class="tile-sub" id="tile-matches-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Players</p>
+                <p class="tile-value" id="tile-players">–</p>
+                <p class="tile-sub" id="tile-players-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Kills</p>
+                <p class="tile-value" id="tile-kills">–</p>
+                <p class="tile-sub" id="tile-kills-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Time played</p>
+                <p class="tile-value" id="tile-time">–</p>
+                <p class="tile-sub" id="tile-time-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Peak players</p>
+                <p class="tile-value" id="tile-peak">–</p>
+                <p class="tile-sub" id="tile-peak-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Seed days</p>
+                <p class="tile-value" id="tile-seed">–</p>
+                <p class="tile-sub" id="tile-seed-sub"></p>
+              </div>
+            </div>
+            <figure class="card chart-card season-chart-card">
+              <figcaption>
+                <h3>Players each day</h3>
+                <p class="chart-sub" id="chart-sub">Everyone on the server each UTC day.</p>
+              </figcaption>
+              <div class="chart" id="season-chart"></div>
+              <details class="table-view">
+                <summary>Show as table</summary>
+                <div class="table-scroll"><table id="days-table"></table></div>
+              </details>
+            </figure>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="teams-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="teams-title">Teams</h2>
+              <p class="section-note">A match goes to the team with the most points. Matches with the top teams level are left out: the bot missed who won.</p>
+            </div>
+            <div class="card team-of-season" id="team-of-season"></div>
+            <div class="team-grid">
+              <article class="card board team-standings" aria-labelledby="standings-title">
+                <h3 id="standings-title">Wins by team</h3>
+                <div id="standings"></div>
+              </article>
+              <article class="card board" aria-labelledby="maps-title">
+                <h3 id="maps-title">Wins on each map</h3>
+                <p class="board-sub">Each map’s matches, by the team that won them. Most played first.</p>
+                <ul class="team-key" id="team-key" aria-label="Key"></ul>
+                <ol class="map-wins" id="map-wins"></ol>
+                <details class="table-view">
+                  <summary>Show as table</summary>
+                  <div class="table-scroll"><table id="map-table"></table></div>
+                </details>
+              </article>
+              <article class="card board" aria-labelledby="streak-title">
+                <h3 id="streak-title">Longest winning streak</h3>
+                <p class="board-sub">The most matches one team won in a row.</p>
+                <div id="streak"></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="fame-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="fame-title">Hall of fame</h2>
+              <p class="section-note">The top 10 of the season.</p>
+            </div>
+            <div class="boards boards-fit" id="boards"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="awards-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="awards-title">Awards</h2>
+              <p class="section-note" id="awards-note">From the game’s kill feed. Team kills don’t count.</p>
+            </div>
+            <ol class="award-grid" id="roles"></ol>
+            <h3 class="shout-title" id="shouts-title">Shout-outs</h3>
+            <ul class="shout-grid" id="shouts" aria-labelledby="shouts-title"></ul>
+          </div>
+        </section>
+
+        <!-- Shown when the bot has the game's kill feed. -->
+        <section class="section" id="weapons" aria-labelledby="weapons-title" hidden>
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="weapons-title">Weapons of the season</h2>
+              <p class="section-note" id="weapons-note">From the game’s kill feed.</p>
+            </div>
+            <div class="weapons">
+              <div class="tiles weapon-tiles">
+                <div class="tile">
+                  <p class="tile-label">Kills recorded</p>
+                  <p class="tile-value" id="weapons-kills">–</p>
+                </div>
+                <div class="tile">
+                  <p class="tile-label">Headshots</p>
+                  <p class="tile-value" id="weapons-headshots">–</p>
+                  <p class="tile-sub" id="weapons-headshots-sub"></p>
+                </div>
+                <div class="tile tile-wide">
+                  <p class="tile-label">Longest kill</p>
+                  <p class="tile-value" id="weapons-longest">–</p>
+                  <p class="tile-sub" id="weapons-longest-sub"></p>
+                </div>
+              </div>
+              <article class="card board weapons-card" aria-labelledby="weapons-top-title">
+                <h3 id="weapons-top-title">Most kills</h3>
+                <p class="board-sub">Each weapon’s share of headshots, how far away its kills were on average, and its longest kill.</p>
+                <div id="weapons-list"></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="moments-title">
+          <div class="wrap">
+            <div class="section-head">
+              <h2 id="moments-title">Matches to remember</h2>
+            </div>
+            <ul class="moments" id="moments"></ul>
+          </div>
+        </section>
+
+        <section class="section season-end" aria-labelledby="next-title">
+          <div class="wrap">
+            <div class="card season-next">
+              <h2 class="season-gate-title" id="next-title">That’s Season 1</h2>
+              <p id="next-text">Thanks to everyone who played, seeded and squadded up. The records start again with Season 2: see who leads it on the leaderboard.</p>
+              <div class="hero-actions">
+                <a class="btn btn-ghost" href="leaderboard" data-keep-query>The leaderboard</a>
+                <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                  <span>Join our Discord</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
+        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
+        <p>Not affiliated with the developers or publishers of WARDOGS.</p>
+        <p><a href="admin" data-keep-query>Staff sign-in</a></p>
+        <p class="footer-credit">Developed by <a href="https://ideasquared.co.uk" rel="noopener">ideaSquared</a></p>
+      </div>
+    </footer>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="discord-logo" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+        />
+      </symbol>
+    </svg>
+  </body>
+</html>
