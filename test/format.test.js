@@ -644,11 +644,11 @@ describe('player pages', () => {
 
 describe('weapons', () => {
   const used = [
-    { day: '2026-09-01', name: 'AK74', kind: 'weapon', kills: 30, headshots: 9, longest: 900 },
-    { day: '2026-09-20', name: 'AK74', kind: 'weapon', kills: 4, headshots: 1, longest: 61.2 },
-    { day: '2026-09-20', name: 'Humvee', kind: 'vehicle', kills: 5, headshots: 0, longest: null },
-    { day: '2026-09-29', name: 'AK74', kind: 'weapon', kills: 2, headshots: 2, longest: 140.5 },
-    { day: '2026-09-29', name: 'SVD', kind: 'weapon', kills: 6, headshots: 3, longest: null },
+    { day: '2026-09-01', name: 'AK74', kind: 'weapon', lockOn: false, kills: 30, headshots: 9, longest: 900 },
+    { day: '2026-09-20', name: 'AK74', kind: 'weapon', lockOn: false, kills: 4, headshots: 1, longest: 61.2 },
+    { day: '2026-09-20', name: 'Humvee', kind: 'vehicle', lockOn: false, kills: 5, headshots: 0, longest: null },
+    { day: '2026-09-29', name: 'AK74', kind: 'weapon', lockOn: false, kills: 2, headshots: 2, longest: 140.5 },
+    { day: '2026-09-29', name: 'SVD', kind: 'weapon', lockOn: false, kills: 6, headshots: 3, longest: null },
   ];
 
   it('writes distances in metres, to a tenth under 10 m', () => {
@@ -660,9 +660,9 @@ describe('weapons', () => {
 
   it('adds up a player’s weapons over the days from the first one asked for, most kills first', () => {
     assert.deepEqual(weaponTotals(used, '2026-09-10'), [
-      { name: 'AK74', kind: 'weapon', kills: 6, headshots: 3, longest: 140.5 },
-      { name: 'SVD', kind: 'weapon', kills: 6, headshots: 3, longest: null },
-      { name: 'Humvee', kind: 'vehicle', kills: 5, headshots: 0, longest: null },
+      { name: 'AK74', kind: 'weapon', lockOn: false, kills: 6, headshots: 3, longest: 140.5 },
+      { name: 'SVD', kind: 'weapon', lockOn: false, kills: 6, headshots: 3, longest: null },
+      { name: 'Humvee', kind: 'vehicle', lockOn: false, kills: 5, headshots: 0, longest: null },
     ]);
     assert.equal(weaponTotals(used, '2026-08-01')[0].kills, 36);
     assert.deepEqual(weaponTotals(undefined, '2026-09-10'), []);
@@ -673,11 +673,13 @@ describe('weapons', () => {
     assert.equal(longestKill(weaponTotals(used.slice(2, 3), '2026-09-10')), null);
   });
 
-  it('takes their longest kill from hand-held weapons only', () => {
+  it('takes their longest kill from hand-held weapons that do not lock on', () => {
     const others = [
-      { day: '2026-09-29', name: 'AT mine', kind: 'placed', kills: 1, headshots: 0, longest: 851.1 },
-      { day: '2026-09-29', name: 'STN 03 Main barrel', kind: 'vehicle-weapon', kills: 3, headshots: 0, longest: 706.8 },
-      { day: '2026-09-29', name: 'Barbed wire', kind: 'buildable', kills: 1, headshots: 0, longest: 2.1 },
+      { day: '2026-09-29', name: 'AT mine', kind: 'placed', lockOn: false, kills: 1, headshots: 0, longest: 851.1 },
+      { day: '2026-09-29', name: 'STN 03 Main barrel', kind: 'vehicle-weapon', lockOn: false, kills: 3, headshots: 0, longest: 706.8 },
+      { day: '2026-09-29', name: 'Barbed wire', kind: 'buildable', lockOn: false, kills: 1, headshots: 0, longest: 2.1 },
+      // Carried by hand, but it locks on.
+      { day: '2026-09-29', name: '9K333 Verba', kind: 'weapon', lockOn: true, kills: 2, headshots: 0, longest: 1450.2 },
     ];
     assert.deepEqual(longestKill(weaponTotals([...used, ...others], '2026-09-10')), { distance: 140.5, weapon: 'AK74' });
     assert.equal(longestKill(weaponTotals(others, '2026-09-10')), null);

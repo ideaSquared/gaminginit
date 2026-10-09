@@ -538,7 +538,7 @@ export const weaponTotals = (used, first) => {
   const weapons = new Map();
   for (const w of used ?? []) {
     if (w.day < first) continue;
-    const known = weapons.get(w.name) ?? { name: w.name, kind: w.kind, kills: 0, headshots: 0, longest: null };
+    const known = weapons.get(w.name) ?? { name: w.name, kind: w.kind, lockOn: w.lockOn === true, kills: 0, headshots: 0, longest: null };
     weapons.set(w.name, {
       ...known,
       kills: known.kills + w.kills,
@@ -549,12 +549,13 @@ export const weaponTotals = (used, first) => {
   return [...weapons.values()].sort((a, b) => b.kills - a.kills || a.name.localeCompare(b.name));
 };
 
-// Their longest kill over those weapons, and what with. Only hand-held weapons count, as on the bot's boards: how far a
-// mine was from whoever laid it, or an emplacement from its target, says nothing about their aim. Null when the feed
-// sent no distances for them.
+// Their longest kill over those weapons, and what with. Only hand-held weapons count, and not launchers that lock on
+// (`lockOn`, such as the 9K333 Verba), as on the bot's boards: how far a mine was from whoever laid it, an emplacement
+// from its target, or a locked-on missile from whoever fired it says nothing about their aim. Null when the feed sent no
+// distances for them.
 export const longestKill = (weapons) =>
   weapons.reduce(
-    (best, w) => (w.kind === 'weapon' && w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best),
+    (best, w) => (w.kind === 'weapon' && !w.lockOn && w.longest !== null && (best === null || w.longest > best.distance) ? { distance: w.longest, weapon: w.name } : best),
     null,
   );
 
