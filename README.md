@@ -80,7 +80,9 @@ What it shows:
   - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One
     slide at a time over the page (a full screen on a phone, a tall card on a computer): tap or click the right of a
     slide, Next, → or Space for the next one, the left, Back or ← for the one before, swipe on a phone, and Esc or ✕ to
-    close. Nothing moves on its own. The server's story has the matches, players, hours and kills, the busiest day, the
+    close. It stays put until you move it (**Autoplay** in the corner steps through it for you, and stops when you tap), but it is
+    lively: numbers count up, the backgrounds drift, lists slide in and the last slide throws confetti. All of that is off
+    (and there is no Autoplay) when your device asks for less motion. The server's story has the matches, players, hours and kills, the busiest day, the
     team of the season and the wooden spoon (the team with the fewest wins), the longest streak, the map played most,
     the top player of each board, the most deaths and the friendly fire award (most team kills), the role awards and
     shout-outs, the weapon of the season, and the closest and biggest wins. **Your season**: find your name and get your
