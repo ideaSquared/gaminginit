@@ -274,7 +274,7 @@ export const demoSeason = (now, { locked = false } = {}) => {
       teams,
       bestTeam: teams[0],
       teamMinMatches: 3,
-      kdMinMatches: 5,
+      kdMinMatches: 10,
       kills: board(0, (i) => ({ kills: 1210 - i * 83 })),
       kd: board(4, (i) => ({ kd: 3.42 - i * 0.21 })),
       bestMatch: board(2, (i) => ({ kills: 48 - i * 3, deaths: 6 + (i % 4), map: MAPS[i % MAPS.length] })),

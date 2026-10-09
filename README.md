@@ -93,8 +93,8 @@ What it shows:
     and the busiest day, and seed days; and players each day as a chart, with a table view.
   - Teams: the team of the season (the best win rate from 3 matches, in its colour in game), each team's wins, losses
     and win rate, each map's wins by team as on the teams page, and the longest winning streak.
-  - The hall of fame: the top 10 for most kills, best K/D (from the leaderboard's share of matches for the season's
-    days), most kills in a match, most wins, most MVPs, most time played and top seeders.
+  - The hall of fame: the top 10 for most kills, best K/D (from 10 matches, as on the leaderboard), most kills in a
+    match, most wins, most MVPs, most time played and top seeders.
   - Awards from the game's kill feed: the best at each role (assault, support, machine gun, marksman, demolitions,
     vehicle crew) with the next two, and shout-outs (headhunter, longest shot, jack of all trades, road rage, bonk,
     quickdraw and ever-present). When the feed started during the season, it says the day.
