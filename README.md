@@ -196,7 +196,8 @@ npm test    # Node's built-in test runner; no dependencies to install
 ```
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. Each page has its own script in
-`public/js/` named after it (`stats.js`, `matches.js`, `player.js`, `admin.js`, `settings.js` and so on). Shared parts:
+`public/js/`, mostly named after it (`stats.js`, `matches.js`, `player.js`, `admin.js` and so on). The exceptions: the
+home page uses `app.js`, `/live` uses `livematch.js` and `/server-settings` uses `settings.js`. Shared parts:
 `live.js` (fetches the bot's numbers and the notice), `views.js` (DOM pieces), `charts.js` (SVG charts), `demo.js`
 (sample data), `session.js` and `staff.js` (staff sign-in and what the staff pages share). Logic kept apart from its
 page, for tests, is in the `*model.js` files.
