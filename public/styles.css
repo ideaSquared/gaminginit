@@ -1765,13 +1765,88 @@ tbody tr:last-child td {
 }
 
 .season-coming {
-  margin: 8px 0 0;
-  padding-left: 1.2em;
-  color: var(--text-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.season-coming li + li {
-  margin-top: 4px;
+.season-coming li {
+  display: grid;
+  gap: 2px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.season-coming li:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+
+.season-coming strong {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.season-coming li > span:last-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.coming-icon {
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+/* The gate: a glow behind the countdown, and a big title. */
+.season-locked .season-gate {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%), var(--surface);
+}
+
+.season-locked .season-gate-title {
+  font-size: clamp(1.8rem, 1.2rem + 3vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.season-locked .season-gate-text,
+.season-locked .countdown {
+  margin-inline: auto;
+}
+
+.season-locked .countdown-part {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.season-locked .countdown-value {
+  font-size: clamp(2rem, 1rem + 5vw, 4rem);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.season-locked .season-coming-title {
+  margin-top: 36px;
+}
+
+.season-locked .season-coming {
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .season-coming li {
+    transition: none;
+  }
+  .season-coming li:hover {
+    transform: none;
+  }
 }
 
 .season-staff {

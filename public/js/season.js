@@ -115,13 +115,10 @@ const showLocked = (page, problem) => {
   $('roundup').hidden = true;
   endsAt = page.endsAt;
   setText($('season-eyebrow'), 'Opens at the wipe');
-  setText($('season-lede'), `The best of ${page.name} on our server, from the first match our bot recorded up to the wipe.`);
+  setText($('season-lede'), `Who won. Who flopped. Who got roasted. ${page.name}, settled for good.`);
   setText($('season-note'), `Opens ${dateLong.format(page.endsAt)}`);
-  setText(
-    $('locked-text'),
-    `${page.name} ends with the wipe on ${whenLong.format(page.endsAt)} (your time). Then this page opens with everything our bot ` +
-      'recorded: the teams, the top players, the awards and the matches to remember.',
-  );
+  setText($('locked-title'), `${page.name} ends at the wipe`);
+  setText($('locked-text'), `${whenLong.format(page.endsAt)} (your time). Then it all drops here.`);
   staffLine(problem);
   if (ticker === 0) ticker = setInterval(() => !document.hidden && tick(), 1000);
   tick();
