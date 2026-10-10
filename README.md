@@ -27,6 +27,7 @@ You need [Node.js](https://nodejs.org) 22 or newer, a free Cloudflare account (t
 deployed with `/api/stats`. Some pages need more of the bot (player pages, live, staff pages, weapons, teams, seeder
 VIP, 14-day busy times). With an older bot the site still works and hides what it can't show. Each bot feature is
 named in the bot's README.
+
 ### 1. Get the bot's stats URL
 
 1. In the `wardogs-discord-bot` folder, deploy the bot if you have not already:
