@@ -102,6 +102,7 @@ describe('a map in the editor', () => {
     assert.equal(lightingIcon('DayClear'), '☀️');
     assert.equal(lightingIcon('DayLateGrayFog'), '🌫️');
     assert.equal(lightingIcon('DayLateGray'), '☁️');
+    assert.equal(lightingIcon('DayLateRain'), '🌧️');
   });
 });
 
