@@ -16,7 +16,7 @@ once a minute and serves them at `GET /api/stats`.
 | `/live` | The match on now: score, kill feed, highlights |
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
 | `/seeding` | What seeding is, top seeders, who has seeder VIP |
-| `/season` | The Season 1 roundup, opens after the wipe on 15 October 2026 |
+| `/season` | The Season 1 roundup and the Season in Review, open since the wipe on 15 October 2026 |
 | `/admin`, `/server-settings` | Staff only: moderation and server settings (Discord sign-in) |
 
 Full details are in [docs/site-pages.md](docs/site-pages.md) and [docs/staff-pages.md](docs/staff-pages.md).

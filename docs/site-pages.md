@@ -70,10 +70,10 @@ What it shows:
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - A season page (`/season`, "Season 1" in the menu, and a box under the home page's intro): the roundup of Season 1,
-  from the bot's `GET /api/season`. **It stays shut until the season ends with the wipe on 15 October 2026, 00:00 UTC**
-  (1am in the UK): the bot does not send the roundup to anyone before then, so the page shows a countdown and what the
-  roundup will have. It loads the bot again every minute, so a page left open opens by itself, within about a minute
-  of the wipe. Then it has:
+  from the bot's `GET /api/season`. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC** (1am in the UK),
+  so the page is open to everyone. Before a season ends the bot does not send the roundup to anyone, so the page shows
+  a countdown and what the roundup will have. It loads the bot again every minute, so a page left open opens by
+  itself, within about a minute of the end. Once open it has:
   - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One
     slide at a time over the page (a full screen on a phone, a tall card on a computer): tap or click the right of a
     slide, Next, → or Space for the next one, the left, Back or ← for the one before, swipe on a phone, and Esc or ✕ to
