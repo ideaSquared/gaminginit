@@ -1228,6 +1228,8 @@ const DEMO_LIGHTINGS = [
   ['DayLateClear', 'Afternoon, clear'],
   ['DayLateGray', 'Afternoon, overcast'],
   ['DayLateGrayFog', 'Afternoon fog'],
+  // Season 2 (15 October 2026).
+  ['DayLateRain', 'Afternoon, rain'],
   ['DayEndClear', 'Dusk, clear'],
 ].map(([id, name]) => ({ id, name }));
 
