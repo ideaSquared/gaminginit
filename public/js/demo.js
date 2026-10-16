@@ -603,6 +603,7 @@ export const demoAdmin = (days, now) => {
   const ref = (name) => ({ steamId: steamId(name), name, id: idOf(name) });
   const scale = days === 1 ? 1 : days === 7 ? 3 : 8;
   const ago = (minutes) => now - minutes * MINUTE;
+  // Those flagged were flagged today, unless said otherwise.
   const row = (name, t) => ({
     ...ref(name),
     teamKills: 0,
@@ -614,6 +615,7 @@ export const demoAdmin = (days, now) => {
     mostKilledTeammate: null,
     flags: [],
     flaggedDays: 0,
+    lastFlaggedDay: (t.flaggedDays ?? 0) > 0 ? demoDay(now) : null,
     matches: 3 * scale,
     kills: 41 * scale,
     deaths: 33 * scale,
@@ -641,6 +643,7 @@ export const demoAdmin = (days, now) => {
       mostKilledTeammate: { ...ref('Kestrel'), kills: 2 },
       flags: ['teamKills', 'sameTeammate'],
       flaggedDays: 1,
+      lastFlaggedDay: demoDay(now - DAY),
       matches: 1,
       kills: 9,
       deaths: 14,
@@ -811,6 +814,7 @@ export const demoAdmin = (days, now) => {
     user: { id: '100000000000000001', name: 'Sarge' },
     // Staff who linked their Steam account. Sarge has not, so the page asks.
     staffProfiles: [{ userId: '100000000000000002', name: 'Kestrel', linkedAt: now - 9 * DAY, player: ref('Kestrel'), seen: true }],
+    dealt: demoDealtBook(now),
     reserved: {
       players: [
         { player: ref('Kestrel'), bot: null, staff: { since: now - 9 * DAY } },
@@ -934,7 +938,8 @@ const UNNAMED = ['WEPN 099', 'SMG 99'];
 const OFFLINE = ['Bravo_Six', 'Nightjar'];
 const killerDays = (name, days) => (name === 'Ghost_7' ? 1 : name === 'Bravo_Six' ? Math.min(days, 2) : days);
 
-const killerRow = ([name, kills, headshots, expected, odds, flagged, weapons], days) => {
+// Those flagged in game were flagged today, and those not in game yesterday.
+const killerRow = ([name, kills, headshots, expected, odds, flagged, weapons], days, now) => {
   const played = killerDays(name, days);
   return {
     steamId: demoSteamId(name),
@@ -946,6 +951,7 @@ const killerRow = ([name, kills, headshots, expected, odds, flagged, weapons], d
     chance: flagged > 0 ? odds ** played : odds,
     days: played,
     flaggedDays: Math.min(flagged, played),
+    lastFlaggedDay: flagged > 0 ? demoDay(OFFLINE.includes(name) ? now - DAY : now) : null,
     weapon: weapons[0][0],
     inGame: !OFFLINE.includes(name),
   };
@@ -979,7 +985,7 @@ const demoKill = (killer, n, at) => {
 };
 
 export const demoKills = (days, now) => {
-  const rows = KILLERS.map((k) => killerRow(k, days)).sort(
+  const rows = KILLERS.map((k) => killerRow(k, days, now)).sort(
     (a, b) => b.flaggedDays - a.flaggedDays || a.chance - b.chance || b.headshots - a.headshots,
   );
   const inGame = KILLERS.filter(([name]) => !OFFLINE.includes(name));
@@ -1026,66 +1032,96 @@ const demoNameOf = (steamId) =>
   VICTIMS.find((_, i) => victimRef(i).steamId === steamId) ??
   steamId;
 
-// A sample player's team kills today, as /player shows them: the same as the Review tab's sample for Vex and Tusk.
-const demoTeamKills = (name, now) => {
-  const ago = (minutes) => `<t:${Math.floor((now - minutes * MINUTE) / 1000)}:R>`;
+// A sample player's team kills today, as their record has them: the same as the Queue's sample for Vex and Tusk.
+const demoGrief = (name, now) => {
+  const at = (minutes) => now - minutes * MINUTE;
+  const ref = (n) => ({ steamId: demoSteamId(n), name: n });
+  const incident = (minutes, kind, victim, weapon, distance, map) => ({
+    at: at(minutes),
+    kind,
+    map,
+    player: ref(name),
+    victim: victim === null ? null : ref(victim),
+    faction: null,
+    weapon,
+    weaponKind: null,
+    distance,
+    tags: [],
+  });
+  const none = { teamKills: 0, vehicleTeamKills: 0, crashTeamKills: 0, teamKilled: 0, suicides: 0, vehicleSuicides: 0, flags: [], victims: [], incidents: [] };
   if (name === 'Vex') {
-    return [
-      '🚩 Flagged: team kills, same teammate, vehicle suicides',
-      '**7 team kills** (4 with a vehicle, 2 in a helicopter crash) · 3 suicides (2 in a vehicle)',
-      'Teammates killed: **Moth** ×2, **Rook**, **Sable**, **Pike**',
-      `${ago(58)} Killed themselves in a vehicle with Humvee on Bakurani`,
-      `${ago(11)} Killed teammate **Moth** with MH-6 on Ozeti`,
-      `${ago(11)} Killed teammate **Rook** with MH-6 on Ozeti`,
-      `${ago(9)} Killed themselves in a vehicle with MH-6 on Ozeti`,
-      `${ago(6)} Killed teammate **Moth** with Humvee from 4 m on Ozeti`,
-    ].join('\n');
+    return {
+      ...none,
+      teamKills: 7,
+      vehicleTeamKills: 4,
+      crashTeamKills: 2,
+      suicides: 3,
+      vehicleSuicides: 2,
+      flags: ['teamKills', 'sameTeammate', 'vehicleSuicides'],
+      victims: [{ ...ref('Moth'), kills: 2 }, { ...ref('Rook'), kills: 1 }, { ...ref('Sable'), kills: 1 }, { ...ref('Pike'), kills: 1 }],
+      incidents: [
+        incident(6, 'team-kill', 'Moth', 'Humvee', 4, 'Ozeti'),
+        incident(9, 'vehicle-suicide', null, 'MH-6', null, 'Ozeti'),
+        incident(11, 'team-kill', 'Rook', 'MH-6', null, 'Ozeti'),
+        incident(11, 'team-kill', 'Moth', 'MH-6', null, 'Ozeti'),
+        incident(58, 'vehicle-suicide', null, 'Humvee', null, 'Bakurani'),
+      ],
+    };
   }
   if (name === 'Tusk') {
-    return [
-      '🚩 Flagged: team kills, suicides',
-      '**3 team kills** · killed by a teammate 1 time · 12 suicides',
-      'Teammates killed: **Pike**, **Rook**, **Sable**',
-      `${ago(96)} Killed teammate **Rook** with M249 SAW from 42 m on Bakurani`,
-      `${ago(31)} Killed teammate **Pike** with AK74 from 18 m on Ozeti`,
-      `${ago(24)} Killed teammate **Sable** with M67 frag grenade from 7 m on Ozeti`,
-    ].join('\n');
+    return {
+      ...none,
+      teamKills: 3,
+      teamKilled: 1,
+      suicides: 12,
+      flags: ['teamKills', 'suicides'],
+      victims: [{ ...ref('Pike'), kills: 1 }, { ...ref('Rook'), kills: 1 }, { ...ref('Sable'), kills: 1 }],
+      incidents: [
+        incident(24, 'team-kill', 'Sable', 'M67 frag grenade', 7, 'Ozeti'),
+        incident(31, 'team-kill', 'Pike', 'AK74', 18, 'Ozeti'),
+        incident(96, 'team-kill', 'Rook', 'M249 SAW', 42, 'Bakurani'),
+      ],
+    };
   }
-  return 'No team kills or suicides today.';
+  return none;
 };
 
-// A sample player's record on the History tab, as the bot's /player answers: made up, like the rest.
+// A sample player's record, as GET /api/admin/player sends it.
 export const demoPlayerRecord = (steamId, now) => {
   const name = demoNameOf(steamId);
   const inGame = !OFFLINE.includes(name) && (KILLERS.some(([n]) => n === name) || VICTIMS.includes(name));
   const banned = name === 'Bravo_Six' || name === 'Nightjar';
+  const sarge = { by: '100000000000000001', byName: 'Sarge' };
   return {
-    embeds: [
-      {
-        title: `👤 ${name}`,
-        description: [`\`${steamId}\` · [Steam profile](https://steamcommunity.com/profiles/${steamId})`, inGame ? '🟢 In game now' : '⚫ Not in game'].join('\n'),
-        fields: [
-          { name: 'Playtime · last 90 days', value: '41h 20m', inline: true },
-          { name: 'Seeding', value: '6h 5m · 9 seed days', inline: true },
-          { name: 'Matches', value: '58 · 1,204 kills · 1.62 K/D', inline: true },
-          { name: 'Team kills · today (UTC)', value: demoTeamKills(name, now) },
-          { name: 'Steam account', value: name === 'Pike' ? '🔴 High risk (5 points): 1 VAC ban, 41 days ago · private profile' : '🟢 Nothing risky' },
-          { name: 'VIP', value: name === 'Moth' ? 'Seeder VIP until tomorrow' : 'None' },
-          { name: 'Ban', value: banned ? `Banned <t:${Math.floor((now - 200 * MINUTE) / 1000)}:R>: Cheating` : 'Not banned' },
-          { name: 'Staff history', value: name === 'Vex' ? 'Warned: Stop team killing with vehicles\nKicked: Crashed a full heli into the base' : 'Nothing yet.' },
-        ],
-        footer: {
-          text: 'Sample data. Staff history only covers what staff did through the bot. Team kills are from the kill feed, with sides from the last check, up to a minute old.',
-        },
-      },
-    ],
+    steamId,
+    name,
+    inGame: inGame ? { faction: null, kills: 12, deaths: 7 } : null,
+    privateProfile: false,
+    days: 90,
+    totals: { minutes: 2480, seedingMinutes: 365, seedDays: 9, matches: 58, kills: 1204, deaths: 743 },
+    grief: demoGrief(name, now),
+    steam:
+      name === 'Pike'
+        ? { status: 'found', risk: 'high', score: 5, flags: ['vacBan', 'recentBan', 'hidden'], facts: ['1 VAC ban, 41 days ago', 'Account age hidden', 'Private profile'], checkedAt: now - 2 * HOUR }
+        : { status: 'found', risk: 'low', score: 0, flags: [], facts: ['No VAC or game bans', 'Account made 6 years ago', 'Public profile'], checkedAt: now - 5 * HOUR },
+    vip: name === 'Moth' ? { kind: 'bot', until: now + DAY, checked: true, blockedUntil: null } : { kind: 'none', checked: true, blockedUntil: null },
+    ban: banned ? { kind: 'bot', reason: 'Cheating', ...sarge, at: now - 200 * MINUTE, until: null, waiting: name === 'Bravo_Six', checked: true } : { kind: 'none', checked: true },
+    log:
+      name === 'Vex'
+        ? [
+            { action: 'warn', at: now - 4 * MINUTE, ...sarge, reason: 'Stop team killing with vehicles' },
+            { action: 'kick', at: now - 2 * DAY, ...sarge, reason: 'Crashed a full heli into the base' },
+          ]
+        : banned
+          ? [{ action: 'ban', at: now - 200 * MINUTE, ...sarge, reason: 'Cheating', detail: 'Permanent' }]
+          : [],
   };
 };
 
 // One sample player's kills, as GET /api/admin/kills?player= sends them: everyone in the sample has some.
 export const demoPlayerKills = (steamId, days, now) => {
   const killer = KILLERS.find(([name]) => demoSteamId(name) === steamId);
-  const row = killer === undefined ? null : killerRow(killer, days);
+  const row = killer === undefined ? null : killerRow(killer, days, now);
   const name = demoNameOf(steamId);
   const today = Math.floor(now / DAY) * DAY;
   const byDay = Array.from({ length: row?.days ?? 0 }, (_, i) => {
@@ -1182,6 +1218,25 @@ const DEMO_ROTATIONS = [
   { name: 'Weekend · 4 maps', value: 'Weekend' },
 ];
 
+// A UTC day, as the bot names them: '2026-10-16'.
+const demoDay = (at) => new Date(at).toISOString().slice(0, 10);
+
+// "Dealt with" on the Queue in ?demo, by Steam ID (null for one undone), kept until the page is closed. Kestrel dealt with
+// Bravo_Six, who has left, this morning, and with Tusk two days ago, who has been flagged again since.
+const demoDealt = new Map();
+const demoDealtBook = (now) => {
+  const kestrel = { by: '100000000000000002', byName: 'Kestrel' };
+  const book = {
+    [demoSteamId('Bravo_Six')]: { ...kestrel, at: now - 5 * HOUR, reasons: ['headshots', 'steam'], headshotDay: demoDay(now - DAY), griefDay: null, steamScore: 4 },
+    [demoSteamId('Tusk')]: { ...kestrel, at: now - 2 * DAY, reasons: ['griefing'], headshotDay: null, griefDay: demoDay(now - 3 * DAY), steamScore: null },
+  };
+  for (const [steamId, dealt] of demoDealt) {
+    if (dealt === null) delete book[steamId];
+    else book[steamId] = dealt;
+  }
+  return book;
+};
+
 // What the bot answers the admin tools in ?demo: sample players and maps to pick from, and nothing done.
 // "Checked, they're fine" in ?demo, by Steam ID (null for one taken back), kept until the page is closed.
 const demoChecks = new Map();
@@ -1199,6 +1254,13 @@ export const demoCall = async (path, body) => {
         : null;
     demoChecks.set(body.steamId, checked);
     return { ok: true, json: { checked } };
+  }
+  // A dealt with, as the bot keeps it, by the signed-in sample staff member.
+  if (path === 'admin/dealt') {
+    const { action: _action, steamId, ...shown } = body;
+    const dealt = body.action === 'deal' ? { by: '100000000000000001', byName: 'Sarge', at: Date.now(), ...shown } : null;
+    demoDealt.set(steamId, dealt);
+    return { ok: true, json: { dealt } };
   }
   const { name, options, focused } = body;
   if (path === 'admin/suggest') {

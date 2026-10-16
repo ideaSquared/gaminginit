@@ -100,7 +100,7 @@ Server's Bans and VIP.
   player who is banned, "Checked, they're fine" or taking it back, **Only them in the kill feed** and **Full history →**
   (on Players). Then their kills and deaths this match, time on today, team kills, vehicle suicides and headshots
   today, the latest staff actions on them in the period, their latest kills and deaths in the kill feed, and **Record**,
-  which loads their record (as Look up) when opened. It keeps up with each refresh and each kill of theirs while open;
+  which loads their record (as on Players) when opened. It keeps up with each refresh and each kill of theirs while open;
   Close, Escape or a click outside it closes it.
 - **Acting on a player.** Warn, Kick, Ban, Move team and the rest open that form in the panel, under the buttons, made
   for that player: no tool to pick and no Steam ID to fill in. A ban's length is a row of buttons (1 hour to Permanent).
@@ -153,7 +153,14 @@ Server's Bans and VIP.
   yellow worth a look. Each row says whether they are in game and on which team, and what staff last did to them in the
   period. Those in game first, then the most serious, then the most reasons. **All**, **Headshots**, **Griefing** and
   **Risky Steam** pick which, with their counts (a player with two reasons counts under both), and **Only in game**
-  leaves out the rest. Those in game have Warn, Kick, Ban and ✓ by Act, as on Now.
+  leaves out the rest. Those in game have Warn, Kick and Ban by Act, as on Now.
+- **✓ Dealt with**, on each row, in game or not: for a player you have looked at, and acted on or found nothing to act
+  on. They leave the Queue for all staff, and its counts, until the bot flags them for something new: a day flagged
+  after the latest it showed, another reason, or a riskier Steam account (`dealtHolds` in `format.js`). Then they are
+  back, saying who dealt with them before and that more came up since. It lasts 30 days, so it covers the longest
+  period. **Undo** by the note above the list takes the last one back; **Show dealt with (N)** lists them again,
+  dimmed, each with who dealt with them and Undo. Needs a bot that keeps it (its README, "Dealt with"); with an older
+  one, those in game have ✓ (Checked, they're fine, as on Now) instead.
 - **By flag:** each list with all its numbers, as below.
 - **Tiles** (By flag): players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
   vehicle, in a helicopter crash, and vehicle suicides) in the period. The first three say how many of them are in game now.
@@ -210,8 +217,10 @@ Server's Bans and VIP.
   on the page, and pick **Full history →**.
 - **The player:** a link to their public player page and their Steam profile, whether they are in game or banned, their
   headshot flags and griefing flags, and Act.
-- **Record:** time played and seeding over the last 90 days, their team kills today (UTC), their Steam account, VIP,
-  ban and staff history, exactly as the Look up tool (and `/player` in Discord) shows them.
+- **Record:** time played, matches, kills and seeding over the last 90 days, their Steam account (its risk and what
+  Steam says), VIP, ban, their team kills today (UTC) with each one, and the staff history, newest first, from the bot
+  as facts (`GET /api/admin/player`, laid out by `record.js`): the same as `/player` in Discord says. With an older bot,
+  the `/player` reply as Discord shows it.
 - **Time on the server** in the period: each time they were on, newest first, with when they joined, when they left
   (or "In game now") and how long, and how many times and how long in all. From the bot's check each minute, like
   Joins and leaves on Now, so a time "since" another means the bot couldn't read the server in between, and "Already
