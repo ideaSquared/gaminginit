@@ -391,6 +391,17 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
       }
       (firstEmpty() ?? (forPlayer ? form.querySelector('.tool-run') : picker)).focus({ preventScroll: true });
     },
+    // Opens a tool with nothing filled in, such as from the command search, at the first thing to fill in.
+    open(key) {
+      if (tools.length === 0) return;
+      output.replaceChildren();
+      show(key);
+      (firstEmpty() ?? form.querySelector('.tool-run')).focus({ preventScroll: true });
+    },
+    // Every tool, as { key, label, group }, in order: for the command search.
+    get list() {
+      return tools.map(({ key, label, group }) => ({ key, label, group }));
+    },
     // Picks the `n`th (from 1) of the first row of buttons, such as a ban's length, and goes to the button. False when
     // there is no such row, or no such button.
     pick(n) {

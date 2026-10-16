@@ -6993,7 +6993,8 @@ body.rot-grabbing * {
   font-size: 0.85rem;
 }
 
-.admin kbd {
+.admin kbd,
+.staff-bar kbd {
   display: inline-block;
   min-width: 1.6em;
   padding: 0 5px;
@@ -7004,6 +7005,210 @@ body.rot-grabbing * {
   color: var(--text);
   font: 600 0.8rem/1.5 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   text-align: center;
+}
+
+/* The Queue's views, under its period: a row of buttons like the period's. */
+.queue-views {
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.queue-view[hidden] {
+  display: none;
+}
+
+/* Flagged players: one row each, every reason on its own line. */
+.queue-table {
+  min-width: 760px;
+}
+
+.queue-tools {
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.queue-tools .team-filter {
+  margin-top: 0;
+}
+
+.queue-tools .check {
+  padding-bottom: 0;
+}
+
+.queue-why {
+  min-width: 18em;
+}
+
+.queue-reason {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.queue-reason + .queue-reason {
+  margin-top: 4px;
+}
+
+.queue-last {
+  min-width: 10em;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.queue-table tr.watch td:first-child {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+/* Players before a search: those staff acted on lately, and who joined or left lately. */
+.players-recent[hidden] {
+  display: none;
+}
+
+.recent-grid {
+  display: grid;
+  gap: 16px 32px;
+}
+
+@media (min-width: 760px) {
+  .recent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.recent-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+/* The Server section's views: a smaller row of tabs under the sections'. */
+.server-tabs [role='tab'] {
+  padding: 6px 12px;
+}
+
+.server-tabs .tab-name {
+  font-size: 0.9rem;
+}
+
+/* The staff bar's buttons say less on a narrower screen; their names stay for screen readers and in their hover. */
+.bar-kbd {
+  margin-left: 2px;
+}
+
+@media (max-width: 1279px) {
+  .bar-button .bar-button-text,
+  .bar-button .bar-kbd {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* The command search: a box near the top of the page, its results under it. */
+.palette {
+  inset: 10vh 0 auto;
+  width: min(600px, calc(100vw - 32px));
+  max-height: 75vh;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text);
+}
+
+.palette[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.palette::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.palette-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--muted);
+}
+
+.palette-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+  outline: none;
+}
+
+.palette-list {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.palette-group {
+  padding: 8px 10px 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.palette-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.palette-item[aria-selected='true'] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.palette-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.palette-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.palette-empty {
+  padding: 12px 10px;
+}
+
+.palette-foot {
+  margin: 0;
+  padding: 8px 16px;
+  border-top: 1px solid var(--hairline);
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 /* A preset reason picked, until its words are changed. */

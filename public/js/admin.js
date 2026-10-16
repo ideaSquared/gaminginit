@@ -34,7 +34,12 @@ import {
   percent,
   PLAYER_SORTS,
   plural,
+  QUEUE_VIEWS,
   reasonFor,
+  recentPlayers,
+  routeHash,
+  SECTIONS,
+  staffRoute,
   recentActions,
   RISK_LABELS,
   sideColours,
@@ -78,19 +83,23 @@ import {
   teamOf,
   when,
 } from './staff.js';
+import { createPalette, matches } from './palette.js';
+import { createQueue } from './queue.js';
+import { createServer } from './server.js';
 import { createTools, replyNodes } from './tools.js';
 import { el, mapTag, playerHref } from './views.js';
 
-// The staff page for moderation, in four tabs. Live: the server now, everyone in game with those worth a look always
-// at the top, to search and act on without leaving the page, every kill as it happens, and who joined and left. Review:
-// what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get, risky Steam
-// accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff did.
-// History: any player's record, kills and headshots, and team kills. Commands: every staff command from Discord (see
-// tools.js). Any player's name opens their panel at the side of the page: what is worth knowing, the buttons to act
+// The staff page, in four sections. Now: the server now, everyone in game with those worth a look always at the top, to
+// search and act on without leaving the page, every kill as it happens, and who joined and left. Queue: what the bot
+// flagged by itself, one row per player with every reason (see queue.js), the lists by flag (far more headshots than a
+// player's weapons usually get, risky Steam accounts, possible griefers), their team kills and vehicle suicides, and
+// the moderation log of what staff did. Players: any player's record, kills and headshots, and team kills, starting
+// from those staff acted on and who was on lately. Server: the bans and VIP, rotations, lines and weapon rules (see
+// server.js). Every staff command from Discord is in the command search (Ctrl K, see palette.js), and the server's own
+// in the Server menu, each opening its form over the page (see tools.js). Any player's name opens their panel at the side of the page: what is worth knowing, the buttons to act
 // with the form for each (Warn, Kick, Ban, Move), their record, staff actions and latest kills. Act on a player, and the
 // quick buttons on the server list, open it with that form ready. Keyboard shortcuts are at the end (? lists them).
-// The bans and VIP, rotations, lines and weapon rules are on the Server settings page (settings.js). Signing in, the
-// Steam account and loading are in staff.js.
+// Signing in, the Steam account and loading are in staff.js.
 
 // The kinds of action staff hid from the moderation log (MOD_ACTIONS keys), kept for this browser when storage is on.
 const MODLOG_HIDDEN_KEY = 'gaminginit-modlog-hidden';
@@ -129,13 +138,9 @@ const ALERTS_KEY = 'gaminginit-look-alerts';
 
 let period = 7;
 let data = null;
-// The tab shown, which the address keeps after the # for all but the first.
-const TABS = ['live', 'review', 'history', 'commands'];
-// The tabs the page had before, which old links name. The Admin tab's commands are on Commands now.
-const OLD_TABS = { players: 'live', alerts: 'review', kills: 'review', admin: 'commands' };
-// The tabs now on the Server settings page, which old links to this page name.
-const SETTINGS_TABS = ['bans', 'rotations', 'lines', 'rules'];
-let tab = 'live';
+// The section shown (see SECTIONS), and the Queue's view, which the address keeps after the # (see staffRoute).
+let tab = 'now';
+let queueView = 'flagged';
 // The server list's search, team (a sideKey, '' for every team, 'none' for no team), "worth a look" and order, which
 // starts with those worth a look at the top.
 const filters = { query: '', team: '', watch: false, sort: 'watch' };
@@ -179,7 +184,10 @@ const signedOut = () => {
   historyKills = null;
   historyRecord = null;
   if ($('keys').open) $('keys').close();
+  if (commandDialog.open) commandDialog.close();
+  if ($('palette').open) $('palette').close();
   records.clear();
+  server.signedOut();
   if (peekDialog.open) peekDialog.close();
   lookSince.clear();
   lookKnown = false;
@@ -195,30 +203,28 @@ const who = (player) =>
     steamLink(player.steamId),
   );
 
-// What the address keeps after the # for the tab shown, and on the History tab the player shown.
-const tabHash = () => (tab === 'live' ? '' : tab === 'history' && historyPlayer ? `#history/${historyPlayer.steamId}` : `#${tab}`);
-
-const selectTab = (name, { focus = false } = {}) => {
-  tab = TABS.includes(name) ? name : 'live';
-  showTab(TABS, tab, { focus });
+// What the address keeps after the # for the section shown, its view, and on Players the player shown.
+const tabHash = () =>
+  routeHash({ section: tab, view: tab === 'queue' ? queueView : tab === 'server' ? server.view : null, steamId: tab === 'players' ? (historyPlayer?.steamId ?? null) : null });
+const keepHash = () => {
   const hash = tabHash();
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+};
+
+const selectTab = (name, { focus = false } = {}) => {
+  tab = SECTIONS.includes(name) ? name : 'now';
+  showTab(SECTIONS, tab, { focus });
+  keepHash();
   // A player's history is drawn straight away with what the page knows, and loaded when it is not yet.
-  if (tab === 'history' && data) {
+  if (tab === 'players' && data) {
     renderHistory();
     if (historyPlayer !== null && !historyLoaded()) loadHistory();
   }
+  // The Server view shown loads its editor the first time.
+  if (tab === 'server') server.show(server.view);
 };
 
-// The tab and player an address names after the #: '' for Live, '#review', '#history/<Steam ID>'. Old links to
-// '#players', '#alerts', '#kills' and '#kills/<Steam ID>' go where those are now.
-const fromHash = (hash) => {
-  const [asked, id] = hash.slice(1).split('/');
-  const steamId = (asked === 'history' || asked === 'kills') && /^\d{17}$/.test(id ?? '') ? id : null;
-  if (steamId !== null) return { name: 'history', steamId };
-  return { name: Object.hasOwn(OLD_TABS, asked) ? OLD_TABS[asked] : asked, steamId: null };
-};
-const isTabHash = (hash) => hash === '' || TABS.includes(fromHash(hash).name) || SETTINGS_TABS.includes(fromHash(hash).name);
+const isTabHash = (hash) => staffRoute(hash) !== null;
 
 // The best name the page has for a Steam ID, until the bot sends theirs.
 const knownName = (steamId) =>
@@ -229,28 +235,37 @@ const knownName = (steamId) =>
     ...(data?.online?.players ?? []),
   ].find((p) => p.steamId === steamId)?.name ?? steamId;
 
-// Shows the tab and player the address names. Old links to the Admin, Rotations, Lines and Weapon rules tabs go to them
-// on the Server settings page.
+// Shows the section, view and player the address names, old links included (see staffRoute). An old link to the
+// Commands tab opens the command search.
 const route = () => {
-  const { name, steamId } = fromHash(location.hash);
-  if (SETTINGS_TABS.includes(name)) {
-    location.replace(keepQuery(`server-settings#${name}`));
-    return;
-  }
-  if (name === 'history') historyPlayer = steamId === null ? null : { steamId, name: knownName(steamId) };
-  selectTab(name);
+  const asked = staffRoute(location.hash);
+  if (asked === null) return;
+  if (asked.section === 'players') historyPlayer = asked.steamId === null ? null : { steamId: asked.steamId, name: knownName(asked.steamId) };
+  if (asked.section === 'queue') showQueueView(asked.view);
+  if (asked.section === 'server') server.show(asked.view);
+  selectTab(asked.section);
+  if (asked.search) palette.open();
 };
 
-// Goes to a player's history, from their name anywhere on the page or a row's Act menu. Back comes back.
+// Goes to a player's history, from their panel, a row's Act menu or Players. Back comes back.
 const openHistory = (player) => {
   historyPlayer = { steamId: player.steamId, name: player.name };
-  const hash = `#history/${player.steamId}`;
+  const hash = `#players/${player.steamId}`;
   if (location.hash !== hash) history.pushState({ player: player.steamId }, '', location.pathname + location.search + hash);
   closeMenus();
   if (peekDialog.open) peekDialog.close();
-  selectTab('history');
+  selectTab('players');
   $('history-player').scrollIntoView({ block: 'start' });
 };
+
+// The Queue's views: Flagged players, By flag, Team kills and the Moderation log.
+const showQueueView = (view) => {
+  queueView = QUEUE_VIEWS.includes(view) ? view : QUEUE_VIEWS[0];
+  for (const b of $('queue-views').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.view === queueView));
+  for (const v of QUEUE_VIEWS) $(`queue-${v}`).hidden = v !== queueView;
+  if (tab === 'queue') keepHash();
+};
+for (const b of $('queue-views').querySelectorAll('button')) b.addEventListener('click', () => showQueueView(b.dataset.view));
 
 // Act: the player's panel, with the form for the tool picked (see openAct).
 const act = (key, player) => {
@@ -258,8 +273,46 @@ const act = (key, player) => {
   openAct(key);
 };
 
-// Commands: every staff command from Discord, to pick, fill in and run.
-const commands = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames, teamOf });
+// A staff command, from the command search or the Server menu: every command from Discord, to pick, fill in and run, in
+// a dialog over the page. A command asked for before the bot's commands have loaded opens when they come.
+const commandDialog = $('command-dialog');
+const COMMAND_NOTE = $('command-note').textContent;
+const commands = createTools({ root: $('command-tools'), call, onChanged: () => load(), staff: staffNames, teamOf });
+let commandWaiting = null;
+let commandMissing = null;
+const openCommand = (key) => {
+  closeMenus();
+  if (!commandDialog.open) commandDialog.showModal();
+  if (commands.ready) {
+    setStatus($('command-note'), COMMAND_NOTE);
+    commands.open(key);
+  } else {
+    commandWaiting = key;
+    setStatus($('command-note'), commandMissing ?? 'Loading the staff commands…');
+  }
+};
+$('command-close').addEventListener('click', () => commandDialog.close());
+
+// The Server menu in the staff bar: the commands for the whole server, and the rotations.
+const SERVER_COMMANDS = ['broadcast', 'setnextmap', 'changemap', 'seednow'];
+const serverMenu = () => {
+  const item = (text, run) => el('button', { type: 'button', className: 'account-item', textContent: text, onclick: () => ((($('server-menu').open = false), run())) });
+  $('server-menu-list').replaceChildren(
+    ...commands.list.filter((t) => SERVER_COMMANDS.includes(t.key)).map((t) => item(t.label, () => openCommand(t.key))),
+    item('Map rotations', () => {
+      server.show('rotations');
+      selectTab('server');
+    }),
+  );
+};
+
+// The bot's commands have come: the Server menu has them, and a command asked for meanwhile opens.
+const commandsReady = () => {
+  serverMenu();
+  const asked = commandWaiting;
+  commandWaiting = null;
+  if (asked && commandDialog.open) openCommand(asked);
+};
 
 // What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History and the
 // kill feed are not admin tools: they open the History tab, and show only that player in the kill feed.
@@ -478,6 +531,7 @@ const renderGriefers = (overview) => {
               textContent: focus === p.steamId ? 'Showing' : 'Incidents',
               onclick: () => {
                 focus = p.steamId;
+                showQueueView('teamkills');
                 render(data);
                 $('incidents-title').scrollIntoView({ block: 'start' });
               },
@@ -975,7 +1029,7 @@ const renderFeed = () => {
 const watchFeed = (player) => {
   killFilters.feed.player = player === null ? null : { steamId: player.steamId, name: player.name };
   if (peekDialog.open) peekDialog.close();
-  if (tab !== 'live') selectTab('live');
+  if (tab !== 'now') selectTab('now');
   renderFeed();
   if (player !== null) $('feed-card').scrollIntoView({ block: 'nearest' });
 };
@@ -1165,13 +1219,18 @@ const renderUnnamed = () => {
   table($('unnamed-weapons'), ['Weapon', ['Kills', 'num'], ['Longest', 'num'], 'Last used', 'Used most by'], weapons.map(row), '');
 };
 
-// The Review tab's count and headshot tile, which need the headshots list as well as the overview.
+// The Queue: its list of flagged players, its counts, and the headshot tile, which need the headshots list as well as
+// the overview.
 const renderReviewCounts = () => {
   if (!data) return;
   const flagged = kills?.totals.flaggedPlayers ?? 0;
-  const alerts = alertCount(data) + flagged;
-  $('count-review').textContent = String(alerts);
-  $('count-review').classList.toggle('tab-count-alert', alerts > 0);
+  const online = new Map((data.online?.players ?? []).map((p) => [p.steamId, p]));
+  const count = queue.render({ overview: data, kills, online, now: data.generatedAt });
+  $('count-queue').textContent = String(count);
+  $('count-queue').classList.toggle('tab-count-alert', count > 0);
+  $('count-flagged').textContent = String(count);
+  $('count-teamkills').textContent = String(data.incidents.length);
+  $('count-log').textContent = String(data.moderation.length);
   $('tile-headshot-flags').textContent = kills ? String(flagged) : '–';
   $('tile-headshot-flags-note').textContent =
     kills && data.online ? `${kills.players.filter((p) => p.flaggedDays > 0 && onlineIds.has(p.steamId)).length} in game` : '';
@@ -1184,7 +1243,7 @@ const renderKills = () => {
     renderHeadshots();
     renderUnnamed();
   }
-  if (tab === 'history') renderHistory();
+  if (tab === 'players') renderHistory();
 };
 
 // Draws new kills, or keeps them until an open Act menu closes.
@@ -1323,6 +1382,7 @@ const renderHistoryGrief = (steamId) => {
 
 const renderHistory = () => {
   $('history-player').hidden = historyPlayer === null;
+  renderRecent();
   const days = period === 1 ? 'Today' : `The last ${period} days`;
   setStatus($('history-period-note'), `${days} (UTC days), for their time on the server, kills and team kills. Their record covers the last 90 days.`);
   if (historyPlayer === null) return;
@@ -1442,8 +1502,9 @@ const searchPlayers = async (typed) => {
 // Opens the History tab's search with something typed, such as a name nobody in game has.
 const findPlayer = (query) => {
   historyPlayer = null;
-  selectTab('history');
+  selectTab('players');
   $('history-search').value = query;
+  renderRecent();
   searchPlayers(query);
   $('history-search').focus();
 };
@@ -1770,7 +1831,7 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key === '/') {
-    const search = tab === 'live' ? $('player-search') : tab === 'history' ? $('history-search') : null;
+    const search = tab === 'now' ? $('player-search') : tab === 'players' ? $('history-search') : null;
     if (search) {
       event.preventDefault();
       search.focus();
@@ -1778,7 +1839,7 @@ document.addEventListener('keydown', (event) => {
     }
     return;
   }
-  if (tab !== 'live' || !$('server-players').contains(at)) return;
+  if (tab !== 'now' || !$('server-players').contains(at)) return;
   // In the server list: ↓ and ↑ move from player to player (↑ from the first goes back to the search), and the letters
   // act on the player you are on.
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -1887,7 +1948,7 @@ const alertLook = (fresh, overview) => {
     }
     note.addEventListener('click', () => {
       window.focus();
-      selectTab('live');
+      selectTab('now');
       peek(p);
       note.close();
     });
@@ -1929,7 +1990,7 @@ const render = (overview) => {
     : `${span} (UTC days).`;
   const players = overview.online?.players ?? [];
   onlineIds = new Set(players.map((p) => p.steamId));
-  $('count-live').textContent = overview.online ? String(players.length) : '–';
+  $('count-now').textContent = overview.online ? String(players.length) : '–';
   renderReviewCounts();
   $('tile-risky').textContent = overview.steam ? String(overview.steam.high + overview.steam.medium) : 'Off';
   // How many of the alerts are for players in game now, when the server is answering.
@@ -1954,8 +2015,10 @@ const render = (overview) => {
   renderIncidents(overview);
   renderSteam(overview);
   renderModeration(overview);
-  if (tab === 'history') renderHistory();
+  renderRecent();
+  if (tab === 'players') renderHistory();
   if (peekDialog.open) renderPeek();
+  server.render(overview, { open: tab === 'server' });
   loadCommands(
     panelTools,
     (text) => {
@@ -1964,9 +2027,14 @@ const render = (overview) => {
     },
     actReady,
   );
-  loadCommands(commands, (text) => {
-    $('tools-note').textContent = text;
-  });
+  loadCommands(
+    commands,
+    (text) => {
+      commandMissing = text;
+      setStatus($('command-note'), text);
+    },
+    commandsReady,
+  );
 };
 
 for (const button of document.querySelectorAll('.period button[data-days]')) {
@@ -1977,9 +2045,9 @@ for (const button of document.querySelectorAll('.period button[data-days]')) {
   });
 }
 
-// Tabs: click, or ← → Home End from the tab bar.
-for (const t of TABS) $(`tab-${t}`).addEventListener('click', () => selectTab(t));
-tabKeys(TABS, () => tab, selectTab);
+// Sections: click, or ← → Home End from their tabs.
+for (const t of SECTIONS) $(`tab-${t}`).addEventListener('click', () => selectTab(t));
+tabKeys(SECTIONS, () => tab, selectTab);
 
 // The server list's search, sort and "worth a look".
 $('player-sort').replaceChildren(...Object.entries(PLAYER_SORTS).map(([value, text]) => el('option', { value, textContent: text })));
@@ -2035,6 +2103,104 @@ $('history-search').addEventListener('input', (event) => {
 
 if (demo) startDemoFeed();
 
+// The Queue's list of flagged players (see queue.js), with what staff last did to each in the period.
+const queue = createQueue({
+  who,
+  quickActs,
+  actMenu,
+  lastAction: (steamId) => {
+    const e = data?.moderation.find((m) => m.player.steamId === steamId);
+    return e ? `${modActionLabel(e.action)} ${timeAgo(data.generatedAt - e.at)} · ${staffBy(e, data.staff ?? {})}` : null;
+  },
+});
+
+// The Server section (see server.js). A dot on its tab while an editor has changes not saved yet.
+const server = createServer({
+  who,
+  act,
+  changed: (dirty) => {
+    $('dirty-server').hidden = !dirty;
+  },
+  selected: () => {
+    if (tab === 'server') keepHash();
+  },
+});
+
+// Players, before a search or a player: those staff acted on lately, and who joined or left lately. Each opens their
+// history.
+const renderRecent = () => {
+  const showing = historyPlayer === null && $('history-search').value.trim() === '';
+  $('players-recent').hidden = !showing;
+  if (!showing || !data) return;
+  const now = data.generatedAt;
+  const { acted, seen } = recentPlayers({ moderation: data.moderation, joins: data.joins ?? [] });
+  const item = (player, text) =>
+    el(
+      'li',
+      {},
+      el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, title: `Steam ID ${player.steamId}`, onclick: () => openHistory(player) }),
+      onlineIds.has(player.steamId) ? badge('In game', 'accent') : null,
+      el('span', { className: 'muted', textContent: ` ${text}` }),
+    );
+  const list = (node, items, empty) => node.replaceChildren(...(items.length > 0 ? items : [el('li', { className: 'muted', textContent: empty })]));
+  list($('recent-acted'), acted.map((a) => item(a.player, `${modActionLabel(a.action)} ${timeAgo(now - a.at)}`)), 'Nobody in this period.');
+  list(
+    $('recent-seen'),
+    seen.map((j) => item(j.player, `${j.kind === 'joined' ? 'joined' : 'left'} ${timeAgo(now - j.at)}`)),
+    data.joins === undefined ? 'The bot does not keep who joins and leaves yet.' : 'Nobody lately.',
+  );
+};
+$('history-search').addEventListener('input', renderRecent);
+
+// The command search, Ctrl K or Search in the staff bar (see palette.js): the sections, every staff command, and any
+// player the bot knows.
+const go = (section, view = null) => () => {
+  if (section === 'queue') showQueueView(view);
+  if (section === 'server') server.show(view);
+  selectTab(section);
+};
+const PLACES = [
+  { label: 'Now', note: 'Who is on, and every kill', words: 'live server list kill feed joins leaves', run: go('now') },
+  { label: 'Queue: flagged players', note: 'Everyone the bot flagged, one row each', words: 'review flags', run: go('queue', 'flagged') },
+  { label: 'Queue: by flag', note: 'Headshots, risky Steam accounts, possible griefers', words: 'review headshots steam griefers weapons to name', run: go('queue', 'flags') },
+  { label: 'Queue: team kills', note: 'Team kills and vehicle suicides', words: 'incidents', run: go('queue', 'teamkills') },
+  { label: 'Queue: moderation log', note: 'What staff did', words: 'warnings kicks bans unbans vip', run: go('queue', 'log') },
+  { label: 'Players', note: 'Any player’s history', words: 'history record find', run: go('players') },
+  { label: 'Server: bans and VIP', note: 'Bans, whitelist slots, staff Steam accounts', words: 'settings unban whitelist', run: go('server', 'bans') },
+  { label: 'Server: rotations', note: 'The maps for each day', words: 'settings maps week', run: go('server', 'rotations') },
+  { label: 'Server: lines', note: 'What the bot says in game', words: 'settings messages seeding welcome', run: go('server', 'lines') },
+  { label: 'Server: weapon rules', note: 'Weapons the bot warns or kicks for', words: 'settings', run: go('server', 'rules') },
+  { label: 'Keyboard shortcuts', note: 'Every key on this page', words: 'keys help', run: () => $('keys').showModal() },
+];
+const palette = createPalette({
+  dialog: $('palette'),
+  input: $('palette-input'),
+  list: $('palette-list'),
+  items: (query) => [
+    ...PLACES.filter((p) => matches(`${p.label} ${p.note} ${p.words}`, query)).map((p) => ({ group: 'Go to', label: p.label, note: p.note, run: p.run })),
+    ...commands.list
+      .filter((t) => matches(`${t.label} ${t.group} ${t.key}`, query))
+      .map((t) => ({ group: 'Commands', label: t.label, note: t.group, run: () => openCommand(t.key) })),
+  ],
+  // Players by name or Steam ID, from the same suggestions as the commands' player lists.
+  find: async (query) => {
+    const { ok, json } = await call('admin/suggest', { name: 'player', options: { player: query }, focused: 'player' });
+    const choices = ok ? (json?.choices ?? []) : [];
+    const direct = /^\d{17}$/.test(query) && !choices.some((c) => c.value === query) ? [{ name: `Steam ID ${query}`, value: query }] : [];
+    return [...choices, ...direct].map((c) => {
+      const [name, ...rest] = c.name.split(' · ');
+      return { group: 'Players', label: name, note: rest.join(' · '), run: () => peek({ steamId: c.value, name }) };
+    });
+  },
+});
+$('search-open').addEventListener('click', () => palette.open());
+document.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'k' || data === null) return;
+  event.preventDefault();
+  if ($('palette').open) $('palette').close();
+  else palette.open();
+});
+
 start({
   route,
   isRoute: isTabHash,
@@ -2043,7 +2209,7 @@ start({
   // The headshots and the player shown on History load with each refresh, and the live kill feed opens once signed in.
   loaded: () => {
     loadKills();
-    if (tab === 'history') loadHistory();
+    if (tab === 'players') loadHistory();
     connectFeed();
   },
   signedOut,

@@ -2,16 +2,15 @@ import { demoAdmin, demoCall, demoCommands } from './demo.js';
 import { clockHour, readSteamId, sessionExpiry, sideColours, sideKey, signInResult, staffBy, steamLinkedText, timeAgo } from './format.js';
 import { demo, keepQuery, showNotice, thisPage } from './live.js';
 import { botUrl, configured, forgetToken, loadToken, saveToken } from './session.js';
-import { createTools } from './tools.js';
 import { el, link, mapTag } from './views.js';
 
-// What the two staff pages share: Moderation (admin.html, see admin.js) and Server settings (server-settings.html, see
-// settings.js). Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
-// session token, which is kept for this browser and sent with each request, so signing in on one page signs in on both.
-// Each page loads the bot's staff overview every minute while it is visible. Both have the staff bar at the top: the two
-// pages, the server now, and a menu with who is signed in, their Steam account and Sign out. Staff link the Steam account
-// they play on, so the bot never counts them as seeders: whichever page they open asks once each sign-in, in a banner,
-// until they have. Each panel's "?" shows what it is about. ?demo shows sample data without signing in.
+// The staff page's signing in, loading and staff bar (admin.html, see admin.js; the Server section is server.js). Staff
+// sign in with Discord through the bot; the bot checks they are staff and sends them back with a session token, which
+// is kept for this browser and sent with each request. The page loads the bot's staff overview every minute while it is
+// visible. The staff bar at the top has the server now, and a menu with who is signed in, their Steam account and Sign
+// out. Staff link the Steam account they play on, so the bot never counts them as seeders: the page asks once each
+// sign-in, in a banner, until they have. Each panel's "?" shows what it is about. ?demo shows sample data without
+// signing in.
 
 // The session and the bot's address, for the staff pages' modules (see session.js).
 export { botUrl, configured, loadToken };
@@ -79,12 +78,13 @@ export const staffCell = (entry, staff = {}) => {
   return cell(el('a', { href: `https://discord.com/users/${entry.by}`, rel: 'noopener noreferrer', target: '_blank', textContent: text }));
 };
 
-// A player's history, on the Moderation page, from any page. Keeps ?demo, so a preview stays a preview.
-export const historyHref = (steamId) => keepQuery(`admin#history/${steamId}`);
+// A player's history, on the staff page's Players section. Keeps ?demo, so a preview stays a preview.
+export const historyHref = (steamId) => keepQuery(`admin#players/${steamId}`);
 
-// The page's tabs: click, or ← → Home End from the tab bar. `select(name, { focus })` shows one.
-export const tabKeys = (tabs, current, select) =>
-  document.querySelector('.admin-tabs').addEventListener('keydown', (event) => {
+// A row of tabs: click, or ← → Home End from it. `select(name, { focus })` shows one. `bar` is the row, the page's
+// sections by default.
+export const tabKeys = (tabs, current, select, bar = document.querySelector('.admin-tabs')) =>
+  bar.addEventListener('keydown', (event) => {
     const i = tabs.indexOf(current());
     const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[event.key];
     if (next === undefined) return;
@@ -233,78 +233,6 @@ export const loadCommands = async (tools, note, ready = () => undefined) => {
   }
   tools.setCommands(commands);
   ready();
-};
-
-// Act: the admin tool for a player, such as Kick or Unban, in a dialog over the page (#act-dialog), so staff never leave
-// what they were working on. Only the tools that take a player are offered. When the button staff came from was drawn
-// again while the dialog was open, such as after a kick or a refresh, `refocus(steamId, key)` gives the one to go back
-// to, if any: the same player's button for the same tool (`key`, such as 'unban').
-export const createActDialog = ({ refocus = () => null } = {}) => {
-  const dialog = $('act-dialog');
-  const ACT_NOTE = $('act-note').textContent;
-  const tools = createTools({
-    root: $('act-tools'),
-    idPrefix: 'act-tool',
-    call,
-    onChanged: () => load(),
-    staff: staffNames,
-    teamOf,
-    only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
-  });
-  // Why there are no tools, when the bot has none.
-  let missing = null;
-  // The button staff came from, the player and tool it was for, and the tool asked for before the tools had loaded.
-  let from = null;
-  let forId = null;
-  let forKey = null;
-  let waiting = null;
-
-  // Opens an admin tool with the player picked. Until the tools have loaded, the dialog says so and opens the tool when
-  // they come.
-  const act = (key, player) => {
-    from = document.activeElement?.closest('.act-menu')?.querySelector('summary') ?? document.activeElement;
-    forId = player.steamId;
-    forKey = key;
-    $('act-dialog-title').textContent = `Act on ${player.name}`;
-    setStatus($('act-note'), tools.ready ? ACT_NOTE : (missing ?? 'Loading the admin tools…'));
-    if (!dialog.open) dialog.showModal();
-    waiting = tools.ready ? null : { key, player };
-    tools.use(key, player.steamId, player.name);
-  };
-
-  // The tools have loaded: the tool asked for while they were loading opens now, if the dialog is still open.
-  const ready = () => {
-    const asked = waiting;
-    waiting = null;
-    if (!asked || !dialog.open) return;
-    setStatus($('act-note'), ACT_NOTE);
-    tools.use(asked.key, asked.player.steamId, asked.player.name);
-  };
-
-  $('act-close').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => {
-    const again = from?.isConnected ? from : refocus(forId, forKey);
-    again?.focus({ preventScroll: true });
-    from = null;
-    forId = null;
-    forKey = null;
-    waiting = null;
-  });
-
-  return {
-    act,
-    dialog,
-    // The bot's commands for its tools, once; called as the page draws the overview.
-    load: () =>
-      loadCommands(
-        tools,
-        (text) => {
-          missing = text;
-          setStatus($('act-note'), text);
-        },
-        ready,
-      ),
-  };
 };
 
 // Linking the signed-in staff member's Steam account. Until they have, the page asks once each sign-in, told apart by
@@ -458,14 +386,15 @@ const showMenu = (overview) => {
   );
 };
 
-// The menu closes on a click elsewhere, or Escape.
+// The staff bar's menus close on a click elsewhere, or Escape.
 document.addEventListener('click', (event) => {
-  if (!event.target.closest('.account-menu')) $('account').open = false;
+  for (const menu of document.querySelectorAll('.account-menu[open]')) if (!menu.contains(event.target)) menu.open = false;
 });
 document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape' || !$('account').open) return;
-  $('account').open = false;
-  $('account-name').focus();
+  const menu = document.querySelector('.account-menu[open]');
+  if (event.key !== 'Escape' || !menu) return;
+  menu.open = false;
+  menu.querySelector('summary').focus();
 });
 
 // Each panel's "?" shows or hides what the panel is about.

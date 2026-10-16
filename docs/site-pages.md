@@ -108,10 +108,11 @@ What it shows:
   - The season's end is set in the bot (`SEASON` in its `src/season.ts`); the page takes it from the bot.
 - Seeder VIP: what seeding earns (a whitelist slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
-- Two staff pages, for staff only: they sign in with Discord. **Moderation** (`/admin`): who is on the server, with
-  anyone worth a look at the top, to act on there and then, the kill feed, what the bot flagged, any player's history
-  and every staff command. **Server settings** (`/server-settings`): the bans and whitelist slots, the map rotations,
-  what the bot says in game and the weapon rules. See [Staff pages](staff-pages.md).
+- The staff page (`/admin`), for staff only: they sign in with Discord. **Now**: who is on the server, with anyone
+  worth a look at the top, to act on there and then, and the kill feed. **Queue**: everyone the bot flagged, one row
+  each. **Players**: any player's history. **Server**: the bans and whitelist slots, the map rotations, what the bot
+  says in game and the weapon rules. Every staff command is in its command search. `/server-settings` goes to Server.
+  See [Staff page](staff-pages.md).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
