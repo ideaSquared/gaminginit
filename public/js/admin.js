@@ -8,6 +8,7 @@ import {
   checkHolds,
   checkOf,
   clockHour,
+  dealtOf,
   DEATH_TAGS,
   factionColours,
   feedEmpty,
@@ -85,6 +86,7 @@ import {
 } from './staff.js';
 import { createPalette, matches } from './palette.js';
 import { createQueue } from './queue.js';
+import { recordNodes } from './record.js';
 import { createServer } from './server.js';
 import { createTools, replyNodes } from './tools.js';
 import { el, mapTag, playerHref } from './views.js';
@@ -343,21 +345,30 @@ const runAction = (key, player) => {
   else act(key, player);
 };
 
-// Notes a "Checked, they're fine", or takes one back, for all staff, and loads the page again to show it.
-const checkPlayer = async (player, on) => {
-  const body = on ? { action: 'check', steamId: player.steamId, ...checkOf(player) } : { action: 'uncheck', steamId: player.steamId };
+// Saves a mark for all staff (a check, or a dealt with), and loads the page again to show it. Resolves to whether it was
+// saved.
+const saveMark = async (path, body) => {
   try {
-    const { ok, json } = await call('admin/check', body);
+    const { ok, json } = await call(path, body);
     if (!ok) {
       if (demo || loadToken()) showNotice(json?.error ?? 'Couldn’t save that just now. Try again in a minute.');
-      return;
+      return false;
     }
     load();
+    return true;
   } catch (error) {
-    console.error('Could not save a check', error);
+    console.error(`Could not save ${path}`, error);
     showNotice('Couldn’t reach the bot. Try again in a minute.');
+    return false;
   }
 };
+
+// Notes a "Checked, they're fine", or takes one back.
+const checkPlayer = (player, on) =>
+  saveMark('admin/check', on ? { action: 'check', steamId: player.steamId, ...checkOf(player) } : { action: 'uncheck', steamId: player.steamId });
+
+// Notes a "Dealt with" on a Queue row, or undoes it (see queue.js).
+const dealWith = (row, on) => saveMark('admin/dealt', on ? { action: 'deal', steamId: row.steamId, ...dealtOf(row) } : { action: 'undo', steamId: row.steamId });
 
 const closeMenus = (except = null) => {
   for (const menu of document.querySelectorAll('.act-menu[open]')) if (menu !== except) menu.open = false;
@@ -631,13 +642,13 @@ const worthKnowing = (p, overview, acted) => {
 };
 
 // One click to warn, kick or ban a player worth a look, or to say they're fine once checked (✓, named in full for
-// screen readers and on hover).
+// screen readers and on hover). `check` false leaves out the ✓, as on the Queue, which has Dealt with in its place.
 const QUICK = { warn: ['Warn'], kick: ['Kick'], ban: ['Ban'], check: ['✓', 'Checked, they’re fine'] };
-const quickActs = (p) =>
+const quickActs = (p, { check = true } = {}) =>
   el(
     'span',
     { className: 'quick-acts' },
-    ...['warn', 'kick', 'ban', ...(checkAction(p) === 'check' ? ['check'] : [])].map((key) => {
+    ...['warn', 'kick', 'ban', ...(check && checkAction(p) === 'check' ? ['check'] : [])].map((key) => {
       const [text, name] = QUICK[key];
       const b = el('button', { type: 'button', className: `btn btn-ghost btn-small quick-${key}`, textContent: text, onclick: () => runAction(key, p) });
       if (name) {
@@ -1409,17 +1420,36 @@ const renderHistory = () => {
     ),
   );
   $('history-act').replaceChildren(actMenu({ steamId, name: player.name }));
-  const record = historyRecord?.steamId === steamId ? historyRecord : null;
-  $('history-record').replaceChildren(
-    ...(record === null
-      ? [el('p', { className: 'muted', textContent: 'Loading their record…' })]
-      : record.reply
-        ? replyNodes(record.reply, data?.staff ?? {})
-        : [el('p', { className: 'tool-error', textContent: record.error })]),
-  );
+  $('history-record').replaceChildren(...recordView(historyRecord?.steamId === steamId ? historyRecord : null));
   renderHistorySessions();
   renderHistoryKills();
   renderHistoryGrief(steamId);
+};
+
+// A player's record from the bot, as facts (GET /api/admin/player): { record }. An older bot has only its /player reply,
+// as Discord shows it: { reply }. { error } when it could not be loaded.
+const fetchRecord = async (steamId) => {
+  const failed = (answer) => ({ error: answer.json?.error ?? 'Couldn’t load their record just now.' });
+  try {
+    if (demo) return { record: demoPlayerRecord(steamId, Date.now()) };
+    const answer = await get(`admin/player?player=${steamId}`);
+    if (answer.ok) return { record: answer.json };
+    if (answer.status !== 404) return failed(answer);
+    const reply = await call('admin/command', { name: 'player', options: { player: steamId } });
+    return reply.ok ? { reply: reply.json } : failed(reply);
+  } catch (error) {
+    console.error('Could not load the player’s record', error);
+    return { error: 'Couldn’t reach the bot. Try again in a minute.' };
+  }
+};
+
+// A record as loaded (see fetchRecord), or that it is loading.
+const recordView = (loaded) => {
+  const staff = data?.staff ?? {};
+  if (!loaded) return [el('p', { className: 'muted', textContent: 'Loading their record…' })];
+  if (loaded.record) return recordNodes(loaded.record, { staff, now: data?.generatedAt ?? Date.now() });
+  if (loaded.reply) return replyNodes(loaded.reply, staff);
+  return [el('p', { className: 'tool-error', textContent: loaded.error })];
 };
 
 // Their kills for the period, with each refresh while History is open, and their record once each time they are opened.
@@ -1429,22 +1459,13 @@ const loadHistory = async () => {
   const shown = historyPlayer;
   const days = period;
   const wantRecord = historyRecord?.steamId !== shown.steamId;
-  const recordCall = !wantRecord
-    ? null
-    : demo
-      ? Promise.resolve({ ok: true, json: demoPlayerRecord(shown.steamId, Date.now()) })
-      : call('admin/command', { name: 'player', options: { player: shown.steamId } });
   try {
     const [killsAnswer, recordAnswer] = await Promise.all([
       demo ? { ok: true, status: 200, json: demoPlayerKills(shown.steamId, days, Date.now()) } : get(`admin/kills?days=${days}&player=${shown.steamId}`),
-      recordCall,
+      wantRecord ? fetchRecord(shown.steamId) : null,
     ]);
     if (mine !== historyGeneration || killsAnswer.status === 401) return;
-    if (recordAnswer) {
-      historyRecord = recordAnswer.ok
-        ? { steamId: shown.steamId, reply: recordAnswer.json }
-        : { steamId: shown.steamId, error: recordAnswer.json?.error ?? 'Couldn’t load their record just now.' };
-    }
+    if (recordAnswer) historyRecord = { steamId: shown.steamId, ...recordAnswer };
     if (killsAnswer.status === 404) {
       killsStatus('The bot does not have the kill feed for staff yet. Deploy the latest bot.');
     } else if (!killsAnswer.ok) {
@@ -1574,18 +1595,12 @@ const closeAct = () => {
   $('peek-act').hidden = true;
 };
 
-// Each player's record (the Look up reply) as loaded this visit, by Steam ID: { reply } or { error }, null while loading.
+// Each player's record as loaded this visit, by Steam ID: { record }, { reply } from an older bot, or { error }; null
+// while loading.
 const records = new Map();
 
 const renderRecord = () => {
-  const record = peekPlayer ? records.get(peekPlayer.steamId) : undefined;
-  $('peek-record-body').replaceChildren(
-    ...(record === undefined || record === null
-      ? [el('p', { className: 'muted', textContent: 'Loading their record…' })]
-      : record.reply
-        ? replyNodes(record.reply, data?.staff ?? {})
-        : [el('p', { className: 'tool-error', textContent: record.error })]),
-  );
+  $('peek-record-body').replaceChildren(...recordView(peekPlayer ? records.get(peekPlayer.steamId) : undefined));
 };
 
 // The panel player's record, when Record is opened: once each visit, and again after staff act on them. One that
@@ -1599,13 +1614,7 @@ const loadRecord = async () => {
   }
   records.set(steamId, null);
   renderRecord();
-  try {
-    const answer = demo ? { ok: true, json: demoPlayerRecord(steamId, Date.now()) } : await call('admin/command', { name: 'player', options: { player: steamId } });
-    records.set(steamId, answer.ok ? { reply: answer.json } : { error: answer.json?.error ?? 'Couldn’t load their record just now.' });
-  } catch (error) {
-    console.error('Could not load the player’s record', error);
-    records.set(steamId, { error: 'Couldn’t reach the bot. Close Record and open it again to try again.' });
-  }
+  records.set(steamId, await fetchRecord(steamId));
   if (peekPlayer?.steamId === steamId) renderRecord();
 };
 $('peek-record').addEventListener('toggle', () => {
@@ -2103,11 +2112,13 @@ $('history-search').addEventListener('input', (event) => {
 
 if (demo) startDemoFeed();
 
-// The Queue's list of flagged players (see queue.js), with what staff last did to each in the period.
+// The Queue's list of flagged players (see queue.js), with what staff last did to each in the period. With a bot that
+// keeps "Dealt with", that takes the place of the ✓.
 const queue = createQueue({
   who,
-  quickActs,
+  quickActs: (p) => quickActs(p, { check: data?.dealt === undefined }),
   actMenu,
+  deal: dealWith,
   lastAction: (steamId) => {
     const e = data?.moderation.find((m) => m.player.steamId === steamId);
     return e ? `${modActionLabel(e.action)} ${timeAgo(data.generatedAt - e.at)} · ${staffBy(e, data.staff ?? {})}` : null;

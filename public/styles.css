@@ -7253,3 +7253,65 @@ body.rot-grabbing * {
 .tab-dirty[hidden] {
   display: none;
 }
+
+/* "Dealt with" on the Queue: hidden unless staff show them, then dimmed, with Undo. */
+.queue-table tr.row-dealt td {
+  opacity: 0.7;
+}
+
+.queue-done:empty {
+  display: none;
+}
+
+.queue-done .link-button {
+  font-weight: 600;
+}
+
+.admin .quick-dealt {
+  white-space: nowrap;
+}
+
+/* A player's record from the bot, as facts: label on the left, what it says on the right. */
+.record-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.record-fact {
+  display: contents;
+}
+
+.record-fact dt {
+  color: var(--muted);
+}
+
+.record-fact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.record-more {
+  display: block;
+  color: var(--muted);
+}
+
+.record-heading {
+  margin: 16px 0 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.record-note {
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
+.record-text {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}

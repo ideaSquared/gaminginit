@@ -923,6 +923,9 @@ export const actedText = ({ entry, count }, now, staff = {}) =>
 // "Checked by Sarge 4 min ago": a staff member's "Checked, they're fine" today.
 export const checkedText = (check, now, staff = {}) => `Checked by ${byWhom(check, staff)} ${timeAgo(now - check.at)}`;
 
+// "Dealt with by Kestrel 2 days ago": a staff member's "Dealt with" on the Queue.
+export const dealtText = (dealt, now, staff = {}) => `Dealt with by ${byWhom(dealt, staff)} ${timeAgo(now - dealt.at)}`;
+
 // Where a player in game goes in the list, as numbers compared in turn, highest first: banned, then flagged for
 // griefing today (most team kills first), flagged for headshots, a high-risk then a risky Steam account, then anyone
 // with team kills or vehicle suicides today below the flags. Each only decides between players level on those before
@@ -1061,16 +1064,27 @@ export const teamOptions = (choices, team) =>
 // Steam accounts and `griefers` everyone with team kills or suicides (both from the overview); `inGame` the Steam IDs in
 // game now. Headshots count with a flagged day or a chance by luck below ordinary, not while the bot can't say yet;
 // Steam accounts all count (the bot only sends risky ones), with how old they are when Steam shows it; griefing only once
-// flagged. Each reason is { kind: 'headshots' | 'steam' | 'griefing',
-// serious, text }: serious is a flagged day, a high-risk account, or griefing. In game first, then the most serious
-// reasons, then the most reasons, then by name.
+// flagged. Each reason is { kind: 'headshots' | 'steam' | 'griefing', serious, text }: serious is a flagged day, a
+// high-risk account, or griefing. Each row also has what "Dealt with" keeps (see dealtHolds): the latest day flagged for
+// headshots and for griefing ('2026-10-16', or null: none, or an older bot), and the Steam account's risk score (null
+// when it is not risky). In game first, then the most serious reasons, then the most reasons, then by name.
 export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = new Set(), now }) => {
   const rows = new Map();
-  const add = (player, reason) => {
-    const row = rows.get(player.steamId) ?? { steamId: player.steamId, name: player.name, id: player.id ?? null, banned: false, reasons: [] };
+  const add = (player, reason, keep) => {
+    const row = rows.get(player.steamId) ?? {
+      steamId: player.steamId,
+      name: player.name,
+      id: player.id ?? null,
+      banned: false,
+      reasons: [],
+      headshotDay: null,
+      griefDay: null,
+      steamScore: null,
+    };
     row.reasons.push(reason);
     row.banned ||= Boolean(player.banned);
     row.id ??= player.id ?? null;
+    Object.assign(row, keep);
     rows.set(player.steamId, row);
   };
   for (const p of headshots) {
@@ -1082,11 +1096,12 @@ export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = 
       luckOdds(p.chance),
       ...(p.flaggedDays > 0 ? [flaggedDaysLabel(p.flaggedDays).toLowerCase()] : []),
     ];
-    add(p, { kind: 'headshots', serious: p.flaggedDays > 0, text: text.join(' · ') });
+    add(p, { kind: 'headshots', serious: p.flaggedDays > 0, text: text.join(' · ') }, { headshotDay: p.lastFlaggedDay ?? null });
   }
   for (const a of steam) {
     const why = [...steamWhy(a, now), ...(a.createdAt === null ? [] : [accountAge(a, now)])];
-    add(a, { kind: 'steam', serious: a.risk === 'high', text: [`${RISK_LABELS[a.risk] ?? a.risk}, ${a.score} point${a.score === 1 ? '' : 's'}`, ...why].join(' · ') });
+    const text = [`${RISK_LABELS[a.risk] ?? a.risk}, ${a.score} point${a.score === 1 ? '' : 's'}`, ...why].join(' · ');
+    add(a, { kind: 'steam', serious: a.risk === 'high', text }, { steamScore: a.score });
   }
   for (const p of griefers) {
     if (p.flags.length === 0) continue;
@@ -1096,13 +1111,90 @@ export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = 
       ...(p.suicides > 0 ? [`${plural(p.suicides, 'suicide')}${withVehicle(p.suicides, p.vehicleSuicides).replace(/^\d+/, '')}`] : []),
       ...(p.flaggedDays > 1 ? [`${p.flaggedDays} days flagged`] : []),
     ];
-    add(p, { kind: 'griefing', serious: true, text: text.join(' · ') });
+    add(p, { kind: 'griefing', serious: true, text: text.join(' · ') }, { griefDay: p.lastFlaggedDay ?? null });
   }
   const serious = (row) => row.reasons.filter((r) => r.serious).length;
   return [...rows.values()]
     .map((row) => ({ ...row, inGame: inGame.has(row.steamId) }))
     .sort((a, b) => Number(b.inGame) - Number(a.inGame) || serious(b) - serious(a) || b.reasons.length - a.reasons.length || a.name.localeCompare(b.name));
 };
+
+// A player's record from the bot (GET /api/admin/player), in words. `date(at)` writes a time as the page shows them.
+
+// Their whitelist slot, and when staff took VIP away, as lines.
+export const recordVip = (vip, date) => {
+  const slot =
+    vip.kind === 'staff'
+      ? vip.pending
+        ? 'Staff spot, on the whitelist from the next check'
+        : 'Staff spot, while they are staff'
+      : vip.kind === 'bot'
+        ? `Whitelist slot until ${date(vip.until)}`
+        : vip.kind === 'permanent'
+          ? 'Permanent whitelist slot'
+          : vip.kind === 'unknown'
+            ? 'Couldn’t read the whitelist'
+            : 'None';
+  return [
+    vip.checked || vip.kind === 'unknown' ? slot : `${slot}, by the bot’s records. Couldn’t check the whitelist.`,
+    ...(vip.blockedUntil === null ? [] : [`Staff removed their VIP: automatic VIP is off until ${date(vip.blockedUntil)}.`]),
+  ];
+};
+
+// Their ban, as lines: the server's ban list is the truth when the bot could read it.
+export const recordBan = (ban, date, staff = {}) => {
+  if (ban.kind === 'none') return ['Not banned'];
+  if (ban.kind === 'unknown') return ['Couldn’t read the ban list'];
+  if (ban.kind === 'server') return [ban.reason ? `Banned outside the bot: ${ban.reason}` : 'Banned outside the bot'];
+  return [
+    `Banned ${ban.until === null ? 'for good' : `until ${date(ban.until)}`} by ${staffBy(ban, staff)}: ${ban.reason}`,
+    ...(ban.waiting ? ['Not on the server yet: the bot bans them when they next join.'] : []),
+    ...(ban.checked ? [] : ['Couldn’t check the server’s ban list.']),
+  ];
+};
+
+// What Steam says about their account, in one line.
+export const recordSteam = (steam) =>
+  steam.status === 'found'
+    ? steam.risk === 'low'
+      ? 'Nothing risky'
+      : `${RISK_LABELS[steam.risk] ?? steam.risk}, ${plural(steam.score, 'point')}`
+    : steam.status === 'missing'
+      ? 'Steam has no account with this ID'
+      : steam.status === 'failed'
+        ? 'Couldn’t reach Steam just now'
+        : 'Not checked: the bot has no Steam key';
+
+// How many of each thing staff did, such as "2 warnings · 1 kick", from the newest-first log.
+export const recordCounts = (log) =>
+  [
+    ['warn', 'warning'],
+    ['kick', 'kick'],
+    ['ban', 'ban'],
+  ]
+    .map(([action, word]) => [log.filter((e) => e.action === action).length, word])
+    .filter(([n]) => n > 0)
+    .map(([n, word]) => plural(n, word))
+    .join(' · ');
+
+// "Dealt with" still covers a Queue row while nothing new came up since: no reason it did not have then, no day flagged
+// for headshots or griefing after the latest it showed, and no riskier Steam account. `dealt` is the bot's (the
+// overview's `dealt`, by Steam ID), or undefined: nobody dealt with them lately, or an older bot.
+const laterDay = (day, then) => day !== null && (then === null || day > then);
+export const dealtHolds = (row, dealt) =>
+  Boolean(dealt) &&
+  row.reasons.every((r) => dealt.reasons.includes(r.kind)) &&
+  !laterDay(row.headshotDay, dealt.headshotDay) &&
+  !laterDay(row.griefDay, dealt.griefDay) &&
+  (row.steamScore === null || row.steamScore <= (dealt.steamScore ?? 0));
+
+// What the page sends the bot to deal with a Queue row: what it shows for them now.
+export const dealtOf = (row) => ({
+  reasons: [...new Set(row.reasons.map((r) => r.kind))],
+  headshotDay: row.headshotDay,
+  griefDay: row.griefDay,
+  steamScore: row.steamScore,
+});
 
 // Players for the Players section before a search: those staff acted on lately, then those who joined or left the
 // server lately, each once in each list and newest first, from the overview's moderation log and joins.

@@ -112,6 +112,9 @@ import {
   recentActions,
   actedText,
   checkedText,
+  dealtHolds,
+  dealtOf,
+  dealtText,
   presetReasons,
   PRESET_REASONS,
   teamOptions,
@@ -124,6 +127,10 @@ import {
   actionLabel,
   reasonFor,
   queueRows,
+  recordBan,
+  recordCounts,
+  recordSteam,
+  recordVip,
   recentPlayers,
   staffRoute,
   routeHash,
@@ -1506,6 +1513,56 @@ describe('the Queue', () => {
   it('is empty with nothing flagged', () => {
     assert.deepEqual(queueRows({ now }), []);
   });
+
+  it('keeps the latest flagged days and the Steam score, for Dealt with', () => {
+    const [row] = queueRows({
+      headshots: [hs('1', 'Pike', 2, 1e-6, { lastFlaggedDay: '2026-10-15' })],
+      steam: [account('1', 'Pike', 'high', 5)],
+      griefers: [griefer('1', 'Pike', ['teamKills'], { lastFlaggedDay: '2026-10-14' })],
+      now,
+    });
+    assert.deepEqual([row.headshotDay, row.griefDay, row.steamScore], ['2026-10-15', '2026-10-14', 5]);
+    // An older bot sends no days.
+    const [old] = queueRows({ headshots: [hs('2', 'Rook', 1, 1e-6)], now });
+    assert.deepEqual([old.headshotDay, old.griefDay, old.steamScore], [null, null, null]);
+  });
+});
+
+describe('dealt with', () => {
+  const now = Date.UTC(2026, 9, 16, 18);
+  const row = { reasons: [{ kind: 'headshots' }, { kind: 'steam' }], headshotDay: '2026-10-14', griefDay: null, steamScore: 3 };
+  const dealt = { by: '1', byName: 'Kestrel', at: now - 2 * 86_400_000, reasons: ['headshots', 'steam'], headshotDay: '2026-10-14', griefDay: null, steamScore: 3 };
+
+  it('keeps them off the Queue while nothing new came up', () => {
+    assert.equal(dealtHolds(row, dealt), true);
+    assert.equal(dealtHolds({ ...row, headshotDay: '2026-10-13' }, dealt), true);
+    assert.equal(dealtHolds({ ...row, steamScore: 2 }, dealt), true);
+    assert.equal(dealtHolds({ ...row, reasons: [{ kind: 'steam' }], headshotDay: null }, dealt), true);
+  });
+
+  it('puts them back for a later flagged day, a new reason or a riskier account', () => {
+    assert.equal(dealtHolds({ ...row, headshotDay: '2026-10-16' }, dealt), false);
+    assert.equal(dealtHolds({ ...row, reasons: [...row.reasons, { kind: 'griefing' }], griefDay: '2026-10-10' }, dealt), false);
+    assert.equal(dealtHolds({ ...row, steamScore: 4 }, dealt), false);
+    // A day flagged since, when none was then.
+    assert.equal(dealtHolds({ ...row, headshotDay: '2026-10-15' }, { ...dealt, headshotDay: null }), false);
+  });
+
+  it('holds nothing without the bot’s record', () => {
+    assert.equal(dealtHolds(row, undefined), false);
+    assert.equal(dealtHolds(row, null), false);
+  });
+
+  it('sends what the Queue shows now, and says who dealt with them', () => {
+    assert.deepEqual(dealtOf({ ...row, reasons: [{ kind: 'headshots' }, { kind: 'headshots' }] }), {
+      reasons: ['headshots'],
+      headshotDay: '2026-10-14',
+      griefDay: null,
+      steamScore: 3,
+    });
+    assert.equal(dealtText(dealt, now), 'Dealt with by Kestrel 2 days ago');
+    assert.equal(dealtText(dealt, now, { 1: { name: 'Kes', username: null } }).startsWith('Dealt with by Kes'), true);
+  });
 });
 
 describe('recent players', () => {
@@ -1561,5 +1618,42 @@ describe('staff page addresses', () => {
     assert.equal(routeHash({ section: 'server', view: 'bans' }), '#server');
     assert.equal(routeHash({ section: 'server', view: 'rules' }), '#server/rules');
     for (const hash of ['', '#queue', '#queue/teamkills', '#players', `#players/${id}`, '#server', '#server/rotations']) assert.equal(routeHash(staffRoute(hash)), hash);
+  });
+});
+
+describe('a player’s record', () => {
+  const date = (at) => `day ${at}`;
+
+  it('says their VIP, trusting the whitelist when the bot could read it', () => {
+    assert.deepEqual(recordVip({ kind: 'none', checked: true, blockedUntil: null }, date), ['None']);
+    assert.deepEqual(recordVip({ kind: 'bot', until: 5, checked: true, blockedUntil: null }, date), ['Whitelist slot until day 5']);
+    assert.deepEqual(recordVip({ kind: 'staff', pending: true, checked: true, blockedUntil: null }, date), ['Staff spot, on the whitelist from the next check']);
+    assert.deepEqual(recordVip({ kind: 'bot', until: 5, checked: false, blockedUntil: 9 }, date), [
+      'Whitelist slot until day 5, by the bot’s records. Couldn’t check the whitelist.',
+      'Staff removed their VIP: automatic VIP is off until day 9.',
+    ]);
+    assert.deepEqual(recordVip({ kind: 'unknown', checked: false, blockedUntil: null }, date), ['Couldn’t read the whitelist']);
+  });
+
+  it('says their ban, naming who made it', () => {
+    const staff = { 42: { name: 'Sarge', username: null } };
+    assert.deepEqual(recordBan({ kind: 'none', checked: true }, date), ['Not banned']);
+    assert.deepEqual(recordBan({ kind: 'server', reason: null, checked: true }, date), ['Banned outside the bot']);
+    assert.deepEqual(recordBan({ kind: 'bot', reason: 'Cheating', by: '42', at: 1, until: null, waiting: true, checked: true }, date, staff), [
+      'Banned for good by Sarge: Cheating',
+      'Not on the server yet: the bot bans them when they next join.',
+    ]);
+    assert.deepEqual(recordBan({ kind: 'bot', reason: 'TK', by: '7', at: 1, until: 3, waiting: false, checked: false }, date), [
+      'Banned until day 3 by Discord user 7: TK',
+      'Couldn’t check the server’s ban list.',
+    ]);
+  });
+
+  it('says what Steam says, and counts what staff did', () => {
+    assert.equal(recordSteam({ status: 'found', risk: 'high', score: 5 }), 'High risk, 5 points');
+    assert.equal(recordSteam({ status: 'found', risk: 'low', score: 0 }), 'Nothing risky');
+    assert.equal(recordSteam({ status: 'off' }), 'Not checked: the bot has no Steam key');
+    assert.equal(recordCounts([{ action: 'warn' }, { action: 'kick' }, { action: 'warn' }, { action: 'unban' }]), '2 warnings · 1 kick');
+    assert.equal(recordCounts([]), '');
   });
 });

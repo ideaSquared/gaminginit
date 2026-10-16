@@ -199,7 +199,8 @@ The formatting and state logic is in `public/js/format.js` and is what the tests
 `public/js/`, mostly named after it (`stats.js`, `matches.js`, `player.js`, `admin.js` and so on). The exceptions: the
 home page uses `app.js` and `/live` uses `livematch.js`. The staff page, `/admin`, has more: `queue.js` (its Queue),
 `server.js` (its Server section, which loads `rotations.js`, `lines.js` and `rules.js` when they are opened),
-`palette.js` (the command search), `tools.js` (the staff commands' forms) and `ask.js` (its questions). Shared parts:
+`palette.js` (the command search), `record.js` (a player's record), `tools.js` (the staff commands' forms) and
+`ask.js` (its questions). Shared parts:
 `live.js` (fetches the bot's numbers and the notice), `views.js` (DOM pieces), `charts.js` (SVG charts), `demo.js`
 (sample data), `session.js` and `staff.js` (staff sign-in and the staff bar). Logic kept apart from its
 page, for tests, is in the `*model.js` files.
