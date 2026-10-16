@@ -34,6 +34,7 @@ import {
   percent,
   PLAYER_SORTS,
   plural,
+  reasonFor,
   recentActions,
   RISK_LABELS,
   sideColours,
@@ -58,7 +59,6 @@ import {
   call,
   cell,
   configured,
-  createActDialog,
   get,
   load,
   loadCommands,
@@ -86,9 +86,11 @@ import { el, mapTag, playerHref } from './views.js';
 // what the bot flagged by itself, to look at: far more headshots than a player's weapons usually get, risky Steam
 // accounts, possible griefers and their team kills and vehicle suicides; and the moderation log of what staff did.
 // History: any player's record, kills and headshots, and team kills. Commands: every staff command from Discord (see
-// tools.js). A player's name on Live opens a quick look at them at the side of the page; anywhere else, their history.
-// Act on a player opens the admin tool for it over the page. The bans and VIP, rotations, lines and weapon rules are on
-// the Server settings page (settings.js). Signing in, the Steam account, Act and loading are in staff.js.
+// tools.js). Any player's name opens their panel at the side of the page: what is worth knowing, the buttons to act
+// with the form for each (Warn, Kick, Ban, Move), their record, staff actions and latest kills. Act on a player, and the
+// quick buttons on the server list, open it with that form ready. Keyboard shortcuts are at the end (? lists them).
+// The bans and VIP, rotations, lines and weapon rules are on the Server settings page (settings.js). Signing in, the
+// Steam account and loading are in staff.js.
 
 // The kinds of action staff hid from the moderation log (MOD_ACTIONS keys), kept for this browser when storage is on.
 const MODLOG_HIDDEN_KEY = 'gaminginit-modlog-hidden';
@@ -176,24 +178,22 @@ const signedOut = () => {
   kills = null;
   historyKills = null;
   historyRecord = null;
-  if (actions.dialog.open) actions.dialog.close();
+  if ($('keys').open) $('keys').close();
+  records.clear();
   if (peekDialog.open) peekDialog.close();
   lookSince.clear();
   lookKnown = false;
   document.title = BASE_TITLE;
 };
 
-// A player's name, opening their history (or `open`, such as a quick look at them on Live), with their Steam ID linking
-// to their Steam profile.
-const who = (player, open = openHistory) =>
+// A player's name, opening their panel, with their Steam ID linking to their Steam profile.
+const who = (player) =>
   el(
     'span',
     { className: 'staff-player' },
-    el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, title: `Steam ID ${player.steamId}`, onclick: () => open(player) }),
+    el('button', { type: 'button', className: 'link-button player-name', textContent: player.name, title: `Steam ID ${player.steamId}`, onclick: () => peek(player) }),
     steamLink(player.steamId),
   );
-// On Live, a quick look.
-const whoLive = (player) => who(player, peek);
 
 // What the address keeps after the # for the tab shown, and on the History tab the player shown.
 const tabHash = () => (tab === 'live' ? '' : tab === 'history' && historyPlayer ? `#history/${historyPlayer.steamId}` : `#${tab}`);
@@ -252,14 +252,11 @@ const openHistory = (player) => {
   $('history-player').scrollIntoView({ block: 'start' });
 };
 
-// Act: the admin tool for a player over the page (see createActDialog). When the button staff came from was drawn again
-// meanwhile, such as after a kick, focus goes back to the quick look's first button, or the same player's Act button in
-// the same tab, if they are still there.
-const actions = createActDialog({
-  refocus: (steamId) =>
-    peekDialog.open ? peekDialog.querySelector('[data-peek]') : $(`panel-${tab}`).querySelector(`.act-menu[data-steam-id="${steamId}"] > summary`),
-});
-const act = actions.act;
+// Act: the player's panel, with the form for the tool picked (see openAct).
+const act = (key, player) => {
+  peek(player);
+  openAct(key);
+};
 
 // Commands: every staff command from Discord, to pick, fill in and run.
 const commands = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames, teamOf });
@@ -619,13 +616,13 @@ const renderPlayers = (overview) => {
   // Those worth a look have their quick buttons by Act.
   const row = (p, quick) => {
     const knowing = worthKnowing(p, overview, acted);
-    return el(
+    const tr = el(
       'tr',
       { className: lookNow(p) ? 'watch' : '' },
       el(
         'td',
         { className: 'player' },
-        whoLive(p),
+        who(p),
         el('span', { className: 'player-team' }, ...(p.faction === null ? ['No team'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`])),
       ),
       labelled('Kills / deaths', el('td', { className: 'num', textContent: p.kills === null ? '–' : `${p.kills} / ${p.deaths ?? 0}` })),
@@ -635,6 +632,8 @@ const renderPlayers = (overview) => {
         : el('td', { className: 'knowing' }, ...knowing),
       el('td', { className: 'row-actions' }, quick ? quickActs(p) : null, actMenu(p)),
     );
+    tr.dataset.steamId = p.steamId;
+    return tr;
   };
   const node = $('server-players');
   // A message in place of the list, such as when nobody is in game.
@@ -744,7 +743,7 @@ const renderJoins = (overview) => {
       {},
       whenSince(e.at, e.from),
       cell(e.kind === 'joined' ? badge('Joined', 'accent') : badge('Left')),
-      el('td', { className: 'player' }, whoLive(e.player)),
+      el('td', { className: 'player' }, who(e.player)),
       e.kind === 'joined'
         ? cell()
         : e.minutes === null
@@ -934,8 +933,8 @@ const feedRow = (k, above) =>
     'tr',
     {},
     killWhen(k.at),
-    el('td', { className: 'player' }, whoLive(k.killer)),
-    el('td', { className: 'player' }, whoLive(k.victim)),
+    el('td', { className: 'player' }, who(k.killer)),
+    el('td', { className: 'player' }, who(k.victim)),
     ...killCells(k, above),
   );
 
@@ -1449,9 +1448,10 @@ const findPlayer = (query) => {
   $('history-search').focus();
 };
 
-// A quick look at a player, from their name on Live: what is worth knowing about them now, what staff did, their latest
-// kills and deaths in the kill feed, and the buttons to act, without leaving Live. Drawn again with each refresh and
-// each kill of theirs while open.
+// A player's panel, from their name anywhere on the page: what is worth knowing about them now, the buttons to act and
+// the form for each, their numbers, record, what staff did and their latest kills and deaths in the kill feed, without
+// leaving the tab. Drawn again with each refresh and each kill of theirs while open; the form and the record are kept
+// through a redraw.
 const peekDialog = $('peek');
 // The player shown ({ steamId, name }), and the name staff clicked, to go back to.
 let peekPlayer = null;
@@ -1460,8 +1460,104 @@ let peekFrom = null;
 const PEEK_KILLS = 8;
 const PEEK_ACTIONS = 5;
 
+// The forms to act on the panel's player: the bot's tools that take a player, with them picked (see tools.js). After
+// one that changes something, their record is loaded again, and the page.
+const panelTools = createTools({
+  root: $('peek-act-tools'),
+  idPrefix: 'peek-tool',
+  call,
+  onChanged: () => {
+    if (peekPlayer) records.delete(peekPlayer.steamId);
+    if ($('peek-record').open) loadRecord();
+    load();
+  },
+  staff: staffNames,
+  teamOf,
+  forPlayer: true,
+  only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
+});
+// The tool open in the panel ('ban'), or null; one asked for before the tools had loaded; and why there are no tools,
+// when the bot has none.
+let actKey = null;
+let actWaiting = null;
+let actMissing = null;
+
+// Opens a tool's form in the panel for its player, such as Ban, starting the reason from what they did today (see
+// reasonFor). Until the tools have loaded, the panel says so and opens it when they come.
+const openAct = (key) => {
+  if (peekPlayer === null) return;
+  actKey = key;
+  $('peek-act').hidden = false;
+  if (!panelTools.ready) {
+    actWaiting = key;
+    setStatus($('peek-act-note'), actMissing ?? 'Loading the admin tools…');
+  } else {
+    setStatus($('peek-act-note'), '');
+    const online = data?.online?.players.find((p) => p.steamId === peekPlayer.steamId) ?? null;
+    panelTools.use(key, peekPlayer.steamId, peekPlayer.name, { reason: reasonFor(online) });
+  }
+  renderPeek();
+  $('peek-act').scrollIntoView({ block: 'nearest' });
+};
+
+// The tools have loaded: a form asked for meanwhile opens now, if the panel is still open.
+const actReady = () => {
+  const asked = actWaiting;
+  actWaiting = null;
+  if (asked && peekDialog.open) openAct(asked);
+};
+
+const closeAct = () => {
+  actKey = null;
+  actWaiting = null;
+  $('peek-act').hidden = true;
+};
+
+// Each player's record (the Look up reply) as loaded this visit, by Steam ID: { reply } or { error }, null while loading.
+const records = new Map();
+
+const renderRecord = () => {
+  const record = peekPlayer ? records.get(peekPlayer.steamId) : undefined;
+  $('peek-record-body').replaceChildren(
+    ...(record === undefined || record === null
+      ? [el('p', { className: 'muted', textContent: 'Loading their record…' })]
+      : record.reply
+        ? replyNodes(record.reply, data?.staff ?? {})
+        : [el('p', { className: 'tool-error', textContent: record.error })]),
+  );
+};
+
+// The panel player's record, when Record is opened: once each visit, and again after staff act on them. One that
+// failed is asked for again the next time.
+const loadRecord = async () => {
+  if (peekPlayer === null) return;
+  const { steamId } = peekPlayer;
+  if (records.get(steamId)?.reply || records.get(steamId) === null) {
+    renderRecord();
+    return;
+  }
+  records.set(steamId, null);
+  renderRecord();
+  try {
+    const answer = demo ? { ok: true, json: demoPlayerRecord(steamId, Date.now()) } : await call('admin/command', { name: 'player', options: { player: steamId } });
+    records.set(steamId, answer.ok ? { reply: answer.json } : { error: answer.json?.error ?? 'Couldn’t load their record just now.' });
+  } catch (error) {
+    console.error('Could not load the player’s record', error);
+    records.set(steamId, { error: 'Couldn’t reach the bot. Close Record and open it again to try again.' });
+  }
+  if (peekPlayer?.steamId === steamId) renderRecord();
+};
+$('peek-record').addEventListener('toggle', () => {
+  if ($('peek-record').open) loadRecord();
+});
+
 const peek = (player) => {
   if (!peekDialog.open) peekFrom = document.activeElement;
+  // Another player: their own panel, with no form open and Record folded.
+  if (peekPlayer?.steamId !== player.steamId) {
+    closeAct();
+    $('peek-record').open = false;
+  }
   peekPlayer = { steamId: player.steamId, name: player.name };
   closeMenus();
   renderPeek();
@@ -1471,6 +1567,15 @@ const peek = (player) => {
 
 const fact = (label, value) => el('div', { className: 'player-peek-fact' }, el('dt', { textContent: label }), el('dd', {}, value));
 
+// The panel's buttons and their keys (see the keys below).
+const PANEL_ACTS = [
+  { key: 'warn', text: 'Warn', letter: 'W', inGame: true },
+  { key: 'kick', text: 'Kick', letter: 'K', inGame: true },
+  { key: 'ban', text: 'Ban', letter: 'B', inGame: false },
+  { key: 'switchteam', text: 'Move team', letter: 'M', inGame: true },
+  { key: 'private:add', text: 'Make profile private', letter: null, inGame: false },
+];
+
 const renderPeek = () => {
   if (peekPlayer === null) return;
   const { steamId } = peekPlayer;
@@ -1479,84 +1584,98 @@ const renderPeek = () => {
   const player = online ?? peekPlayer;
   const ban = data?.bans?.find((b) => b.player.steamId === steamId) ?? null;
   // Keep keyboard focus on the same button through a redraw.
-  const focused = peekDialog.contains(document.activeElement) ? document.activeElement.dataset.peek : undefined;
+  const focused = $('peek-top').contains(document.activeElement) || $('peek-body').contains(document.activeElement) ? document.activeElement.dataset.peek : undefined;
   $('peek-title').textContent = player.name;
-  const button = (key, text, run, kind = '') => {
+  const button = (key, text, run, { kind = '', letter = null, pressed = null } = {}) => {
     const b = el('button', { type: 'button', className: `btn btn-ghost btn-small${kind ? ` ${kind}` : ''}`, textContent: text, onclick: run });
+    if (letter) {
+      b.title = `${text} (${letter})`;
+      b.setAttribute('aria-keyshortcuts', letter);
+    }
+    if (pressed !== null) b.setAttribute('aria-pressed', String(pressed));
     b.dataset.peek = key;
     return b;
   };
   const check = checkAction(player);
   const actions = [
-    ...(online ? [button('warn', 'Warn', () => act('warn', player)), button('kick', 'Kick', () => act('kick', player)), button('switchteam', 'Move team', () => act('switchteam', player))] : []),
-    button('ban', 'Ban', () => act('ban', player)),
-    ...(check ? [button(check, CHECK_ACTIONS[check].label, () => checkPlayer(player, check === 'check'), check === 'check' ? 'quick-check' : '')] : []),
+    ...PANEL_ACTS.filter((a) => online || !a.inGame).map((a) => button(a.key, a.text, () => openAct(a.key), { letter: a.letter, pressed: actKey === a.key })),
+    ...(ban ? [button('unban', 'Unban', () => openAct('unban'), { pressed: actKey === 'unban' })] : []),
+    ...(check ? [button(check, CHECK_ACTIONS[check].label, () => checkPlayer(player, check === 'check'), { kind: check === 'check' ? 'quick-check' : '', letter: 'C' })] : []),
     button('feed', 'Only them in the kill feed', () => watchFeed(player)),
     button('history', 'Full history →', () => openHistory(player)),
   ];
   const theirs = feed.filter((k) => k.killer.steamId === steamId || k.victim.steamId === steamId).slice(0, PEEK_KILLS);
   const did = (data?.moderation ?? []).filter((e) => e.player.steamId === steamId).slice(0, PEEK_ACTIONS);
   const hs = online?.headshotsToday;
+  // Left out when not shown: replaceChildren would write "null".
+  const shown = (...nodes) => nodes.filter(Boolean);
+  $('peek-top').replaceChildren(
+    ...shown(
+      el(
+        'p',
+        { className: 'player-peek-id' },
+        steamLink(steamId),
+        online?.id ? el('a', { className: 'player-link', href: playerHref(online.id), textContent: 'Public player page' }) : null,
+      ),
+      el(
+        'span',
+        { className: 'badges' },
+        online ? badge(online.faction ? `In game · ${online.faction}` : 'In game', 'accent') : badge('Not in game'),
+        ban && !online?.banned ? badge(ban.onServer ? 'Banned' : 'Ban waiting', 'bad') : null,
+      ),
+      ...(online && data ? worthKnowing(online, data, recentActions(data.moderation, now)) : []),
+      el('div', { className: 'player-peek-actions' }, ...actions),
+      online ? null : el('p', { className: 'muted player-peek-off', textContent: 'Not in game, so they can’t be warned, kicked or moved.' }),
+    ),
+  );
   $('peek-body').replaceChildren(
-    el(
-      'p',
-      { className: 'player-peek-id' },
-      steamLink(steamId),
-      online?.id ? el('a', { className: 'player-link', href: playerHref(online.id), textContent: 'Public player page' }) : null,
-    ),
-    el(
-      'span',
-      { className: 'badges' },
-      online ? badge(online.faction ? `In game · ${online.faction}` : 'In game', 'accent') : badge('Not in game'),
-      ban && !online?.banned ? badge(ban.onServer ? 'Banned' : 'Ban waiting', 'bad') : null,
-    ),
-    ...(online && data ? worthKnowing(online, data, recentActions(data.moderation, now)) : []),
-    el('div', { className: 'player-peek-actions' }, ...actions),
-    online
-      ? el(
-          'dl',
-          { className: 'player-peek-facts' },
-          fact('Kills / deaths', online.kills === null ? '–' : `${online.kills} / ${online.deaths ?? 0} this match`),
-          fact('On today', online.minutesToday > 0 ? formatHours(online.minutesToday) : '–'),
-          fact('Team kills today', String(online.teamKillsToday)),
-          fact('Vehicle suicides today', String(online.vehicleSuicidesToday)),
-          fact('Headshots today', hs ? `${hs.headshots} of ${hs.kills} kills${hs.expected === null ? '' : `, usual ${Math.round(hs.expected)}`}` : '–'),
-        )
-      : null,
-    el('h3', { className: 'group-title', textContent: 'Staff actions' }),
-    did.length === 0
-      ? el('p', { className: 'muted', textContent: 'Nothing in this period.' })
-      : el(
-          'ul',
-          { className: 'player-peek-list' },
-          ...did.map((e) =>
-            el(
-              'li',
-              {},
-              badge(modActionLabel(e.action), e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : ''),
-              ` ${timeAgo(now - e.at)} · ${staffBy(e, data?.staff ?? {})}`,
-              e.reason ? el('span', { className: 'muted', textContent: ` · ${e.reason}` }) : null,
+    ...shown(
+      online
+        ? el(
+            'dl',
+            { className: 'player-peek-facts' },
+            fact('Kills / deaths', online.kills === null ? '–' : `${online.kills} / ${online.deaths ?? 0} this match`),
+            fact('On today', online.minutesToday > 0 ? formatHours(online.minutesToday) : '–'),
+            fact('Team kills today', String(online.teamKillsToday)),
+            fact('Vehicle suicides today', String(online.vehicleSuicidesToday)),
+            fact('Headshots today', hs ? `${hs.headshots} of ${hs.kills} kills${hs.expected === null ? '' : `, usual ${Math.round(hs.expected)}`}` : '–'),
+          )
+        : null,
+      el('h3', { className: 'group-title', textContent: 'Staff actions' }),
+      did.length === 0
+        ? el('p', { className: 'muted', textContent: 'Nothing in this period.' })
+        : el(
+            'ul',
+            { className: 'player-peek-list' },
+            ...did.map((e) =>
+              el(
+                'li',
+                {},
+                badge(modActionLabel(e.action), e.action === 'ban' ? 'bad' : e.action === 'kick' ? 'hot' : ''),
+                ` ${timeAgo(now - e.at)} · ${staffBy(e, data?.staff ?? {})}`,
+                e.reason ? el('span', { className: 'muted', textContent: ` · ${e.reason}` }) : null,
+              ),
             ),
           ),
-        ),
-    el('h3', { className: 'group-title', textContent: 'Kill feed' }),
-    theirs.length === 0
-      ? el('p', { className: 'muted', textContent: 'No kills or deaths in the kill feed.' })
-      : el(
-          'ul',
-          { className: 'player-peek-list' },
-          ...theirs.map((k) =>
-            el(
-              'li',
-              {},
-              el('time', { dateTime: new Date(k.at).toISOString(), className: 'when', textContent: timeKill.format(k.at) }),
-              k.killer.steamId === steamId ? ` Killed ${k.victim.name}` : ` Killed by ${k.killer.name}`,
-              el('span', { className: 'muted', textContent: ` · ${k.weapon}` }),
-              k.teamKill ? badge('Team kill', 'bad') : null,
-              k.headshot ? badge('Headshot', 'accent') : null,
+      el('h3', { className: 'group-title', textContent: 'Kill feed' }),
+      theirs.length === 0
+        ? el('p', { className: 'muted', textContent: 'No kills or deaths in the kill feed.' })
+        : el(
+            'ul',
+            { className: 'player-peek-list' },
+            ...theirs.map((k) =>
+              el(
+                'li',
+                {},
+                el('time', { dateTime: new Date(k.at).toISOString(), className: 'when', textContent: timeKill.format(k.at) }),
+                k.killer.steamId === steamId ? ` Killed ${k.victim.name}` : ` Killed by ${k.killer.name}`,
+                el('span', { className: 'muted', textContent: ` · ${k.weapon}` }),
+                k.teamKill ? badge('Team kill', 'bad') : null,
+                k.headshot ? badge('Headshot', 'accent') : null,
+              ),
             ),
           ),
-        ),
+    ),
   );
   if (focused !== undefined) peekDialog.querySelector(`[data-peek="${focused}"]`)?.focus({ preventScroll: true });
 };
@@ -1566,6 +1685,8 @@ peekDialog.addEventListener('close', () => {
   if (peekFrom?.isConnected) peekFrom.focus({ preventScroll: true });
   peekFrom = null;
   peekPlayer = null;
+  closeAct();
+  $('peek-record').open = false;
 });
 // A click on the backdrop, outside the panel, closes it. The panel's own padding is the dialog too, so where the click was
 // tells them apart.
@@ -1574,6 +1695,105 @@ peekDialog.addEventListener('click', (event) => {
   const box = peekDialog.getBoundingClientRect();
   const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
   if (!inside) peekDialog.close();
+});
+
+// Keyboard shortcuts, for staff at a desk. ? lists them (#keys). None while typing in a box, or with Ctrl, Alt or Cmd,
+// and none sends anything by itself: W, K, B and M open a form, and Enter or a click sends it.
+const LETTERS = { w: 'warn', k: 'kick', b: 'ban', m: 'switchteam' };
+
+// Whether keys go to what has focus as text: a box being typed in, or a drop-down.
+const typing = (node) =>
+  node instanceof HTMLTextAreaElement ||
+  node instanceof HTMLSelectElement ||
+  Boolean(node?.isContentEditable) ||
+  (node instanceof HTMLInputElement && !['radio', 'checkbox', 'button', 'submit', 'reset', 'hidden'].includes(node.type));
+
+// The server list's players, by their names' buttons, in the order shown.
+const listNames = () => [...$('server-players').querySelectorAll('tbody tr .player-name')];
+const playerOfRow = (node) => {
+  const id = node?.closest?.('#server-players tr[data-steam-id]')?.dataset.steamId;
+  return id ? (data?.online?.players.find((p) => p.steamId === id) ?? null) : null;
+};
+
+// W, K, B, M or C on a player: the form in their panel, or their check.
+const keyAct = (letter, player) => {
+  const inGame = onlineIds.has(player.steamId);
+  if (letter === 'c') {
+    const check = checkAction(player);
+    if (check) checkPlayer(player, check === 'check');
+    return Boolean(check);
+  }
+  const key = LETTERS[letter];
+  if (!key || (key !== 'ban' && !inGame)) return false;
+  act(key, player);
+  return true;
+};
+
+$('keys-close').addEventListener('click', () => $('keys').close());
+
+document.addEventListener('keydown', (event) => {
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || data === null) return;
+  const at = document.activeElement;
+  // From the server list's search, ↓ goes to the first player.
+  if (event.key === 'ArrowDown' && at === $('player-search')) {
+    const first = listNames()[0];
+    if (first) {
+      event.preventDefault();
+      first.focus();
+    }
+    return;
+  }
+  if (typing(at)) return;
+  // Another dialog over the page, or an Act menu, has the keys.
+  const other = [...document.querySelectorAll('dialog[open]')].some((d) => d !== peekDialog) || document.querySelector('.act-menu[open]');
+  if (event.key === '?') {
+    if (!other) {
+      event.preventDefault();
+      $('keys').showModal();
+    }
+    return;
+  }
+  if (other) return;
+  const letter = event.key.toLowerCase();
+  if (peekDialog.open) {
+    // In the panel: 1 to 6 pick a ban's length, and the letters act on its player.
+    if (/^[1-9]$/.test(event.key) && actKey !== null && panelTools.pick(Number(event.key))) {
+      event.preventDefault();
+      return;
+    }
+    if (peekPlayer && (LETTERS[letter] || letter === 'c')) {
+      event.preventDefault();
+      // The form open now stays as it is: B on the ban form does not start it again.
+      if (LETTERS[letter] === actKey) return;
+      keyAct(letter, data.online?.players.find((p) => p.steamId === peekPlayer.steamId) ?? peekPlayer);
+    }
+    return;
+  }
+  if (event.key === '/') {
+    const search = tab === 'live' ? $('player-search') : tab === 'history' ? $('history-search') : null;
+    if (search) {
+      event.preventDefault();
+      search.focus();
+      search.select();
+    }
+    return;
+  }
+  if (tab !== 'live' || !$('server-players').contains(at)) return;
+  // In the server list: ↓ and ↑ move from player to player (↑ from the first goes back to the search), and the letters
+  // act on the player you are on.
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const names = listNames();
+    const i = names.findIndex((n) => n.closest('tr') === at.closest('tr'));
+    const next = event.key === 'ArrowDown' ? names[i + 1] : i > 0 ? names[i - 1] : $('player-search');
+    if (next) {
+      event.preventDefault();
+      next.focus();
+      next.closest('tr')?.scrollIntoView({ block: 'nearest' });
+    }
+    return;
+  }
+  const player = playerOfRow(at);
+  if (player && (LETTERS[letter] || letter === 'c') && keyAct(letter, player)) event.preventDefault();
 });
 
 // Alerts: the browser tab's title says how many in game are worth a look now, and a player who becomes worth a look
@@ -1736,7 +1956,14 @@ const render = (overview) => {
   renderModeration(overview);
   if (tab === 'history') renderHistory();
   if (peekDialog.open) renderPeek();
-  actions.load();
+  loadCommands(
+    panelTools,
+    (text) => {
+      actMissing = text;
+      setStatus($('peek-act-note'), text);
+    },
+    actReady,
+  );
   loadCommands(commands, (text) => {
     $('tools-note').textContent = text;
   });

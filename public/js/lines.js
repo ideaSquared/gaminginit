@@ -1,3 +1,4 @@
+import { ask } from './ask.js';
 import { groupLists, lineProblem, linesToSave, listLabel, messageLength, messageParts, problemCount, sameLines, tidyLine } from './linesmodel.js';
 import { clockHour, factionColours } from './format.js';
 import { el, sideName } from './views.js';
@@ -71,7 +72,7 @@ export const createLines = ({ root, load, send }) => {
   };
 
   // Moves to another list, asking first when that would lose changes.
-  const leave = () => !dirty() || window.confirm(`Discard your changes to the ${listLabel(list())} lines?`);
+  const leave = async () => !dirty() || ask(`Discard your changes to the ${listLabel(list())} lines?`, { yes: 'Discard changes', no: 'Keep editing', danger: true });
 
   window.addEventListener('beforeunload', (event) => {
     if (dirty()) event.preventDefault();
@@ -161,9 +162,9 @@ export const createLines = ({ root, load, send }) => {
 
   // --- Actions ---
 
-  const select = (id) => {
+  const select = async (id) => {
     if (id === selected) return;
-    if (!leave()) return;
+    if (!(await leave())) return;
     const next = page?.lists.find((l) => l.id === id);
     if (!next) return;
     edit(next);
@@ -225,7 +226,7 @@ export const createLines = ({ root, load, send }) => {
   const useBots = async () => {
     const current = list();
     if (!current?.changed) return;
-    if (!window.confirm(`Put the bot's own ${listLabel(current)} lines back? The lines here now are thrown away.`)) return;
+    if (!(await ask(`Put the bot's own ${listLabel(current)} lines back? The lines here now are thrown away.`, { yes: 'Use the bot’s lines', danger: true }))) return;
     if (await change({ action: 'reset', list: current.id })) toast(`The ${listLabel(current)} lines are the bot's own again.`);
   };
 

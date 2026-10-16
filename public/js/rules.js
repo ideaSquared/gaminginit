@@ -1,3 +1,4 @@
+import { ask } from './ask.js';
 import { clockHour, WEAPON_KINDS } from './format.js';
 import {
   draftOf,
@@ -90,7 +91,7 @@ export const createRules = ({ root, load, send }) => {
   };
 
   // Moves to another rule, asking first when that would lose changes.
-  const leave = () => !dirty() || window.confirm(`Discard your changes to the ${label()} rule?`);
+  const leave = async () => !dirty() || ask(`Discard your changes to the ${label()} rule?`, { yes: 'Discard changes', no: 'Keep editing', danger: true });
 
   window.addEventListener('beforeunload', (event) => {
     if (dirty()) event.preventDefault();
@@ -174,9 +175,9 @@ export const createRules = ({ root, load, send }) => {
 
   // --- Actions ---
 
-  const select = (id) => {
+  const select = async (id) => {
     if (id === selected) return;
-    if (!leave()) return;
+    if (!(await leave())) return;
     edit(id);
     render();
     // On a narrow screen the editor is under the list.
@@ -210,7 +211,7 @@ export const createRules = ({ root, load, send }) => {
   const remove = async () => {
     const current = rule();
     if (!current) return;
-    if (!window.confirm(`Take the ${current.name} rule out? The bot stops warning and kicking for its weapons.`)) return;
+    if (!(await ask(`Take the ${current.name} rule out? The bot stops warning and kicking for its weapons.`, { yes: 'Take it out', danger: true }))) return;
     if (await change({ action: 'remove', id: current.id }, () => null)) toast(`Took the ${current.name} rule out.`);
   };
 

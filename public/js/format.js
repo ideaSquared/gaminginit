@@ -1021,6 +1021,33 @@ export const presetReasons = (toolKey, option) => {
   return [];
 };
 
+// The preset reason (one of PRESET_REASONS' labels) to start a warning, kick or ban of a player in game with, from what
+// they did today: team kills, then team vehicles destroyed. None for anything else, such as headshots: a flag is a
+// reason to look, not proof. Staff can pick another, or change the words, before sending.
+export const reasonFor = (player) => {
+  if (!player) return null;
+  if (player.teamKillsToday > 0) return 'Team killing';
+  if (player.vehicleSuicidesToday > 0) return 'Team vehicles';
+  return null;
+};
+
+// What a tool's button says it does to a player, so staff see exactly what they are about to do: "Ban Vex for 3 days",
+// "Move Vex to Manticore". `choice` is the name of the length or team picked, or null before one is. Null when the
+// player's name is not known yet, or for a tool with no such words: the button keeps the tool's own label.
+const ACTION_LABELS = {
+  player: (name) => `Look up ${name}`,
+  warn: (name) => `Warn ${name}`,
+  kick: (name) => `Kick ${name}`,
+  switchteam: (name, choice) => (choice === null ? `Move ${name} to another team` : `Move ${name} to ${choice}`),
+  ban: (name, choice) => (choice === null ? `Ban ${name}` : /^permanent$/i.test(choice) ? `Ban ${name} for good` : `Ban ${name} for ${choice.toLowerCase()}`),
+  unban: (name) => `Unban ${name}`,
+  'private:add': (name) => `Make ${name}’s profile private`,
+  'private:remove': (name) => `Make ${name}’s profile public again`,
+  'vip:add': (name) => `Give ${name} VIP`,
+  'vip:remove': (name) => `Remove ${name}’s VIP`,
+};
+export const actionLabel = (key, name, choice = null) => (name && Object.hasOwn(ACTION_LABELS, key) ? ACTION_LABELS[key](name, choice) : null);
+
 // The teams to move a player to ({ value, name, disabled }), from the bot's choices: the team they are on now (`team`,
 // null when not known) stays in the list, marked and not to be picked, as moving them there does nothing.
 export const teamOptions = (choices, team) =>

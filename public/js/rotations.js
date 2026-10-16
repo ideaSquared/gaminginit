@@ -1,3 +1,4 @@
+import { ask } from './ask.js';
 import { clockHour } from './format.js';
 import {
   chosenBy,
@@ -108,7 +109,8 @@ export const createRotations = ({ root, load, send }) => {
   };
 
   // Moves to another rotation, asking first when that would lose changes.
-  const leave = () => !dirty() || window.confirm(`Discard your changes to ${tidyName(draft.name) || 'the new rotation'}?`);
+  const leave = async () =>
+    !dirty() || ask(`Discard your changes to ${tidyName(draft.name) || 'the new rotation'}?`, { yes: 'Discard changes', no: 'Keep editing', danger: true });
 
   // The maps the palette offers: the catalogue's, or the three maps when the server could not say.
   const maps = () =>
@@ -227,16 +229,16 @@ export const createRotations = ({ root, load, send }) => {
 
   // --- Actions ---
 
-  const select = (name) => {
+  const select = async (name) => {
     if (draft && draft.from !== null && draft.from.toLowerCase() === name.toLowerCase()) return;
-    if (!leave()) return;
+    if (!(await leave())) return;
     const rotation = saved(name);
     if (rotation) edit(rotation);
     render();
   };
 
-  const startNew = (entries = [], base = 'New rotation') => {
-    if (!leave()) return;
+  const startNew = async (entries = [], base = 'New rotation') => {
+    if (!(await leave())) return;
     draft = { name: freeName(base, (page?.rotations ?? []).map((r) => r.name)), from: null, entries };
     open.clear();
     render();
@@ -283,9 +285,9 @@ export const createRotations = ({ root, load, send }) => {
     if (!page) return;
     const editing = draft && draft.from !== null && draft.from.toLowerCase() === name.toLowerCase();
     if (editing && dirty()) {
-      if (!window.confirm(`Save your changes to ${name} and put it on the server for the rest of today?`)) return;
+      if (!(await ask(`Save your changes to ${name} and put it on the server for the rest of today?`, { yes: 'Save and put on' }))) return;
       if (!(await save())) return;
-    } else if (!window.confirm(`Put ${name} on the server for the rest of today? It plays from the next map.${tomorrowNote()}`)) {
+    } else if (!(await ask(`Put ${name} on the server for the rest of today? It plays from the next map.${tomorrowNote()}`, { yes: 'Put on server' }))) {
       return;
     }
     // Saving may have renamed it.
@@ -296,7 +298,7 @@ export const createRotations = ({ root, load, send }) => {
 
   const remove = async () => {
     if (!draft || draft.from === null) {
-      if (!window.confirm('Throw away this new rotation?')) return;
+      if (!(await ask('Throw away this new rotation?', { yes: 'Throw away', danger: true }))) return;
       draft = null;
       const first = saved(defaultName()) ?? page?.rotations[0];
       if (first) edit(first);
@@ -306,7 +308,7 @@ export const createRotations = ({ root, load, send }) => {
     const name = draft.from;
     const days = daysOf(page.week.map((n) => n), name);
     const note = days.length > 0 ? ` ${daysLabel(days, page.weekdays)} go back to ${defaultName()}.` : '';
-    if (!window.confirm(`Delete ${name}?${note}`)) return;
+    if (!(await ask(`Delete ${name}?${note}`, { yes: 'Delete', danger: true }))) return;
     const answer = await change({ action: 'delete', name }, { quiet: true });
     if (!answer) return;
     draft = null;
@@ -320,7 +322,7 @@ export const createRotations = ({ root, load, send }) => {
     const name = value === '' ? null : value;
     const shown = name ?? defaultName();
     const today = day === page.today.weekday;
-    if (today && page.plan[day] !== shown && !window.confirm(`It's ${page.weekdays[day]}: this puts ${shown} on the server now, from the next map. Go ahead?`)) {
+    if (today && page.plan[day] !== shown && !(await ask(`It's ${page.weekdays[day]}: this puts ${shown} on the server now, from the next map. Go ahead?`, { yes: 'Put on now' }))) {
       select.value = page.week[day] ?? '';
       return;
     }
@@ -332,10 +334,10 @@ export const createRotations = ({ root, load, send }) => {
     toast(`${page.weekdays[day]}s: ${shown}. ${today ? outcomeText(answer.json.outcome, shown) : ''}`.trim(), answer.json.outcome?.outcome === 'failed' ? 'warn' : 'ok');
   };
 
-  const copyServer = () => {
+  const copyServer = async () => {
     const entries = page?.server?.entries ?? [];
     if (entries.length === 0 || !draft) return;
-    if (draft.entries.length > 0 && !window.confirm(`Replace the ${draft.entries.length} maps here with the server's ${entries.length}?`)) return;
+    if (draft.entries.length > 0 && !(await ask(`Replace the ${draft.entries.length} maps here with the server's ${entries.length}?`, { yes: 'Replace' }))) return;
     draft.entries = entries.map((e) => toDraft(e, catalog()));
     open.clear();
     render();

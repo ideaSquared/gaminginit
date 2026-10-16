@@ -1,9 +1,11 @@
-import { asksFirst, clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, teamOptions, toolsFrom } from './format.js';
+import { actionLabel, asksFirst, clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, teamOptions, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
-// Pick-lists are filled from the bot's own suggestions, as in Discord; anything that changes the game or the records
-// asks first; the bot's reply is shown underneath. The bot checks and runs each command exactly as the slash command.
+// Pick-lists are filled from the bot's own suggestions, as in Discord, and a short list to pick from (a ban's length) is a
+// row of buttons. The button says what it does ("Ban Vex for 3 days"). Anything that changes the game or the records,
+// but a warning, asks first, in place: the button asks again, with what will happen. The bot's reply is shown
+// underneath. The bot checks and runs each command exactly as the slash command.
 
 // Discord's option types.
 const STRING = 3;
@@ -12,6 +14,12 @@ const BOOLEAN = 5;
 
 // Wait this long after typing stops before asking the bot for suggestions.
 const SUGGEST_DELAY_MS = 250;
+
+// A required choice with this many options or fewer is a row of buttons, not a drop-down.
+const CHOICE_BUTTONS = 6;
+
+// Tools whose confirm button is red: they take a player off the server, or delete something.
+const DANGER_TOOLS = new Set(['kick', 'ban', 'removematch', 'rotations:delete']);
 
 // In the reader's own time: "Fri 3 Oct, 21:40".
 const when = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: clockHour(), minute: '2-digit' });
@@ -53,28 +61,31 @@ export const replyNodes = (reply, staff) => [
 // that changes something, so the page can load the records again. `staff()` gives the current Discord user names.
 // `only(tool)` picks the tools offered, such as only those for a player; every tool by default. `idPrefix` starts the
 // ids of its fields, so two sets of tools can be on one page. `teamOf(steamId)` gives a player's team in game now, or
-// null, so a player can't be moved to the team they are on.
-export const createTools = ({ root, call, onChanged, staff, only = () => true, idPrefix = 'tool', teamOf = () => null }) => {
+// null, so a player can't be moved to the team they are on. `forPlayer`: the tools are for the player they are opened
+// with (see `use`), as in a player's panel, so there is no tool to pick and no player to fill in.
+export const createTools = ({ root, call, onChanged, staff, only = () => true, idPrefix = 'tool', teamOf = () => null, forPlayer = false }) => {
   let tools = [];
   let current = null;
   // What staff picked or typed for the player in each tool, so it carries over when they switch tools.
   let playerValue = '';
   // The names of the choices last offered, by option and value, to show who a Steam ID is.
   const offered = new Map();
+  // Whether the button is asking again, before a tool that changes something runs.
+  let confirming = false;
 
   const picker = el('select', { id: `${idPrefix}-picker`, className: 'finder-input tool-picker' });
   const help = el('p', { className: 'section-note tool-help' });
   const form = el('form', { className: 'tool-form', noValidate: false });
   const output = el('div', { className: 'tool-output', role: 'status' });
   root.replaceChildren(
-    el('label', { className: 'finder-label', htmlFor: picker.id, textContent: 'Tool' }),
-    picker,
-    help,
+    ...(forPlayer ? [] : [el('label', { className: 'finder-label', htmlFor: picker.id, textContent: 'Tool' }), picker, help]),
     form,
     output,
   );
 
   const fieldId = (name) => `${idPrefix}-${name}`;
+  const isPlayer = (o) => o.name === 'player' || o.name === 'steam_id';
+  const asButtons = (o) => Boolean(o.choices) && Boolean(o.required) && o.choices.length >= 2 && o.choices.length <= CHOICE_BUTTONS && o.name !== 'team';
 
   const values = () =>
     Object.fromEntries(
@@ -93,6 +104,7 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     offered.set(option.name, new Map([...(offered.get(option.name) ?? []), ...names]));
     list.replaceChildren(...choices.map((c) => el('option', { value: c.value, label: c.name })));
     showHint(option, input, hint);
+    showRun();
   };
 
   // Who or what a picked value is: "Vex · 🔴 Valkyra · 7656…" under a Steam ID.
@@ -117,10 +129,53 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     if (select.value !== '' && select.selectedOptions[0]?.disabled) select.value = '';
   };
 
+  // The player's name, as picked, for the button: "Ban Vex". Null until it is known.
+  const playerName = () => {
+    const option = current.options.find(isPlayer);
+    const value = option ? (form.elements.namedItem(option.name)?.value.trim() ?? '') : '';
+    return offered.get(option?.name)?.get(value)?.split(' · ')[0] ?? null;
+  };
+
+  // The name of the length or team picked, for the button: "for 3 days", "to Manticore".
+  const choiceName = () => {
+    const option = current.options.find((o) => (o.name === 'duration' || o.name === 'team') && o.choices);
+    const value = option ? (form.elements.namedItem(option.name)?.value ?? '') : '';
+    return option?.choices.find((c) => c.value === value)?.name ?? null;
+  };
+
+  // What the button says: what the tool will do, in words, when the page can say it, or the tool's own label.
+  const runLabel = () => actionLabel(current.key, playerName(), choiceName()) ?? (asksFirst(current.key) ? `${current.label}…` : current.label);
+
+  const showRun = () => {
+    const run = form.querySelector('.tool-run');
+    if (run && current) run.textContent = runLabel();
+  };
+
+  // A reason picked from the presets is marked, until the words are changed.
+  const markPresets = (input) => {
+    for (const b of input.closest('.tool-field')?.querySelectorAll('.preset') ?? []) b.setAttribute('aria-pressed', String(b.title === input.value));
+  };
+
   const field = (o) => {
     const id = fieldId(o.name);
-    const label = el('label', { htmlFor: id, className: 'tool-label', textContent: `${optionLabel(o.name)}${o.required ? '' : ' (optional)'}` });
+    // The player the tools are for is already picked.
+    if (forPlayer && isPlayer(o)) return el('input', { type: 'hidden', id, name: o.name, value: playerValue });
+    const labelText = `${optionLabel(o.name)}${o.required ? '' : ' (optional)'}`;
     const note = el('p', { className: 'tool-note muted', textContent: o.description ?? '' });
+    if (asButtons(o)) {
+      // A row of buttons to pick one from, such as a ban's length. With the keyboard, the arrows move between them, and
+      // on a player's panel 1, 2, 3 … pick them.
+      const label = el('p', { className: 'tool-label', id: `${id}-label` }, labelText, forPlayer ? el('span', { className: 'tool-keys', textContent: ` · keys 1–${o.choices.length}` }) : null);
+      const group = el(
+        'div',
+        { className: 'choices', id, role: 'radiogroup' },
+        ...o.choices.map((c) => el('label', { className: 'choice' }, el('input', { type: 'radio', name: o.name, value: c.value, required: true }), el('span', { textContent: c.name }))),
+      );
+      group.setAttribute('aria-labelledby', label.id);
+      group.setAttribute('aria-required', 'true');
+      return el('div', { className: 'tool-field' }, label, group, ...(o.description ? [note] : []));
+    }
+    const label = el('label', { htmlFor: id, className: 'tool-label', textContent: labelText });
     let input;
     if (o.choices) {
       input = el(
@@ -155,34 +210,38 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
         el(
           'div',
           { className: 'presets', role: 'group', ariaLabel: `Pick a ${o.name === 'message' ? 'message' : 'reason'}` },
-          ...presets.map((r) =>
-            el('button', {
+          ...presets.map((r) => {
+            const b = el('button', {
               type: 'button',
               className: 'preset',
               textContent: r.label,
               title: r.text,
               onclick: () => {
                 input.value = r.text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.focus();
                 input.setSelectionRange(r.text.length, r.text.length);
               },
-            }),
-          ),
+            });
+            b.setAttribute('aria-pressed', 'false');
+            return b;
+          }),
         ),
       );
+      input.addEventListener('input', () => markPresets(input));
     }
     if (o.type === STRING && o.autocomplete && !o.choices) {
       const list = el('datalist', { id: `${id}-list` });
       const hint = el('p', { className: 'tool-hint' });
       input.setAttribute('list', list.id);
-      input.placeholder = o.name === 'player' || o.name === 'steam_id' ? 'Type a name or Steam ID, then pick' : 'Type, then pick';
+      input.placeholder = isPlayer(o) ? 'Type a name or Steam ID, then pick' : 'Type, then pick';
       let timer = 0;
       const later = () => {
         clearTimeout(timer);
         timer = setTimeout(() => suggest(o, input, list, hint).catch(() => undefined), SUGGEST_DELAY_MS);
       };
       input.addEventListener('input', () => {
-        if (o.name === 'player' || o.name === 'steam_id') playerValue = input.value;
+        if (isPlayer(o)) playerValue = input.value;
         if (o.name === 'player') markTeam();
         showHint(o, input, hint);
         later();
@@ -195,18 +254,34 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     return el('div', { className: 'tool-field' }, ...parts);
   };
 
+  // Asking again, in place of the button: what will happen, then Confirm or Back.
+  const confirmBox = el('div', { className: 'tool-confirm', hidden: true });
+
+  // Back to the button, as when staff go back or change anything in the form.
+  const stopConfirming = ({ focus = false } = {}) => {
+    if (!confirming) return;
+    confirming = false;
+    confirmBox.hidden = true;
+    const run = form.querySelector('.tool-run');
+    run.hidden = false;
+    if (focus) run.focus();
+  };
+
   const show = (key) => {
     current = tools.find((t) => t.key === key) ?? tools[0];
     if (!current) return;
+    confirming = false;
+    confirmBox.hidden = true;
     picker.value = current.key;
     help.textContent = current.description;
-    const submit = el('button', { type: 'submit', className: 'btn btn-small tool-run', textContent: asksFirst(current.key) ? `${current.label}…` : current.label });
-    form.replaceChildren(...current.options.map(field), submit);
-    for (const name of ['player', 'steam_id']) {
-      const input = form.elements.namedItem(name);
+    const submit = el('button', { type: 'submit', className: 'btn btn-small tool-run' });
+    form.replaceChildren(...current.options.map(field), submit, confirmBox);
+    for (const option of current.options.filter(isPlayer)) {
+      const input = form.elements.namedItem(option.name);
       if (input && playerValue) input.value = playerValue;
     }
     markTeam();
+    showRun();
   };
 
   picker.addEventListener('change', () => {
@@ -214,25 +289,48 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     show(picker.value);
   });
 
+  // Anything changed while the button asks again goes back to the button: what is confirmed is what is shown.
+  for (const type of ['input', 'change']) {
+    form.addEventListener(type, () => {
+      stopConfirming();
+      showRun();
+    });
+  }
+
   // What will happen, in words, for staff to confirm.
   const summary = (given) =>
     current.options
-      .filter((o) => given[o.name] !== undefined)
+      .filter((o) => given[o.name] !== undefined && !(forPlayer && isPlayer(o)))
       .map((o) => {
         const value = given[o.name];
         const picked = offered.get(o.name)?.get(value) ?? o.choices?.find((c) => c.value === value)?.name;
         const shown = o.type === BOOLEAN ? (value === 'true' ? 'On' : 'Off') : picked ? `${picked}` : value;
         return `${optionLabel(o.name)}: ${shown}`;
-      })
-      .join('\n');
+      });
+
+  const askAgain = (given) => {
+    confirming = true;
+    const yes = el('button', { type: 'submit', className: `btn btn-small ${DANGER_TOOLS.has(current.key) ? 'btn-danger' : 'tool-run-confirm'}`, textContent: 'Confirm' });
+    confirmBox.replaceChildren(
+      el('p', { className: 'tool-confirm-question' }, el('strong', { textContent: `${runLabel().replace(/…$/, '')}?` })),
+      el('ul', { className: 'tool-summary' }, ...summary(given).map((line) => el('li', { textContent: line }))),
+      el('div', { className: 'tool-confirm-actions' }, yes, el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: 'Back', onclick: () => stopConfirming({ focus: true }) })),
+    );
+    form.querySelector('.tool-run').hidden = true;
+    confirmBox.hidden = false;
+    yes.focus();
+  };
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!current || !form.reportValidity()) return;
     const given = values();
-    if (asksFirst(current.key) && !window.confirm(`${current.label}?\n\n${summary(given)}`)) return;
-    const button = form.querySelector('.tool-run');
-    button.disabled = true;
+    if (asksFirst(current.key) && !confirming) {
+      askAgain(given);
+      return;
+    }
+    const buttons = [...form.querySelectorAll('button[type="submit"]')];
+    for (const b of buttons) b.disabled = true;
     output.replaceChildren(el('p', { className: 'muted', textContent: 'Working…' }));
     try {
       const options = { ...given, ...(current.subcommand ? { subcommand: current.subcommand } : {}) };
@@ -246,9 +344,21 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     } catch {
       output.replaceChildren(el('p', { className: 'tool-error', textContent: 'Could not reach the bot. If it was an action, check before trying again.' }));
     } finally {
-      button.disabled = false;
+      // A disabled button loses keyboard focus: it goes back to the button, unless staff moved on meanwhile.
+      const lost = document.activeElement === null || document.activeElement === document.body || form.contains(document.activeElement);
+      for (const b of buttons) b.disabled = false;
+      stopConfirming();
+      if (lost) form.querySelector('.tool-run').focus({ preventScroll: true });
     }
   });
+
+  // The first required field not filled in yet, to start on: the first of a row of buttons, or the box.
+  const firstEmpty = () => {
+    const option = current.options.find((o) => o.required && !(forPlayer && isPlayer(o)) && (form.elements.namedItem(o.name)?.value ?? '') === '');
+    if (!option) return null;
+    const input = form.elements.namedItem(option.name);
+    return input instanceof RadioNodeList ? input[0] : input;
+  };
 
   return {
     // The bot's staff command definitions.
@@ -261,20 +371,39 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
       show(current?.key ?? tools[0]?.key);
     },
     // Opens a tool with a player already picked, as from a row's button. With no `key`, the player tool open now stays
-    // open, such as Kick or Ban, and otherwise Warn opens. The page brings the tools into view.
-    use(key, steamId, name) {
+    // open, such as Kick or Ban, and otherwise Warn opens. `reason`, one of the preset reasons' labels, starts the
+    // message or reason with it. Focus goes to the first thing still to fill in, or to the button. The page brings the
+    // tools into view.
+    use(key, steamId, name, { reason = null } = {}) {
       if (tools.length === 0) return;
       playerValue = steamId;
       for (const option of ['player', 'steam_id']) offered.set(option, new Map([...(offered.get(option) ?? []), [steamId, name]]));
       output.replaceChildren();
-      const playerTool = current?.group === 'Players' && current.options.some((o) => o.name === 'player' || o.name === 'steam_id');
+      const playerTool = current?.group === 'Players' && current.options.some(isPlayer);
       show(key ?? (playerTool ? current.key : 'warn'));
-      for (const option of ['player', 'steam_id']) {
-        const input = form.elements.namedItem(option);
-        if (input) input.dispatchEvent(new Event('input'));
+      for (const option of current.options.filter(isPlayer)) form.elements.namedItem(option.name)?.dispatchEvent(new Event('input', { bubbles: true }));
+      for (const option of current.options) {
+        const preset = reason && presetReasons(current.key, option.name).find((r) => r.label === reason);
+        const input = form.elements.namedItem(option.name);
+        if (!preset || !input || input.value !== '') continue;
+        input.value = preset.text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      const next = [...form.querySelectorAll('input, select, textarea')].find((i) => i.required && i.value === '');
-      (next ?? picker).focus({ preventScroll: true });
+      (firstEmpty() ?? (forPlayer ? form.querySelector('.tool-run') : picker)).focus({ preventScroll: true });
+    },
+    // Picks the `n`th (from 1) of the first row of buttons, such as a ban's length, and goes to the button. False when
+    // there is no such row, or no such button.
+    pick(n) {
+      const radio = form.querySelectorAll('.choices')[0]?.querySelectorAll('input[type="radio"]')[n - 1];
+      if (!radio) return false;
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      form.querySelector('.tool-run').focus();
+      return true;
+    },
+    // The tool open now, such as 'ban'.
+    get key() {
+      return current?.key ?? null;
     },
     get ready() {
       return tools.length > 0;

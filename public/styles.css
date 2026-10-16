@@ -6690,7 +6690,7 @@ body.rot-grabbing * {
 /* A quick look at a player: a panel at the side of the page, the whole screen on a phone. */
 .player-peek {
   inset: 0 0 0 auto;
-  width: min(440px, 100vw);
+  width: min(480px, 100vw);
   max-width: 100vw;
   height: 100dvh;
   max-height: 100dvh;
@@ -6766,6 +6766,250 @@ body.rot-grabbing * {
 .player-peek-list .when {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* The panel's buttons: the form open now is pressed. */
+.player-peek-actions .btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.player-peek-off {
+  margin: -8px 0 16px;
+  font-size: 0.85rem;
+}
+
+/* The form to act on the panel's player, under its buttons. */
+.peek-act {
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.peek-act[hidden] {
+  display: none;
+}
+
+.peek-act .tool-form {
+  max-width: none;
+}
+
+.peek-act .section-note:empty {
+  display: none;
+}
+
+.peek-act .tool-output:not(:empty) {
+  margin-top: 12px;
+}
+
+/* The panel player's record, folded until opened. */
+.peek-record {
+  margin-top: 16px;
+}
+
+.peek-record > summary {
+  width: fit-content;
+  list-style: none;
+  cursor: pointer;
+}
+
+.peek-record > summary::-webkit-details-marker {
+  display: none;
+}
+
+.peek-record > summary::before {
+  content: '▸ ';
+  color: var(--text-2);
+}
+
+.peek-record[open] > summary::before {
+  content: '▾ ';
+}
+
+.peek-record .tool-note {
+  margin-bottom: 8px;
+}
+
+/* A short list to pick one from, such as a ban's length: a row of buttons. Each is a radio button underneath, so the
+   arrows move between them and the form knows one must be picked. */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.choice {
+  position: relative;
+}
+
+.choice input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.choice span {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.choice:hover span {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.choice input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.choice input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tool-keys {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Asking again, in place of the button: what will happen, then Confirm or Back. */
+.tool-confirm {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warning) 8%, var(--surface));
+}
+
+.tool-confirm[hidden] {
+  display: none;
+}
+
+.tool-summary {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.tool-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin button.tool-run-confirm {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.admin button.btn-danger {
+  background: var(--critical);
+  color: #fff;
+}
+
+.admin button.btn-danger:hover {
+  background: color-mix(in srgb, var(--critical) 85%, white);
+}
+
+.admin button.tool-run[hidden] {
+  display: none;
+}
+
+/* A question on the page, in place of the browser's own pop-up (see ask.js). */
+.ask-dialog {
+  width: min(460px, calc(100vw - 32px));
+  padding: 20px;
+  color: var(--text);
+}
+
+.ask-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.ask-question {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.ask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The keyboard shortcuts. */
+.keys-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px 24px;
+  color: var(--text);
+}
+
+.keys-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.keys-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.keys-table th,
+.keys-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.keys-table th {
+  width: 9.5em;
+  padding-right: 16px;
+  color: var(--text-2);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.keys-note {
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.admin kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 5px;
+  border: 1px solid var(--axis);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 600 0.8rem/1.5 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  text-align: center;
+}
+
+/* A preset reason picked, until its words are changed. */
+.preset[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Reasons to pick in a warning, kick or ban. */
