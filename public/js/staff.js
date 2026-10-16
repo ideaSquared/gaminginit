@@ -330,6 +330,12 @@ const noteAsked = () => {
   }
 };
 
+// "Later", on the banner or in the dialog: not asked again until the next sign-in.
+const later = () => {
+  noteAsked();
+  $('steam-banner').hidden = true;
+};
+
 const steamDialog = $('steam-dialog');
 
 const steamError = (text) => {
@@ -353,7 +359,11 @@ export const openSteam = () => {
   steamDialog.showModal();
 };
 
-$('steam-cancel').addEventListener('click', () => steamDialog.close());
+// "Later" for staff who have not linked an account; "Cancel" for changing one.
+$('steam-cancel').addEventListener('click', () => {
+  if (!myProfile(current)) later();
+  steamDialog.close();
+});
 $('steam-done-close').addEventListener('click', () => steamDialog.close());
 $('steam-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -388,10 +398,7 @@ $('steam-form').addEventListener('submit', async (event) => {
 });
 
 $('steam-banner-link').addEventListener('click', () => openSteam());
-$('steam-banner-later').addEventListener('click', () => {
-  noteAsked();
-  $('steam-banner').hidden = true;
-});
+$('steam-banner-later').addEventListener('click', later);
 
 const PHASES = { live: ['Live', 'accent'], seeding: ['Seeding', 'hot'], empty: ['Empty', ''] };
 

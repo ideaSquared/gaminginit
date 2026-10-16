@@ -4031,6 +4031,7 @@ body.refreshing .tile-value {
 /* The staff pages' own bar, in place of the site's menu: the brand, the two pages, the server now, then alerts and the
    menu at the end. Below 1100px the server takes a row of its own. */
 .staff-bar-inner {
+  flex-wrap: wrap;
   gap: 8px 16px;
   min-height: 56px;
   padding-block: 6px;
@@ -4078,6 +4079,13 @@ body.refreshing .tile-value {
 .server-status .server-seen {
   margin-left: 0;
   font-size: 0.8rem;
+}
+
+/* Where the server shares the bar's one line with no room to spare, when the bot checked is in its hover. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .server-status .server-seen {
+    display: none;
+  }
 }
 
 .bar-button {
@@ -4802,14 +4810,14 @@ body.staff .staff-live > .panel {
   min-width: 420px;
 }
 
-/* The kill feed has six, with headshots and team kills marked by the weapon, so it fits beside the server list. Names
-   break only when one is longer than its column. */
+/* The kill feed has six, with headshots and team kills marked by the weapon, so it fits beside the server list. Its
+   names have room for an ordinary name before one breaks. */
 .admin-table.feed-table {
   min-width: 520px;
 }
 
-.feed-table .player-name {
-  overflow-wrap: break-word;
+.feed-table td.player {
+  min-width: 8ch;
 }
 
 /* "since …" under a time, when the bot couldn't read the server in between. */
@@ -6562,8 +6570,9 @@ body.rot-grabbing * {
   margin-top: 6px;
 }
 
-/* Staff pages: wider on a big screen, so the server list and the kill feed fit side by side. */
-@media (min-width: 1440px) {
+/* Staff pages: the whole width of a big screen, so the staff bar fits on one line from 1100px, and the server list and
+   the kill feed fit side by side from 1440px. */
+@media (min-width: 1100px) {
   body.staff {
     --wrap: 1680px;
   }

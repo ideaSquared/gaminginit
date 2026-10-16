@@ -27,8 +27,9 @@ at them; anywhere else, on either page, it opens their history.**
 the site), the switch between Moderation and Server settings, the server now, and at the end the menu under your name:
 who you are signed in as, your Steam account, View the site and Sign out. On Moderation, **Alerts** is next to it (see
 Alerts, below). The server now is: live, seeding or empty, the map, the players, each team's score and when the bot last
-checked (hover it for the server's name). When the bot cannot reach the server, it says so and when it last could.
-Below 1100 pixels wide the server takes a row of its own, and on a phone the bar scrolls away with the page.
+checked (hover it for the server's name; from 1100 to 1279 pixels wide, when the bot checked is only in the hover).
+When the bot cannot reach the server, it says so and when it last could. Below 1100 pixels wide the server takes a row
+of its own, and on a phone the bar scrolls away with the page.
 
 **What things mean.** Each panel has a **?** by its title that shows what it lists and how the bot decides, such as how
 headshots are judged or how accounts are scored. On Review, **How flags work** by the period shows how the bot flags
@@ -51,9 +52,9 @@ Server settings' Bans and VIP tab.
 
 ## Moderation: Live, the server, who is on and every kill now
 
-- **Side by side.** On a wide screen (1440 pixels and up) the staff pages use more of it, and the kill feed sits beside
-  the server list, staying in view as the list scrolls, with Joins and leaves under the list. Narrower, they are one
-  above the other.
+- **Side by side.** The staff pages use the whole width of the screen from 1100 pixels. From 1440 pixels the kill feed
+  sits beside the server list, staying in view as the list scrolls, with Joins and leaves under the list. Narrower, they
+  are one above the other.
 - **The server at a glance** is in the staff bar (see above).
 - **The server list:** everyone in game, with their team under their name, kills and deaths this match (K / D), time on
   the server today, and
