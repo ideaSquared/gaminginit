@@ -45,8 +45,9 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
     $queue.dealt.hidden = dealt === undefined || done === 0;
     $queue.dealtCount.textContent = String(done);
     const counts = Object.fromEntries(Object.keys(KINDS).map((k) => [k, rows.filter((r) => r.reasons.some((x) => x.kind === k)).length]));
-    // A kind with nobody flagged for it falls back to every flag.
-    if (kind && counts[kind] === 0) kind = '';
+    const listed = showDealt ? all : rows;
+    // A kind with nobody listed for it falls back to every flag.
+    if (kind && !listed.some((r) => r.reasons.some((x) => x.kind === kind))) kind = '';
     const button = (value, text, count) => {
       const b = el(
         'button',
@@ -67,7 +68,6 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
     };
     replaceButtons($queue.filter, [button('', 'All', rows.length), ...Object.entries(KINDS).map(([k, text]) => button(k, text, counts[k]))]);
 
-    const listed = showDealt ? all : rows;
     const shown = listed.filter((r) => (!kind || r.reasons.some((x) => x.kind === kind)) && (!inGameOnly || r.inGame));
     setStatus($queue.note, shown.length === listed.length ? '' : `Showing ${shown.length} of ${listed.length}.`);
     // A ghost button by the Act menu: Dealt with, or Undo on a row dealt with.

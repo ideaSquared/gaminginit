@@ -1608,7 +1608,8 @@ const renderRecord = () => {
 const loadRecord = async () => {
   if (peekPlayer === null) return;
   const { steamId } = peekPlayer;
-  if (records.get(steamId)?.reply || records.get(steamId) === null) {
+  const kept = records.get(steamId);
+  if (kept?.record || kept?.reply || kept === null) {
     renderRecord();
     return;
   }
