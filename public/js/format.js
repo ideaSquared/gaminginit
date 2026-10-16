@@ -1021,6 +1021,14 @@ export const presetReasons = (toolKey, option) => {
   return [];
 };
 
+// The teams to move a player to ({ value, name, disabled }), from the bot's choices: the team they are on now (`team`,
+// null when not known) stays in the list, marked and not to be picked, as moving them there does nothing.
+export const teamOptions = (choices, team) =>
+  choices.map((c) => {
+    const theirs = team != null && sideKey(c.value) === sideKey(team);
+    return { value: c.value, name: theirs ? `${c.name} (their team now)` : c.name, disabled: theirs };
+  });
+
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
 export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);
 

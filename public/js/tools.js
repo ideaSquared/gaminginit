@@ -1,4 +1,4 @@
-import { clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, toolsFrom } from './format.js';
+import { clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, teamOptions, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
@@ -52,8 +52,9 @@ export const replyNodes = (reply, staff) => [
 // `call(path, body)` posts to the bot's staff API and resolves to { ok, json }. `onChanged()` is called after a command
 // that changes something, so the page can load the records again. `staff()` gives the current Discord user names.
 // `only(tool)` picks the tools offered, such as only those for a player; every tool by default. `idPrefix` starts the
-// ids of its fields, so two sets of tools can be on one page.
-export const createTools = ({ root, call, onChanged, staff, only = () => true, idPrefix = 'tool' }) => {
+// ids of its fields, so two sets of tools can be on one page. `teamOf(steamId)` gives a player's team in game now, or
+// null, so a player can't be moved to the team they are on.
+export const createTools = ({ root, call, onChanged, staff, only = () => true, idPrefix = 'tool', teamOf = () => null }) => {
   let tools = [];
   let current = null;
   // What staff picked or typed for the player in each tool, so it carries over when they switch tools.
@@ -100,6 +101,22 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     hint.textContent = name && name !== input.value ? `→ ${name}` : '';
   };
 
+  // Moving a player: the team they are on now is marked and can't be picked (see teamOptions). A team picked before
+  // that is theirs now is cleared.
+  const markTeam = () => {
+    const option = current?.options.find((o) => o.name === 'team' && o.choices);
+    const select = form.elements.namedItem('team');
+    const player = form.elements.namedItem('player');
+    if (!option || !select || !player) return;
+    for (const { value, name, disabled } of teamOptions(option.choices, teamOf(player.value.trim()))) {
+      const node = [...select.options].find((n) => n.value === value);
+      if (!node) continue;
+      node.textContent = name;
+      node.disabled = disabled;
+    }
+    if (select.value !== '' && select.selectedOptions[0]?.disabled) select.value = '';
+  };
+
   const field = (o) => {
     const id = fieldId(o.name);
     const label = el('label', { htmlFor: id, className: 'tool-label', textContent: `${optionLabel(o.name)}${o.required ? '' : ' (optional)'}` });
@@ -112,6 +129,8 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
         ...(o.required ? [el('option', { value: '', textContent: 'Pick one', disabled: true, selected: true })] : [el('option', { value: '', textContent: '—' })]),
         ...o.choices.map((c) => el('option', { value: c.value, textContent: c.name })),
       );
+      // The player may have changed team since the form was drawn.
+      if (o.name === 'team') input.addEventListener('focus', markTeam);
     } else if (o.type === BOOLEAN) {
       input = el(
         'select',
@@ -164,6 +183,7 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
       };
       input.addEventListener('input', () => {
         if (o.name === 'player' || o.name === 'steam_id') playerValue = input.value;
+        if (o.name === 'player') markTeam();
         showHint(o, input, hint);
         later();
       });
@@ -186,6 +206,7 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
       const input = form.elements.namedItem(name);
       if (input && playerValue) input.value = playerValue;
     }
+    markTeam();
   };
 
   picker.addEventListener('change', () => {

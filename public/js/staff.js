@@ -187,6 +187,9 @@ export const call = async (path, body) => {
 // The Discord names of staff, by user ID, as the bot last sent them.
 export const staffNames = () => current?.staff ?? {};
 
+// A player's team in game now, by Steam ID, as the bot last sent it; null when they are not in game or it is not known.
+export const teamOf = (steamId) => current?.online?.players?.find((p) => p.steamId === steamId)?.faction ?? null;
+
 // The signed-in staff member's linked Steam account, or null.
 export const myProfile = (overview) => overview?.staffProfiles?.find((p) => p.userId === overview.user?.id) ?? null;
 
@@ -236,6 +239,7 @@ export const createActDialog = ({ refocus = () => null } = {}) => {
     call,
     onChanged: () => load(),
     staff: staffNames,
+    teamOf,
     only: (tool) => tool.options.some((o) => o.name === 'player' || o.name === 'steam_id'),
   });
   // Why there are no tools, when the bot has none.

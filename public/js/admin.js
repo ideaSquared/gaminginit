@@ -74,6 +74,7 @@ import {
   steamLink,
   table,
   tabKeys,
+  teamOf,
   when,
 } from './staff.js';
 import { createTools, replyNodes } from './tools.js';
@@ -267,7 +268,7 @@ const actions = createActDialog({
 const act = actions.act;
 
 // Commands: every staff command from Discord, to pick, fill in and run.
-const commands = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames });
+const commands = createTools({ root: $('tools'), call, onChanged: () => load(), staff: staffNames, teamOf });
 
 // What staff can do to a player from a row. Warnings, kicks and team moves only work on someone in game. History and the
 // kill feed are not admin tools: they open the History tab, and show only that player in the kill feed.

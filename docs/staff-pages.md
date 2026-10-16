@@ -189,6 +189,8 @@ Bans and VIP tab.
   pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
   first. Each runs on the bot as you, exactly as the slash command: the same checks and replies, and it goes in the
   player's staff history and the moderation log. To warn, kick or move someone in game, Act on Live is quicker.
+  Moving a player to another team greys out the team they are on now ("their team now"), so it can't be picked; the bot
+  refuses that move too, from Discord as well.
 
 ## Server settings: Bans and VIP
 
