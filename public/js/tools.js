@@ -391,9 +391,11 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
       }
       (firstEmpty() ?? (forPlayer ? form.querySelector('.tool-run') : picker)).focus({ preventScroll: true });
     },
-    // Opens a tool with nothing filled in, such as from the command search, at the first thing to fill in.
+    // Opens a tool with nothing filled in, such as from the command search, at the first thing to fill in. The player
+    // last picked is forgotten, so a command never starts on someone from before.
     open(key) {
       if (tools.length === 0) return;
+      playerValue = '';
       output.replaceChildren();
       show(key);
       (firstEmpty() ?? form.querySelector('.tool-run')).focus({ preventScroll: true });

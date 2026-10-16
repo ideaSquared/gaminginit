@@ -1493,6 +1493,16 @@ describe('the Queue', () => {
     assert.deepEqual(rows.map((r) => r.reasons[0].serious), [true, false, false, true]);
   });
 
+  it('leaves out headshots the bot can’t judge yet, unless a day was flagged', () => {
+    const rows = queueRows({ headshots: [hs('1', 'Unjudged', 0, null), hs('2', 'Flagged', 1, null)], now });
+    assert.deepEqual(rows.map((r) => r.name), ['Flagged']);
+  });
+
+  it('says how old a Steam account is, when Steam shows it', () => {
+    const young = { ...account('1', 'Fresh', 'medium', 2), vacBans: 0, lastBanAt: null, setUp: true, public: true, createdAt: now - 6 * 86_400_000 };
+    assert.equal(queueRows({ steam: [young], now })[0].reasons[0].text, 'Worth a look, 2 points · Made 6 days ago');
+  });
+
   it('is empty with nothing flagged', () => {
     assert.deepEqual(queueRows({ now }), []);
   });

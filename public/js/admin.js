@@ -2153,8 +2153,10 @@ const renderRecent = () => {
 $('history-search').addEventListener('input', renderRecent);
 
 // The command search, Ctrl K or Search in the staff bar (see palette.js): the sections, every staff command, and any
-// player the bot knows.
+// player the bot knows. Going to a section closes a player's panel or a command's form, which would cover it.
 const go = (section, view = null) => () => {
+  if (peekDialog.open) peekDialog.close();
+  if (commandDialog.open) commandDialog.close();
   if (section === 'queue') showQueueView(view);
   if (section === 'server') server.show(view);
   selectTab(section);
@@ -2196,6 +2198,8 @@ const palette = createPalette({
 $('search-open').addEventListener('click', () => palette.open());
 document.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'k' || data === null) return;
+  // Over the page, a player's panel or a command's form, but not over a question, the keys or the Steam box.
+  if ([...document.querySelectorAll('dialog[open]')].some((d) => ![peekDialog, commandDialog, $('palette')].includes(d))) return;
   event.preventDefault();
   if ($('palette').open) $('palette').close();
   else palette.open();

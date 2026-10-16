@@ -1059,8 +1059,9 @@ export const teamOptions = (choices, team) =>
 // The Queue: everyone the bot flagged in the period, one row per player with every reason together, so a player is
 // never on it twice. `headshots` are the period's players with a headshot (GET /api/admin/kills), `steam` the risky
 // Steam accounts and `griefers` everyone with team kills or suicides (both from the overview); `inGame` the Steam IDs in
-// game now. Headshots count with a flagged day or a chance by luck below ordinary; Steam accounts all count (the bot
-// only sends risky ones); griefing only once flagged. Each reason is { kind: 'headshots' | 'steam' | 'griefing',
+// game now. Headshots count with a flagged day or a chance by luck below ordinary, not while the bot can't say yet;
+// Steam accounts all count (the bot only sends risky ones), with how old they are when Steam shows it; griefing only once
+// flagged. Each reason is { kind: 'headshots' | 'steam' | 'griefing',
 // serious, text }: serious is a flagged day, a high-risk account, or griefing. In game first, then the most serious
 // reasons, then the most reasons, then by name.
 export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = new Set(), now }) => {
@@ -1073,7 +1074,8 @@ export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = 
     rows.set(player.steamId, row);
   };
   for (const p of headshots) {
-    if (ordinaryHeadshots(p)) continue;
+    const unlikely = p.chance !== null && p.chance !== undefined && p.chance < ODDS_SHOWN;
+    if (p.flaggedDays === 0 && !unlikely) continue;
     const text = [
       headshotCount(p.kills, p.headshots),
       `usual ${usualHeadshots(p.expected, p.kills)}`,
@@ -1083,7 +1085,7 @@ export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = 
     add(p, { kind: 'headshots', serious: p.flaggedDays > 0, text: text.join(' · ') });
   }
   for (const a of steam) {
-    const why = steamWhy(a, now);
+    const why = [...steamWhy(a, now), ...(a.createdAt === null ? [] : [accountAge(a, now)])];
     add(a, { kind: 'steam', serious: a.risk === 'high', text: [`${RISK_LABELS[a.risk] ?? a.risk}, ${a.score} point${a.score === 1 ? '' : 's'}`, ...why].join(' · ') });
   }
   for (const p of griefers) {
