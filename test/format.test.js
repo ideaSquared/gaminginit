@@ -120,6 +120,7 @@ import {
   defaultLabel,
   optionLabel,
   READ_ONLY_TOOLS,
+  asksFirst,
   toolsFrom,
 } from '../public/js/format.js';
 
@@ -942,6 +943,16 @@ describe('admin tools', () => {
     assert.ok(!READ_ONLY_TOOLS.has('private:add'));
     assert.ok(!READ_ONLY_TOOLS.has('kick'));
     assert.ok(!READ_ONLY_TOOLS.has('rotations:use'));
+  });
+
+  it('asks first for anything that changes the game, but a warning', () => {
+    assert.equal(asksFirst('player'), false);
+    assert.equal(asksFirst('rotations:show'), false);
+    assert.equal(asksFirst('warn'), false);
+    assert.equal(asksFirst('kick'), true);
+    assert.equal(asksFirst('ban'), true);
+    assert.equal(asksFirst('switchteam'), true);
+    assert.equal(asksFirst('broadcast'), true);
   });
 
   it('labels options', () => {

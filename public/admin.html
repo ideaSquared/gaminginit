@@ -19,8 +19,11 @@
   <body class="staff">
     <a class="skip" href="#main">Skip to content</a>
 
-    <header class="nav">
-      <div class="wrap nav-inner">
+    <!-- The staff pages' own bar, in place of the site's menu: the two pages, the server now, alerts and who is signed in.
+         Keep the same as in server-settings.html, but for the alerts, which are only on this page. Shown once signed in
+         (data-signed-in, see staff.js). -->
+    <header class="nav staff-bar">
+      <div class="wrap nav-inner staff-bar-inner">
         <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
             <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
@@ -28,22 +31,21 @@
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <nav class="nav-sections" aria-label="Sections">
-          <ul class="nav-links">
-            <li><a href="stats" data-keep-query>Stats</a></li>
-            <li><a href="live" data-keep-query>Live</a></li>
-            <li><a href="matches" data-keep-query>Matches</a></li>
-            <li><a href="teams" data-keep-query>Teams</a></li>
-            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
-            <li><a href="players" data-keep-query>Players</a></li>
-            <li><a href="seeding" data-keep-query>Seeding</a></li>
-            <li><a href="season" data-keep-query>Season 1</a></li>
-          </ul>
+        <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" data-signed-in hidden>
+          <a href="admin" data-keep-query aria-current="page">Moderation</a>
+          <a href="server-settings" data-keep-query>Server settings</a>
         </nav>
-        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-          <span>Discord</span>
-        </a>
+        <p class="server-status" id="server-status" data-signed-in hidden></p>
+        <div class="staff-bar-end">
+          <button type="button" class="bar-button" id="look-alerts" aria-pressed="false" title="Alert me when someone new is worth a look: a chime, and a desktop notification while this tab is in the background" data-signed-in hidden>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+            <span>Alerts</span>
+          </button>
+          <details class="account-menu" id="account" data-signed-in hidden>
+            <summary class="bar-button" id="account-name">Staff</summary>
+            <div class="account-list" id="account-list"></div>
+          </details>
+        </div>
       </div>
     </header>
 
@@ -55,17 +57,15 @@
 
       <section class="section admin" aria-labelledby="admin-title">
         <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
-          <div class="section-head">
-            <div class="staff-head">
-              <h1 class="page-title" id="admin-title">Staff</h1>
-              <!-- The two staff pages. Keep the same as in server-settings.html. -->
-              <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" hidden>
-                <a href="admin" data-keep-query aria-current="page">Moderation</a>
-                <a href="server-settings" data-keep-query>Server settings</a>
-              </nav>
+          <h1 class="visually-hidden" id="admin-title">Moderation</h1>
+
+          <!-- Asks staff who have not linked their Steam account to, once each sign-in (see staff.js). -->
+          <div class="staff-banner" id="steam-banner" hidden>
+            <p>Link the Steam account you play on, so the bot counts your time on the server as playing, not seeding.</p>
+            <div class="staff-banner-actions">
+              <button type="button" class="btn btn-small tool-run" id="steam-banner-link">Link your Steam account</button>
+              <button type="button" class="btn btn-ghost btn-small" id="steam-banner-later">Later</button>
             </div>
-            <p class="section-note" id="admin-user" hidden></p>
           </div>
 
           <div class="card panel signin" id="signin" hidden>
@@ -80,77 +80,81 @@
           </div>
 
           <div id="admin-body" hidden>
-            <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Moderation">
-              <button type="button" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true" data-tab="live">
+            <!-- What each tab holds is in its title, shown on hover. -->
+            <div class="admin-tabs" role="tablist" aria-label="Moderation">
+              <button type="button" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true" data-tab="live" title="Who is on, those worth a look first, and every kill now">
                 <span class="tab-name">Live <span class="tab-count" id="count-live"></span></span>
-                <span class="tab-hint">Who is on, those worth a look first, and every kill now</span>
               </button>
-              <button type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review">
+              <button type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review" title="What the bot flagged, and what staff did">
                 <span class="tab-name">Review <span class="tab-count" id="count-review"></span></span>
-                <span class="tab-hint">What the bot flagged, and what staff did</span>
               </button>
-              <button type="button" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history">
+              <button type="button" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history" title="Any player’s kills, team kills and record">
                 <span class="tab-name">History</span>
-                <span class="tab-hint">Any player’s kills, team kills and record</span>
               </button>
-              <button type="button" role="tab" id="tab-commands" aria-controls="panel-commands" aria-selected="false" tabindex="-1" data-tab="commands">
+              <button type="button" role="tab" id="tab-commands" aria-controls="panel-commands" aria-selected="false" tabindex="-1" data-tab="commands" title="Every staff command: message everyone, maps, VIP and more">
                 <span class="tab-name">Commands</span>
-                <span class="tab-hint">Every staff command: message everyone, maps, VIP and more</span>
               </button>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
-              <div class="card server-strip" id="server-strip"></div>
-
+            <div class="tab-panel compact-rows" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
               <!-- On a wide screen the kill feed sits beside the server list, and stays in view as the list scrolls. -->
               <div class="staff-live">
                 <article class="card panel admin-panel staff-live-list" aria-labelledby="players-title">
                   <div class="panel-head">
-                    <h2 class="panel-title" id="players-title">Server list</h2>
-                    <label class="check" for="look-alerts"><input type="checkbox" id="look-alerts" /> Alert me when someone new is worth a look</label>
+                    <div class="title-help">
+                      <h2 class="panel-title" id="players-title">Server list</h2>
+                      <button type="button" class="help-toggle" aria-expanded="false" aria-controls="players-help" title="About the server list"><span aria-hidden="true">?</span><span class="visually-hidden">About the server list</span></button>
+                    </div>
+                    <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only worth a look</label>
                   </div>
-                  <p class="section-note">Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for a quick look at them, or use <strong>Act</strong> to warn, kick, move them to another team or ban them, without leaving this page.</p>
+                  <div class="panel-help" id="players-help" hidden>
+                    <p>Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for a quick look at them. <strong>Warn</strong>, <strong>Kick</strong> and <strong>Ban</strong> on a row, or <strong>Act</strong> for the rest, open the tool over this page with them picked. <strong>✓</strong> is “Checked, they’re fine”. Hover a name for their Steam ID.</p>
+                  </div>
                   <p class="section-note alerts-note" id="alerts-note" role="status" hidden></p>
                   <div class="list-tools">
                     <div class="list-search">
-                      <label class="finder-label" for="player-search">Search</label>
-                      <input class="finder-input" id="player-search" type="search" placeholder="Name or Steam ID" autocomplete="off" spellcheck="false" />
+                      <label class="visually-hidden" for="player-search">Search players in game</label>
+                      <input class="finder-input" id="player-search" type="search" placeholder="Search name or Steam ID" autocomplete="off" spellcheck="false" />
                     </div>
-                    <div class="list-filter">
-                      <p class="finder-label" id="team-filter-label">Team</p>
-                      <div class="period team-filter" id="team-filter" role="group" aria-labelledby="team-filter-label"></div>
-                    </div>
-                    <div class="list-filter">
-                      <label class="finder-label" for="player-sort">Sort by</label>
-                      <select class="finder-input" id="player-sort"></select>
-                    </div>
-                    <div class="checks">
-                      <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only players worth a look</label>
-                      <label class="check" for="player-compact"><input type="checkbox" id="player-compact" /> Compact rows</label>
-                    </div>
+                    <p class="visually-hidden" id="team-filter-label">Team</p>
+                    <div class="period team-filter" id="team-filter" role="group" aria-labelledby="team-filter-label"></div>
+                    <label class="visually-hidden" for="player-sort">Sort by</label>
+                    <select class="finder-input list-sort" id="player-sort"></select>
                   </div>
                   <p class="finder-count" id="players-count" role="status"></p>
-                  <div id="server-players"></div>
+                  <div class="compact" id="server-players"></div>
                 </article>
 
                 <article class="card panel admin-panel staff-live-feed" id="feed-card" aria-labelledby="feed-title">
                   <div class="panel-head">
-                    <h2 class="panel-title" id="feed-title">Kill feed <span class="feed-state" id="feed-state" data-state="off"></span></h2>
+                    <div class="title-help">
+                      <h2 class="panel-title" id="feed-title">Kill feed <span class="feed-state" id="feed-state" data-state="off"></span></h2>
+                      <button type="button" class="help-toggle" aria-expanded="false" aria-controls="feed-help" title="About the kill feed"><span aria-hidden="true">?</span><span class="visually-hidden">About the kill feed</span></button>
+                    </div>
                     <div class="checks">
                       <label class="check" for="feed-teamkills"><input type="checkbox" id="feed-teamkills" /> Only team kills</label>
                       <label class="check" for="feed-headshots"><input type="checkbox" id="feed-headshots" /> Only headshots</label>
                     </div>
                   </div>
+                  <div class="panel-help" id="feed-help" hidden>
+                    <p id="feed-note"></p>
+                  </div>
                   <p class="feed-player" id="feed-player" hidden></p>
-                  <p class="section-note" id="feed-note"></p>
                   <div class="admin-scroll kills-scroll">
-                    <table class="admin-table" id="kill-feed"></table>
+                    <table class="admin-table feed-table" id="kill-feed"></table>
                   </div>
                 </article>
 
                 <article class="card panel admin-panel staff-live-joins" id="joins-card" aria-labelledby="joins-title" hidden>
-                  <h2 class="panel-title" id="joins-title">Joins and leaves</h2>
-                  <p class="section-note">Who joined and left the server, newest first: the latest 500, from the bot’s check each minute, so each shows up to a minute late, and someone on for less than a minute between two checks is missed. Click a name for a quick look at them.</p>
+                  <div class="panel-head">
+                    <div class="title-help">
+                      <h2 class="panel-title" id="joins-title">Joins and leaves</h2>
+                      <button type="button" class="help-toggle" aria-expanded="false" aria-controls="joins-help" title="About joins and leaves"><span aria-hidden="true">?</span><span class="visually-hidden">About joins and leaves</span></button>
+                    </div>
+                  </div>
+                  <div class="panel-help" id="joins-help" hidden>
+                    <p>Who joined and left the server, newest first: the latest 500, from the bot’s check each minute, so each shows up to a minute late, and someone on for less than a minute between two checks is missed. Click a name for a quick look at them.</p>
+                  </div>
                   <div class="admin-scroll kills-scroll">
                     <table class="admin-table joins-table" id="joins" aria-labelledby="joins-title"></table>
                   </div>
@@ -166,17 +170,17 @@
                   <button type="button" data-days="30" aria-pressed="false">30 days</button>
                 </div>
                 <p class="section-note" id="period-note"></p>
+                <button type="button" class="help-toggle help-toggle-text" aria-expanded="false" aria-controls="how-flags">How flags work</button>
               </div>
 
-              <!-- Open the first time; folded away after that, unless staff leave it open. -->
-              <details class="card panel how-alerts" id="how-flags" open>
-                <summary class="panel-title">How flags work</summary>
+              <div class="card panel how-alerts" id="how-flags" hidden>
+                <h2 class="panel-title">How flags work</h2>
                 <ol class="alert-steps">
                   <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every kill in the kill feed is checked for headshots, team kills and vehicle suicides.</li>
                   <li><strong>Serious ones go to Discord.</strong> Players passing a griefing mark and the riskiest Steam accounts are posted in the moderation log channel as they happen.</li>
                   <li><strong>Everything is listed here,</strong> those in game first; the rest are folded under <strong>Not in game</strong>. A flag is a reason to look, not proof: check the player’s history before you act.</li>
                 </ol>
-              </details>
+              </div>
 
               <div class="tiles">
                 <div class="tile">
@@ -204,49 +208,78 @@
 
               <article class="card panel admin-panel" aria-labelledby="headshots-title">
                 <div class="panel-head">
-                  <h2 class="panel-title" id="headshots-title">Headshots</h2>
+                  <div class="title-help">
+                    <h2 class="panel-title" id="headshots-title">Headshots</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="headshots-help" title="How headshots are judged"><span aria-hidden="true">?</span><span class="visually-hidden">How headshots are judged</span></button>
+                  </div>
                   <label class="check" for="headshots-ordinary" id="headshots-ordinary-label" hidden><input type="checkbox" id="headshots-ordinary" /> <span id="headshots-ordinary-text">Show ordinary players</span></label>
                 </div>
-                <p class="section-note" id="headshots-note"></p>
-                <details class="rules">
-                  <summary>How headshots are judged</summary>
+                <div class="panel-help" id="headshots-help" hidden>
+                  <p>Everyone with a headshot who stands out, most flagged days first, then least likely by luck. Those with an ordinary chance by luck and no flagged day are hidden until you tick <strong>Show ordinary players</strong>. Click a name for their history.</p>
+                  <h3 class="help-title">How headshots are judged</h3>
                   <ul class="flag-rules" id="headshot-rules"></ul>
-                </details>
+                </div>
+                <p class="section-note" id="headshots-note"></p>
                 <div id="headshots"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="unnamed-title" id="unnamed-panel" hidden>
-                <h2 class="panel-title" id="unnamed-title">Weapons to name <span class="tab-count" id="count-unnamed"></span></h2>
-                <p class="section-note">The game sends the bot a code for each weapon, not its name. The bot has no name for these yet, so the site shows their code. The game’s own kill feed shows the name: watch one of these players in game, or when a kill marked “Check name” comes up in the Live tab’s kill feed, find the same kill in game. Then tell whoever runs the bot what it is. Over the last 30 days, most kills first.</p>
+                <div class="panel-head">
+                  <div class="title-help">
+                    <h2 class="panel-title" id="unnamed-title">Weapons to name <span class="tab-count" id="count-unnamed"></span></h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="unnamed-help" title="About weapons to name"><span aria-hidden="true">?</span><span class="visually-hidden">About weapons to name</span></button>
+                  </div>
+                </div>
+                <div class="panel-help" id="unnamed-help" hidden>
+                  <p>The game sends the bot a code for each weapon, not its name. The bot has no name for these yet, so the site shows their code. The game’s own kill feed shows the name: watch one of these players in game, or when a kill marked “Check name” comes up in the Live tab’s kill feed, find the same kill in game. Then tell whoever runs the bot what it is. Over the last 30 days, most kills first.</p>
+                </div>
                 <div class="admin-scroll">
                   <table class="admin-table" id="unnamed-weapons"></table>
                 </div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="steam-title">
-                <h2 class="panel-title" id="steam-title">Risky Steam accounts</h2>
-                <p class="section-note" id="steam-note"></p>
-                <details class="rules">
-                  <summary>How accounts are scored</summary>
+                <div class="panel-head">
+                  <div class="title-help">
+                    <h2 class="panel-title" id="steam-title">Risky Steam accounts</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="steam-help" title="How accounts are scored"><span aria-hidden="true">?</span><span class="visually-hidden">How accounts are scored</span></button>
+                  </div>
+                </div>
+                <div class="panel-help" id="steam-help" hidden>
+                  <p id="steam-help-note"></p>
+                  <h3 class="help-title">How accounts are scored</h3>
                   <ul class="flag-rules" id="steam-rules"></ul>
-                </details>
+                </div>
+                <p class="section-note" id="steam-note"></p>
                 <div id="steam-accounts"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="griefers-title">
-                <h2 class="panel-title" id="griefers-title">Possible griefers</h2>
-                <p class="section-note" id="griefers-note"></p>
-                <details class="rules">
-                  <summary>What gets a player flagged</summary>
+                <div class="panel-head">
+                  <div class="title-help">
+                    <h2 class="panel-title" id="griefers-title">Possible griefers</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="griefers-help" title="What gets a player flagged"><span aria-hidden="true">?</span><span class="visually-hidden">What gets a player flagged</span></button>
+                  </div>
+                </div>
+                <div class="panel-help" id="griefers-help" hidden>
+                  <p>Everyone who team killed, was team killed or killed themselves, most flagged days first. A flag is a reason to look, not proof: check the incidents and ask around first.</p>
+                  <h3 class="help-title">What gets a player flagged</h3>
                   <ul class="flag-rules" id="flag-rules"></ul>
-                </details>
+                </div>
+                <p class="section-note" id="griefers-note"></p>
                 <div id="griefers"></div>
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="incidents-title">
                 <div class="panel-head">
-                  <h2 class="panel-title" id="incidents-title">Team kills and vehicle suicides</h2>
+                  <div class="title-help">
+                    <h2 class="panel-title" id="incidents-title">Team kills and vehicle suicides</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="incidents-help" title="About team kills and vehicle suicides"><span aria-hidden="true">?</span><span class="visually-hidden">About team kills and vehicle suicides</span></button>
+                  </div>
                   <button type="button" class="btn btn-ghost btn-small" id="incidents-all" hidden>Show everyone</button>
+                </div>
+                <div class="panel-help" id="incidents-help" hidden>
+                  <p>Newest first. Sides come from the bot’s check each minute, so a player who switched sides in the last minute can show wrongly. Other suicides are only counted.</p>
                 </div>
                 <p class="section-note" id="incidents-note"></p>
                 <div class="admin-scroll">
@@ -255,8 +288,15 @@
               </article>
 
               <article class="card panel admin-panel" aria-labelledby="modlog-title">
-                <h2 class="panel-title" id="modlog-title">Moderation log</h2>
-                <p class="section-note">Warnings, kicks, bans, unbans, team moves and VIP through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
+                <div class="panel-head">
+                  <div class="title-help">
+                    <h2 class="panel-title" id="modlog-title">Moderation log</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="modlog-help" title="About the moderation log"><span aria-hidden="true">?</span><span class="visually-hidden">About the moderation log</span></button>
+                  </div>
+                </div>
+                <div class="panel-help" id="modlog-help" hidden>
+                  <p>Warnings, kicks, bans, unbans, team moves and VIP through the bot, and bans made or lifted outside it (in game, or in the server’s settings). Kicks made in game are not shown: the game does not report them.</p>
+                </div>
                 <div class="list-tools">
                   <div class="list-filter">
                     <p class="finder-label" id="modlog-filter-label">Show</p>
@@ -353,8 +393,16 @@
 
             <div class="tab-panel" role="tabpanel" id="panel-commands" aria-labelledby="tab-commands" hidden>
               <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
-                <h2 class="panel-title" id="tools-title">Staff commands</h2>
-                <p class="section-note" id="tools-note">Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first. To warn, kick, move or ban someone in game, <strong>Act</strong> on the Live tab’s server list is quicker.</p>
+                <div class="panel-head">
+                  <div class="title-help">
+                    <h2 class="panel-title" id="tools-title">Staff commands</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="tools-help" title="About the staff commands"><span aria-hidden="true">?</span><span class="visually-hidden">About the staff commands</span></button>
+                  </div>
+                </div>
+                <div class="panel-help" id="tools-help" hidden>
+                  <p>Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning. To warn, kick, move or ban someone in game, the buttons on the Live tab’s server list are quicker.</p>
+                </div>
+                <p class="section-note" id="tools-note"></p>
                 <div id="tools"></div>
               </article>
             </div>
@@ -375,7 +423,7 @@
               <h2 class="panel-title" id="act-dialog-title">Act</h2>
               <button type="button" class="btn btn-ghost btn-small" id="act-close">Close</button>
             </div>
-            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
+            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning.</p>
             <div class="tools-panel" id="act-tools"></div>
           </dialog>
 

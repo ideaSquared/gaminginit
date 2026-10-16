@@ -4028,12 +4028,296 @@ body.refreshing .tile-value {
   margin-top: 4px;
 }
 
-/* The two staff pages, Moderation and Server settings, by the page's title: one pressed at a time, like a period. */
-.staff-head {
+/* The staff pages' own bar, in place of the site's menu: the brand, the two pages, the server now, then alerts and the
+   menu at the end. Below 1100px the server takes a row of its own. */
+.staff-bar-inner {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-height: 56px;
+  padding-block: 6px;
+}
+
+.staff-bar .brand {
+  margin-right: 0;
+}
+
+.staff-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.server-status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 20px;
+  gap: 4px 12px;
+  order: 1;
+  flex-basis: 100%;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.server-status[hidden] {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .server-status {
+    order: 0;
+    flex-basis: auto;
+  }
+}
+
+.server-players {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.server-status .server-seen {
+  margin-left: 0;
+  font-size: 0.8rem;
+}
+
+/* Where the server shares the bar's one line with no room to spare, when the bot checked is in its hover. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .server-status .server-seen {
+    display: none;
+  }
+}
+
+.bar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bar-button:hover {
+  background: var(--surface-2);
+}
+
+.bar-button[hidden] {
+  display: none;
+}
+
+.bar-button .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Alerts on. */
+.bar-button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+/* Who is signed in, their Steam account, the site and Sign out, dropping down from their name. */
+.account-menu {
+  position: relative;
+}
+
+.account-menu[hidden] {
+  display: none;
+}
+
+.account-menu > summary {
+  list-style: none;
+}
+
+.account-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.account-menu > summary::after {
+  content: '▾';
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.account-menu[open] > summary {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.account-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 6;
+  display: grid;
+  min-width: 240px;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.account-who {
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.account-item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-item:hover {
+  background: var(--surface-2);
+}
+
+/* On a phone the bar takes a few rows, so it scrolls away with the page. */
+@media (max-width: 719px) {
+  .staff-bar {
+    position: static;
+  }
+}
+
+/* The staff pages start close under the bar. */
+body.staff .notice {
+  margin-top: 10px;
+}
+
+body.staff .notice:not([hidden]) {
+  padding-bottom: 6px;
+}
+
+body.staff .section.admin {
+  padding-top: 12px;
+}
+
+body.staff .staff-live > .panel {
+  padding-top: 16px;
+}
+
+/* Asks staff to link their Steam account, without covering the page. */
+.staff-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.staff-banner[hidden] {
+  display: none;
+}
+
+.staff-banner p {
+  flex: 1 1 320px;
+  color: var(--text-2);
+}
+
+.staff-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Each panel's "?" shows what the panel is about, and how it decides, under its title. */
+.title-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.title-help .panel-title {
+  margin-bottom: 0;
+}
+
+.help-toggle {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--axis);
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.help-toggle:hover,
+.help-toggle[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* "How flags work", by the Review tab's period. */
+.help-toggle-text {
+  width: auto;
+  height: auto;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.panel-help {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.panel-help[hidden] {
+  display: none;
+}
+
+.panel .help-title {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* A note that says nothing, such as when nothing is wrong, takes no room. */
+.admin .section-note:empty {
+  display: none;
 }
 
 .staff-pages {
@@ -4049,10 +4333,10 @@ body.refreshing .tile-value {
 }
 
 .staff-pages a {
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 7px;
   color: var(--text-2);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -4068,53 +4352,45 @@ body.refreshing .tile-value {
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
-/* Each staff page's tabs: Live, Review and History; or Rotations, Lines, Weapon rules and Admin. Each says what is in
-   it, so the page reads at a glance. */
+/* Each staff page's tabs: Live, Review, History and Commands; or Bans and VIP, Rotations, Lines and Weapon rules. One row
+   of names with their counts, the one shown underlined; what each holds is in its title. */
 .admin-tabs {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .admin-tabs [role='tab'] {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px 16px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  margin-bottom: -1px;
+  padding: 7px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: none;
   color: var(--text-2);
   font: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
 .admin-tabs [role='tab']:hover {
-  border-color: var(--axis);
+  background: var(--surface);
   color: var(--text);
 }
 
 .admin-tabs [role='tab'][aria-selected='true'] {
-  border-color: var(--accent);
-  background: var(--surface-2);
+  border-bottom-color: var(--accent);
+  background: var(--surface);
   color: var(--text);
-  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 .tab-name {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
-}
-
-.tab-hint {
-  color: var(--muted);
-  font-size: 0.8rem;
 }
 
 .tab-count {
@@ -4138,34 +4414,8 @@ body.refreshing .tile-value {
   color: #1d1400;
 }
 
-@media (max-width: 559px) {
-  /* Four tabs are two rows of two on a phone; three fit in one row. */
-  .admin-tabs-wrap {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-flow: row;
-  }
-
-  .admin-tabs [role='tab'] {
-    padding: 10px 12px;
-  }
-
-  .tab-hint {
-    display: none;
-  }
-}
-
 .tab-panel > .tiles {
   margin-bottom: 16px;
-}
-
-/* The server at a glance, above the server list. */
-.server-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  margin-bottom: 16px;
-  padding: 14px 18px;
 }
 
 .server-score {
@@ -4191,6 +4441,37 @@ body.refreshing .tile-value {
 
 .list-search {
   flex: 1 1 240px;
+}
+
+/* The server list's search, team and order, labelled for screen readers only, fit in one row from about 640px. */
+.staff-live-list .list-tools {
+  align-items: center;
+  gap: 8px;
+}
+
+.staff-live-list .list-search {
+  flex: 1 1 140px;
+}
+
+.staff-live-list .list-tools .finder-input,
+.staff-live-list .team-filter {
+  margin-top: 0;
+}
+
+.staff-live-list .finder-input {
+  padding: 8px 12px;
+}
+
+.staff-live-list .list-sort {
+  width: auto;
+}
+
+.staff-live-list .team-filter button {
+  padding: 6px 9px;
+}
+
+#players-count:empty {
+  display: none;
 }
 
 .list-tools .finder-input {
@@ -4245,29 +4526,58 @@ body.refreshing .tile-value {
 }
 
 .server-table {
-  min-width: 720px;
+  min-width: 600px;
   table-layout: fixed;
 }
 
-/* The same column widths in both parts of the server list, so they line up. Worth knowing takes the rest. */
+/* The same column widths in both parts of the server list, so they line up, but for the last: those worth a look have
+   their quick buttons by Act. Worth knowing takes the rest. */
+.server-table th,
+.server-table th.num {
+  white-space: normal;
+}
+
 .server-table th:nth-child(1) {
-  width: 24%;
+  width: 150px;
 }
 
 .server-table th:nth-child(2) {
-  width: 124px;
-}
-
-.server-table th:nth-child(3) {
-  width: 96px;
-}
-
-.server-table th:nth-child(4) {
   width: 72px;
 }
 
-.server-table th:nth-child(6) {
+.server-table th:nth-child(3) {
+  width: 64px;
+}
+
+.server-table th:nth-child(5) {
   width: 84px;
+}
+
+.server-table.look-table th:nth-child(5) {
+  width: 290px;
+}
+
+/* A long mark wraps in a narrow column rather than running into the next. */
+.server-table .badge {
+  white-space: normal;
+}
+
+/* A player's team, under their name. */
+.player-team {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* For those worth a look, the quick buttons, then Act. */
+.row-actions .quick-acts {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 0 4px 0 0;
+  vertical-align: top;
 }
 
 /* Those worth a look, then everyone else. */
@@ -4330,6 +4640,18 @@ body.refreshing .tile-value {
   /* Nothing worth knowing takes no room on a card. */
   .server-table td.no-watch {
     display: none;
+  }
+
+  /* Those worth a look have their buttons on a line of their own, under what is worth knowing. */
+  .server-table.look-table td.row-actions {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .row-actions .quick-acts {
+    flex-wrap: wrap;
   }
 }
 
@@ -4424,23 +4746,6 @@ body.refreshing .tile-value {
   color: var(--text-2);
 }
 
-/* "How accounts are scored" and the like: open when staff want the detail. */
-.rules {
-  margin-bottom: 12px;
-}
-
-.rules > summary {
-  width: fit-content;
-  margin-bottom: 8px;
-  color: var(--text-2);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.rules > summary:hover {
-  color: var(--text);
-}
-
 /* Staff page names open the player's history, so each is a button drawn as a name. */
 .link-button.player-name {
   color: inherit;
@@ -4503,6 +4808,16 @@ body.refreshing .tile-value {
 /* The join log has four columns, so it needs less room before it scrolls sideways. */
 .admin-table.joins-table {
   min-width: 420px;
+}
+
+/* The kill feed has six, with headshots and team kills marked by the weapon, so it fits beside the server list. Its
+   names have room for an ordinary name before one breaks. */
+.admin-table.feed-table {
+  min-width: 520px;
+}
+
+.feed-table td.player {
+  min-width: 8ch;
 }
 
 /* "since …" under a time, when the bot couldn't read the server in between. */
@@ -6255,8 +6570,9 @@ body.rot-grabbing * {
   margin-top: 6px;
 }
 
-/* Staff pages: wider on a big screen, so the server list and the kill feed fit side by side. */
-@media (min-width: 1440px) {
+/* Staff pages: the whole width of a big screen, so the staff bar fits on one line from 1100px, and the server list and
+   the kill feed fit side by side from 1440px. */
+@media (min-width: 1100px) {
   body.staff {
     --wrap: 1680px;
   }
@@ -6275,7 +6591,7 @@ body.rot-grabbing * {
 /* The kill feed beside the list, staying in view under the site's header as the list scrolls. */
 @media (min-width: 1440px) {
   .staff-live {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
     grid-template-areas: 'list feed' 'joins feed';
     align-items: start;
   }
@@ -6291,10 +6607,10 @@ body.rot-grabbing * {
   .staff-live-feed {
     grid-area: feed;
     position: sticky;
-    top: 80px;
+    top: 72px;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 96px);
+    max-height: calc(100vh - 88px);
   }
 
   .staff-live-feed .kills-scroll {
@@ -6346,7 +6662,8 @@ body.rot-grabbing * {
 }
 
 .admin .quick-acts .btn {
-  padding: 3px 10px;
+  min-height: 30px;
+  padding: 0 9px;
   font-size: 0.8rem;
 }
 
@@ -6473,30 +6790,6 @@ body.rot-grabbing * {
 .preset:hover {
   border-color: var(--accent);
   color: var(--text);
-}
-
-/* "How flags work", folded away once read. */
-.how-alerts > summary {
-  margin-bottom: 0;
-  list-style: none;
-  cursor: pointer;
-}
-
-.how-alerts > summary::-webkit-details-marker {
-  display: none;
-}
-
-.how-alerts > summary::before {
-  content: '▸ ';
-  color: var(--text-2);
-}
-
-.how-alerts[open] > summary::before {
-  content: '▾ ';
-}
-
-.how-alerts[open] > summary {
-  margin-bottom: 12px;
 }
 
 /* A tab whose changes are not saved yet. */

@@ -1081,6 +1081,13 @@ export const TOOL_GROUPS = [
 // Tools that only read, so they run without asking first.
 export const READ_ONLY_TOOLS = new Set(['player', 'seeders', 'rotations:show', 'private:list']);
 
+// Tools that change something but run without asking first, as they are small and quick to put right: a warning is only
+// a private message in game.
+export const NO_CONFIRM_TOOLS = new Set(['warn']);
+
+// Whether a tool asks staff to confirm before it runs.
+export const asksFirst = (key) => !READ_ONLY_TOOLS.has(key) && !NO_CONFIRM_TOOLS.has(key);
+
 const SUBCOMMAND = 1;
 
 const describe = (text) => (text ?? '').replace(/\s*\(staff only\)\s*$/i, '');
