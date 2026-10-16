@@ -114,6 +114,7 @@ import {
   checkedText,
   presetReasons,
   PRESET_REASONS,
+  teamOptions,
   alertCount,
   discordParts,
   defaultLabel,
@@ -1177,6 +1178,21 @@ describe('the staff page server list', () => {
     assert.deepEqual(presetReasons('ban', 'reason').at(-1), { label: 'Ignoring warnings', text: 'Ignoring staff warnings' });
     assert.deepEqual(presetReasons('broadcast', 'message'), []);
     assert.deepEqual(presetReasons('kick', 'player'), []);
+  });
+
+  it("won't let staff move a player to the team they are on", () => {
+    const choices = [
+      { name: '🔵 Lonestar', value: 'Lonestar' },
+      { name: '🟢 Manticore', value: 'Manticore' },
+      { name: '🔴 Valkyra', value: 'Valkyra' },
+    ];
+    assert.deepEqual(teamOptions(choices, 'VALKYRA'), [
+      { value: 'Lonestar', name: '🔵 Lonestar', disabled: false },
+      { value: 'Manticore', name: '🟢 Manticore', disabled: false },
+      { value: 'Valkyra', name: '🔴 Valkyra (their team now)', disabled: true },
+    ]);
+    // Not in game, or the server didn't say their team: every team can be picked, and the bot checks.
+    assert.ok(teamOptions(choices, null).every((o) => !o.disabled));
   });
 
   it("filters the live kill feed to headshots, team kills or both, and says when that leaves none", () => {
