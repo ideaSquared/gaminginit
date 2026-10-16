@@ -321,7 +321,7 @@ export const createLines = ({ root, load, send }) => {
     box.append(
       el('p', {
         className: 'rot-note',
-        textContent: `Line ${index + 1}. The dimmed parts are what the bot adds. The count takes {score} and {team} at the longest they can be, so it can be more than this shows.`,
+        textContent: `Line ${index + 1}. The dimmed parts are what the bot adds. The count takes each placeholder, such as {score} or {team}, at the longest it can be, so it can be more than this shows.`,
       }),
     );
     return box;
