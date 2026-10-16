@@ -442,6 +442,16 @@ const showMenu = (overview) => {
     ...[
       el('p', { className: 'account-who', textContent: `Signed in as ${name}` }),
       overview.staffProfiles === undefined ? null : steamButton,
+      // On Moderation, its keyboard shortcuts.
+      document.getElementById('keys')
+        ? item({
+            textContent: 'Keyboard shortcuts',
+            onclick: () => {
+              $('account').open = false;
+              $('keys').showModal();
+            },
+          })
+        : null,
       item({ href: keepQuery('./'), textContent: 'View the site' }),
       demo ? null : item({ textContent: 'Sign out', onclick: signOut }),
     ].filter(Boolean),

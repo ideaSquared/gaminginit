@@ -121,6 +121,8 @@ import {
   optionLabel,
   READ_ONLY_TOOLS,
   asksFirst,
+  actionLabel,
+  reasonFor,
   toolsFrom,
 } from '../public/js/format.js';
 
@@ -943,6 +945,31 @@ describe('admin tools', () => {
     assert.ok(!READ_ONLY_TOOLS.has('private:add'));
     assert.ok(!READ_ONLY_TOOLS.has('kick'));
     assert.ok(!READ_ONLY_TOOLS.has('rotations:use'));
+  });
+
+  it('names what a tool does to a player', () => {
+    assert.equal(actionLabel('warn', 'Vex'), 'Warn Vex');
+    assert.equal(actionLabel('ban', 'Vex'), 'Ban Vex');
+    assert.equal(actionLabel('ban', 'Vex', '3 days'), 'Ban Vex for 3 days');
+    assert.equal(actionLabel('ban', 'Vex', 'Permanent'), 'Ban Vex for good');
+    assert.equal(actionLabel('switchteam', 'Vex', null), 'Move Vex to another team');
+    assert.equal(actionLabel('switchteam', 'Vex', 'Manticore'), 'Move Vex to Manticore');
+    assert.equal(actionLabel('private:add', 'Vex'), 'Make Vex’s profile private');
+    assert.equal(actionLabel('vip:add', 'Vex', 'Friend'), 'Give Vex VIP');
+    // No name yet, or a tool with no such words: the tool keeps its own label.
+    assert.equal(actionLabel('ban', null, '3 days'), null);
+    assert.equal(actionLabel('broadcast', 'Vex'), null);
+    assert.equal(actionLabel('toString', 'Vex'), null);
+  });
+
+  it('starts a reason from what a player did today, never from headshots', () => {
+    const player = { teamKillsToday: 0, vehicleSuicidesToday: 0, headshotsToday: { flagged: true } };
+    assert.equal(reasonFor(player), null);
+    assert.equal(reasonFor({ ...player, vehicleSuicidesToday: 2 }), 'Team vehicles');
+    assert.equal(reasonFor({ ...player, teamKillsToday: 1, vehicleSuicidesToday: 2 }), 'Team killing');
+    assert.equal(reasonFor(null), null);
+    // Each is a preset staff can pick.
+    for (const label of ['Team killing', 'Team vehicles']) assert.ok(PRESET_REASONS.some((r) => r.label === label));
   });
 
   it('asks first for anything that changes the game, but a warning', () => {

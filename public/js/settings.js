@@ -1,3 +1,4 @@
+import { ask } from './ask.js';
 import { demoLines, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
 import { staffNote } from './format.js';
 import { createLines } from './lines.js';
@@ -198,7 +199,7 @@ const unlinkSteam = async (profile, mine) => {
   const question = mine
     ? 'Unlink your Steam account? Your staff spot comes off the whitelist, and your time on the server counts as seeding again.'
     : `Unlink ${profile.name}’s Steam account? Do this when they are no longer staff: their staff spot comes off the whitelist, and their time on the server counts as seeding again.`;
-  if (!window.confirm(question)) return;
+  if (!(await ask(question, { yes: 'Unlink', danger: true }))) return;
   try {
     const { ok, json } = await call('admin/profile', { action: 'unlink', ...(mine ? {} : { userId: profile.userId }) });
     if (!ok) {

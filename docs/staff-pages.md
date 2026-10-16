@@ -20,8 +20,8 @@ tab (`/admin#review`, `/admin#history`, `/admin#commands`, `/server-settings#rot
 `/server-settings#rules`; Live and Bans and VIP, the first tabs, have none), and on History the player shown
 (`/admin#history/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
 those tabs are now: `/admin#admin` and `/server-settings#commands` to Commands, `/server-settings#admin` to Bans and
-VIP, `/admin#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **A player's name on Live opens a quick look
-at them; anywhere else, on either page, it opens their history.**
+VIP, `/admin#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **Any player's name on Moderation opens their
+panel; on Server settings, it opens their history on Moderation.**
 
 **The staff bar.** In place of the site's menu, both pages have their own bar at the top: the gaminginit logo (back to
 the site), the switch between Moderation and Server settings, the server now, and at the end the menu under your name:
@@ -67,8 +67,8 @@ Server settings' Bans and VIP tab.
   yellow when there is anyone in it, and then **Everyone else**. Whatever the order picked, a flagged player is never
   further down; when nobody is worth a look, the first part says so. Someone who became worth a look since the page
   loaded is marked **Just flagged** for 5 minutes.
-- **One click for those worth a look:** **Warn**, **Kick** and **Ban**, by Act on their row, open that tool over the page
-  with them picked, and **✓** (Checked, they're fine; hover it to see) is for a player you looked at and found nothing to
+- **One click for those worth a look:** **Warn**, **Kick** and **Ban**, by Act on their row, open their panel with that
+  form ready, and **✓** (Checked, they're fine; hover it to see) is for a player you looked at and found nothing to
   act on. It moves them to Everyone else,
   for all staff, with "✓ Checked by Sarge 4 min ago", until the end of the UTC day, or until more comes up (another
   team kill or vehicle suicide, or a new flag): then they come back to the top, saying they were checked before. Act's
@@ -82,28 +82,38 @@ Server settings' Bans and VIP tab.
   most team kills first, then flagged headshots, then high-risk and risky Steam accounts, then anyone else with team
   kills or vehicle suicides today, then the rest by team. When nobody in game matches a search, "Find" searches
   everyone the bot knows on the History tab. The list and the kill feed leave out the Steam ID under each name, to fit
-  more players on the screen: hover a name for it, or open a quick look. "Showing 5 of 26 in game" says when a search,
+  more players on the screen: hover a name for it, or open their panel. "Showing 5 of 26 in game" says when a search,
   team or tick leaves some out.
 - **Alerts.** The browser tab's title says how many in game are worth a look now: "(3) Moderation | …". Turn on
   **Alerts**, the bell in the staff bar, for a chime when someone becomes worth a look, and a desktop notification while
   the page's tab is in the background (once the browser is allowed to show them; it asks when you tick it). Clicking
-  the notification opens a quick look at them. With alerts on, the page keeps checking every minute while its tab is in
+  the notification opens their panel. With alerts on, the page keeps checking every minute while its tab is in
   the background (the kill feed still closes); without, it stops until you come back. Browsers only play sound after a
   click on the page, so after a reload, click anywhere once. The page remembers it in this browser.
-- **A quick look.** Click a player's name in the list, the kill feed or Joins and leaves for a panel at the side (the
-  whole screen on a phone): whether they are in game and on which team, what is worth knowing, their kills and deaths
-  this match, time on today, team kills, vehicle suicides and headshots today, the latest staff actions on them in the
-  period, and their latest kills and deaths in the kill feed. Its buttons warn, kick, move or ban them, check them,
-  show only them in the kill feed, or open their **Full history**. It keeps up with each refresh and each kill of theirs
-  while open; Close, Escape or a click outside it closes it.
+- **A player's panel.** Click any player's name, on any tab, for a panel at the side (the whole screen on a phone):
+  whether they are in game and on which team, what is worth knowing, and the buttons to act: **Warn**, **Kick**,
+  **Ban**, **Move team** (Warn, Kick and Move only for a player in game), **Make profile private**, **Unban** for a
+  player who is banned, "Checked, they're fine" or taking it back, **Only them in the kill feed** and **Full history →**
+  (the History tab). Then their kills and deaths this match, time on today, team kills, vehicle suicides and headshots
+  today, the latest staff actions on them in the period, their latest kills and deaths in the kill feed, and **Record**,
+  which loads their record (as Look up) when opened. It keeps up with each refresh and each kill of theirs while open;
+  Close, Escape or a click outside it closes it.
+- **Acting on a player.** Warn, Kick, Ban, Move team and the rest open that form in the panel, under the buttons, made
+  for that player: no tool to pick and no Steam ID to fill in. A ban's length is a row of buttons (1 hour to Permanent).
+  The button says what it will do, in words: "Warn Vex", "Ban Vex for 3 days", "Move Vex to Manticore". A warning sends
+  straight away. A kick, ban, move or the rest asks again in place: the button turns into what will happen (the
+  length, the reason) with **Confirm** (red for a kick or ban) and **Back**, so a ban is Ban, a length, Ban Vex for 3
+  days and Confirm. Changing anything goes back to the button. The bot's reply shows under the form, and after the
+  page loads again, the player's row says what was done ("Banned just now by Sarge").
 - **Act** on a player opens a menu: their history, only them in the kill feed, warn, kick, move to another team, ban,
-  make their profile private, and "Checked, they're fine" or taking it back. History opens the History tab. Warn, kick,
-  move, ban and private open that admin tool over the page, with the player picked, so you never leave the list: fill
-  it in, run it, and close it (or Escape) to be back on the same player. It can switch to any other tool for a player,
-  such as Look up or Give VIP. Every other command is on the Commands tab.
+  make their profile private, and "Checked, they're fine" or taking it back. History opens the History tab; the rest
+  open their panel with that form ready. Every other command is on the Commands tab.
 - **Reasons to pick.** Warn, Kick and Ban have buttons for the usual reasons (team killing, team vehicles, toxic chat,
   racism, and for kicks and bans cheating and ignoring warnings), which fill in the message or reason to change before
-  sending. They are `PRESET_REASONS` in `format.js`. On the Commands tab too.
+  sending; the one picked is marked until its words are changed. From a player's panel, the reason starts from what
+  they did today: **Team killing** for a player with a team kill today, else **Team vehicles** for one with a vehicle
+  suicide. Never from headshots or a Steam account: a flag is a reason to look, not proof. They are `PRESET_REASONS`,
+  and the choice `reasonFor`, in `format.js`. On the Commands tab too.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what (with Headshot and Team
@@ -111,7 +121,7 @@ Server settings' Bans and VIP tab.
   server stays on one map for a long run of kills. A weapon the bot has no name for is marked
   **Check name** (see Weapons to name, on Review). **Only team kills** and **Only headshots** hide the rest (tick both
   for team kills by headshot): Only team kills is for watching a player someone in game says is team killing. **Only
-  them in the kill feed**, from Act or a quick look, shows one player's kills and deaths, as they happen, until **Show
+  them in the kill feed**, from Act or a player's panel, shows one player's kills and deaths, as they happen, until **Show
   everyone**. By its title:
   **Live**, **Reconnecting…** (it tries again by itself, waiting longer each time), or **Every minute** when the live
   feed can't be reached and the kills come with each refresh instead. It closes while the browser tab is hidden, and
@@ -178,7 +188,8 @@ Server settings' Bans and VIP tab.
 ## Moderation: History, any player's record
 
 - **Find a player** by name or Steam ID: anyone in game, seen in the last 30 days, banned or with VIP, from the same
-  suggestions as the admin tools. A Steam ID can always be opened. Or click any name on the page.
+  suggestions as the admin tools. A Steam ID can always be opened. Or open a player's panel from their name, anywhere
+  on the page, and pick **Full history →**.
 - **The player:** a link to their public player page and their Steam profile, whether they are in game or banned, their
   headshot flags and griefing flags, and Act.
 - **Record:** time played and seeding over the last 90 days, their team kills today (UTC), their Steam account, VIP,
@@ -203,8 +214,10 @@ Server settings' Bans and VIP tab.
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
-  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. Anything that changes the game or the records asks
-  first, except a warning, which is a private message in game and sends straight away. Each runs on the bot as you,
+  pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. A short list to pick one from, such as a ban's length or
+  why VIP is given, is a row of buttons. Once the player is picked, the button says what it will do ("Ban Vex for 3
+  days"). Anything that changes the game or the records asks again in place, as in a player's panel, except a warning,
+  which is a private message in game and sends straight away. Each runs on the bot as you,
   exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
   moderation log. To warn, kick, ban or move someone in game, the buttons on Live are quicker.
   Moving a player to another team greys out the team they are on now ("their team now"), so it can't be picked; the bot
@@ -213,7 +226,7 @@ Server settings' Bans and VIP tab.
 ## Server settings: Bans and VIP
 
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
-  tool over the page with them picked, as Act does on Moderation.
+  Unban tool over the page with them picked: "Unban Nightjar", then Confirm.
 - **Whitelist slots.** Everyone on the whitelist in the server's settings, with VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked, the same way.
   Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
@@ -294,10 +307,19 @@ forgotten while on another tab.
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
 - Each page refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills
-  happen. A player's Act menu stays open through a refresh, and so does a tool opened from it.
+  happen. A player's Act menu stays open through a refresh, and so does their panel, with its form as filled in.
+- **Questions are asked on the page**, not in the browser's own pop-up: deleting a rotation, putting one on the
+  server, throwing away changes, unlinking a Steam account. The safe answer (Back, Keep editing) is picked to start
+  with for anything that throws something away, so Enter alone never does it; Escape or a click outside is Back. Only
+  leaving the page with unsaved changes is still the browser's own question, as only the browser can ask it.
+- **Keyboard shortcuts** on Moderation, listed by **?** and in the menu under your name: **/** searches the server list
+  (or every player, on History); **↓** and **↑** from there move through the list; **Enter** opens a player's panel;
+  **W**, **K**, **B** and **M** warn, kick, ban or move the player you are on, or the one in the panel; **C** checks
+  them; **1** to **6** pick a ban's length; and **Enter** sends, then confirms. So from a player in the list, a ban is
+  **B**, **3**, **Enter**, **Enter**. Keys do nothing while you type in a box, and none sends anything by itself.
 - Times are in your own time and clock: "7:00 PM" on a 12-hour clock (no leading zero), "07:00" on a 24-hour one.
-- They show Steam IDs, linked to Steam profiles. Player names open their history, on Moderation; History links to their
-  public player page.
+- They show Steam IDs, linked to Steam profiles. Player names open their panel on Moderation, and their history from
+  Server settings; History and the panel link to their public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` and `http://localhost:3000/server-settings?demo` show sample data without signing
   in. Their admin tools only say what they would do, and the rotations, lines and weapon rules on Server settings change

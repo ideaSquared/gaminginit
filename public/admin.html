@@ -108,7 +108,7 @@
                     <label class="check" for="player-watch"><input type="checkbox" id="player-watch" /> Only worth a look</label>
                   </div>
                   <div class="panel-help" id="players-help" hidden>
-                    <p>Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for a quick look at them. <strong>Warn</strong>, <strong>Kick</strong> and <strong>Ban</strong> on a row, or <strong>Act</strong> for the rest, open the tool over this page with them picked. <strong>✓</strong> is “Checked, they’re fine”. Hover a name for their Steam ID.</p>
+                    <p>Everyone in game, from the bot’s check each minute, with those worth a look (banned, flagged for griefing or headshots today, or a risky Steam account) always at the top. Click a name for a quick look at them. <strong>Warn</strong>, <strong>Kick</strong> and <strong>Ban</strong> on a row, or <strong>Act</strong> for the rest, open their panel with that form ready. <strong>✓</strong> is “Checked, they’re fine”. Hover a name for their Steam ID. Press <kbd>?</kbd> for keyboard shortcuts.</p>
                   </div>
                   <p class="section-note alerts-note" id="alerts-note" role="status" hidden></p>
                   <div class="list-tools">
@@ -408,23 +408,48 @@
             </div>
           </div>
 
-          <!-- A quick look at a player from the Live tab, at the side of the page (see peek in admin.js). -->
+          <!-- A player's panel, at the side of the page: any player's name on this page opens it (see peek in admin.js).
+               What is worth knowing about them, the buttons to act and the form for each, then their numbers, record,
+               staff actions and latest kills. -->
           <dialog class="card player-peek" id="peek" aria-labelledby="peek-title">
             <div class="panel-head player-peek-head">
               <h2 class="player-peek-title" id="peek-title">Player</h2>
               <button type="button" class="btn btn-ghost btn-small" id="peek-close">Close</button>
             </div>
+            <div id="peek-top"></div>
+            <section class="peek-act" id="peek-act" aria-label="Act on this player" hidden>
+              <p class="section-note" id="peek-act-note" role="status"></p>
+              <div class="tools-panel" id="peek-act-tools"></div>
+            </section>
             <div id="peek-body"></div>
+            <details class="peek-record" id="peek-record">
+              <summary class="group-title">Record</summary>
+              <p class="muted tool-note">Time played and seeding over the last 90 days, their Steam account, VIP, ban and staff history: the same as Look up.</p>
+              <div class="tool-output history-record" id="peek-record-body"></div>
+            </details>
           </dialog>
 
-          <!-- Act on a player: the admin tool for it, over the page (see createActDialog in staff.js). -->
-          <dialog class="card act-dialog" id="act-dialog" aria-labelledby="act-dialog-title">
+          <!-- The keyboard shortcuts, from ? or the menu under your name (see the keys in admin.js). -->
+          <dialog class="card keys-dialog" id="keys" aria-labelledby="keys-title">
             <div class="panel-head">
-              <h2 class="panel-title" id="act-dialog-title">Act</h2>
-              <button type="button" class="btn btn-ghost btn-small" id="act-close">Close</button>
+              <h2 class="panel-title" id="keys-title">Keyboard shortcuts</h2>
+              <button type="button" class="btn btn-ghost btn-small" id="keys-close">Close</button>
             </div>
-            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning.</p>
-            <div class="tools-panel" id="act-tools"></div>
+            <table class="keys-table">
+              <tbody>
+                <tr><th scope="row"><kbd>/</kbd></th><td>Search the server list on Live, or every player on History</td></tr>
+                <tr><th scope="row"><kbd>↓</kbd> <kbd>↑</kbd></th><td>From the search, move through the server list</td></tr>
+                <tr><th scope="row"><kbd>Enter</kbd></th><td>Open the player’s panel</td></tr>
+                <tr><th scope="row"><kbd>W</kbd> <kbd>K</kbd> <kbd>B</kbd> <kbd>M</kbd></th><td>Warn, kick, ban or move the player you are on in the list, or the one in the panel</td></tr>
+                <tr><th scope="row"><kbd>C</kbd></th><td>Checked, they’re fine, or take it back</td></tr>
+                <tr><th scope="row"><kbd>1</kbd> to <kbd>6</kbd></th><td>Pick a ban’s length</td></tr>
+                <tr><th scope="row"><kbd>Enter</kbd></th><td>Send it. A kick, ban or move asks again: <kbd>Enter</kbd> again to confirm</td></tr>
+                <tr><th scope="row"><kbd>Esc</kbd></th><td>Close the panel, a menu or this</td></tr>
+                <tr><th scope="row"><kbd>←</kbd> <kbd>→</kbd></th><td>From the tabs, the next or last tab</td></tr>
+                <tr><th scope="row"><kbd>?</kbd></th><td>Show these keys</td></tr>
+              </tbody>
+            </table>
+            <p class="muted keys-note">Keys do nothing while you type in a box, and nothing is sent without <kbd>Enter</kbd> or a click.</p>
           </dialog>
 
           <dialog class="card steam-dialog" id="steam-dialog" aria-labelledby="steam-dialog-title">
