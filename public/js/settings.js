@@ -213,14 +213,12 @@ const unlinkSteam = async (profile, mine) => {
 };
 
 // Staff who linked their Steam account, so the bot never counts them as seeders. Anyone can unlink anyone, for staff
-// who have left.
-const STAFF_STEAM_NOTE = $('staff-steam-note').textContent;
+// who have left. What that means is behind the panel's "?".
 const renderStaffSteam = (overview) => {
   const profiles = overview.staffProfiles;
   const mineButton = $('staff-steam-mine');
   mineButton.hidden = profiles === undefined;
-  const note = profiles === undefined ? 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.' : STAFF_STEAM_NOTE;
-  setStatus($('staff-steam-note'), note);
+  setStatus($('staff-steam-note'), profiles === undefined ? 'The bot does not keep staff Steam accounts yet. Deploy the latest bot.' : '');
   if (profiles === undefined) {
     $('staff-steam').replaceChildren();
     return;

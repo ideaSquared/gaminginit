@@ -1,4 +1,4 @@
-import { clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, teamOptions, toolsFrom } from './format.js';
+import { asksFirst, clockHour, defaultLabel, discordParts, optionLabel, presetReasons, READ_ONLY_TOOLS, staffLabel, teamOptions, toolsFrom } from './format.js';
 import { el } from './views.js';
 
 // The staff page's admin tools: a form for each of the bot's staff commands, built from the definitions the bot sends.
@@ -200,7 +200,7 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     if (!current) return;
     picker.value = current.key;
     help.textContent = current.description;
-    const submit = el('button', { type: 'submit', className: 'btn btn-small tool-run', textContent: READ_ONLY_TOOLS.has(current.key) ? current.label : `${current.label}…` });
+    const submit = el('button', { type: 'submit', className: 'btn btn-small tool-run', textContent: asksFirst(current.key) ? `${current.label}…` : current.label });
     form.replaceChildren(...current.options.map(field), submit);
     for (const name of ['player', 'steam_id']) {
       const input = form.elements.namedItem(name);
@@ -230,7 +230,7 @@ export const createTools = ({ root, call, onChanged, staff, only = () => true, i
     event.preventDefault();
     if (!current || !form.reportValidity()) return;
     const given = values();
-    if (!READ_ONLY_TOOLS.has(current.key) && !window.confirm(`${current.label}?\n\n${summary(given)}`)) return;
+    if (asksFirst(current.key) && !window.confirm(`${current.label}?\n\n${summary(given)}`)) return;
     const button = form.querySelector('.tool-run');
     button.disabled = true;
     output.replaceChildren(el('p', { className: 'muted', textContent: 'Working…' }));

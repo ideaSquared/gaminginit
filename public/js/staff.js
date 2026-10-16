@@ -1,16 +1,17 @@
 import { demoAdmin, demoCall, demoCommands } from './demo.js';
-import { clockHour, readSteamId, sessionExpiry, signInResult, staffBy, steamLinkedText } from './format.js';
+import { clockHour, readSteamId, sessionExpiry, sideColours, sideKey, signInResult, staffBy, steamLinkedText, timeAgo } from './format.js';
 import { demo, keepQuery, showNotice, thisPage } from './live.js';
 import { botUrl, configured, forgetToken, loadToken, saveToken } from './session.js';
 import { createTools } from './tools.js';
-import { el, link } from './views.js';
+import { el, link, mapTag } from './views.js';
 
 // What the two staff pages share: Moderation (admin.html, see admin.js) and Server settings (server-settings.html, see
 // settings.js). Staff sign in with Discord through the bot; the bot checks they are staff and sends them back with a
 // session token, which is kept for this browser and sent with each request, so signing in on one page signs in on both.
-// Each page loads the bot's staff overview every minute while it is visible. Staff link the Steam account they play on,
-// so the bot never counts them as seeders: whichever page they open asks once each sign-in until they have. ?demo shows
-// sample data without signing in.
+// Each page loads the bot's staff overview every minute while it is visible. Both have the staff bar at the top: the two
+// pages, the server now, and a menu with who is signed in, their Steam account and Sign out. Staff link the Steam account
+// they play on, so the bot never counts them as seeders: whichever page they open asks once each sign-in, in a banner,
+// until they have. Each panel's "?" shows what it is about. ?demo shows sample data without signing in.
 
 // The session and the bot's address, for the staff pages' modules (see session.js).
 export { botUrl, configured, loadToken };
@@ -47,6 +48,13 @@ export const steamLink = (steamId) =>
   });
 
 export const badge = (text, kind = '') => el('span', { className: `badge${kind ? ` badge-${kind}` : ''}`, textContent: text });
+
+// A team's colour, by its name.
+export const swatch = (colour) => {
+  const node = el('span', { className: 'team-swatch', ariaHidden: 'true' });
+  if (colour) node.style.setProperty('--team', colour);
+  return node;
+};
 
 export const table = (node, headers, rows, empty) => {
   if (rows.length === 0) {
@@ -132,8 +140,9 @@ const signedOut = (message) => {
   document.body.classList.remove('refreshing');
   current = null;
   $('admin-body').hidden = true;
-  $('admin-user').hidden = true;
-  $('staff-pages').hidden = true;
+  for (const node of document.querySelectorAll('[data-signed-in]')) node.hidden = true;
+  $('account').open = false;
+  $('steam-banner').hidden = true;
   $('signin').hidden = false;
   $('signin-link').href = signInHref();
   $('signin-error').hidden = !message;
@@ -331,6 +340,7 @@ const steamError = (text) => {
 
 export const openSteam = () => {
   if (steamDialog.open) return;
+  $('account').open = false;
   const mine = myProfile(current);
   $('steam-form').hidden = false;
   $('steam-done').hidden = true;
@@ -377,32 +387,89 @@ $('steam-form').addEventListener('submit', async (event) => {
   }
 });
 
-// Who is signed in, with their Steam account and a way to sign out, and the Steam dialog the first time each sign-in
-// for staff who have not linked theirs. Each page calls this as it draws the overview.
+$('steam-banner-link').addEventListener('click', () => openSteam());
+$('steam-banner-later').addEventListener('click', () => {
+  noteAsked();
+  $('steam-banner').hidden = true;
+});
+
+const PHASES = { live: ['Live', 'accent'], seeding: ['Seeding', 'hot'], empty: ['Empty', ''] };
+
+// The server now, in the staff bar: whether the bot can reach it, its phase, map, players and score.
+const showServer = (overview) => {
+  const { server, online } = overview;
+  const status = $('server-status');
+  if (!server) {
+    status.title = '';
+    status.replaceChildren(badge('Waiting'), el('span', { className: 'muted', textContent: 'The bot has not reached the game server yet' }));
+    return;
+  }
+  if (online === null) {
+    const seen = `last reached ${timeAgo(overview.generatedAt - server.seenAt)}`;
+    status.title = `${server.name}: not answering, ${seen}`;
+    status.replaceChildren(badge('Not answering', 'bad'), el('span', { className: 'muted', textContent: seen }));
+    return;
+  }
+  const [label, kind] = PHASES[server.phase] ?? [server.phase, ''];
+  const checked = `Checked ${timeAgo(overview.generatedAt - online.at)}`;
+  const colours = sideColours([{ factionScores: server.factionScores }]);
+  status.title = `${server.name} · ${checked}`;
+  status.replaceChildren(
+    badge(label, kind),
+    mapTag(online.map),
+    el('span', { className: 'server-players', textContent: `${online.players.length}/${server.maxPlayers}` }, el('span', { className: 'visually-hidden', textContent: ' players' })),
+    ...server.factionScores.map((f) => el('span', { className: 'server-score' }, swatch(colours.get(sideKey(f.name))), ` ${f.name} ${f.score}`)),
+    el('span', { className: 'muted server-seen', textContent: checked }),
+  );
+};
+
+// The menu in the staff bar: who is signed in, their Steam account, the site and Sign out.
+const showMenu = (overview) => {
+  const name = overview.user?.name ?? 'Staff';
+  $('account-name').textContent = name;
+  const mine = myProfile(overview);
+  const item = (props) => el(props.href ? 'a' : 'button', { className: 'account-item', ...(props.href ? {} : { type: 'button' }), ...props });
+  const steamButton = item({ textContent: mine ? `Steam: ${mine.player.name}` : 'Link your Steam account', onclick: () => openSteam() });
+  if (mine) steamButton.setAttribute('aria-label', `Change your Steam account, linked to ${mine.player.name}`);
+  $('account-list').replaceChildren(
+    ...[
+      el('p', { className: 'account-who', textContent: `Signed in as ${name}` }),
+      overview.staffProfiles === undefined ? null : steamButton,
+      item({ href: keepQuery('./'), textContent: 'View the site' }),
+      demo ? null : item({ textContent: 'Sign out', onclick: signOut }),
+    ].filter(Boolean),
+  );
+};
+
+// The menu closes on a click elsewhere, or Escape.
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.account-menu')) $('account').open = false;
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !$('account').open) return;
+  $('account').open = false;
+  $('account-name').focus();
+});
+
+// Each panel's "?" shows or hides what the panel is about.
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('.help-toggle');
+  if (!toggle) return;
+  const open = toggle.getAttribute('aria-expanded') !== 'true';
+  toggle.setAttribute('aria-expanded', String(open));
+  $(toggle.getAttribute('aria-controls')).hidden = !open;
+});
+
+// The staff bar and the page, once signed in, and the Steam banner each sign-in for staff who have not linked theirs.
+// Each page calls this as it draws the overview.
 export const showAccount = (overview) => {
   current = overview;
   $('signin').hidden = true;
   $('admin-body').hidden = false;
-  $('staff-pages').hidden = false;
-  const user = $('admin-user');
-  user.hidden = false;
-  const mine = myProfile(overview);
-  const steamButton = el('button', {
-    type: 'button',
-    className: 'link-button',
-    textContent: mine ? `Steam: ${mine.player.name}` : 'Link your Steam account',
-    onclick: () => openSteam(),
-  });
-  if (mine) steamButton.setAttribute('aria-label', `Change your Steam account, linked to ${mine.player.name}`);
-  user.replaceChildren(
-    `Signed in as ${overview.user?.name ?? 'staff'}`,
-    ...(overview.staffProfiles === undefined ? [] : [' · ', steamButton]),
-    ...(demo ? [] : [' · ', el('button', { type: 'button', className: 'link-button', textContent: 'Sign out', onclick: signOut })]),
-  );
-  if (overview.staffProfiles !== undefined && !mine && !askedThisSignIn()) {
-    noteAsked();
-    openSteam();
-  }
+  for (const node of document.querySelectorAll('[data-signed-in]')) node.hidden = false;
+  showServer(overview);
+  showMenu(overview);
+  $('steam-banner').hidden = overview.staffProfiles === undefined || myProfile(overview) !== null || askedThisSignIn();
 };
 
 // A refusal the bot explained, such as staff sign-in not being set up on it.

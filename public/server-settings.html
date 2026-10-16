@@ -19,8 +19,11 @@
   <body class="staff">
     <a class="skip" href="#main">Skip to content</a>
 
-    <header class="nav">
-      <div class="wrap nav-inner">
+    <!-- The staff pages' own bar, in place of the site's menu: the two pages, the server now, alerts and who is signed in.
+         Keep the same as in admin.html, but for the alerts, which are only there. Shown once signed in
+         (data-signed-in, see staff.js). -->
+    <header class="nav staff-bar">
+      <div class="wrap nav-inner staff-bar-inner">
         <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
             <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
@@ -28,22 +31,17 @@
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <nav class="nav-sections" aria-label="Sections">
-          <ul class="nav-links">
-            <li><a href="stats" data-keep-query>Stats</a></li>
-            <li><a href="live" data-keep-query>Live</a></li>
-            <li><a href="matches" data-keep-query>Matches</a></li>
-            <li><a href="teams" data-keep-query>Teams</a></li>
-            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
-            <li><a href="players" data-keep-query>Players</a></li>
-            <li><a href="seeding" data-keep-query>Seeding</a></li>
-            <li><a href="season" data-keep-query>Season 1</a></li>
-          </ul>
+        <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" data-signed-in hidden>
+          <a href="admin" data-keep-query>Moderation</a>
+          <a href="server-settings" data-keep-query aria-current="page">Server settings</a>
         </nav>
-        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-          <span>Discord</span>
-        </a>
+        <p class="server-status" id="server-status" data-signed-in hidden></p>
+        <div class="staff-bar-end">
+          <details class="account-menu" id="account" data-signed-in hidden>
+            <summary class="bar-button" id="account-name">Staff</summary>
+            <div class="account-list" id="account-list"></div>
+          </details>
+        </div>
       </div>
     </header>
 
@@ -55,17 +53,15 @@
 
       <section class="section admin" aria-labelledby="admin-title">
         <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
-          <div class="section-head">
-            <div class="staff-head">
-              <h1 class="page-title" id="admin-title">Staff</h1>
-              <!-- The two staff pages. Keep the same as in admin.html. -->
-              <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" hidden>
-                <a href="admin" data-keep-query>Moderation</a>
-                <a href="server-settings" data-keep-query aria-current="page">Server settings</a>
-              </nav>
+          <h1 class="visually-hidden" id="admin-title">Server settings</h1>
+
+          <!-- Asks staff who have not linked their Steam account to, once each sign-in (see staff.js). -->
+          <div class="staff-banner" id="steam-banner" hidden>
+            <p>Link the Steam account you play on, so the bot counts your time on the server as playing, not seeding.</p>
+            <div class="staff-banner-actions">
+              <button type="button" class="btn btn-small tool-run" id="steam-banner-link">Link your Steam account</button>
+              <button type="button" class="btn btn-ghost btn-small" id="steam-banner-later">Later</button>
             </div>
-            <p class="section-note" id="admin-user" hidden></p>
           </div>
 
           <div class="card panel signin" id="signin" hidden>
@@ -80,22 +76,19 @@
           </div>
 
           <div id="admin-body" hidden>
-            <div class="admin-tabs admin-tabs-wrap" role="tablist" aria-label="Server settings">
-              <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans">
+            <!-- What each tab holds is in its title, shown on hover. -->
+            <div class="admin-tabs" role="tablist" aria-label="Server settings">
+              <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans" title="Bans, whitelist slots and staff spots">
                 <span class="tab-name">Bans and VIP</span>
-                <span class="tab-hint">Bans, whitelist slots and staff spots</span>
               </button>
-              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations">
+              <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations" title="The maps for each day">
                 <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
-                <span class="tab-hint">The maps for each day</span>
               </button>
-              <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines">
+              <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines" title="What the bot says in game">
                 <span class="tab-name">Lines <span class="tab-dirty" id="dirty-lines" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
-                <span class="tab-hint">What the bot says in game</span>
               </button>
-              <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules">
+              <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules" title="Weapons the bot warns or kicks for">
                 <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
-                <span class="tab-hint">Weapons the bot warns or kicks for</span>
               </button>
             </div>
 
@@ -118,10 +111,16 @@
 
               <article class="card panel admin-panel" aria-labelledby="staff-steam-title">
                 <div class="panel-head">
-                  <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
+                  <div class="title-help">
+                    <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
+                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="staff-steam-help" title="About staff Steam accounts"><span aria-hidden="true">?</span><span class="visually-hidden">About staff Steam accounts</span></button>
+                  </div>
                   <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
                 </div>
-                <p class="section-note" id="staff-steam-note">Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the whitelist while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
+                <div class="panel-help" id="staff-steam-help" hidden>
+                  <p>Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the whitelist while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
+                </div>
+                <p class="section-note" id="staff-steam-note"></p>
                 <div class="admin-scroll">
                   <table class="admin-table" id="staff-steam"></table>
                 </div>
@@ -147,7 +146,7 @@
               <h2 class="panel-title" id="act-dialog-title">Act</h2>
               <button type="button" class="btn btn-ghost btn-small" id="act-close">Close</button>
             </div>
-            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first.</p>
+            <p class="section-note act-dialog-note" id="act-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning.</p>
             <div class="tools-panel" id="act-tools"></div>
           </dialog>
 

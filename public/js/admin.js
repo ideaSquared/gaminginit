@@ -72,6 +72,7 @@ import {
   staffNames,
   start,
   steamLink,
+  swatch,
   table,
   tabKeys,
   teamOf,
@@ -107,7 +108,7 @@ const saveHidden = (hidden) => {
   }
 };
 
-// A choice kept for this browser when storage is on, such as compact rows.
+// A choice kept for this browser when storage is on, such as alerts.
 const loadPref = (key) => {
   try {
     return localStorage.getItem(key) ?? '';
@@ -122,10 +123,7 @@ const savePref = (key, value) => {
     // Kept until the page is closed.
   }
 };
-const COMPACT_KEY = 'gaminginit-compact-rows';
 const ALERTS_KEY = 'gaminginit-look-alerts';
-// '' before the Review tab was first opened, 'seen' after, and 'open' while staff keep "How flags work" open.
-const HOW_FLAGS_KEY = 'gaminginit-how-flags';
 
 let period = 7;
 let data = null;
@@ -165,8 +163,6 @@ let killsWaiting = false;
 // "Only headshots", "Only team kills" and only one player ({ steamId, name }, or null for everyone) on the kill feed,
 // and "Only headshots" on a player's kills.
 const killFilters = { feed: { headshots: false, teamKills: false, player: null }, history: false };
-// Compact rows on the server list: no Steam ID under each name, and less room around each row.
-let compact = loadPref(COMPACT_KEY) === '1';
 // "Show ordinary players" on the Review tab's headshots: off, those whose headshots are ordinary and who have no flagged
 // day are left out.
 let showOrdinary = false;
@@ -207,8 +203,6 @@ const selectTab = (name, { focus = false } = {}) => {
   showTab(TABS, tab, { focus });
   const hash = tabHash();
   if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
-  // "How flags work" is open the first time; after that it is folded away, unless staff leave it open.
-  if (tab === 'review' && loadPref(HOW_FLAGS_KEY) === '') savePref(HOW_FLAGS_KEY, 'seen');
   // A player's history is drawn straight away with what the page knows, and loaded when it is not yet.
   if (tab === 'history' && data) {
     renderHistory();
@@ -451,9 +445,9 @@ const renderGriefers = (overview) => {
       el('li', {}, badge(flagLabel(flag), FLAG_KIND[flag]), ` ${flagRule(flag, marks, overview.totals.crashTeamKills !== undefined)}`),
     ),
   );
+  // What the list is, and the marks, are behind its "?"; only a reason it is empty shows.
   $('griefers-note').textContent = overview.feedSince
-    ? 'Everyone who team killed, was team killed or killed themselves, most flagged days first. ' +
-      'A flag is a reason to look, not proof: check the incidents and ask around first.'
+    ? ''
     : 'The bot has not had the game’s kill feed yet, so there are no team kills or suicides to show. See the bot’s README, “Weapon stats”.';
   const row = (p) =>
     el(
@@ -513,44 +507,6 @@ const renderGriefers = (overview) => {
   });
 };
 
-const swatch = (colour) => {
-  const node = el('span', { className: 'team-swatch', ariaHidden: 'true' });
-  if (colour) node.style.setProperty('--team', colour);
-  return node;
-};
-
-const PHASES = { live: ['Live', 'accent'], seeding: ['Seeding', 'hot'], empty: ['Empty', ''] };
-
-// The server at a glance: whether the bot can reach it, its map, phase, players and score.
-const renderServer = (overview) => {
-  const { server, online } = overview;
-  const strip = $('server-strip');
-  if (!server) {
-    strip.replaceChildren(el('p', { className: 'muted', textContent: 'The bot has not reached the game server yet.' }));
-    return;
-  }
-  const colours = sideColours([{ factionScores: server.factionScores }]);
-  if (online === null) {
-    strip.replaceChildren(
-      badge('Not answering', 'bad'),
-      el('strong', { textContent: server.name }),
-      el('span', { className: 'muted', textContent: `The bot last reached it ${timeAgo(overview.generatedAt - server.seenAt)}. The list comes back with it.` }),
-    );
-    return;
-  }
-  const [label, kind] = PHASES[server.phase] ?? [server.phase, ''];
-  strip.replaceChildren(
-    badge(label, kind),
-    el('strong', { className: 'server-name', textContent: server.name }),
-    mapTag(online.map),
-    el('span', { textContent: `${online.players.length} / ${server.maxPlayers} players` }),
-    server.factionScores.length > 0
-      ? el('span', { className: 'server-score' }, ...server.factionScores.flatMap((f, i) => [i > 0 ? ' · ' : '', swatch(colours.get(sideKey(f.name))), ` ${f.name} ${f.score}`]))
-      : null,
-    el('span', { className: 'muted server-seen', textContent: `Checked ${timeAgo(overview.generatedAt - online.at)}` }),
-  );
-};
-
 // `scores` gives each team's colour in game.
 const renderTeamFilter = (players, scores) => {
   const teams = teamCounts(players);
@@ -586,8 +542,9 @@ const renderTeamFilter = (players, scores) => {
   ]);
 };
 
-// The server list's columns.
-const PLAYER_HEADERS = ['Player', 'Team', ['Kills / deaths', 'num'], ['Today', 'num'], 'Worth knowing', ''];
+// The server list's columns: kills and deaths this match, and time on the server today. Each player's team is under
+// their name.
+const PLAYER_HEADERS = ['Player', ['K / D', 'num'], ['Today', 'num'], 'Worth knowing', ''];
 
 // How long a player newly worth a look is marked "Just flagged".
 const JUST_FLAGGED_MS = 5 * 60_000;
@@ -622,14 +579,20 @@ const worthKnowing = (p, overview, acted) => {
   ].filter(Boolean);
 };
 
-// One click to warn or kick a player worth a look, or to say they're fine once checked.
-const QUICK = { warn: 'Warn', kick: 'Kick', check: '✓ Checked, they’re fine' };
+// One click to warn, kick or ban a player worth a look, or to say they're fine once checked (✓, named in full for
+// screen readers and on hover).
+const QUICK = { warn: ['Warn'], kick: ['Kick'], ban: ['Ban'], check: ['✓', 'Checked, they’re fine'] };
 const quickActs = (p) =>
   el(
     'span',
     { className: 'quick-acts' },
-    ...['warn', 'kick', ...(checkAction(p) === 'check' ? ['check'] : [])].map((key) => {
-      const b = el('button', { type: 'button', className: `btn btn-ghost btn-small quick-${key}`, textContent: QUICK[key], onclick: () => runAction(key, p) });
+    ...['warn', 'kick', 'ban', ...(checkAction(p) === 'check' ? ['check'] : [])].map((key) => {
+      const [text, name] = QUICK[key];
+      const b = el('button', { type: 'button', className: `btn btn-ghost btn-small quick-${key}`, textContent: text, onclick: () => runAction(key, p) });
+      if (name) {
+        b.title = name;
+        b.setAttribute('aria-label', `${name}: ${p.name}`);
+      } else b.setAttribute('aria-label', `${text} ${p.name}`);
       b.dataset.quick = key;
       return b;
     }),
@@ -645,35 +608,35 @@ const renderPlayers = (overview) => {
   renderTeamFilter(players, overview.server?.factionScores ?? []);
   const shown = filterPlayers(players, filters);
   const query = filters.query.trim();
-  setStatus(
-    $('players-count'),
-    online === null ? '' : shown.length === players.length ? `${players.length} in game` : `Showing ${shown.length} of ${players.length} in game`,
-  );
+  // Said only while a search, team or "Only worth a look" leaves some out: the tab and each part give the counts.
+  setStatus($('players-count'), online === null || shown.length === players.length ? '' : `Showing ${shown.length} of ${players.length} in game`);
   // On a phone each cell says what it is, as the table's headings are hidden there.
   const labelled = (label, td) => {
     td.dataset.label = label;
     return td;
   };
   const acted = recentActions(overview.moderation, overview.generatedAt);
-  // Those worth a look have their quick buttons under what is worth knowing.
+  // Those worth a look have their quick buttons by Act.
   const row = (p, quick) => {
     const knowing = worthKnowing(p, overview, acted);
     return el(
       'tr',
       { className: lookNow(p) ? 'watch' : '' },
-      el('td', { className: 'player' }, whoLive(p)),
-      labelled('Team', cell(...(p.faction === null ? ['–'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`]))),
+      el(
+        'td',
+        { className: 'player' },
+        whoLive(p),
+        el('span', { className: 'player-team' }, ...(p.faction === null ? ['No team'] : [swatch(colours.get(sideKey(p.faction)) ?? null), ` ${p.faction}`])),
+      ),
       labelled('Kills / deaths', el('td', { className: 'num', textContent: p.kills === null ? '–' : `${p.kills} / ${p.deaths ?? 0}` })),
       labelled('Today', el('td', { className: 'num', textContent: p.minutesToday > 0 ? formatHours(p.minutesToday) : '–' })),
       knowing.length === 0 && !quick
         ? el('td', { className: 'no-watch' }, el('span', { className: 'muted', textContent: '–' }))
-        : el('td', { className: 'knowing' }, ...knowing, quick ? quickActs(p) : null),
-      el('td', { className: 'row-actions' }, actMenu(p)),
+        : el('td', { className: 'knowing' }, ...knowing),
+      el('td', { className: 'row-actions' }, quick ? quickActs(p) : null, actMenu(p)),
     );
   };
   const node = $('server-players');
-  node.classList.toggle('compact', compact);
-  $('panel-live').classList.toggle('compact-rows', compact);
   // A message in place of the list, such as when nobody is in game.
   const instead = (...content) => node.replaceChildren(el('p', { className: 'muted list-instead' }, ...content));
   if (online === null) {
@@ -699,7 +662,7 @@ const renderPlayers = (overview) => {
   const { look, rest } = lookFirst(shown);
   const narrowed = shown.length < players.length;
   const part = (id, title, list, alert, empty) => {
-    const t = el('table', { className: 'admin-table server-table' });
+    const t = el('table', { className: `admin-table server-table${alert ? ' look-table' : ''}` });
     t.setAttribute('aria-labelledby', id);
     table(t, PLAYER_HEADERS, list.map((p) => row(p, alert)), empty);
     return el(
@@ -746,11 +709,7 @@ const renderIncidents = (overview) => {
   const shown = overview.incidents.filter((i) => focus === null || i.player.steamId === focus || i.victim?.steamId === focus);
   const focused = focus === null ? null : (overview.players.find((p) => p.steamId === focus) ?? null);
   $('incidents-all').hidden = focus === null;
-  $('incidents-note').textContent =
-    focused === null
-      ? 'Newest first. Sides come from the bot’s check each minute, so a player who switched sides in the last minute can ' +
-        'show wrongly. Other suicides are only counted.'
-      : `Involving ${focused.name}, newest first.`;
+  $('incidents-note').textContent = focused === null ? '' : `Involving ${focused.name}, newest first.`;
   table(
     $('incidents'),
     INCIDENT_HEADERS,
@@ -807,14 +766,15 @@ const renderSteam = (overview) => {
       steam === undefined
         ? 'The bot does not check Steam accounts yet. Deploy the latest bot.'
         : 'Steam checks are off: the bot has no STEAM_API_KEY. See the bot’s README, “Risky Steam accounts”.';
+    $('steam-help-note').textContent = '';
     $('steam-rules').replaceChildren();
     $('steam-accounts').replaceChildren();
     return;
   }
   const now = overview.generatedAt;
-  $('steam-note').textContent =
-    `The bot has checked ${steam.checked} of the ${steam.players} players seen in this period or in game now: ` +
-    `${steam.high} high risk (${points(steam.risk.high)} or more) and ${steam.medium} worth a look (${steam.risk.medium} or more), riskiest first. ` +
+  $('steam-note').textContent = `Checked ${steam.checked} of the ${steam.players} players seen in this period or in game now: ${steam.high} high risk and ${steam.medium} worth a look.`;
+  $('steam-help-note').textContent =
+    `Riskiest first. High risk is ${points(steam.risk.high)} or more, worth a look ${steam.risk.medium} or more. ` +
     // An older bot posts every high-risk account, and sends no alert mark.
     (steam.risk.alert === undefined ? '' : `Only accounts on ${points(steam.risk.alert)} or more are posted to the moderation log by themselves. `) +
     'A reason to look, not proof: a ban may be years old and from another game, and honest players have new and private accounts too.';
@@ -941,31 +901,31 @@ const killMap = (k, above) =>
     ? el('td', { className: 'map-same' }, k.map ? el('span', { className: 'visually-hidden', textContent: k.map }) : null)
     : cell(k.map ? mapTag(k.map) : '–');
 
-// A kill's weapon, what sort it is when not carried by hand, what the game said about it, and whether it was a team
-// kill; then whether it was a headshot, how far, and where.
+// A kill's weapon, what sort it is when not carried by hand, what the game said about it, and whether it was a
+// headshot or a team kill; then how far, and where.
 const killCells = (k, above) => [
   cell(
     k.weapon,
     WEAPON_KINDS[k.weaponKind] ? el('span', { className: 'kill-distance', textContent: ` · ${WEAPON_KINDS[k.weaponKind]}` }) : null,
     ...k.tags.filter((t) => DEATH_TAGS[t] && t !== 'Suicide').map((t) => el('span', { className: 'kill-distance', textContent: ` · ${DEATH_TAGS[t]}` })),
-    k.teamKill || k.weaponNamed === false
+    k.headshot || k.teamKill || k.weaponNamed === false
       ? el(
           'span',
           { className: 'badges' },
+          k.headshot ? badge('Headshot', 'accent') : null,
           k.teamKill ? badge('Team kill', 'bad') : null,
           // Older bots don't say, so only a weapon the bot says it has no name for is marked.
           k.weaponNamed === false ? uncheckedName() : null,
         )
       : null,
   ),
-  cell(k.headshot ? badge('Headshot', 'accent') : ''),
   el('td', { className: 'num', textContent: k.distance === null ? '–' : metres(k.distance) }),
   killMap(k, above),
 ];
 
 // The kill feed shows the latest kills, up to as many as the bot keeps.
 const FEED_SHOWN = 250;
-const FEED_HEADERS = ['When', 'Killer', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'];
+const FEED_HEADERS = ['When', 'Killer', 'Killed', 'With', ['Distance', 'num'], 'Map'];
 const FEED_STATES = { live: 'Live', connecting: 'Connecting…', retrying: 'Reconnecting…', off: 'Every minute', sample: 'Sample' };
 
 // `above` is the kill in the row above, which the map is compared with.
@@ -1150,12 +1110,9 @@ const renderHeadshots = () => {
   const hiding = !showOrdinary && ordinary.length > 0;
   $('headshots-ordinary-label').hidden = ordinary.length === 0;
   setStatus($('headshots-ordinary-text'), `Show ordinary players (${ordinary.length})`);
+  // What the list is is behind its "?".
   $('headshots-note').textContent = kills.since
-    ? `${totals.kills.toLocaleString('en-GB')} kills in this period, ${percent(totals.kills > 0 ? totals.headshots / totals.kills : null)} of them headshots. ` +
-      (hiding
-        ? 'Everyone with a headshot who stands out, most flagged days first, then least likely by luck. Those with an ordinary chance by luck and no flagged day are hidden unless you show them. '
-        : 'Everyone with a headshot, most flagged days first, then least likely by luck. ') +
-      'Click a name for their history.'
+    ? `${totals.kills.toLocaleString('en-GB')} kills in this period, ${percent(totals.kills > 0 ? totals.headshots / totals.kills : null)} of them headshots.`
     : 'No kills yet. They start with the first kill after the bot is updated.';
   const row = (p) =>
     el(
@@ -1275,7 +1232,7 @@ const renderHistoryList = () => {
     k.list.length < k.kills ? `Their latest ${k.list.length} of ${k.kills} kills, newest first.` : `Newest first.${k.kills > 0 ? ' Click a name for that player’s history.' : ''}`;
   table(
     $('history-list'),
-    ['When', 'Killed', 'With', 'Headshot', ['Distance', 'num'], 'Map'],
+    ['When', 'Killed', 'With', ['Distance', 'num'], 'Map'],
     shown.map((kill, i) => el('tr', {}, killWhen(kill.at), el('td', { className: 'player' }, who(kill.victim)), ...killCells(kill, shown[i - 1]))),
     k.list.length === 0 ? 'No kills in this period.' : 'No headshots among them.',
   );
@@ -1657,7 +1614,7 @@ const startAudio = () => {
 const notifications = () => (typeof Notification === 'undefined' ? 'none' : Notification.permission);
 
 const alertsNote = () => {
-  $('look-alerts').checked = alertsOn;
+  $('look-alerts').setAttribute('aria-pressed', String(alertsOn));
   $('alerts-note').hidden = !alertsOn;
   const desktop = notifications();
   setStatus(
@@ -1771,7 +1728,6 @@ const render = (overview) => {
   ]
     .filter(Boolean)
     .join(' · ');
-  renderServer(overview);
   renderPlayers(overview);
   renderJoins(overview);
   renderGriefers(overview);
@@ -1813,13 +1769,7 @@ $('player-watch').addEventListener('change', (event) => {
   filters.watch = event.target.checked;
   renderPlayers(data);
 });
-$('player-compact').checked = compact;
-$('player-compact').addEventListener('change', (event) => {
-  compact = event.target.checked;
-  savePref(COMPACT_KEY, compact ? '1' : '');
-  renderPlayers(data);
-});
-$('look-alerts').addEventListener('change', (event) => setAlerts(event.target.checked));
+$('look-alerts').addEventListener('click', () => setAlerts(!alertsOn));
 alertsNote();
 // Browsers only start sound after a click or key press on the page.
 if (alertsOn) {
@@ -1827,11 +1777,6 @@ if (alertsOn) {
   document.addEventListener('pointerdown', unlock, { once: true });
   document.addEventListener('keydown', unlock, { once: true });
 }
-
-// "How flags work": open the first time, folded away after that, unless staff leave it open.
-const howFlags = $('how-flags');
-howFlags.open = loadPref(HOW_FLAGS_KEY) !== 'seen';
-howFlags.addEventListener('toggle', () => savePref(HOW_FLAGS_KEY, howFlags.open ? 'open' : 'seen'));
 
 $('incidents-all').addEventListener('click', () => {
   focus = null;
