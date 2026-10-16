@@ -1,44 +1,48 @@
-# Staff pages
+# Staff page
 
 Back to the [README](../README.md).
 
-The staff pages are for staff: Discord Administrators and members with a staff role in our Discord server (the bot's
-`DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. `/admin` is linked from every page's
-footer ("Staff sign-in") and both are kept out of search results.
+The staff page (`/admin`) is for staff: Discord Administrators and members with a staff role in our Discord server
+(the bot's `DISCORD_ADMIN_ROLE_IDS`), the same people who can use the bot's staff commands. It is linked from every
+page's footer ("Staff sign-in") and kept out of search results.
 
-There are two, one for each kind of work, with a switch between them in the staff bar at the top:
+It has four sections:
 
-- **Moderation** (`/admin`), the page to keep open while the server is busy: **Live** (who is on, with those worth a
-  look always at the top, and every kill now), **Review** (what the bot flagged, and what staff did), **History** (any
-  player's record) and **Commands** (every staff command).
-- **Server settings** (`/server-settings`), for setting the server up: **Bans and VIP** (the bans, whitelist slots and
-  staff Steam accounts), **Rotations**, **Lines** and **Weapon rules**.
+- **Now**, the one to keep open while the server is busy: who is on, with those worth a look always at the top, and
+  every kill now.
+- **Queue**: everyone the bot flagged, one row each, with the lists by flag, the team kills and the moderation log.
+- **Players**: any player's record, starting from those staff acted on and who was on lately.
+- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines and the weapon rules.
 
-Each tab has a count (how many are in game, and how many flags there are), and says what is in it when you hover it.
-The address keeps the
-tab (`/admin#review`, `/admin#history`, `/admin#commands`, `/server-settings#rotations`, `/server-settings#lines`,
-`/server-settings#rules`; Live and Bans and VIP, the first tabs, have none), and on History the player shown
-(`/admin#history/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
-those tabs are now: `/admin#admin` and `/server-settings#commands` to Commands, `/server-settings#admin` to Bans and
-VIP, `/admin#rotations`, `#lines` and `#rules` to Server settings, `#alerts` and `#kills` to Review, and `#kills/<Steam ID>` to that player's history. ← → move between a page's tabs from the keyboard. **Any player's name on Moderation opens their
-panel; on Server settings, it opens their history on Moderation.**
+Every staff command is in the **command search** (Ctrl K), and the server's own in the **Server** menu.
 
-**The staff bar.** In place of the site's menu, both pages have their own bar at the top: the gaminginit logo (back to
-the site), the switch between Moderation and Server settings, the server now, and at the end the menu under your name:
-who you are signed in as, your Steam account, View the site and Sign out. On Moderation, **Alerts** is next to it (see
-Alerts, below). The server now is: live, seeding or empty, the map, the players, each team's score and when the bot last
+Now and Queue have a count (how many are in game, and how many are flagged), and each section says what is in it when
+you hover it. The address keeps the section and its view (`/admin#queue`, `/admin#queue/teamkills`, `/admin#players`,
+`/admin#server/rotations`; Now and the first view of each have none), and on Players the player shown
+(`/admin#players/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
+those are now (`staffRoute` in `format.js`): `#live` to Now; `#review`, `#alerts` and `#kills` to Queue; `#history`,
+`#history/<Steam ID>` and `#kills/<Steam ID>` to Players; `#commands` and `#admin` to Now with the command search open;
+`#bans`, `#rotations`, `#lines` and `#rules` to Server. The Server settings page, `/server-settings`, is only a link
+on to Server now, keeping its tab: `/server-settings#lines` opens Server's Lines. ← → move between the sections from
+the keyboard. **Any player's name, in any section, opens their panel.**
+
+**The staff bar.** In place of the site's menu, the page has its own bar at the top: the gaminginit logo (back to the
+site), the server now, and at the end **Server** (the server's commands), **Search** (the command search), **Alerts**
+(see Alerts, below) and the menu under your name: who you are signed in as, your Steam account, keyboard shortcuts,
+View the site and Sign out. From 1100 to 1279 pixels wide, Search and Alerts show only their icons (their names are in
+their hover). The server now is: live, seeding or empty, the map, the players, each team's score and when the bot last
 checked (hover it for the server's name; from 1100 to 1279 pixels wide, when the bot checked is only in the hover).
 When the bot cannot reach the server, it says so and when it last could. Below 1100 pixels wide the server takes a row
 of its own, and on a phone the bar scrolls away with the page.
 
 **What things mean.** Each panel has a **?** by its title that shows what it lists and how the bot decides, such as how
-headshots are judged or how accounts are scored. On Review, **How flags work** by the period shows how the bot flags
+headshots are judged or how accounts are scored. On Queue, **How flags work** by the period shows how the bot flags
 players. They are hidden until asked for, so the lists start near the top.
 
 **Signing in.** "Sign in with Discord" goes to the bot, which sends you to Discord, checks your roles in our server and
 sends you back to the page you were on. Discord only tells the bot who you are and your roles there. The sign-in is
-kept in this browser for 36 hours, for both pages; "Sign out", in the menu under your name, forgets it. Anyone else is
-told the pages are for staff only.
+kept in this browser for 36 hours; "Sign out", in the menu under your name, forgets it. Anyone else is
+told the page is for staff only.
 
 **Your Steam account.** Seeder VIP and the top seeders are for the players who seed, not for staff. Until you link a
 Steam account, a banner at the top of the page asks you to. **Link your Steam account** asks for your Steam64 ID (17
@@ -48,9 +52,9 @@ show as a top seeder, and your player page shows no seed days. Your kills, match
 get a staff spot instead: the bot keeps you on the server's whitelist for as long as you're linked, in place of a
 slot added by hand.
 **Later** hides the banner until your next sign-in. Change it any time from "Steam: …" in the menu under your name, or on
-Server settings' Bans and VIP tab.
+Server's Bans and VIP.
 
-## Moderation: Live, the server, who is on and every kill now
+## Now: the server, who is on and every kill now
 
 - **Side by side.** The staff pages use the whole width of the screen from 1100 pixels. From 1440 pixels the kill feed
   sits beside the server list, staying in view as the list scrolls, with Joins and leaves under the list. Narrower, they
@@ -81,10 +85,10 @@ Server settings' Bans and VIP tab.
   parts. It opens sorted by **Worth a look first**: banned players, then those flagged for griefing today with the
   most team kills first, then flagged headshots, then high-risk and risky Steam accounts, then anyone else with team
   kills or vehicle suicides today, then the rest by team. When nobody in game matches a search, "Find" searches
-  everyone the bot knows on the History tab. The list and the kill feed leave out the Steam ID under each name, to fit
+  everyone the bot knows on Players. The list and the kill feed leave out the Steam ID under each name, to fit
   more players on the screen: hover a name for it, or open their panel. "Showing 5 of 26 in game" says when a search,
   team or tick leaves some out.
-- **Alerts.** The browser tab's title says how many in game are worth a look now: "(3) Moderation | …". Turn on
+- **Alerts.** The browser tab's title says how many in game are worth a look now: "(3) Staff | …". Turn on
   **Alerts**, the bell in the staff bar, for a chime when someone becomes worth a look, and a desktop notification while
   the page's tab is in the background (once the browser is allowed to show them; it asks when you tick it). Clicking
   the notification opens their panel. With alerts on, the page keeps checking every minute while its tab is in
@@ -94,7 +98,7 @@ Server settings' Bans and VIP tab.
   whether they are in game and on which team, what is worth knowing, and the buttons to act: **Warn**, **Kick**,
   **Ban**, **Move team** (Warn, Kick and Move only for a player in game), **Make profile private**, **Unban** for a
   player who is banned, "Checked, they're fine" or taking it back, **Only them in the kill feed** and **Full history →**
-  (the History tab). Then their kills and deaths this match, time on today, team kills, vehicle suicides and headshots
+  (on Players). Then their kills and deaths this match, time on today, team kills, vehicle suicides and headshots
   today, the latest staff actions on them in the period, their latest kills and deaths in the kill feed, and **Record**,
   which loads their record (as Look up) when opened. It keeps up with each refresh and each kill of theirs while open;
   Close, Escape or a click outside it closes it.
@@ -106,20 +110,20 @@ Server settings' Bans and VIP tab.
   days and Confirm. Changing anything goes back to the button. The bot's reply shows under the form, and after the
   page loads again, the player's row says what was done ("Banned just now by Sarge").
 - **Act** on a player opens a menu: their history, only them in the kill feed, warn, kick, move to another team, ban,
-  make their profile private, and "Checked, they're fine" or taking it back. History opens the History tab; the rest
-  open their panel with that form ready. Every other command is on the Commands tab.
+  make their profile private, and "Checked, they're fine" or taking it back. History opens them on Players; the rest
+  open their panel with that form ready. Every other command is in the command search.
 - **Reasons to pick.** Warn, Kick and Ban have buttons for the usual reasons (team killing, team vehicles, toxic chat,
   racism, and for kicks and bans cheating and ignoring warnings), which fill in the message or reason to change before
   sending; the one picked is marked until its words are changed. From a player's panel, the reason starts from what
   they did today: **Team killing** for a player with a team kill today, else **Team vehicles** for one with a vehicle
   suicide. Never from headshots or a Steam account: a flag is a reason to look, not proof. They are `PRESET_REASONS`,
-  and the choice `reasonFor`, in `format.js`. On the Commands tab too.
+  and the choice `reasonFor`, in `format.js`. In the command search's forms too.
 - **Kill feed.** The server's latest 250 kills, newest first, to the second, as they happen: the bot sends each batch
   from the game a second or two after the kills, and new ones glow as they come in. Each has when (just the time for a
   kill from today, with the date too for an older one; hover for both), who, whom, with what (with Headshot and Team
   kill marked under the weapon), wallbangs and the like, how far and on which map, which is only shown when it differs from the kill above, as the
   server stays on one map for a long run of kills. A weapon the bot has no name for is marked
-  **Check name** (see Weapons to name, on Review). **Only team kills** and **Only headshots** hide the rest (tick both
+  **Check name** (see Weapons to name, on Queue's By flag). **Only team kills** and **Only headshots** hide the rest (tick both
   for team kills by headshot): Only team kills is for watching a player someone in game says is team killing. **Only
   them in the kill feed**, from Act or a player's panel, shows one player's kills and deaths, as they happen, until **Show
   everyone**. By its title:
@@ -134,13 +138,24 @@ Server settings' Bans and VIP tab.
 - On a phone each player in the server list is a small card, with Act at the top and the one-click buttons under what
   is worth knowing.
 
-## Moderation: Review, what the bot flagged, and what staff did
+## Queue: what the bot flagged, and what staff did
 
 - **How flags work**, by the period, in three steps: the bot checks every player's Steam account as they join, and every
   kill in the kill feed for headshots, team kills and vehicle suicides; the serious ones (griefing, with the player's
   Steam risk, and only the riskiest Steam accounts) go to the Discord moderation log channel as they happen; everything
-  is listed here, those in game first and the rest folded under Not in game. A flag is a reason to look, not proof.
-- **Tiles:** players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
+  is listed here. A flag is a reason to look, not proof.
+- **Four views**, under the period: **Flagged players** (first), **By flag**, **Team kills** and the **Moderation
+  log**, with their counts. The address keeps the view.
+- **Flagged players.** Everyone the bot flagged in the period, one row each with every reason together, so a player is
+  never on it twice (`queueRows` in `format.js`): **Headshots** with a flagged day or a chance by luck below ordinary,
+  with their headshots, usual and chance; a **Risky Steam** account, with its risk, points and why; and **Griefing**
+  once flagged, with the flags, team kills and suicides. Red is serious (a flagged day, a high-risk account, griefing),
+  yellow worth a look. Each row says whether they are in game and on which team, and what staff last did to them in the
+  period. Those in game first, then the most serious, then the most reasons. **All**, **Headshots**, **Griefing** and
+  **Risky Steam** pick which, with their counts (a player with two reasons counts under both), and **Only in game**
+  leaves out the rest. Those in game have Warn, Kick, Ban and ✓ by Act, as on Now.
+- **By flag:** each list with all its numbers, as below.
+- **Tiles** (By flag): players flagged for headshots, risky Steam accounts, players flagged for griefing, and team kills (with a
   vehicle, in a helicopter crash, and vehicle suicides) in the period. The first three say how many of them are in game now.
 - **In game first.** Each list is in two parts: **In game now** first, as the players staff can still warn, kick or
   move, its count in yellow when there is anyone in it; then **Not in game**, for everyone else in the period, as a
@@ -178,15 +193,18 @@ Server settings' Bans and VIP tab.
   played for scale, and whether they are banned. "Incidents" shows a player's team kills and vehicle suicides. Its "?"
   says what gets a player flagged.
 - **Team kills and vehicle suicides.** Each one: when, who, which teammate, with what, how far and on which map.
-- **Moderation log.** Every warning, kick, ban, unban, team move and VIP added or removed through the bot, with the
+- **Moderation log** (its own view). Every warning, kick, ban, unban, team move and VIP added or removed through the bot, with the
   reason and who did it (VIP added: Friend, Regular, Seeder, Paid or Other, and any note; VIP removed: any reason given),
   and bans made or lifted outside the bot (in game, or in the server's settings). Each kind of action can be hidden
   (team moves, say); the page remembers what you hid in this browser.
 - Pick today, 7 days or 30 days (UTC days). Act works here too; for a player not in game it only offers their history,
   ban and making their profile private, as the game can only warn, kick or move players who are on.
 
-## Moderation: History, any player's record
+## Players: any player's record
 
+- **Lately**, before a search: those staff acted on in the period and who joined or left the server lately, each once,
+  newest first, with what was done or when, and whether they are in game (`recentPlayers` in `format.js`). A name opens
+  their history here.
 - **Find a player** by name or Steam ID: anyone in game, seen in the last 30 days, banned or with VIP, from the same
   suggestions as the admin tools. A Steam ID can always be opened. Or open a player's panel from their name, anywhere
   on the page, and pick **Full history →**.
@@ -196,7 +214,7 @@ Server settings' Bans and VIP tab.
   ban and staff history, exactly as the Look up tool (and `/player` in Discord) shows them.
 - **Time on the server** in the period: each time they were on, newest first, with when they joined, when they left
   (or "In game now") and how long, and how many times and how long in all. From the bot's check each minute, like
-  Joins and leaves on Live, so a time "since" another means the bot couldn't read the server in between, and "Already
+  Joins and leaves on Now, so a time "since" another means the bot couldn't read the server in between, and "Already
   on" that they were on when the bot started keeping the log. The bot keeps 30 days. Hidden while the bot does not send
   it.
 - **Kills and headshots** in the period: their headshots in words, against their usual and the chance by luck; by
@@ -208,9 +226,15 @@ Server settings' Bans and VIP tab.
 - Pick today, 7 days or 30 days (UTC days). Their kills refresh with the page; their record loads each time they are
   opened. The kills start from when the bot first kept them, and it keeps 30 days.
 
-## Moderation: Commands, every staff command
+## The command search and the Server menu
 
-- Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
+- **Search**, in the staff bar, or **Ctrl K** (⌘K on a Mac) anywhere on the page: one box to go to any section or view
+  ("rotations", "moderation log"), run any staff command ("ban", "next map"), or open any player's panel by name or
+  Steam ID, from the same suggestions as the commands' player lists. Every word typed must match, in any case. ↑ and ↓
+  move, Enter or a click opens, Escape closes.
+- **Server**, in the staff bar: the commands for the whole server (message everyone in game, set the next map, change
+  map now, call for seeders) and the map rotations.
+- A command opens its form over the page. Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
@@ -219,11 +243,11 @@ Server settings' Bans and VIP tab.
   days"). Anything that changes the game or the records asks again in place, as in a player's panel, except a warning,
   which is a private message in game and sends straight away. Each runs on the bot as you,
   exactly as the slash command: the same checks and replies, and it goes in the player's staff history and the
-  moderation log. To warn, kick, ban or move someone in game, the buttons on Live are quicker.
+  moderation log. To warn, kick, ban or move someone in game, the buttons on Now are quicker.
   Moving a player to another team greys out the team they are on now ("their team now"), so it can't be picked; the bot
   refuses that move too, from Discord as well.
 
-## Server settings: Bans and VIP
+## Server: Bans and VIP
 
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   Unban tool over the page with them picked: "Unban Nightjar", then Confirm.
@@ -237,7 +261,7 @@ Server settings' Bans and VIP tab.
   counts as seeding again. Needs the bot's staff Steam
   accounts (its README, "Staff Steam accounts").
 
-## Server settings: Rotations, the maps for each day
+## Server: Rotations, the maps for each day
 
 A tab with changes not saved yet (Rotations, Lines or Weapon rules) has a yellow dot by its name, so they are not
 forgotten while on another tab.
@@ -262,7 +286,7 @@ forgotten while on another tab.
 - The bot keeps the rules (see its README, "Map rotations"): the server plays a new rotation from the next map, so a
   match is never cut short, and each day's rotation goes on at the hour shown, in your own time.
 
-## Server settings: Lines, what the bot says in game
+## Server: Lines, what the bot says in game
 
 - **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (the basic rules,
   sent privately to each player who joins), 10 minutes in, for halfway and nearly won, one list for each faction
@@ -282,7 +306,7 @@ forgotten while on another tab.
 - A list that is marked "too long or wrong" was fine when it was saved, but the bot's settings changed since (its
   website, seeder VIP or the winning score). The bot cuts such a line short until it is changed.
 
-## Server settings: Weapon rules, weapons the bot warns or kicks for
+## Server: Weapon rules, weapons the bot warns or kicks for
 
 - **The rules.** Each rule is a name, its weapons, and what the bot does when someone kills with one of them: **Off**,
   **Warn** (a private message in game, each time), **Warn, then kick** (warnings for their first 1 to 5 offences of the
@@ -306,25 +330,25 @@ forgotten while on another tab.
   sign in and use its commands, and asks Discord for the rest when it has its bot token. When the bot has no name for
   someone, the page uses the name kept with their moderation log entries, if any. Anyone still without a name shows as
   "Discord user" and their ID, linked to their Discord profile.
-- Each page refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills
+- The page refreshes every minute while the browser tab is visible, like the bot's checks, and the kill feed as kills
   happen. A player's Act menu stays open through a refresh, and so does their panel, with its form as filled in.
 - **Questions are asked on the page**, not in the browser's own pop-up: deleting a rotation, putting one on the
   server, throwing away changes, unlinking a Steam account. The safe answer (Back, Keep editing) is picked to start
   with for anything that throws something away, so Enter alone never does it; Escape or a click outside is Back. Only
   leaving the page with unsaved changes is still the browser's own question, as only the browser can ask it.
-- **Keyboard shortcuts** on Moderation, listed by **?** and in the menu under your name: **/** searches the server list
-  (or every player, on History); **↓** and **↑** from there move through the list; **Enter** opens a player's panel;
+- **Keyboard shortcuts**, listed by **?** and in the menu under your name: **Ctrl K** searches everything; **/** searches
+  the server list (or every player, on Players); **↓** and **↑** from there move through the list; **Enter** opens a player's panel;
   **W**, **K**, **B** and **M** warn, kick, ban or move the player you are on, or the one in the panel; **C** checks
   them; **1** to **6** pick a ban's length; and **Enter** sends, then confirms. So from a player in the list, a ban is
   **B**, **3**, **Enter**, **Enter**. Keys do nothing while you type in a box, and none sends anything by itself.
 - Times are in your own time and clock: "7:00 PM" on a 12-hour clock (no leading zero), "07:00" on a 24-hour one.
-- They show Steam IDs, linked to Steam profiles. Player names open their panel on Moderation, and their history from
-  Server settings; History and the panel link to their public player page.
+- It shows Steam IDs, linked to Steam profiles. Player names open their panel; Players and the panel link to their
+  public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
-- `http://localhost:3000/admin?demo` and `http://localhost:3000/server-settings?demo` show sample data without signing
-  in. Their admin tools only say what they would do, and the rotations, lines and weapon rules on Server settings change
-  in the page only.
-- They only talk to the bot in their own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
+- `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would do,
+  and the rotations, lines and weapon rules on Server change in the page only. The Rotations, Lines and Weapon rules
+  editors load the first time they are opened.
+- It only talks to the bot in its own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try them against a local bot, change the meta tag in local copies.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
   lets that site read the staff data.

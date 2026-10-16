@@ -1056,6 +1056,106 @@ export const teamOptions = (choices, team) =>
     return { value: c.value, name: theirs ? `${c.name} (their team now)` : c.name, disabled: theirs };
   });
 
+// The Queue: everyone the bot flagged in the period, one row per player with every reason together, so a player is
+// never on it twice. `headshots` are the period's players with a headshot (GET /api/admin/kills), `steam` the risky
+// Steam accounts and `griefers` everyone with team kills or suicides (both from the overview); `inGame` the Steam IDs in
+// game now. Headshots count with a flagged day or a chance by luck below ordinary, not while the bot can't say yet;
+// Steam accounts all count (the bot only sends risky ones), with how old they are when Steam shows it; griefing only once
+// flagged. Each reason is { kind: 'headshots' | 'steam' | 'griefing',
+// serious, text }: serious is a flagged day, a high-risk account, or griefing. In game first, then the most serious
+// reasons, then the most reasons, then by name.
+export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = new Set(), now }) => {
+  const rows = new Map();
+  const add = (player, reason) => {
+    const row = rows.get(player.steamId) ?? { steamId: player.steamId, name: player.name, id: player.id ?? null, banned: false, reasons: [] };
+    row.reasons.push(reason);
+    row.banned ||= Boolean(player.banned);
+    row.id ??= player.id ?? null;
+    rows.set(player.steamId, row);
+  };
+  for (const p of headshots) {
+    const unlikely = p.chance !== null && p.chance !== undefined && p.chance < ODDS_SHOWN;
+    if (p.flaggedDays === 0 && !unlikely) continue;
+    const text = [
+      headshotCount(p.kills, p.headshots),
+      `usual ${usualHeadshots(p.expected, p.kills)}`,
+      luckOdds(p.chance),
+      ...(p.flaggedDays > 0 ? [flaggedDaysLabel(p.flaggedDays).toLowerCase()] : []),
+    ];
+    add(p, { kind: 'headshots', serious: p.flaggedDays > 0, text: text.join(' · ') });
+  }
+  for (const a of steam) {
+    const why = [...steamWhy(a, now), ...(a.createdAt === null ? [] : [accountAge(a, now)])];
+    add(a, { kind: 'steam', serious: a.risk === 'high', text: [`${RISK_LABELS[a.risk] ?? a.risk}, ${a.score} point${a.score === 1 ? '' : 's'}`, ...why].join(' · ') });
+  }
+  for (const p of griefers) {
+    if (p.flags.length === 0) continue;
+    const text = [
+      p.flags.map(flagLabel).join(', '),
+      `${plural(p.teamKills, 'team kill')}${withVehicle(p.teamKills, p.vehicleTeamKills, p.crashTeamKills ?? 0).replace(/^\d+/, '')}`,
+      ...(p.suicides > 0 ? [`${plural(p.suicides, 'suicide')}${withVehicle(p.suicides, p.vehicleSuicides).replace(/^\d+/, '')}`] : []),
+      ...(p.flaggedDays > 1 ? [`${p.flaggedDays} days flagged`] : []),
+    ];
+    add(p, { kind: 'griefing', serious: true, text: text.join(' · ') });
+  }
+  const serious = (row) => row.reasons.filter((r) => r.serious).length;
+  return [...rows.values()]
+    .map((row) => ({ ...row, inGame: inGame.has(row.steamId) }))
+    .sort((a, b) => Number(b.inGame) - Number(a.inGame) || serious(b) - serious(a) || b.reasons.length - a.reasons.length || a.name.localeCompare(b.name));
+};
+
+// Players for the Players section before a search: those staff acted on lately, then those who joined or left the
+// server lately, each once in each list and newest first, from the overview's moderation log and joins.
+export const recentPlayers = ({ moderation = [], joins = [], limit = 10 }) => {
+  const latest = (entries, pick) => {
+    const seen = new Set();
+    const out = [];
+    for (const e of [...entries].sort((a, b) => b.at - a.at)) {
+      if (seen.has(e.player.steamId)) continue;
+      seen.add(e.player.steamId);
+      out.push(pick(e));
+      if (out.length === limit) break;
+    }
+    return out;
+  };
+  return {
+    acted: latest(moderation, (e) => ({ player: e.player, at: e.at, action: e.action })),
+    seen: latest(joins, (e) => ({ player: e.player, at: e.at, kind: e.kind })),
+  };
+};
+
+// The staff page's sections and their views, by the address after the #: '' for Now, '#queue' (and '#queue/teamkills'
+// for one of its views), '#players' (and '#players/<Steam ID>' for one player), '#server' (and '#server/rotations').
+// Old links go where those are now: the Moderation page's '#review', '#alerts' and '#kills' to Queue, '#history',
+// '#history/<Steam ID>' and '#kills/<Steam ID>' to Players, '#commands' and '#admin' to Now with the command search
+// open, and the Server settings page's '#bans', '#rotations', '#lines' and '#rules' to Server. Null for anything else,
+// such as the bot's answer to signing in.
+export const SECTIONS = ['now', 'queue', 'players', 'server'];
+export const QUEUE_VIEWS = ['flagged', 'flags', 'teamkills', 'log'];
+export const SERVER_VIEWS = ['bans', 'rotations', 'lines', 'rules'];
+const OLD_SECTIONS = { live: 'now', review: 'queue', alerts: 'queue', history: 'players' };
+export const staffRoute = (hash) => {
+  const [asked = '', sub = ''] = hash.replace(/^#/, '').split('/');
+  const steamId = /^\d{17}$/.test(sub) ? sub : null;
+  if (asked === '' || asked === 'now' || asked === 'live') return { section: 'now', view: null, steamId: null, search: false };
+  if (asked === 'commands' || asked === 'admin') return { section: 'now', view: null, steamId: null, search: true };
+  if (asked === 'kills') return steamId ? { section: 'players', view: null, steamId, search: false } : { section: 'queue', view: 'flagged', steamId: null, search: false };
+  if (SERVER_VIEWS.includes(asked)) return { section: 'server', view: asked, steamId: null, search: false };
+  const section = OLD_SECTIONS[asked] ?? asked;
+  if (section === 'queue') return { section, view: QUEUE_VIEWS.includes(sub) ? sub : 'flagged', steamId: null, search: false };
+  if (section === 'players') return { section, view: null, steamId, search: false };
+  if (section === 'server') return { section, view: SERVER_VIEWS.includes(sub) ? sub : 'bans', steamId: null, search: false };
+  return null;
+};
+
+// The address after the # for a section, its view and its player: the first of each is left out.
+export const routeHash = ({ section, view = null, steamId = null }) => {
+  if (section === 'queue') return view && view !== 'flagged' ? `#queue/${view}` : '#queue';
+  if (section === 'players') return steamId ? `#players/${steamId}` : '#players';
+  if (section === 'server') return view && view !== 'bans' ? `#server/${view}` : '#server';
+  return '';
+};
+
 // How many things on the Alerts tab are worth a look: risky Steam accounts and players flagged for griefing.
 export const alertCount = (overview) => (overview.steam?.accounts.length ?? 0) + (overview.totals?.flaggedPlayers ?? 0);
 

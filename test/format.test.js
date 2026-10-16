@@ -123,6 +123,10 @@ import {
   asksFirst,
   actionLabel,
   reasonFor,
+  queueRows,
+  recentPlayers,
+  staffRoute,
+  routeHash,
   toolsFrom,
 } from '../public/js/format.js';
 
@@ -1453,5 +1457,109 @@ describe('the season page', () => {
       shoutOuts({ ...roundup, awards: null }).map((s) => s.title),
       ['Ever-present'],
     );
+  });
+});
+
+describe('the Queue', () => {
+  const now = Date.UTC(2026, 9, 16, 18);
+  const hs = (steamId, name, flaggedDays, chance, extra = {}) => ({ steamId, name, kills: 100, headshots: 60, expected: 25, chance, flaggedDays, ...extra });
+  const account = (steamId, name, risk, score) => ({ steamId, name, risk, score, vacBans: 1, gameBans: 0, lastBanAt: now - 41 * 86_400_000, communityBanned: false, tradeBan: 'none', createdAt: null, profilePublic: false });
+  const griefer = (steamId, name, flags, extra = {}) => ({ steamId, name, flags, teamKills: 9, vehicleTeamKills: 2, crashTeamKills: 0, suicides: 0, vehicleSuicides: 0, flaggedDays: 1, ...extra });
+
+  it('puts each player on it once, with every reason', () => {
+    const rows = queueRows({
+      headshots: [hs('1', 'Pike', 3, 1e-10), hs('2', 'Ordinary', 0, 0.3)],
+      steam: [account('1', 'Pike', 'high', 5)],
+      griefers: [griefer('1', 'Pike', ['teamKills']), griefer('3', 'Unflagged', [])],
+      inGame: new Set(['1']),
+      now,
+    });
+    assert.deepEqual(rows.map((r) => r.name), ['Pike']);
+    assert.deepEqual(rows[0].reasons.map((r) => r.kind), ['headshots', 'steam', 'griefing']);
+    assert.equal(rows[0].inGame, true);
+    assert.match(rows[0].reasons[0].text, /Under 1 in a billion · flagged 3 days$/);
+    assert.match(rows[0].reasons[1].text, /^High risk, 5 points · 1 VAC ban/);
+    assert.equal(rows[0].reasons[2].text, 'Team kills · 9 team kills (2 vehicle)');
+  });
+
+  it('orders those in game first, then by how serious', () => {
+    const rows = queueRows({
+      headshots: [hs('1', 'Rook', 0, 0.02), hs('2', 'Ghost', 1, 1e-9)],
+      steam: [account('3', 'Away', 'high', 9), account('4', 'Sable', 'medium', 3)],
+      inGame: new Set(['1', '2', '4']),
+      now,
+    });
+    assert.deepEqual(rows.map((r) => r.name), ['Ghost', 'Rook', 'Sable', 'Away']);
+    assert.deepEqual(rows.map((r) => r.reasons[0].serious), [true, false, false, true]);
+  });
+
+  it('leaves out headshots the bot can’t judge yet, unless a day was flagged', () => {
+    const rows = queueRows({ headshots: [hs('1', 'Unjudged', 0, null), hs('2', 'Flagged', 1, null)], now });
+    assert.deepEqual(rows.map((r) => r.name), ['Flagged']);
+  });
+
+  it('says how old a Steam account is, when Steam shows it', () => {
+    const young = { ...account('1', 'Fresh', 'medium', 2), vacBans: 0, lastBanAt: null, setUp: true, public: true, createdAt: now - 6 * 86_400_000 };
+    assert.equal(queueRows({ steam: [young], now })[0].reasons[0].text, 'Worth a look, 2 points · Made 6 days ago');
+  });
+
+  it('is empty with nothing flagged', () => {
+    assert.deepEqual(queueRows({ now }), []);
+  });
+});
+
+describe('recent players', () => {
+  const p = (steamId) => ({ steamId, name: `P${steamId}` });
+  it('lists each player once, newest first', () => {
+    const { acted, seen } = recentPlayers({
+      moderation: [{ player: p('1'), at: 10, action: 'warn' }, { player: p('1'), at: 30, action: 'kick' }, { player: p('2'), at: 20, action: 'ban' }],
+      joins: [{ player: p('3'), at: 5, kind: 'joined' }, { player: p('3'), at: 50, kind: 'left' }],
+    });
+    assert.deepEqual(acted.map((a) => [a.player.steamId, a.action]), [['1', 'kick'], ['2', 'ban']]);
+    assert.deepEqual(seen.map((s) => [s.player.steamId, s.kind]), [['3', 'left']]);
+  });
+  it('stops at the limit', () => {
+    const joins = Array.from({ length: 30 }, (_, i) => ({ player: p(String(i)), at: i, kind: 'joined' }));
+    assert.equal(recentPlayers({ joins, limit: 4 }).seen.length, 4);
+  });
+});
+
+describe('staff page addresses', () => {
+  const id = '76561198000000008';
+  it('reads each section and view', () => {
+    assert.deepEqual(staffRoute(''), { section: 'now', view: null, steamId: null, search: false });
+    assert.deepEqual(staffRoute('#queue/teamkills'), { section: 'queue', view: 'teamkills', steamId: null, search: false });
+    assert.deepEqual(staffRoute(`#players/${id}`), { section: 'players', view: null, steamId: id, search: false });
+    assert.deepEqual(staffRoute('#server/lines'), { section: 'server', view: 'lines', steamId: null, search: false });
+    assert.equal(staffRoute('#queue/nonsense').view, 'flagged');
+  });
+  it('sends every old link where it is now', () => {
+    const where = (hash) => {
+      const r = staffRoute(hash);
+      return [r.section, r.view ?? r.steamId ?? (r.search ? 'search' : null)];
+    };
+    assert.deepEqual(where('#live'), ['now', null]);
+    assert.deepEqual(where('#review'), ['queue', 'flagged']);
+    assert.deepEqual(where('#alerts'), ['queue', 'flagged']);
+    assert.deepEqual(where('#kills'), ['queue', 'flagged']);
+    assert.deepEqual(where(`#kills/${id}`), ['players', id]);
+    assert.deepEqual(where('#history'), ['players', null]);
+    assert.deepEqual(where(`#history/${id}`), ['players', id]);
+    assert.deepEqual(where('#commands'), ['now', 'search']);
+    assert.deepEqual(where('#admin'), ['now', 'search']);
+    for (const view of ['bans', 'rotations', 'lines', 'rules']) assert.deepEqual(where(`#${view}`), ['server', view]);
+  });
+  it('is not a section for the sign-in answer', () => {
+    assert.equal(staffRoute('#session=abc.def'), null);
+    assert.equal(staffRoute('#error=denied'), null);
+  });
+  it('writes the address back, leaving out the first of each', () => {
+    assert.equal(routeHash({ section: 'now' }), '');
+    assert.equal(routeHash({ section: 'queue', view: 'flagged' }), '#queue');
+    assert.equal(routeHash({ section: 'queue', view: 'log' }), '#queue/log');
+    assert.equal(routeHash({ section: 'players', steamId: id }), `#players/${id}`);
+    assert.equal(routeHash({ section: 'server', view: 'bans' }), '#server');
+    assert.equal(routeHash({ section: 'server', view: 'rules' }), '#server/rules');
+    for (const hash of ['', '#queue', '#queue/teamkills', '#players', `#players/${id}`, '#server', '#server/rotations']) assert.equal(routeHash(staffRoute(hash)), hash);
   });
 });

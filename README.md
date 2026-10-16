@@ -17,7 +17,7 @@ once a minute and serves them at `GET /api/stats`.
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
 | `/seeding` | What seeding is, top seeders, who has seeder VIP |
 | `/season` | The Season 1 roundup and the Season in Review, open since the wipe on 15 October 2026 |
-| `/admin`, `/server-settings` | Staff only: moderation and server settings (Discord sign-in) |
+| `/admin` | Staff only: moderation and the server's settings (Discord sign-in). `/server-settings` goes there |
 
 Full details are in [docs/site-pages.md](docs/site-pages.md) and [docs/staff-pages.md](docs/staff-pages.md).
 
@@ -40,7 +40,7 @@ named in the bot's README.
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `admin.html` and `server-settings.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `season.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
@@ -197,7 +197,9 @@ npm test    # Node's built-in test runner; no dependencies to install
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. Each page has its own script in
 `public/js/`, mostly named after it (`stats.js`, `matches.js`, `player.js`, `admin.js` and so on). The exceptions: the
-home page uses `app.js`, `/live` uses `livematch.js` and `/server-settings` uses `settings.js`. Shared parts:
+home page uses `app.js` and `/live` uses `livematch.js`. The staff page, `/admin`, has more: `queue.js` (its Queue),
+`server.js` (its Server section, which loads `rotations.js`, `lines.js` and `rules.js` when they are opened),
+`palette.js` (the command search), `tools.js` (the staff commands' forms) and `ask.js` (its questions). Shared parts:
 `live.js` (fetches the bot's numbers and the notice), `views.js` (DOM pieces), `charts.js` (SVG charts), `demo.js`
-(sample data), `session.js` and `staff.js` (staff sign-in and what the staff pages share). Logic kept apart from its
+(sample data), `session.js` and `staff.js` (staff sign-in and the staff bar). Logic kept apart from its
 page, for tests, is in the `*model.js` files.

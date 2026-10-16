@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Moderation | Staff | gaminginit WARDOGS server</title>
-    <meta name="description" content="For gaminginit staff: who is on our WARDOGS server with those worth a look at the top, the kill feed live, flags to review (headshots, griefing, risky Steam accounts) and every player's history." />
+    <title>Staff | gaminginit WARDOGS server</title>
+    <meta name="description" content="For gaminginit staff: who is on our WARDOGS server with those worth a look at the top, the kill feed live, a queue of flagged players (headshots, griefing, risky Steam accounts), every player's history and the server's settings." />
     <!-- Staff only: never in search results, and no address in links to other sites. -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
@@ -19,9 +19,8 @@
   <body class="staff">
     <a class="skip" href="#main">Skip to content</a>
 
-    <!-- The staff pages' own bar, in place of the site's menu: the two pages, the server now, alerts and who is signed in.
-         Keep the same as in server-settings.html, but for the alerts, which are only on this page. Shown once signed in
-         (data-signed-in, see staff.js). -->
+    <!-- The staff page's own bar, in place of the site's menu: the server now, the server's commands, the command search,
+         alerts and who is signed in. Shown once signed in (data-signed-in, see staff.js). -->
     <header class="nav staff-bar">
       <div class="wrap nav-inner staff-bar-inner">
         <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
@@ -31,15 +30,21 @@
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <nav class="staff-pages" id="staff-pages" aria-label="Staff pages" data-signed-in hidden>
-          <a href="admin" data-keep-query aria-current="page">Moderation</a>
-          <a href="server-settings" data-keep-query>Server settings</a>
-        </nav>
         <p class="server-status" id="server-status" data-signed-in hidden></p>
         <div class="staff-bar-end">
+          <!-- The commands for the whole server (see serverMenu in admin.js). -->
+          <details class="account-menu server-menu" id="server-menu" data-signed-in hidden>
+            <summary class="bar-button">Server</summary>
+            <div class="account-list" id="server-menu-list"></div>
+          </details>
+          <button type="button" class="bar-button" id="search-open" aria-keyshortcuts="Control+K" title="Search commands, players and sections (Ctrl K)" data-signed-in hidden>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <span class="bar-button-text">Search</span>
+            <kbd class="bar-kbd">Ctrl K</kbd>
+          </button>
           <button type="button" class="bar-button" id="look-alerts" aria-pressed="false" title="Alert me when someone new is worth a look: a chime, and a desktop notification while this tab is in the background" data-signed-in hidden>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-            <span>Alerts</span>
+            <span class="bar-button-text">Alerts</span>
           </button>
           <details class="account-menu" id="account" data-signed-in hidden>
             <summary class="bar-button" id="account-name">Staff</summary>
@@ -57,7 +62,7 @@
 
       <section class="section admin" aria-labelledby="admin-title">
         <div class="wrap">
-          <h1 class="visually-hidden" id="admin-title">Moderation</h1>
+          <h1 class="visually-hidden" id="admin-title">Staff</h1>
 
           <!-- Asks staff who have not linked their Steam account to, once each sign-in (see staff.js). -->
           <div class="staff-banner" id="steam-banner" hidden>
@@ -70,7 +75,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history. Every staff command, to run from here. On Server settings: the bans and whitelist slots, the map rotations, what the bot says in game and the weapon rules. For Discord Administrators and members with a staff role in our server.</p>
+            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; and the server’s settings: the bans and whitelist slots, the map rotations, what the bot says in game and the weapon rules. Every staff command, to run from here. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -79,24 +84,25 @@
             <p class="muted signin-note">Discord tells us who you are and your roles in our server, nothing else. You stay signed in on this browser for 36 hours.</p>
           </div>
 
+
           <div id="admin-body" hidden>
-            <!-- What each tab holds is in its title, shown on hover. -->
-            <div class="admin-tabs" role="tablist" aria-label="Moderation">
-              <button type="button" role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true" data-tab="live" title="Who is on, those worth a look first, and every kill now">
-                <span class="tab-name">Live <span class="tab-count" id="count-live"></span></span>
+            <!-- The four sections. What each holds is in its title, shown on hover. -->
+            <div class="admin-tabs" role="tablist" aria-label="Staff">
+              <button type="button" role="tab" id="tab-now" aria-controls="panel-now" aria-selected="true" data-tab="now" title="Who is on, those worth a look first, and every kill now">
+                <span class="tab-name">Now <span class="tab-count" id="count-now"></span></span>
               </button>
-              <button type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review" title="What the bot flagged, and what staff did">
-                <span class="tab-name">Review <span class="tab-count" id="count-review"></span></span>
+              <button type="button" role="tab" id="tab-queue" aria-controls="panel-queue" aria-selected="false" tabindex="-1" data-tab="queue" title="Everyone the bot flagged, one row each, and what staff did">
+                <span class="tab-name">Queue <span class="tab-count" id="count-queue"></span></span>
               </button>
-              <button type="button" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history" title="Any player’s kills, team kills and record">
-                <span class="tab-name">History</span>
+              <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" tabindex="-1" data-tab="players" title="Any player’s kills, team kills and record">
+                <span class="tab-name">Players</span>
               </button>
-              <button type="button" role="tab" id="tab-commands" aria-controls="panel-commands" aria-selected="false" tabindex="-1" data-tab="commands" title="Every staff command: message everyone, maps, VIP and more">
-                <span class="tab-name">Commands</span>
+              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans and VIP, rotations, what the bot says in game and weapon rules">
+                <span class="tab-name">Server <span class="tab-dirty" id="dirty-server" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
               </button>
             </div>
 
-            <div class="tab-panel compact-rows" role="tabpanel" id="panel-live" aria-labelledby="tab-live">
+            <div class="tab-panel compact-rows" role="tabpanel" id="panel-now" aria-labelledby="tab-now">
               <!-- On a wide screen the kill feed sits beside the server list, and stays in view as the list scrolls. -->
               <div class="staff-live">
                 <article class="card panel admin-panel staff-live-list" aria-labelledby="players-title">
@@ -162,7 +168,8 @@
               </div>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-review" aria-labelledby="tab-review" hidden>
+
+            <div class="tab-panel" role="tabpanel" id="panel-queue" aria-labelledby="tab-queue" hidden>
               <div class="admin-bar">
                 <div class="period" role="group" aria-label="Period">
                   <button type="button" data-days="1" aria-pressed="false">Today</button>
@@ -178,10 +185,43 @@
                 <ol class="alert-steps">
                   <li><strong>The bot watches by itself.</strong> Each player’s Steam account is checked with Steam as they join, and every kill in the kill feed is checked for headshots, team kills and vehicle suicides.</li>
                   <li><strong>Serious ones go to Discord.</strong> Players passing a griefing mark and the riskiest Steam accounts are posted in the moderation log channel as they happen.</li>
-                  <li><strong>Everything is listed here,</strong> those in game first; the rest are folded under <strong>Not in game</strong>. A flag is a reason to look, not proof: check the player’s history before you act.</li>
+                  <li><strong>Everything is listed here:</strong> one row for each player under <strong>Flagged players</strong>, and each list with all its numbers under <strong>By flag</strong>, those in game first. A flag is a reason to look, not proof: check the player’s history before you act.</li>
                 </ol>
               </div>
 
+              <!-- The Queue's views: everyone flagged, one row each (see queue.js); the lists by flag, with their numbers; the
+                   team kills and vehicle suicides; and the moderation log. -->
+              <div class="queue-views period" role="group" aria-label="Show" id="queue-views">
+                <button type="button" data-view="flagged" aria-pressed="true">Flagged players <span class="filter-count" id="count-flagged"></span></button>
+                <button type="button" data-view="flags" aria-pressed="false">By flag</button>
+                <button type="button" data-view="teamkills" aria-pressed="false">Team kills <span class="filter-count" id="count-teamkills"></span></button>
+                <button type="button" data-view="log" aria-pressed="false">Moderation log <span class="filter-count" id="count-log"></span></button>
+              </div>
+
+              <div class="queue-view" id="queue-flagged">
+                <article class="card panel admin-panel" aria-labelledby="queue-title">
+                  <div class="panel-head">
+                    <div class="title-help">
+                      <h2 class="panel-title" id="queue-title">Flagged players</h2>
+                      <button type="button" class="help-toggle" aria-expanded="false" aria-controls="queue-help" title="About the queue"><span aria-hidden="true">?</span><span class="visually-hidden">About the queue</span></button>
+                    </div>
+                  </div>
+                  <div class="panel-help" id="queue-help" hidden>
+                    <p>Everyone the bot flagged in the period, one row each with every reason: headshots with a flagged day or far from ordinary, a risky Steam account, or griefing. Those in game first, then the most serious. A flag is a reason to look, not proof: open their panel for the rest. <strong>By flag</strong> has each list with all its numbers.</p>
+                  </div>
+                  <div class="list-tools queue-tools">
+                    <p class="visually-hidden" id="queue-filter-label">Show</p>
+                    <div class="period team-filter" id="queue-filter" role="group" aria-labelledby="queue-filter-label"></div>
+                    <label class="check" for="queue-ingame"><input type="checkbox" id="queue-ingame" /> Only in game</label>
+                  </div>
+                  <p class="section-note" id="queue-note"></p>
+                  <div class="admin-scroll">
+                    <table class="admin-table queue-table" id="queue-list" aria-labelledby="queue-title"></table>
+                  </div>
+                </article>
+              </div>
+
+              <div class="queue-view" id="queue-flags" hidden>
               <div class="tiles">
                 <div class="tile">
                   <p class="tile-label">Flagged for headshots</p>
@@ -270,6 +310,9 @@
                 <div id="griefers"></div>
               </article>
 
+              </div>
+
+              <div class="queue-view" id="queue-teamkills" hidden>
               <article class="card panel admin-panel" aria-labelledby="incidents-title">
                 <div class="panel-head">
                   <div class="title-help">
@@ -287,6 +330,9 @@
                 </div>
               </article>
 
+              </div>
+
+              <div class="queue-view" id="queue-log" hidden>
               <article class="card panel admin-panel" aria-labelledby="modlog-title">
                 <div class="panel-head">
                   <div class="title-help">
@@ -308,9 +354,10 @@
                   <table class="admin-table" id="modlog"></table>
                 </div>
               </article>
+              </div>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-history" aria-labelledby="tab-history" hidden>
+            <div class="tab-panel" role="tabpanel" id="panel-players" aria-labelledby="tab-players" hidden>
               <div class="admin-bar">
                 <div class="period" role="group" aria-label="Period">
                   <button type="button" data-days="1" aria-pressed="false">Today</button>
@@ -328,6 +375,21 @@
                 </div>
                 <p class="finder-count" id="history-search-note" role="status">Or click any player’s name on this page.</p>
                 <div class="history-results" id="history-results"></div>
+              </article>
+
+              <!-- Before a search: those staff acted on lately, and who joined or left lately (see renderRecent in admin.js). -->
+              <article class="card panel admin-panel players-recent" id="players-recent" aria-labelledby="players-recent-title">
+                <h2 class="panel-title" id="players-recent-title">Lately</h2>
+                <div class="recent-grid">
+                  <section aria-labelledby="recent-acted-title">
+                    <h3 class="group-title" id="recent-acted-title">Staff acted on</h3>
+                    <ul class="recent-list" id="recent-acted"></ul>
+                  </section>
+                  <section aria-labelledby="recent-seen-title">
+                    <h3 class="group-title" id="recent-seen-title">Joined or left the server</h3>
+                    <ul class="recent-list" id="recent-seen"></ul>
+                  </section>
+                </div>
               </article>
 
               <article class="card panel admin-panel history-player" id="history-player" aria-labelledby="history-title" hidden>
@@ -391,22 +453,73 @@
               </article>
             </div>
 
-            <div class="tab-panel" role="tabpanel" id="panel-commands" aria-labelledby="tab-commands" hidden>
-              <article class="card panel admin-panel tools-panel" aria-labelledby="tools-title">
-                <div class="panel-head">
-                  <div class="title-help">
-                    <h2 class="panel-title" id="tools-title">Staff commands</h2>
-                    <button type="button" class="help-toggle" aria-expanded="false" aria-controls="tools-help" title="About the staff commands"><span aria-hidden="true">?</span><span class="visually-hidden">About the staff commands</span></button>
+
+            <div class="tab-panel" role="tabpanel" id="panel-server" aria-labelledby="tab-server" hidden>
+              <!-- What each holds is in its title, shown on hover. -->
+              <div class="admin-tabs server-tabs" role="tablist" aria-label="Server">
+                <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans" title="Bans, whitelist slots and staff spots">
+                  <span class="tab-name">Bans and VIP</span>
+                </button>
+                <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations" title="The maps for each day">
+                  <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
+                <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines" title="What the bot says in game">
+                  <span class="tab-name">Lines <span class="tab-dirty" id="dirty-lines" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
+                <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules" title="Weapons the bot warns or kicks for">
+                  <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-bans" aria-labelledby="tab-bans">
+                <article class="card panel admin-panel" aria-labelledby="bans-title">
+                  <h2 class="panel-title" id="bans-title">Bans</h2>
+                  <p class="section-note" id="bans-note">Everyone banned on the server now, with the reason.</p>
+                  <div class="admin-scroll">
+                    <table class="admin-table" id="bans"></table>
                   </div>
-                </div>
-                <div class="panel-help" id="tools-help" hidden>
-                  <p>Every staff command from Discord: pick one, fill it in, and run it. Each runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning. To warn, kick, move or ban someone in game, the buttons on the Live tab’s server list are quicker.</p>
-                </div>
-                <p class="section-note" id="tools-note"></p>
-                <div id="tools"></div>
-              </article>
+                </article>
+
+                <article class="card panel admin-panel" aria-labelledby="reserved-title">
+                  <h2 class="panel-title" id="reserved-title">Whitelist slots</h2>
+                  <p class="section-note" id="reserved-note"></p>
+                  <div class="admin-scroll">
+                    <table class="admin-table" id="reserved"></table>
+                  </div>
+                </article>
+
+                <article class="card panel admin-panel" aria-labelledby="staff-steam-title">
+                  <div class="panel-head">
+                    <div class="title-help">
+                      <h2 class="panel-title" id="staff-steam-title">Staff Steam accounts</h2>
+                      <button type="button" class="help-toggle" aria-expanded="false" aria-controls="staff-steam-help" title="About staff Steam accounts"><span aria-hidden="true">?</span><span class="visually-hidden">About staff Steam accounts</span></button>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-small" id="staff-steam-mine" hidden></button>
+                  </div>
+                  <div class="panel-help" id="staff-steam-help" hidden>
+                    <p>Seeder VIP and the top seeders are for the players who seed. Staff who link the Steam account they play on count as playing, never seeding: no seeder VIP, and not on any top seeders list. Their kills, matches and time played show as for anyone. Each gets a staff spot on the whitelist while linked. Unlink anyone who is no longer staff: their staff spot comes off too.</p>
+                  </div>
+                  <p class="section-note" id="staff-steam-note"></p>
+                  <div class="admin-scroll">
+                    <table class="admin-table" id="staff-steam"></table>
+                  </div>
+                </article>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>
+                <div id="rotations"></div>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
+                <div id="lines"></div>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
+                <div id="rules"></div>
+              </div>
             </div>
           </div>
+
 
           <!-- A player's panel, at the side of the page: any player's name on this page opens it (see peek in admin.js).
                What is worth knowing about them, the buttons to act and the form for each, then their numbers, record,
@@ -429,6 +542,27 @@
             </details>
           </dialog>
 
+          <!-- A staff command, from the command search or the Server menu: every command from Discord, with its form (see
+               tools.js). -->
+          <dialog class="card act-dialog" id="command-dialog" aria-labelledby="command-dialog-title">
+            <div class="panel-head">
+              <h2 class="panel-title" id="command-dialog-title">Staff command</h2>
+              <button type="button" class="btn btn-ghost btn-small" id="command-close">Close</button>
+            </div>
+            <p class="section-note act-dialog-note" id="command-note">Runs on the bot as you, exactly as the slash command, and goes in the player’s staff history and the moderation log. Anything that changes the game or the records asks first, except a warning.</p>
+            <div class="tools-panel" id="command-tools"></div>
+          </dialog>
+
+          <!-- The command search, Ctrl K: sections, every staff command, and players (see palette.js). -->
+          <dialog class="card palette" id="palette" aria-label="Search">
+            <div class="palette-input-row">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+              <input class="palette-input" id="palette-input" type="search" placeholder="Search commands, players and sections" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" />
+            </div>
+            <ul class="palette-list" id="palette-list" role="listbox" aria-label="Results"></ul>
+            <p class="palette-foot"><kbd>↑</kbd> <kbd>↓</kbd> move · <kbd>Enter</kbd> open · <kbd>Esc</kbd> close</p>
+          </dialog>
+
           <!-- The keyboard shortcuts, from ? or the menu under your name (see the keys in admin.js). -->
           <dialog class="card keys-dialog" id="keys" aria-labelledby="keys-title">
             <div class="panel-head">
@@ -437,7 +571,8 @@
             </div>
             <table class="keys-table">
               <tbody>
-                <tr><th scope="row"><kbd>/</kbd></th><td>Search the server list on Live, or every player on History</td></tr>
+                <tr><th scope="row"><kbd>Ctrl</kbd> <kbd>K</kbd></th><td>Search everything: a section, any staff command, or any player</td></tr>
+                <tr><th scope="row"><kbd>/</kbd></th><td>Search the server list on Now, or every player on Players</td></tr>
                 <tr><th scope="row"><kbd>↓</kbd> <kbd>↑</kbd></th><td>From the search, move through the server list</td></tr>
                 <tr><th scope="row"><kbd>Enter</kbd></th><td>Open the player’s panel</td></tr>
                 <tr><th scope="row"><kbd>W</kbd> <kbd>K</kbd> <kbd>B</kbd> <kbd>M</kbd></th><td>Warn, kick, ban or move the player you are on in the list, or the one in the panel</td></tr>
