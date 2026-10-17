@@ -1,3 +1,5 @@
+// Not used by name: loading it shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav.
+import './live.js';
 import { configured, botUrl } from './session.js';
 import { el, setText } from './views.js';
 import { share, statusText, winnerOf } from './votemodel.js';
@@ -14,11 +16,22 @@ const IDLE_MS = 30_000;
 let vote = null;
 let discord = null;
 let loaded = false;
+// What the screen reader was last told, so it hears the vote open, close and end but not every count and tick.
+let announced = '';
 
 const render = () => {
   const now = Date.now();
   const open = vote !== null && vote.open && now < vote.closesAt;
-  setText($('vote-status'), loaded ? statusText(vote, now) : 'Loading the vote…');
+  const status = loaded ? statusText(vote, now) : 'Loading the vote…';
+  setText($('vote-status'), status);
+  if (loaded) {
+    const phase = vote === null ? 'none' : open ? `open:${vote.id}` : `over:${vote.id}:${vote.winner?.map ?? ''}:${vote.pending}`;
+    if (phase !== announced) {
+      announced = phase;
+      // The countdown is left out: it changes every second.
+      setText($('vote-announce'), open ? `A vote is open for the map after ${vote.fromName}.` : status);
+    }
+  }
   const winner = winnerOf(vote);
   $('vote-options').replaceChildren(
     ...(vote?.options ?? []).map((o) => {
