@@ -1,5 +1,4 @@
-import { demo } from './live.js';
-import { botUrl, configured } from './session.js';
+import { apiUrl, demo } from './live.js';
 import { el, setText } from './views.js';
 import { peekState, peekTitle, share, statusText, winnerOf } from './votemodel.js';
 
@@ -74,13 +73,16 @@ const render = () => {
   );
 };
 
+// The bot this page reads its other numbers from, so the card and the server card describe the same server (?stats=… too).
+const voteUrl = apiUrl('/api/vote');
+
 const load = async () => {
   if (demo) {
     vote = sample(Date.now());
     return render();
   }
   try {
-    const response = await fetch(botUrl('/api/vote'), { headers: { accept: 'application/json' } });
+    const response = await fetch(voteUrl, { headers: { accept: 'application/json' } });
     if (!response.ok) throw new Error(String(response.status));
     const body = await response.json();
     vote = body.vote ?? null;
@@ -97,7 +99,7 @@ const tick = async () => {
   setTimeout(tick, vote?.open ? OPEN_MS : IDLE_MS);
 };
 
-if (configured || demo) {
+if (voteUrl !== '' || demo) {
   tick();
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) load();

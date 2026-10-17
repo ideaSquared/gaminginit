@@ -1,6 +1,6 @@
-// Not used by name: loading it shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav.
-import './live.js';
-import { configured, botUrl } from './session.js';
+// Loading live.js also shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav. The bot is the one
+// the other pages read, so ?stats=… previews the vote too.
+import { apiUrl } from './live.js';
 import { el, setText } from './views.js';
 import { share, statusText, winnerOf } from './votemodel.js';
 
@@ -12,6 +12,8 @@ const $ = (id) => document.getElementById(id);
 // Fast enough that the counts feel live; slower once the vote is over.
 const OPEN_MS = 5_000;
 const IDLE_MS = 30_000;
+
+const voteUrl = apiUrl('/api/vote');
 
 let vote = null;
 let discord = null;
@@ -71,7 +73,7 @@ const render = () => {
 
 const load = async () => {
   try {
-    const response = await fetch(botUrl('/api/vote'), { headers: { accept: 'application/json' } });
+    const response = await fetch(voteUrl, { headers: { accept: 'application/json' } });
     if (!response.ok) throw new Error(String(response.status));
     const body = await response.json();
     vote = body.vote ?? null;
@@ -89,7 +91,7 @@ const tick = async () => {
   setTimeout(tick, vote?.open ? OPEN_MS : IDLE_MS);
 };
 
-if (!configured) {
+if (voteUrl === '') {
   setText($('vote-status'), 'The vote is not connected yet.');
 } else {
   tick();
