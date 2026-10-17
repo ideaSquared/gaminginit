@@ -72,6 +72,12 @@ What it shows:
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
+- A vote page (`/vote`): the next map. People vote in Discord, with buttons on a message in one channel that the bot posts
+  when a match goes live (random maps, never the one playing or one of the last few played; one vote per Discord account,
+  changeable until it closes). The page shows each map's votes and share and a countdown, refreshed every 5 seconds, with a
+  "Vote in Discord" button to the channel. When the vote closes, the winner is put on the server as the next map, infantry
+  only, and the page says so; with no votes, or if staff picked a map meanwhile, it says why nothing changed. It cannot
+  vote itself. The bot's `GET /api/vote` serves it (never who voted), and it is empty unless the bot has `MAP_VOTE` on.
 - A season page (`/season`, "Season 1" in the menu, and a box under the home page's intro): the roundup of Season 1,
   from the bot's `GET /api/season`. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC** (1am in the UK),
   so the page is open to everyone. Before a season ends the bot does not send the roundup to anyone, so the page shows

@@ -7315,3 +7315,67 @@ body.rot-grabbing * {
   margin: 4px 0 0;
   font-size: 0.9rem;
 }
+
+/* The next-map vote (see vote.js): a row per map, with its share of the votes as a bar. */
+.vote-card {
+  padding: 20px;
+}
+
+.vote-status {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.vote-options {
+  display: grid;
+  gap: 12px;
+}
+
+.vote-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 12px 16px;
+  background: var(--page);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+}
+
+.vote-option[data-winner] {
+  border-color: var(--good);
+  border-width: 2px;
+}
+
+.vote-name {
+  font-weight: 700;
+}
+
+.vote-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.vote-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  background: var(--hairline);
+  border-radius: 3px;
+}
+
+.vote-fill {
+  display: block;
+  height: 100%;
+  background: var(--series);
+}
+
+.vote-foot {
+  margin: 16px 0 0;
+}
+
+.vote-how {
+  max-width: 62ch;
+  margin-top: 20px;
+}
