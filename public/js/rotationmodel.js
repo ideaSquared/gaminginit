@@ -140,11 +140,12 @@ const zoneName = (id) => id.split('.').at(-1) ?? id;
 const plainId = (id) => id.replace(/_/g, ' ');
 
 // Lighting at a glance: dawn, day, dusk, grey, fog or rain, from its id (DayStartClear, DayLateGrayFog, DayLateRain …).
+// Start is dawn and End is dusk, as in the bot's conditions vote; Early is morning, so it is a day.
 export const lightingIcon = (id) => {
   if (/rain|storm/i.test(id)) return '🌧️';
   if (/fog/i.test(id)) return '🌫️';
   if (/gray|grey|overcast/i.test(id)) return '☁️';
-  if (/start|early|dawn/i.test(id)) return '🌅';
+  if (/start|dawn/i.test(id)) return '🌅';
   if (/end|dusk|night/i.test(id)) return '🌆';
   if (/late/i.test(id)) return '🌇';
   return '☀️';
