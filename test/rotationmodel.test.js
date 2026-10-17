@@ -100,6 +100,7 @@ describe('a map in the editor', () => {
   it('gives lighting an icon from its id', () => {
     assert.equal(lightingIcon('DayStartClear'), '🌅');
     assert.equal(lightingIcon('DayClear'), '☀️');
+    assert.equal(lightingIcon('DayEarlyClear'), '☀️');
     assert.equal(lightingIcon('DayLateGrayFog'), '🌫️');
     assert.equal(lightingIcon('DayLateGray'), '☁️');
     assert.equal(lightingIcon('DayLateRain'), '🌧️');
