@@ -2,6 +2,7 @@ import {
   DEATH_TAGS,
   formatDuration,
   liveState,
+  matchStatus,
   metres,
   multiKill,
   percent,
@@ -17,7 +18,9 @@ import { apiUrl, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
 
 // The live page: the match on now, pushed by the bot as it happens. The kill feed, players, weapons and highlights
-// come from the game's kill feed; the score, map and player count from the bot's check once a minute.
+// come from the game's kill feed, and so does where the match is (about to start, being played, over) and, once it
+// ends, who won and the final score; the score while it goes on, the map and the player count from the bot's check
+// once a minute.
 
 const $ = (id) => document.getElementById(id);
 
@@ -227,9 +230,14 @@ const renderMeta = (now) => {
   setText(
     $('live-meta'),
     [
+      matchStatus(snapshot),
       server ? plural(server.players, 'player') : null,
-      current?.liveAt ? `live for ${formatDuration(now - current.liveAt)}` : current ? `started ${timeAgo(now - current.startedAt)}` : null,
-      match ? `last kill ${shortAgo(now - match.lastKillAt) === 'now' ? 'just now' : `${shortAgo(now - match.lastKillAt)} ago`}` : null,
+      match?.endedAt ? null : current?.liveAt ? `live for ${formatDuration(now - current.liveAt)}` : current ? `started ${timeAgo(now - current.startedAt)}` : null,
+      match?.endedAt
+        ? `ended ${timeAgo(now - match.endedAt)}`
+        : match
+          ? `last kill ${shortAgo(now - match.lastKillAt) === 'now' ? 'just now' : `${shortAgo(now - match.lastKillAt)} ago`}`
+          : null,
     ]
       .filter(Boolean)
       .join(' · '),
@@ -252,7 +260,9 @@ const render = (latest) => {
   const palette = colours();
   const server = snapshot?.server;
   setText($('live-title'), state === 'loading' ? 'Loading…' : server?.map || snapshot?.match?.map || 'Live match');
-  $('live-score').replaceChildren(...(server && state !== 'offline' && server.factionScores.length > 0 ? scoreLine(server.factionScores, palette) : []));
+  // Once the game says the match is over, its final score; until then, the score at the bot's last check.
+  const scores = snapshot?.match?.result?.factionScores ?? (server && state !== 'offline' ? server.factionScores : []);
+  $('live-score').replaceChildren(...(scores.length > 0 ? scoreLine(scores, palette) : []));
   document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | gaminginit WARDOGS server` : 'Live match | gaminginit WARDOGS server';
 
   const idle = IDLE[state];
