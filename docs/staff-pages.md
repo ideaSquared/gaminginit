@@ -299,16 +299,17 @@ forgotten while on another tab.
 
 - **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (the basic rules,
   sent privately to each player who joins), 10 minutes in, for halfway and nearly won, one list for each faction
-  plus level scores and any other team, and top players (sent privately to the top players on the scoreboard when a
-  match ends, with `{place}` such as "2nd", `{kills}` such as "23 kills" and `{site}`). Pick a list on the left; each
+  plus level scores and any other team, and end of match (sent privately to the match's best players the moment a team
+  wins, with `{earned}` such as "2nd on the scoreboard (23 kills) and best demolitions (8 kills)" and `{site}`). Pick a
+  list on the left; each
   says how many lines it has and whether staff changed it or it is the bot's own.
 - **The editor.** Change a line, take it out (×), or add one (**+ Add a line**, or Enter in a line to add one after
   it). The buttons under "Filled in by the bot" put a placeholder such as `{score}` where the cursor is, and show what
   the bot fills it in with now.
 - **In game.** The message as it goes out, for the line you are on: what the bot adds before and after the line (such
   as "Halfway there!" and the seeding call to action) is dimmed. Each line counts the whole message against the game's
-  200 characters, with `{score}`, `{team}`, `{place}` and `{kills}` at the longest they can be when it goes out (the
-  halfway score up to the winning score, a team name up to 16 characters, "100th" and "999 kills"), so the count can be more than the preview shows. A line that is too long, or has a placeholder the bot can't fill in there, is marked and can't be
+  200 characters, with `{score}`, `{team}` and `{earned}` at the longest they can be when it goes out (the halfway score
+  up to the winning score, a team name up to 16 characters, and a scoreboard place with two awards), so the count can be more than the preview shows. A line that is too long, or has a placeholder the bot can't fill in there, is marked and can't be
   saved.
 - Nothing changes until **Save**; the next message of that kind uses the new lines. **Use the bot's lines** puts the
   bot's own back. Each list says who changed it last and when. Leaving with unsaved changes asks first.
