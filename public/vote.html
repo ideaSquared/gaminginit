@@ -78,6 +78,11 @@
             <p class="visually-hidden" id="vote-announce" role="status"></p>
             <p class="vote-status" id="vote-status">Loading the vote…</p>
             <div class="vote-options" id="vote-options"></div>
+            <!-- The conditions vote (time of day and weather), when the bot has one. See vote.js. -->
+            <div class="vote-conditions" id="vote-conditions" hidden>
+              <h2 class="vote-sub">Conditions</h2>
+              <div class="vote-options" id="vote-conditions-list"></div>
+            </div>
             <p class="vote-foot">
               <a class="btn btn-discord" id="vote-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener" hidden>
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -87,7 +92,7 @@
           </div>
           <p class="muted vote-how">
             A vote opens in our Discord when a match goes live and stays open until a team is close to winning (95
-            points). Press a map's button in the vote channel to vote; press another to change it. You vote with your
+            points). Press a map's button in the vote channel to vote, and one of the conditions buttons (time of day and weather) under it; press another to change either. You vote with your
             Discord account, so it is one vote each. The map with the most votes is put on the server and plays when this
             match ends. This page shows the same counts.
           </p>

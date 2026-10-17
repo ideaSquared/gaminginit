@@ -7371,6 +7371,13 @@ body.rot-grabbing * {
   background: var(--series);
 }
 
+.vote-sub {
+  margin: 24px 0 12px;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .vote-foot {
   margin: 16px 0 0;
 }
@@ -7378,4 +7385,117 @@ body.rot-grabbing * {
 .vote-how {
   max-width: 62ch;
   margin-top: 20px;
+}
+
+/* The home page's right column: the server card, and under it the next-map vote while there is one (see votepeek.js). */
+.hero-side {
+  display: grid;
+  gap: 16px;
+}
+
+.btn[hidden] {
+  display: none;
+}
+
+.btn-vote {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-vote:hover {
+  background: #7be3db;
+}
+
+/* The Seeder VIP and Season 1 boxes read as one group, closer together than to the buttons. */
+.hero-notes {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.hero-notes .vip-cta {
+  margin-top: 0;
+}
+
+@media (max-width: 599px) {
+  .hero-notes {
+    margin-top: 14px;
+  }
+}
+
+.vote-peek {
+  padding: 20px 24px;
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.6);
+}
+
+.vote-peek[hidden] {
+  display: none;
+}
+
+.vote-peek-top {
+  margin: 0;
+}
+
+.vote-peek-title {
+  margin: 10px 0 0;
+  font-size: 1.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* With the vote button there, the server card is the status: the button to scroll to it makes the row wrap. */
+.hero-actions[data-vote] .btn-ghost {
+  display: none;
+}
+
+.vote-peek-detail {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.vote-peek-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vote-peek-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  font-size: 0.95rem;
+}
+
+.vote-peek-row[data-winner] .vote-name {
+  color: var(--good);
+}
+
+.vote-peek-row .vote-bar {
+  height: 5px;
+}
+
+.vote-peek-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 18px 0 0;
+}
+
+.vote-peek-actions[hidden] {
+  display: none;
+}
+
+.vote-peek-actions a:not(.btn) {
+  font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .vote-peek {
+    padding: 16px 20px;
+  }
 }

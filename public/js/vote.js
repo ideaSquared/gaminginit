@@ -1,6 +1,6 @@
-// Not used by name: loading it shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav.
-import './live.js';
-import { configured, botUrl } from './session.js';
+// Loading live.js also shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav. The bot is the one
+// the other pages read, so ?stats=… previews the vote too.
+import { apiUrl } from './live.js';
 import { el, setText } from './views.js';
 import { share, statusText, winnerOf } from './votemodel.js';
 
@@ -12,6 +12,8 @@ const $ = (id) => document.getElementById(id);
 // Fast enough that the counts feel live; slower once the vote is over.
 const OPEN_MS = 5_000;
 const IDLE_MS = 30_000;
+
+const voteUrl = apiUrl('/api/vote');
 
 let vote = null;
 let discord = null;
@@ -47,6 +49,22 @@ const render = () => {
       return row;
     }),
   );
+  // The conditions vote, when the bot has one: its own share, of the votes on the conditions.
+  const conditions = vote?.conditions ?? [];
+  const conditionVotes = conditions.reduce((sum, c) => sum + c.votes, 0);
+  $('vote-conditions').hidden = conditions.length === 0;
+  $('vote-conditions-list').replaceChildren(
+    ...conditions.map((c) => {
+      const percent = share(c.votes, conditionVotes);
+      return el(
+        'div',
+        { className: 'vote-option' },
+        el('span', { className: 'vote-name', textContent: c.label }),
+        el('span', { className: 'vote-count', textContent: `${c.votes} ${c.votes === 1 ? 'vote' : 'votes'} · ${percent}%` }),
+        el('span', { className: 'vote-bar', 'aria-hidden': 'true' }, el('span', { className: 'vote-fill', style: `width: ${percent}%` })),
+      );
+    }),
+  );
   // The way in: the channel when the bot knows it, else the community's Discord invite already on every page.
   const link = $('vote-discord');
   link.hidden = vote === null || !open;
@@ -55,7 +73,7 @@ const render = () => {
 
 const load = async () => {
   try {
-    const response = await fetch(botUrl('/api/vote'), { headers: { accept: 'application/json' } });
+    const response = await fetch(voteUrl, { headers: { accept: 'application/json' } });
     if (!response.ok) throw new Error(String(response.status));
     const body = await response.json();
     vote = body.vote ?? null;
@@ -73,7 +91,7 @@ const tick = async () => {
   setTimeout(tick, vote?.open ? OPEN_MS : IDLE_MS);
 };
 
-if (!configured) {
+if (voteUrl === '') {
   setText($('vote-status'), 'The vote is not connected yet.');
 } else {
   tick();
