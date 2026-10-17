@@ -79,7 +79,7 @@ What it shows:
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - A vote page (`/vote`): the next map. People vote in Discord, with buttons on a message in one channel that the bot posts
   when a match goes live (random maps, never the one playing or one of the last few played; one vote per Discord account,
-  changeable until it closes). The page shows each map's votes and share, and the conditions vote under it (time of day and weather: groups such as Day, Night and Rain, and Random, when the bot has them), refreshed every 5 seconds, with a
+  changeable until it closes). The page shows each map's votes and share, and the time of day and weather votes under it (groups such as Morning, Day, Afternoon, Dusk and Clear, Fog, Rain, and Random, when the bot has them), refreshed every 5 seconds, with a
   "Vote in Discord" button to the channel. When the vote closes, the winner is put on the server as the next map, infantry
   only, and the page says so; with no votes, or if staff picked a map meanwhile, it says why nothing changed. It cannot
   vote itself. The bot's `GET /api/vote` serves it (never who voted), and it is empty unless the bot has `MAP_VOTE` on.
