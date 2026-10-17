@@ -73,7 +73,7 @@ What it shows:
   and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - A vote page (`/vote`): the next map, voted on by whoever visits. The bot opens a vote when a match goes live, with a few
-  random maps; the page shows each map's votes and share, and a countdown, refreshed every 5 seconds. Tap a map to vote,
+  random maps (never the one playing or one of the last few played); the page shows each map's votes and share, and a countdown, refreshed every 5 seconds. Tap a map to vote,
   and tap another to change it until the vote closes. When it closes, the winner is put on the server as the next map,
   infantry only, and the page says so; with no votes, or if staff picked a map meanwhile, it says why nothing changed.
   There is no sign-in: one vote per browser (a random token kept in local storage) and per network (the bot keeps a salted
