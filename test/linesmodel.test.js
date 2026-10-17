@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { fillLine, groupLists, lineProblem, linesToSave, listLabel, messageLength, messageParts, problemCount, sameLines, tidyLine } from '../public/js/linesmodel.js';
 
-const after = ' Seed on 3 days in a week and get a whitelist slot. How at gaminginit.com';
+const after = ' Check the leaderboard and stats at gaminginit.com';
 const halfway = {
   id: 'halfway.valkyra',
   group: 'Halfway',
