@@ -66,7 +66,8 @@ const render = () => {
       ? `Your Steam account is linked${account.steam.via === 'steam' ? ' (you signed in with Steam)' : account.steam.via === 'discord' ? ' (from your Discord profile)' : ''}.`
       : 'No Steam account linked yet.',
   );
-  $('link-steam').hidden = false;
+  // ?demo is a sample: it never starts a real sign-in, which would come back to a real account.
+  $('link-steam').hidden = demo;
   setText($('link-steam'), linked ? 'Link another with Steam' : 'Link with Steam');
   $('link-steam').href = steamHref();
   $('unlink-steam').hidden = !linked;
@@ -180,14 +181,14 @@ $('forget').addEventListener('click', async () => {
     flash('bad', problem);
     return;
   }
-  forgetPlayerToken();
+  if (!demo) forgetPlayerToken();
   account = null;
   render();
   flash('good', 'Your account is deleted.');
 });
 
 $('sign-out').addEventListener('click', () => {
-  forgetPlayerToken();
+  if (!demo) forgetPlayerToken();
   account = null;
   armed = null;
   render();

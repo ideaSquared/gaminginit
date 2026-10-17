@@ -34,29 +34,78 @@ let reply = arrived.error === undefined ? '' : errorText(arrived.error);
 // What the screen reader was last told, so it hears the vote open, close and end but not every count and tick.
 let announced = '';
 
-// One option: a bar with its votes, and a button to vote for it when `choice` ({ kind, key }) says this player can.
-const optionRow = (name, votes, total, choice) => {
-  const percent = share(votes, total);
-  const parts = [
-    el('span', { className: 'vote-name', textContent: name }),
-    el('span', { className: 'vote-count', textContent: `${votes} ${votes === 1 ? 'vote' : 'votes'} · ${percent}%` }),
-    el('span', { className: 'vote-bar', 'aria-hidden': 'true' }, el('span', { className: 'vote-fill', style: `width: ${percent}%` })),
-  ];
-  if (choice === null) return el('div', { className: 'vote-option' }, ...parts);
-  const mine = choiceIn(account.ballot, vote, choice.kind) === choice.key;
-  const button = el('button', { type: 'button', className: 'vote-option', disabled: busy }, ...parts);
-  button.setAttribute('aria-pressed', String(mine));
-  button.setAttribute('aria-label', `${mine ? 'Your vote: ' : 'Vote for '}${name}`);
-  if (mine) button.dataset.mine = '';
-  button.addEventListener('click', () => cast(choice));
-  return button;
+// The rows of one list of options. Each is a bar with its votes, and a button to vote for it when the player can. They are built
+// once and then changed in place: the page refreshes every few seconds and counts down every second, and drawing the buttons
+// again each time would drop the keyboard focus (and the screen reader's place) from whoever is choosing. Only when the options
+// themselves change, or a row turns into a button or back, are they drawn again, and focus goes back to the same choice.
+const buildRow = (row) => {
+  const node = el(
+    row.press ? 'button' : 'div',
+    { className: 'vote-option' },
+    el('span', { className: 'vote-name' }),
+    el('span', { className: 'vote-count' }),
+    el('span', { className: 'vote-bar' }, el('span', { className: 'vote-fill' })),
+  );
+  node.dataset.key = row.key;
+  node.querySelector('.vote-bar').setAttribute('aria-hidden', 'true');
+  if (row.press) {
+    node.type = 'button';
+    node.addEventListener('click', row.press);
+  }
+  return node;
 };
 
+const updateRow = (node, row) => {
+  const percent = share(row.votes, row.total);
+  setText(node.querySelector('.vote-name'), row.name);
+  setText(node.querySelector('.vote-count'), `${row.votes} ${row.votes === 1 ? 'vote' : 'votes'} · ${percent}%`);
+  const fill = node.querySelector('.vote-fill');
+  if (fill.style.width !== `${percent}%`) fill.style.width = `${percent}%`;
+  node.toggleAttribute('data-winner', row.winner === true);
+  if (row.press) {
+    node.toggleAttribute('data-mine', row.mine);
+    node.setAttribute('aria-pressed', String(row.mine));
+    node.setAttribute('aria-label', `${row.mine ? 'Your vote: ' : 'Vote for '}${row.name}`);
+    // Not `disabled`, which would take the focus from the button just pressed.
+    node.setAttribute('aria-busy', String(busy));
+  }
+};
+
+const syncRows = (list, rows) => {
+  const have = [...list.children];
+  const same = have.length === rows.length && have.every((n, i) => n.dataset.key === rows[i].key && (n.tagName === 'BUTTON') === Boolean(rows[i].press));
+  if (!same) {
+    const focused = list.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
+    list.replaceChildren(...rows.map(buildRow));
+    if (focused !== undefined) [...list.children].find((n) => n.dataset.key === focused && n.tagName === 'BUTTON')?.focus({ preventScroll: true });
+  }
+  [...list.children].forEach((node, i) => updateRow(node, rows[i]));
+};
+
+// What a row needs: `voting` says whether this player can vote, and `kind` is the map or the conditions.
+const rowsFor = (items, kind, total, voting, winner = null) =>
+  items.map((item) => {
+    const key = kind === 'map' ? item.map : item.key;
+    return {
+      key: `${kind}:${key}`,
+      name: kind === 'map' ? item.name : item.label,
+      votes: item.votes,
+      total,
+      winner: winner !== null && winner === key,
+      mine: choiceIn(account?.ballot, vote, kind === 'map' ? 'map' : 'light') === key,
+      press: voting ? () => cast({ kind: kind === 'map' ? 'map' : 'light', key }) : null,
+    };
+  });
+
 // Under the options: how to vote here, for someone who cannot yet. Nothing once they can, or when there is nothing to vote on.
+// Drawn again only when what it offers changes, so the links keep the focus.
+let offered = null;
 const renderSignIn = (open) => {
   const box = $('vote-signin');
   const offer = open && configured ? voteOffer(account) : null;
   box.hidden = offer === null;
+  if (offer === offered) return;
+  offered = offer;
   if (offer === null) return;
   box.replaceChildren(
     offer === 'sign-in' ? 'Vote right here: ' : 'You are signed in but not in the Discord yet. Join to vote here: ',
@@ -103,9 +152,14 @@ const loadAccount = async () => {
   else if (status === 401) account = null;
 };
 
+// Whether the last full draw had the vote open: when its time runs out the page is drawn again, and until then the countdown
+// only changes its words.
+let wasOpen = null;
+
 const render = () => {
   const now = Date.now();
   const open = vote !== null && vote.open && now < vote.closesAt;
+  wasOpen = open;
   const status = loaded ? statusText(vote, now) : 'Loading the vote…';
   setText($('vote-status'), status);
   if (loaded) {
@@ -116,21 +170,14 @@ const render = () => {
       setText($('vote-announce'), open ? `A vote is open for the map after ${vote.fromName}.` : status);
     }
   }
-  const winner = winnerOf(vote);
   const voting = canVote(account, vote, now);
-  $('vote-options').replaceChildren(
-    ...(vote?.options ?? []).map((o) => {
-      const row = optionRow(o.name, o.votes, vote.total, voting ? { kind: 'map', key: o.map } : null);
-      if (winner === o.map) row.dataset.winner = '';
-      return row;
-    }),
-  );
+  syncRows($('vote-options'), rowsFor(vote?.options ?? [], 'map', vote?.total ?? 0, voting, winnerOf(vote)));
   // The conditions vote, when the bot has one: its own share, of the votes on the conditions.
   const conditions = vote?.conditions ?? [];
-  const conditionVotes = conditions.reduce((sum, c) => sum + c.votes, 0);
   $('vote-conditions').hidden = conditions.length === 0;
-  $('vote-conditions-list').replaceChildren(
-    ...conditions.map((c) => optionRow(c.label, c.votes, conditionVotes, voting ? { kind: 'light', key: c.key } : null)),
+  syncRows(
+    $('vote-conditions-list'),
+    rowsFor(conditions, 'light', conditions.reduce((sum, c) => sum + c.votes, 0), voting),
   );
   renderSignIn(open);
   setText($('vote-reply'), reply);
@@ -161,7 +208,8 @@ const ACCOUNT_MS = 60_000;
 const tick = async () => {
   if (!document.hidden) {
     await load();
-    if (account !== null && Date.now() - accountAt >= ACCOUNT_MS) {
+    // Also when the first ask failed (the bot was down for a moment) and there is no account yet.
+    if (configured && loadPlayerToken() !== null && Date.now() - accountAt >= ACCOUNT_MS) {
       await loadAccount();
       render();
     }
@@ -177,9 +225,12 @@ if (voteUrl === '') {
     render();
   });
   tick();
-  // The countdown moves every second without asking the bot.
+  // The countdown moves every second without asking the bot, and without drawing the options again.
   setInterval(() => {
-    if (!document.hidden && loaded) render();
+    if (document.hidden || !loaded) return;
+    const now = Date.now();
+    if ((vote !== null && vote.open && now < vote.closesAt) !== wasOpen) render();
+    else setText($('vote-status'), statusText(vote, now));
   }, 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) load();

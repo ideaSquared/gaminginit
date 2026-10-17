@@ -41,6 +41,7 @@ export const errorText = (error) =>
     expired: 'That sign-in took too long, or was started in another browser. Try again.',
     failed: 'Discord or the bot could not finish the sign-in. Try again in a minute.',
     steam: 'Steam did not confirm that sign-in. Try again.',
+    unbound: 'That sign-in did not start in this browser, so it was not used. Start it again from this page.',
   })[error] ?? 'Something went wrong with the sign-in. Try again in a minute.';
 
 // What the join button did, said once after coming back from Discord. Null when it was not pressed.
@@ -106,3 +107,10 @@ export const placeOf = (pageName, part) =>
     .replace(/[^a-z0-9-]/g, '-')
     .slice(0, 24)
     .replace(/-+$/, '');
+
+// Whether a sign-in coming back is the one this browser started: the value kept here when it went out (`started`) is the one in
+// the address it came back to (`search`, as `?signin=…`). Neither may be missing.
+export const signinBound = (started, search) => {
+  const given = new URLSearchParams(search).get('signin');
+  return typeof started === 'string' && started !== '' && given === started;
+};

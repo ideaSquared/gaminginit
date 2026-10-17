@@ -11,6 +11,7 @@ import {
   readHash,
   sessionName,
   shortName,
+  signinBound,
   steamText,
   vipText,
   voteOffer,
@@ -69,6 +70,7 @@ describe('what the page says', () => {
     assert.match(errorText('cancelled'), /cancelled/);
     assert.match(errorText('expired'), /another browser/);
     assert.match(errorText('steam'), /Steam did not confirm/);
+    assert.match(errorText('unbound'), /did not start in this browser/);
     assert.match(errorText('weird'), /Something went wrong/);
   });
 
@@ -149,5 +151,17 @@ describe('placeOf', () => {
     assert.equal(placeOf('leaderboard', 'nav'), 'leaderboard-nav');
     assert.equal(placeOf('some-long-page-name', 'an-even-longer-part').length <= 24, true);
     assert.doesNotMatch(placeOf('abcdefghijklmnopqrstuv', 'x'), /-$/);
+  });
+});
+
+describe('signinBound', () => {
+  it('is only for a sign-in whose value this browser kept', () => {
+    assert.equal(signinBound('abc123', '?signin=abc123'), true);
+    assert.equal(signinBound('abc123', '?x=1&signin=abc123'), true);
+    assert.equal(signinBound('abc123', '?signin=other'), false);
+    assert.equal(signinBound('abc123', ''), false);
+    assert.equal(signinBound(null, '?signin=abc123'), false);
+    assert.equal(signinBound('', '?signin='), false);
+    assert.equal(signinBound(undefined, '?signin=undefined'), false);
   });
 });
