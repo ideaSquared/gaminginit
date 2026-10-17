@@ -10,6 +10,7 @@ import {
   fromDraft,
   insert,
   lightingIcon,
+  lightingName,
   mapColour,
   mapLabel,
   move,
@@ -705,7 +706,7 @@ export const createRotations = ({ root, load, send }) => {
       field('Game mode', selectOf('mode', entry.mode, modeChoices, (v) => update(entry.key, { mode: v }))),
       field(
         'Lighting',
-        selectOf('lighting', entry.lighting, [['', "The map's own"], ...lightings.map((l) => [l.id, `${lightingIcon(l.id)} ${l.name}`]), ...(entry.lighting && !lightings.some((l) => l.id === entry.lighting) ? [[entry.lighting, entry.lighting]] : [])], (v) =>
+        selectOf('lighting', entry.lighting, [['', "The map's own"], ...lightings.map((l) => [l.id, `${lightingIcon(l.id)} ${l.name}`]), ...(entry.lighting && !lightings.some((l) => l.id === entry.lighting) ? [[entry.lighting, lightingName(entry.lighting)]] : [])], (v) =>
           update(entry.key, { lighting: v }),
         ),
       ),

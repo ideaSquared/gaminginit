@@ -9,6 +9,8 @@ import {
   fromDraft,
   insert,
   lightingIcon,
+  lightingName,
+  zoneName,
   mapColour,
   mapLabel,
   move,
@@ -183,5 +185,17 @@ describe('the week', () => {
     assert.equal(outcomeText({ outcome: 'updated' }, 'Weekend'), 'Weekend is on the server now and plays from the next map.');
     assert.match(outcomeText({ outcome: 'failed', reason: 'read-only' }, 'Weekend'), /\(read-only\)\. The bot tries again/);
     assert.equal(outcomeText(undefined, 'Weekend'), '');
+  });
+});
+
+describe('lightingName and zoneName', () => {
+  it('name an id the catalogue does not list', () => {
+    assert.equal(lightingName('DayStartClear'), 'Dawn, clear');
+    assert.equal(lightingName('DayLateGrayFog'), 'Afternoon, overcast, fog');
+    assert.equal(lightingName('DayLateRain'), 'Afternoon, rain');
+    assert.equal(lightingName('NightStorm'), 'Night, storm');
+    assert.equal(zoneName('ZoneAlternator.Bakurani.Default.Circle'), 'Circle');
+    assert.equal(zoneName('ZoneAlternator.Ozeti.Default.NorthSouthLine'), 'North South Line');
+    assert.equal(zoneName('ZoneAlternator.Bakurani.Night.Circle'), 'Night Circle');
   });
 });
