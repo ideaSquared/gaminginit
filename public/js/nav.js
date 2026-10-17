@@ -75,6 +75,12 @@ if (header) {
     }
   });
 
+  // Tabbing out of the open panel would leave it covering the page, so it closes. Focus moving between the header's
+  // own controls, or the window losing focus, does not.
+  header.addEventListener('focusout', (event) => {
+    if (event.relatedTarget && !header.contains(event.relatedTarget)) setMenu(false);
+  });
+
   wide.addEventListener('change', () => {
     closeGroups();
     setMenu(false);
@@ -100,7 +106,10 @@ if (header) {
     count.hidden = state.count === '';
   };
 
+  // The vote as last read. Its deadline is known, so the flag clears on time even when a refresh fails.
+  let lastVote = null;
   const showVote = (vote) => {
+    lastVote = vote;
     const open = voteOpen(vote, Date.now());
     voteLink?.toggleAttribute('data-open', open);
     voteGroup?.toggleAttribute('data-alert', open);
@@ -118,6 +127,7 @@ if (header) {
   };
 
   const REFRESH_MS = 60_000;
+  const EXPIRY_MS = 10_000;
   const statsUrl = apiUrl('stats');
   const voteUrl = apiUrl('/api/vote');
 
@@ -137,12 +147,24 @@ if (header) {
 
   if (demo || statsUrl !== '') {
     let timer = 0;
+    let loading = false;
+    // Coming back to the tab while a load is still out asks for nothing more, so an older response can never land
+    // after a newer one, and there is only ever one timer.
     const tick = async () => {
       clearTimeout(timer);
-      if (!document.hidden) await load();
+      if (!document.hidden && !loading) {
+        loading = true;
+        try {
+          await load();
+        } finally {
+          loading = false;
+        }
+      }
+      clearTimeout(timer);
       timer = setTimeout(tick, REFRESH_MS);
     };
     tick();
+    setInterval(() => showVote(lastVote), EXPIRY_MS);
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) tick();
     });
