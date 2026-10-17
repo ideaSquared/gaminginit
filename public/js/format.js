@@ -606,6 +606,18 @@ export const liveState = (snapshot, now) => {
   return snapshot.feed ? 'waiting' : 'scoreboard';
 };
 
+// What the game last said about the match on the live page, through the bot's kill feed: who won, once the game has
+// sent the match's result, or that the match is about to start or is over. Null while it is being played, and without
+// the kill feed.
+export const matchStatus = (snapshot) => {
+  const result = snapshot?.match?.result;
+  if (result) return result.winner ? `${result.winner} won` : 'Match over';
+  const phase = snapshot?.phase?.phase;
+  if (phase === 'pre-match') return 'Starting soon';
+  if (phase === 'post-match') return 'Match over';
+  return null;
+};
+
 // The staff page. Staff sign in with Discord through the bot, which sends them back here with a session token after
 // `#session=`, or what went wrong after `#error=`. The page keeps the token and sends it with each request for the
 // page's data (GET /api/admin/overview).

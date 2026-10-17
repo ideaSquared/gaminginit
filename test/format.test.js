@@ -68,6 +68,7 @@ import {
   weaponTotals,
   DEATH_TAGS,
   liveState,
+  matchStatus,
   multiKill,
   shortAgo,
   flagLabel,
@@ -746,6 +747,17 @@ describe('live page', () => {
     assert.equal(liveState(snapshot({ server: { ...server, seenAt: NOW - 10 * 60_000 } }), NOW), 'offline');
     assert.equal(liveState(snapshot({ server: null }), NOW), 'offline');
     assert.equal(liveState(snapshot({ server: null, match: { kills: 3 } }), NOW), 'match');
+  });
+
+  it("says who won once the game sends the result, or that the match is about to start or over", () => {
+    const result = { winner: 'Lonestar', factionScores: [{ name: 'Lonestar', score: 100 }] };
+    assert.equal(matchStatus(snapshot({ match: { kills: 3, result }, phase: { phase: 'post-match', since: NOW } })), 'Lonestar won');
+    assert.equal(matchStatus(snapshot({ match: { kills: 3, result: { ...result, winner: null } } })), 'Match over');
+    assert.equal(matchStatus(snapshot({ phase: { phase: 'pre-match', since: NOW } })), 'Starting soon');
+    assert.equal(matchStatus(snapshot({ phase: { phase: 'post-match', since: NOW } })), 'Match over');
+    assert.equal(matchStatus(snapshot({ match: { kills: 3, result: null }, phase: { phase: 'playing', since: NOW } })), null);
+    assert.equal(matchStatus(snapshot()), null);
+    assert.equal(matchStatus(null), null);
   });
 });
 

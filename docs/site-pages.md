@@ -39,6 +39,9 @@ What it shows:
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
   multi-kill, most headshots and a rivalry). The longest kill counts hand-held weapons only, not lock-on anti-air
   launchers such as the 9K333 Verba. The bot pushes each change over a WebSocket, a second or two after the kill.
+  The game says where the match is through the kill feed: under the score it says "Starting soon" before a match
+  starts and "Match over" after, and once the game sends the result, who won ("Lonestar won"), the final score and
+  how long ago it ended. An ended match stays up until the next one starts.
   Without the bot's kill feed it shows the score and the server's top 5, read once a minute. On a wide screen the kill
   feed scrolls inside its card; on a phone (under 900 px wide) it is a short list in the page, the latest 15 kills with
   "Show more" for 15 more at a time, so scrolling the page is never caught in a box of its own.
