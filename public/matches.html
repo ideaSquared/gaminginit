@@ -29,6 +29,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="js/matches.js"></script>
+    <script type="module" src="js/nav.js"></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -42,20 +43,53 @@
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <nav class="nav-sections" aria-label="Sections">
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
+          <span class="nav-toggle-label">Menu</span>
+          <svg class="nav-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+        <nav class="nav-sections" id="nav-menu" aria-label="Sections">
           <ul class="nav-links">
-            <li><a href="stats" data-keep-query>Stats</a></li>
-            <li><a href="live" data-keep-query>Live</a></li>
-            <li><a href="matches" data-keep-query aria-current="page">Matches</a></li>
-            <li><a href="teams" data-keep-query>Teams</a></li>
-            <li><a href="leaderboard" data-keep-query>Leaderboard</a></li>
-            <li><a href="players" data-keep-query>Players</a></li>
-            <li><a href="seeding" data-keep-query>Seeding</a></li>
-            <li><a href="vote" data-keep-query>Vote</a></li>
-            <li><a href="season" data-keep-query>Season 1</a></li>
+            <li><a href="live" data-keep-query><span class="nav-link-title">Live</span></a></li>
+            <li><a href="matches" data-keep-query aria-current="page"><span class="nav-link-title">Matches</span></a></li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-players">Players<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Players</span>
+              <ul class="nav-sub" id="nav-sub-players">
+                <li><a href="leaderboard" data-keep-query><span class="nav-link-title">Leaderboard</span><span class="nav-link-note">Top kills, K/D and seeders</span></a></li>
+                <li><a href="players" data-keep-query><span class="nav-link-title">All players</span><span class="nav-link-note">Search anyone seen in 90 days</span></a></li>
+              </ul>
+            </li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-stats">Stats<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Stats</span>
+              <ul class="nav-sub" id="nav-sub-stats">
+                <li><a href="stats" data-keep-query><span class="nav-link-title">Server activity</span><span class="nav-link-note">Players over time and busy hours</span></a></li>
+                <li><a href="teams" data-keep-query><span class="nav-link-title">Team win rates</span><span class="nav-link-note">Which side wins most</span></a></li>
+              </ul>
+            </li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-community">Community<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Community</span>
+              <ul class="nav-sub" id="nav-sub-community">
+                <li><a href="vote" data-keep-query data-vote-link><span class="nav-link-title">Map vote</span><span class="nav-link-note">Pick the next map</span><span class="nav-badge">Open</span></a></li>
+                <li><a href="seeding" data-keep-query><span class="nav-link-title">Seeding &amp; VIP</span><span class="nav-link-note">Help fill the server and earn VIP</span></a></li>
+                <li><a href="season" data-keep-query><span class="nav-link-title">Season roundup</span><span class="nav-link-note">Awards, records and team of the season</span></a></li>
+              </ul>
+            </li>
+            <li class="nav-panel-cta">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="menu" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                <span>Join our Discord</span>
+              </a>
+            </li>
           </ul>
         </nav>
-        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
+        <a class="status nav-status" id="nav-status" href="./#join" data-keep-query data-kind="empty" hidden>
+          <span class="status-icon" aria-hidden="true"></span>
+          <span class="nav-status-label"></span>
+          <span class="nav-status-count"></span>
+        </a>
+        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
           <span>Discord</span>
         </a>

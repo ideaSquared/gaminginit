@@ -23,6 +23,14 @@ if (chip !== null) {
   bar.insertBefore(chip, bar.querySelector(':scope > .btn-discord'));
 }
 
+// On a phone the header has no room for it, so it is in the menu panel, above the Discord button (see the CSS).
+const panelItem = chip === null ? null : el('li', { className: 'nav-panel-account' }, el('a', { className: 'btn btn-ghost', href: 'account' }));
+if (panelItem !== null) {
+  const cta = document.querySelector('.nav-panel-cta');
+  if (cta) cta.before(panelItem);
+  else panelItem.remove();
+}
+
 // What is shown for whoever is signed in now: the chip, and the parts of a page for someone who is not (a reason to sign in,
 // in the right place), shown only then and only once the bot is connected, so they never point at a sign-in that is not there.
 const refresh = () => {
@@ -33,6 +41,8 @@ const refresh = () => {
     chip.setAttribute('aria-label', name === null ? 'Sign in' : `Signed in as ${name}: your account`);
     if (name === null) chip.removeAttribute('title');
     else chip.title = `Signed in as ${name}`;
+    const panelLink = panelItem?.querySelector('a');
+    if (panelLink) panelLink.textContent = name === null ? 'Sign in' : `Signed in as ${shortName(name, 24)}`;
   }
   for (const node of document.querySelectorAll('[data-signed-out]')) node.hidden = !configured || token !== null;
 };

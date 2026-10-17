@@ -27,14 +27,6 @@ export const keepQuery = (href) => {
 
 for (const a of document.querySelectorAll('a[data-keep-query]')) a.href = keepQuery(a.getAttribute('href'));
 
-// On phones the page links scroll sideways in one row. Bring this page's link into view.
-const sections = document.querySelector('.nav-sections');
-const current = sections?.querySelector('[aria-current="page"]');
-if (current) {
-  const hidden = current.getBoundingClientRect().right - sections.getBoundingClientRect().right;
-  if (hidden > 0) sections.scrollLeft += hidden + 32;
-}
-
 // This page's own address with a query parameter changed, so a page that shows one player keeps its id.
 export const thisPage = (change) => {
   const url = new URL(location.href);

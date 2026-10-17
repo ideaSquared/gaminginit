@@ -1446,8 +1446,8 @@ export const demoRotationsChange = async (body) => {
 // The staff page's Lines tab, as the bot sends it: each list with what the bot puts around its lines and fills in,
 // for gaminginit.com with seeder VIP on, 20 players to go live and 100 points to win.
 const DEMO_SITE = 'gaminginit.com';
-const DEMO_HALFWAY_AFTER = ` Seed on 3 days in a week and get a whitelist slot. How at ${DEMO_SITE}`;
-const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard, Discord and seeding at ${DEMO_SITE}`;
+const DEMO_HALFWAY_AFTER = ` Check the leaderboard and stats at ${DEMO_SITE}`;
+const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard and stats at ${DEMO_SITE}`;
 const demoList = (id, group, name, note, frame, lines) => ({ id, group, name, note, off: null, ...frame, lines, changed: null });
 const demoFaction = (group, key, name, note, frame, lines) => demoList(`${group === 'Halfway' ? 'halfway' : 'nearly'}.${key}`, group, name, note, frame, lines);
 const DEMO_TEAM_LONGEST = 'x'.repeat(16);
@@ -1490,13 +1490,13 @@ const DEMO_LISTS = [
     ['manticore', 'Manticore', ['Manticore leads on {score}. Green winning? Shocking. Truly.', 'Manticore leads on {score}. Green is winning. Water is also wet.']],
     ['valkyra', 'Valkyra', ['Valkyra leads on {score}. Not my points, OUR points, comrade.', 'Valkyra leads on {score}. The motherland is pleased. For now.']],
   ].map(([key, name, lines]) =>
-    demoFaction('Halfway', key, name, `When ${name} is in front at half the winning score. "Halfway there!" goes before it, and seeding or the Discord after it.`, halfwayFrame(name), lines),
+    demoFaction('Halfway', key, name, `When ${name} is in front at half the winning score. "Halfway there!" goes before it, and the leaderboard after it.`, halfwayFrame(name), lines),
   ),
   demoList(
     'halfwayLevel',
     'Halfway',
     'Level scores',
-    'At half the winning score when the top teams are level. These go in place of "Halfway there!", with seeding or the Discord after them.',
+    'At half the winning score when the top teams are level. These go in place of "Halfway there!", with the leaderboard after them.',
     exactFrame({}, '', DEMO_HALFWAY_AFTER),
     ["Halfway there and it's neck and neck!", 'Halfway there and dead level. Somebody do something.'],
   ),
@@ -1504,7 +1504,7 @@ const DEMO_LISTS = [
     'halfwayOther',
     'Halfway',
     'Any other team',
-    'When a team without a list of its own is in front at half the winning score. "Halfway there!" goes before it, and seeding or the Discord after it.',
+    'When a team without a list of its own is in front at half the winning score. "Halfway there!" goes before it, and the leaderboard after it.',
     halfwayFrame('Other team'),
     ['{team} leads on {score}!'],
   ),
