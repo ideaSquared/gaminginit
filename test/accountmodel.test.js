@@ -130,10 +130,11 @@ describe('voting here', () => {
   });
 
   it('knows the choice they made in this vote, and not one from an earlier vote', () => {
-    const ballot = { poll: '1759300000000', map: 'Foy', light: 'night', weather: 'rain' };
+    const ballot = { poll: '1759300000000', map: 'Foy', light: 'night', weather: 'rain', zone: 'z1' };
     assert.equal(choiceIn(ballot, vote, 'map'), 'Foy');
     assert.equal(choiceIn(ballot, vote, 'light'), 'night');
     assert.equal(choiceIn(ballot, vote, 'weather'), 'rain');
+    assert.equal(choiceIn(ballot, vote, 'zone'), 'z1');
     assert.equal(choiceIn({ ...ballot, poll: 'old' }, vote, 'map'), null);
     assert.equal(choiceIn({ poll: '1759300000000', map: null, light: null }, vote, 'map'), null);
     assert.equal(choiceIn(null, vote, 'map'), null);
