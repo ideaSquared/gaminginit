@@ -16,6 +16,7 @@ once a minute and serves them at `GET /api/stats`.
 | `/live` | The match on now: score, kill feed, highlights |
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
 | `/seeding` | What seeding is, top seeders, who has seeder VIP |
+| `/vote` | The next-map vote: one vote each, the winner plays next, infantry only |
 | `/season` | The Season 1 roundup and the Season in Review, open since the wipe on 15 October 2026 |
 | `/admin` | Staff only: moderation and the server's settings (Discord sign-in). `/server-settings` goes there |
 
@@ -40,7 +41,7 @@ named in the bot's README.
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `season.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `vote.html`, `season.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
