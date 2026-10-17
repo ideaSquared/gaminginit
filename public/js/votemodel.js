@@ -1,5 +1,5 @@
 // The next-map vote page's logic, with no DOM so it can be tested: what the bot sends at GET /api/vote, and how the page
-// words it. Votes are cast in Discord; the page only shows them.
+// words it. Votes are cast in Discord, or on the page by a signed-in member (see vote.js).
 
 // "12:05": the time left on the vote, never below 0:00.
 export const countdown = (closesAt, now) => {
@@ -16,7 +16,7 @@ export const statusText = (vote, now) => {
   if (vote.open && now < vote.closesAt) {
     // The score is what normally closes it; the time is only a backstop, so it is only named when there is no score.
     const closing = vote.closeScore > 0 ? `when a team reaches ${vote.closeScore} points` : `in ${countdown(vote.closesAt, now)}`;
-    return `Voting in Discord for the map after ${vote.fromName}. Closes ${closing}.`;
+    return `Vote for the map after ${vote.fromName}, here or in Discord. Closes ${closing}.`;
   }
   if (vote.winner !== null) {
     return vote.pending

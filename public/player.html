@@ -78,7 +78,7 @@
               </ul>
             </li>
             <li class="nav-panel-cta">
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="menu" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
@@ -90,7 +90,7 @@
           <span class="nav-status-label"></span>
           <span class="nav-status-count"></span>
         </a>
-        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
           <span>Discord</span>
         </a>
@@ -220,6 +220,22 @@
                 <button type="button" class="btn btn-ghost btn-small more-matches" id="more-matches" hidden>Show more</button>
               </article>
             </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- For someone not signed in (see chip.js). -->
+      <section class="section" aria-labelledby="player-link-title" data-signed-out hidden>
+        <div class="wrap">
+          <div class="card cta-card">
+            <h2 id="player-link-title">Is this you?</h2>
+            <p>
+              Sign in with Discord and link your Steam account to open your own page and season in one tap, see how close you
+              are to seeder VIP, and get a role and VIP messages in the Discord.
+            </p>
+            <div class="account-actions">
+              <a class="btn btn-discord" href="account" data-keep-query>Sign in with Discord</a>
+            </div>
           </div>
         </div>
       </section>

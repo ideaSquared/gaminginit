@@ -1676,3 +1676,33 @@ export const demoRulesChange = async (body) => {
   demoRuleState.rules = body.id === null ? [...demoRuleState.rules, rule] : demoRuleState.rules.map((r) => (r.id === rule.id ? rule : r));
   return { ok: true, json: demoRulesPage() };
 };
+
+// A signed-in player, for /account?demo: linked, in the Discord, with VIP, as the bot's GET /api/account sends it.
+export const demoAccount = (now) => ({
+  user: { id: '100000000000000009', name: 'Sarge' },
+  member: true,
+  steam: { linked: true, via: 'discord' },
+  playerId: 'd00000000000',
+  vip: { until: now + 4 * 86_400_000, source: 'seeding' },
+  alerts: true,
+  private: { on: false, byYou: false },
+  ballot: null,
+  perks: { role: true, vipRole: true, messages: true, join: true },
+});
+
+// The staff page's Discord growth card: the bot's GET /api/admin/growth, with sample numbers.
+export const demoGrowth = () => ({
+  clicks: {
+    days: 30,
+    total: 214,
+    places: [
+      { src: 'short', clicks: 96 },
+      { src: 'home-hero', clicks: 58 },
+      { src: 'home-nav', clicks: 31 },
+      { src: 'vote-peek', clicks: 17 },
+      { src: 'season-end', clicks: 12 },
+    ],
+  },
+  accounts: { accounts: 64, linked: 51, members: 58, joinedOnSite: 19, withVipRole: 6 },
+  members: 412,
+});

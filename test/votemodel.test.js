@@ -25,13 +25,13 @@ describe('statusText', () => {
   });
 
   it('counts down while open when only time closes it', () => {
-    assert.equal(statusText(open, 40_000), 'Voting in Discord for the map after Ozeti. Closes in 1:00.');
+    assert.equal(statusText(open, 40_000), 'Vote for the map after Ozeti, here or in Discord. Closes in 1:00.');
   });
 
   it('names the score that closes it, not the time, when there is one', () => {
     assert.equal(
       statusText({ ...open, closeScore: 95 }, 40_000),
-      'Voting in Discord for the map after Ozeti. Closes when a team reaches 95 points.',
+      'Vote for the map after Ozeti, here or in Discord. Closes when a team reaches 95 points.',
     );
   });
 

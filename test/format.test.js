@@ -136,6 +136,8 @@ import {
   staffRoute,
   routeHash,
   toolsFrom,
+  clickPlace,
+  growthText,
 } from '../public/js/format.js';
 
 const NOW = Date.UTC(2026, 8, 30, 12);
@@ -1667,5 +1669,27 @@ describe('a player’s record', () => {
     assert.equal(recordSteam({ status: 'off' }), 'Not checked: the bot has no Steam key');
     assert.equal(recordCounts([{ action: 'warn' }, { action: 'kick' }, { action: 'warn' }, { action: 'unban' }]), '2 warnings · 1 kick');
     assert.equal(recordCounts([]), '');
+  });
+});
+
+describe('the Discord growth card', () => {
+  it('names where a click was, with the short link and the leftovers in words', () => {
+    assert.equal(clickPlace('short'), 'Short link (in game)');
+    assert.equal(clickPlace('other'), 'Other');
+    assert.equal(clickPlace('home-hero'), 'home-hero');
+  });
+
+  it('says how many players signed in, linked, are in the Discord and joined with the button', () => {
+    const growth = { clicks: { days: 30, total: 5, places: [] }, accounts: { accounts: 64, linked: 51, members: 58, joinedOnSite: 19, withVipRole: 6 }, members: 412 };
+    assert.equal(
+      growthText(growth),
+      '64 players have signed in on the website, 51 linked Steam, 58 are in the Discord, 19 joined with the website’s button. The Discord has 412 members. Clicks on the Discord invite in the last 30 days, by where they were made. A click is not a join.',
+    );
+  });
+
+  it('says one player, and leaves out the Discord’s count when the bot has none', () => {
+    const text = growthText({ clicks: { days: 30, total: 0, places: [] }, accounts: { accounts: 1, linked: 0, members: 1, joinedOnSite: 0, withVipRole: 0 }, members: null });
+    assert.match(text, /^1 player has signed in on the website, 0 linked Steam, 1 is in the Discord, 0 joined/);
+    assert.doesNotMatch(text, /The Discord has/);
   });
 });

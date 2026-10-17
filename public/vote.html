@@ -77,7 +77,7 @@
               </ul>
             </li>
             <li class="nav-panel-cta">
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="menu" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
@@ -89,7 +89,7 @@
           <span class="nav-status-label"></span>
           <span class="nav-status-count"></span>
         </a>
-        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
           <span>Discord</span>
         </a>
@@ -106,7 +106,7 @@
           <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
           <div class="section-head">
             <h1 class="page-title" id="vote-title">Next map vote</h1>
-            <p class="section-note">Voted in our Discord, one vote each. The winner plays next, infantry only.</p>
+            <p class="section-note">Vote here once you are signed in, or in our Discord. One vote each. The winner plays next, infantry only.</p>
           </div>
           <div class="card vote-card" id="vote">
             <p class="visually-hidden" id="vote-announce" role="status"></p>
@@ -117,8 +117,11 @@
               <h2 class="vote-sub">Conditions</h2>
               <div class="vote-options" id="vote-conditions-list"></div>
             </div>
+            <!-- Voting here: sign in, or join the Discord first. See vote.js. -->
+            <p class="vote-signin" id="vote-signin" hidden></p>
+            <p class="vote-reply" id="vote-reply" role="status"></p>
             <p class="vote-foot">
-              <a class="btn btn-discord" id="vote-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener" hidden>
+              <a class="btn btn-discord" id="vote-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="vote" rel="noopener" hidden>
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Vote in Discord</span>
               </a>
@@ -126,8 +129,9 @@
           </div>
           <p class="muted vote-how">
             A vote opens in our Discord when a match goes live and stays open until a team is close to winning (95
-            points). Press a map's button in the vote channel to vote, and one of the conditions buttons (time of day and weather) under it; press another to change either. You vote with your
-            Discord account, so it is one vote each. The map with the most votes is put on the server and plays when this
+            points). Press a map's button in the vote channel to vote, and one of the conditions buttons (time of day and weather) under it; press another to change either. You can do the same here: <a href="account">sign in with Discord</a>
+            and press a map. You vote with your Discord account, so it is one vote each, wherever you press it, and only
+            members of the Discord can vote. The map with the most votes is put on the server and plays when this
             match ends. This page shows the same counts.
           </p>
         </div>
