@@ -21,7 +21,7 @@ export const statusText = (vote, now) => {
   if (vote.winner !== null) {
     return vote.pending
       ? `${vote.winner.name} won. Putting it on the server…`
-      : `${vote.winner.name} plays next, infantry only${vote.lightingName ? `, ${vote.lightingName}` : ''}.`;
+      : `${vote.winner.name} plays next, infantry only${vote.lightingName ? `, ${vote.lightingName}` : ''}${vote.zoneName ? `, ${vote.zoneName} zones` : ''}.`;
   }
   return vote.note ?? 'Counting the votes…';
 };

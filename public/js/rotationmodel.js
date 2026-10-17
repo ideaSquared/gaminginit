@@ -134,17 +134,48 @@ const FALLBACK_NAMES = { Kavkazi: 'Bakurani', Europe: 'Ozeti', NorthAmerica: 'Ze
 
 const nameIn = (items, id) => items?.find((i) => i.id === id)?.name ?? null;
 
-// A zone layout the catalogue does not name goes by the end of its tag: ZoneAlternator.Bakurani.Default.Circle is
-// "Circle". An experience id loses its underscores.
-const zoneName = (id) => id.split('.').at(-1) ?? id;
+// What the bot does for an id the server gave no name (see names.ts there), for one the catalogue does not list at all.
+const words = (text) =>
+  text
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .split(/[\s_]+/)
+    .filter((w) => w !== '');
+const capital = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+
+// A zone layout goes by its tag: ZoneAlternator.Bakurani.Default.Circle is "Circle", and one in a variant that is not
+// Default keeps it ("Night Circle").
+export const zoneName = (id) => {
+  const parts = id.split('.');
+  const layout = parts[0] === 'ZoneAlternator' && parts.length >= 4 ? parts.slice(2) : parts.slice(-1);
+  const name = layout
+    .filter((p) => p.toLowerCase() !== 'default')
+    .flatMap(words)
+    .map(capital)
+    .join(' ');
+  return name === '' ? (parts.at(-1) ?? id) : name;
+};
+
+// A lighting goes by its words: DayStartClear is "Dawn, clear", DayLateGrayFog "Afternoon, overcast, fog".
+const TIME_PARTS = { start: 'Dawn', early: 'Morning', late: 'Afternoon', end: 'Dusk' };
+const WEATHER_PARTS = { gray: 'overcast', grey: 'overcast' };
+export const lightingName = (id) => {
+  const [first, ...rest] = words(id);
+  if (first === undefined) return id;
+  const time = first.toLowerCase() === 'day' && rest.length > 0 ? TIME_PARTS[rest[0].toLowerCase()] : undefined;
+  const weather = (time === undefined ? rest : rest.slice(1)).map((w) => WEATHER_PARTS[w.toLowerCase()] ?? w.toLowerCase());
+  return [time ?? capital(first), ...weather].join(', ');
+};
+
+// An experience id loses its underscores.
 const plainId = (id) => id.replace(/_/g, ' ');
 
 // Lighting at a glance: dawn, day, dusk, grey, fog or rain, from its id (DayStartClear, DayLateGrayFog, DayLateRain …).
+// Start is dawn and End is dusk, as in the bot's conditions vote; Early is morning, so it is a day.
 export const lightingIcon = (id) => {
   if (/rain|storm/i.test(id)) return '🌧️';
   if (/fog/i.test(id)) return '🌫️';
   if (/gray|grey|overcast/i.test(id)) return '☁️';
-  if (/start|early|dawn/i.test(id)) return '🌅';
+  if (/start|dawn/i.test(id)) return '🌅';
   if (/end|dusk|night/i.test(id)) return '🌆';
   if (/late/i.test(id)) return '🌇';
   return '☀️';
@@ -160,7 +191,7 @@ export const draftChips = (draft, catalog) => {
     chips.push({ kind: /hardcore/i.test(id) ? 'hardcore' : 'modifier', text: name });
   }
   for (const id of draft.extras) chips.push({ kind: 'extra', text: nameIn(catalog?.experiences, id) ?? plainId(id) });
-  if (draft.lighting) chips.push({ kind: 'lighting', text: `${lightingIcon(draft.lighting)} ${nameIn(catalog?.lightings, draft.lighting) ?? plainId(draft.lighting)}` });
+  if (draft.lighting) chips.push({ kind: 'lighting', text: `${lightingIcon(draft.lighting)} ${nameIn(catalog?.lightings, draft.lighting) ?? lightingName(draft.lighting)}` });
   if (draft.zone) chips.push({ kind: 'zones', text: `${nameIn(map?.zones, draft.zone) ?? zoneName(draft.zone)} zones` });
   return chips;
 };

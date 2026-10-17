@@ -82,7 +82,7 @@ const syncRows = (list, rows) => {
   [...list.children].forEach((node, i) => updateRow(node, rows[i]));
 };
 
-// What a row needs: `voting` says whether this player can vote, and `kind` is the map or the conditions.
+// What a row needs: `voting` says whether this player can vote, and `kind` is the map, the time of day ('light'), the weather or the circles ('zone').
 const rowsFor = (items, kind, total, voting, winner = null) =>
   items.map((item) => {
     const key = kind === 'map' ? item.map : item.key;
@@ -92,8 +92,8 @@ const rowsFor = (items, kind, total, voting, winner = null) =>
       votes: item.votes,
       total,
       winner: winner !== null && winner === key,
-      mine: choiceIn(account?.ballot, vote, kind === 'map' ? 'map' : 'light') === key,
-      press: voting ? () => cast({ kind: kind === 'map' ? 'map' : 'light', key }) : null,
+      mine: choiceIn(account?.ballot, vote, kind) === key,
+      press: voting ? () => cast({ kind, key }) : null,
     };
   });
 
@@ -172,13 +172,15 @@ const render = () => {
   }
   const voting = canVote(account, vote, now);
   syncRows($('vote-options'), rowsFor(vote?.options ?? [], 'map', vote?.total ?? 0, voting, winnerOf(vote)));
-  // The conditions vote, when the bot has one: its own share, of the votes on the conditions.
-  const conditions = vote?.conditions ?? [];
-  $('vote-conditions').hidden = conditions.length === 0;
-  syncRows(
-    $('vote-conditions-list'),
-    rowsFor(conditions, 'light', conditions.reduce((sum, c) => sum + c.votes, 0), voting),
-  );
+  // The time of day, weather and circles votes, when the bot has them: each its own share, of the votes on it.
+  for (const [kind, section, items] of [
+    ['light', 'vote-conditions', vote?.conditions ?? []],
+    ['weather', 'vote-weather', vote?.weather ?? []],
+    ['zone', 'vote-zones', vote?.zones ?? []],
+  ]) {
+    $(section).hidden = items.length === 0;
+    syncRows($(`${section}-list`), rowsFor(items, kind, items.reduce((sum, c) => sum + c.votes, 0), voting));
+  }
   renderSignIn(open);
   setText($('vote-reply'), reply);
   // The way in: the channel when the bot knows it, else the community's Discord invite already on every page.

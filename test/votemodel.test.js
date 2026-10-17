@@ -39,6 +39,7 @@ describe('statusText', () => {
     const won = { ...open, open: false, winner: { map: 'A', name: 'Alpha' } };
     assert.equal(statusText(won, 200_000), 'Alpha plays next, infantry only.');
     assert.equal(statusText({ ...won, lightingName: 'Night, storm' }, 200_000), 'Alpha plays next, infantry only, Night, storm.');
+    assert.equal(statusText({ ...won, lightingName: 'Night, storm', zoneName: 'Circle' }, 200_000), 'Alpha plays next, infantry only, Night, storm, Circle zones.');
     assert.equal(statusText({ ...won, pending: true }, 200_000), 'Alpha won. Putting it on the server…');
     assert.equal(winnerOf(won), 'A');
   });
