@@ -40,12 +40,6 @@ html {
   scroll-padding-top: 72px;
 }
 
-@media (max-width: 919px) {
-  html {
-    scroll-padding-top: 112px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -189,7 +183,8 @@ a {
 .nav {
   position: sticky;
   top: 0;
-  z-index: 5;
+  /* Above the page's own raised parts, so a menu opens over them. Below the full-screen story and dialogs. */
+  z-index: 30;
   background: color-mix(in srgb, var(--page) 88%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--hairline);
@@ -198,7 +193,7 @@ a {
 .nav-inner {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   min-height: 60px;
 }
 
@@ -229,85 +224,424 @@ a {
   color: var(--accent);
 }
 
-/* On phones the links take a row of their own under the brand, and scroll sideways if they do not fit. */
-.nav-inner {
-  flex-wrap: wrap;
+/* The server chip: what the server is doing now, on every page, linking to how to join. Its icon shape (from .status)
+   carries the state as well as its colour. Hidden until the bot has given a reading. */
+.nav-status {
+  min-height: 36px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.72rem;
+  white-space: nowrap;
 }
 
-.nav-sections {
-  order: 1;
-  flex-basis: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: -6px -16px 0;
-  padding: 0 0 8px 16px;
-  /* Fades the right edge, so links cut off there read as more to scroll to. */
-  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+.nav-status[hidden],
+.nav-status-count[hidden] {
+  display: none;
+}
+
+.nav-status:hover {
+  border-color: var(--axis);
+  background: var(--surface);
+}
+
+.nav-status[data-kind='seeding'] {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--hairline));
+}
+
+.nav-status[data-kind='live'] {
+  border-color: color-mix(in srgb, var(--good) 55%, var(--hairline));
+}
+
+.nav-status-count {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Menu button, for phones and tablets. Without script it is not shown and the links stay open. */
+.nav-toggle {
+  display: none;
+  position: relative;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  background: none;
+  color: var(--text);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nav-toggle:hover,
+.nav-toggle[aria-expanded='true'] {
+  background: var(--surface-2);
+}
+
+.nav-toggle-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* A vote is open: a dot on whatever holds it, because it can't be seen inside a closed menu. */
+.nav-toggle[data-alert]::after,
+.nav-group[data-alert] > .nav-group-btn::before,
+.nav-group[data-alert] > .nav-group-label::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.nav-toggle[data-alert]::after {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  box-shadow: 0 0 0 2px var(--page);
 }
 
 .nav-links {
-  display: flex;
-  width: max-content;
   list-style: none;
   margin: 0;
-  /* Room to scroll the last link clear of the fade. */
-  padding: 0 32px 0 0;
-  gap: 2px;
+  padding: 0;
 }
 
-.nav-links a {
-  display: block;
-  padding: 6px 10px;
+.nav-sub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a,
+.nav-group-btn {
   color: var(--text-2);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
-  white-space: nowrap;
+}
+
+.nav-links a:hover,
+.nav-group-btn:hover {
+  color: var(--text);
+}
+
+.nav-link-title {
+  display: block;
+}
+
+.nav-link-note {
+  display: none;
+}
+
+.nav-badge {
+  display: none;
+  background: var(--accent);
+  color: var(--accent-ink);
   border-radius: 6px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.nav-links a:hover {
-  color: var(--text);
-  background: var(--surface-2);
+.nav-links a[data-open] .nav-badge {
+  display: inline-block;
 }
 
-.nav-links a[aria-current='page'] {
-  color: var(--text);
-  background: var(--surface-2);
+.nav-chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 120ms ease;
 }
 
-/* From 920px the seven links fit next to the brand and the Discord button, with more room around them from 1000px. */
-@media (min-width: 920px) {
-  .nav-inner {
-    flex-wrap: nowrap;
+.nav-group-btn[aria-expanded='true'] .nav-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-chevron {
+    transition: none;
+  }
+}
+
+/* Phones and tablets: the links are a panel under the header, opened by the Menu button, with each group named. */
+@media (max-width: 919px) {
+  .nav-js .nav-toggle {
+    display: inline-flex;
   }
 
   .nav-sections {
-    order: 0;
-    flex-basis: auto;
-    overflow: visible;
-    margin: 0;
-    padding: 0;
-    mask-image: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100dvh - 61px);
+    overflow-y: auto;
+    background: var(--page);
+    border-bottom: 1px solid var(--hairline);
+    box-shadow: 0 16px 24px rgb(0 0 0 / 0.4);
+  }
+
+  .nav-js .nav-sections {
+    display: none;
+  }
+
+  .nav-js[data-menu-open] .nav-sections {
+    display: block;
+  }
+
+  /* No script: the links sit under the brand in the page, open. */
+  .nav:not(.nav-js) .nav-inner {
+    flex-wrap: wrap;
+  }
+
+  .nav:not(.nav-js) .nav-sections {
+    position: static;
+    order: 9;
+    flex-basis: 100%;
+    max-height: none;
+    box-shadow: none;
+    border-bottom: 0;
   }
 
   .nav-links {
-    width: auto;
-    padding: 0;
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 8px 8px 16px;
   }
 
   .nav-links a {
-    padding: 8px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  .nav-links a:hover,
+  .nav-links a[aria-current] {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .nav-links a[aria-current='page'] .nav-link-title {
+    color: var(--accent);
+  }
+
+  .nav-group-btn {
+    display: none;
+  }
+
+  .nav-group-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 12px 4px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .nav-group + .nav-group,
+  .nav-links > li + .nav-group {
+    border-top: 1px solid var(--hairline);
+    margin-top: 8px;
+  }
+
+  .nav-panel-cta {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .nav-links .nav-panel-cta a {
+    justify-content: center;
+    min-height: 48px;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .nav-links .nav-panel-cta a:hover {
+    background: var(--discord-hover);
+  }
+
+  /* On a phone the Discord button is in the panel, so the header keeps room for the brand, the chip and Menu. */
+  .nav-discord {
+    display: none;
+  }
+
+  .nav-status {
+    order: 1;
+  }
+
+  .nav-toggle {
+    order: 3;
+  }
+
+  /* The links are out of the row, so these keep their place after the brand. */
+  .brand {
+    order: 0;
   }
 }
 
-@media (min-width: 1000px) {
-  .nav-links {
-    gap: 4px;
+@media (min-width: 600px) and (max-width: 919px) {
+  .nav-discord {
+    display: inline-flex;
+    order: 2;
   }
 
-  .nav-links a {
+  .nav-panel-cta {
+    display: none;
+  }
+}
+
+/* On the narrowest phones the chip gives up its count to keep the brand and the Menu button on one row. */
+@media (max-width: 359px) {
+  .nav-status-count {
+    display: none;
+  }
+}
+
+@media (max-width: 519px) {
+  .nav-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .nav-toggle {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* Desktop: the links sit next to the brand. Groups open as menus on a click (or Down arrow), and close on Escape. */
+@media (min-width: 920px) {
+  .brand {
+    margin-right: 0;
+  }
+
+  .nav-sections {
+    margin: 0 auto 0 12px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .nav-links > li {
+    position: relative;
+  }
+
+  .nav-links > li > a,
+  .nav-group-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 12px;
+    border-radius: 6px;
+  }
+
+  .nav-group-btn {
+    background: none;
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .nav-links > li > a:hover,
+  .nav-group-btn:hover,
+  .nav-group-btn[aria-expanded='true'],
+  .nav-links > li > a[aria-current],
+  .nav-group[data-current] > .nav-group-btn {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+
+  /* Where this page sits, when its group is closed: an accent underline, so it isn't only a shade of grey. */
+  .nav-links > li > a[aria-current='page'],
+  .nav-group[data-current] > .nav-group-btn {
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .nav-group-label,
+  .nav-panel-cta {
+    display: none;
+  }
+
+  .nav-sub {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 1;
+    min-width: 290px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--axis);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 32px rgb(0 0 0 / 0.5);
+  }
+
+  .nav-group[data-open] > .nav-sub,
+  .nav:not(.nav-js) .nav-group:hover > .nav-sub,
+  .nav:not(.nav-js) .nav-group:focus-within > .nav-sub {
+    display: block;
+  }
+
+  .nav-sub a {
+    position: relative;
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text);
+  }
+
+  .nav-sub a:hover,
+  .nav-sub a[aria-current] {
+    background: var(--surface-2);
+  }
+
+  .nav-sub a[aria-current='page'] {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  .nav-link-note {
+    display: block;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  .nav-badge {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+  }
+
+  .nav-group[data-alert] > .nav-group-btn::before {
+    flex: none;
+  }
+
+  .nav-discord {
+    flex: none;
   }
 }
 

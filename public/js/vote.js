@@ -1,4 +1,4 @@
-// Loading live.js also shows the site-wide notice, keeps ?demo and similar on links, and scrolls the nav. The bot is the one
+// Loading live.js also shows the site-wide notice and keeps ?demo and similar on links. The bot is the one
 // the other pages read, so ?stats=… previews the vote too.
 import { apiUrl } from './live.js';
 import { el, setText } from './views.js';
