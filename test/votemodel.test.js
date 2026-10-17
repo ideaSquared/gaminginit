@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { countdown, newToken, refusal, share, statusText, winnerOf } from '../public/js/votemodel.js';
+import { countdown, share, statusText, winnerOf } from '../public/js/votemodel.js';
 
 const open = { id: '1', open: true, fromName: 'Ozeti', closesAt: 100_000, winner: null, note: null, pending: false };
 
@@ -25,7 +25,7 @@ describe('statusText', () => {
   });
 
   it('counts down while open', () => {
-    assert.equal(statusText(open, 40_000), 'Vote for the map after Ozeti. Closes in 1:00.');
+    assert.equal(statusText(open, 40_000), 'Voting in Discord for the map after Ozeti. Closes in 1:00.');
   });
 
   it('names the winner, infantry only, once it is on the server', () => {
@@ -39,16 +39,5 @@ describe('statusText', () => {
     assert.equal(statusText({ ...open, open: false, note: 'Nobody voted, so the rotation carries on.' }, 200_000), 'Nobody voted, so the rotation carries on.');
     assert.equal(statusText(open, 200_000), 'Counting the votes…');
     assert.equal(winnerOf(null), null);
-  });
-});
-
-describe('newToken and refusal', () => {
-  it('makes 32 hex characters', () => {
-    assert.match(newToken(), /^[0-9a-f]{32}$/);
-  });
-
-  it('explains a ballot that was not counted', () => {
-    assert.match(refusal('closed'), /closed/);
-    assert.match(refusal('something-new'), /not counted/);
   });
 });

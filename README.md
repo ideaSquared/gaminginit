@@ -16,7 +16,7 @@ once a minute and serves them at `GET /api/stats`.
 | `/live` | The match on now: score, kill feed, highlights |
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
 | `/seeding` | What seeding is, top seeders, who has seeder VIP |
-| `/vote` | The next-map vote: one vote each, the winner plays next, infantry only |
+| `/vote` | The next-map vote, held in Discord: live counts and a link to vote. The winner plays next, infantry only |
 | `/season` | The Season 1 roundup and the Season in Review, open since the wipe on 15 October 2026 |
 | `/admin` | Staff only: moderation and the server's settings (Discord sign-in). `/server-settings` goes there |
 
