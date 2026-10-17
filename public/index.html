@@ -102,65 +102,85 @@
               <!-- Left out on phones, so the server card comes up the screen. Step 2 says it too. -->
               <span class="lede-more">Everything is organised on our Discord, and the bot there tells you when the server is filling up.</span>
             </p>
-            <!-- Shown when the bot gives seeders VIP. -->
-            <p class="vip-cta" id="vip-cta" hidden>
-              <span class="vip-tag">Seeder VIP</span>
-              <span class="vip-offer" id="vip-cta-text"></span>
-              <a href="#vip">How it works</a>
-            </p>
-            <!-- The Season 1 roundup, open since the wipe. Styled like the Seeder VIP box above. -->
-            <p class="vip-cta">
-              <span class="vip-tag">Season 1</span>
-              <span class="vip-offer">It’s over: the team of the season, the top players, awards, records and the Season in Review.</span>
-              <a href="season" data-keep-query>See the roundup</a>
-            </p>
+            <div class="hero-notes">
+              <!-- Shown when the bot gives seeders VIP. -->
+              <p class="vip-cta" id="vip-cta" hidden>
+                <span class="vip-tag">Seeder VIP</span>
+                <span class="vip-offer" id="vip-cta-text"></span>
+                <a href="#vip">How it works</a>
+              </p>
+              <!-- The Season 1 roundup, open since the wipe. Styled like the Seeder VIP box above. -->
+              <p class="vip-cta">
+                <span class="vip-tag">Season 1</span>
+                <span class="vip-offer">It’s over: the team of the season, the top players, awards, records and the Season in Review.</span>
+                <a href="season" data-keep-query>See the roundup</a>
+              </p>
+            </div>
             <div class="hero-actions">
               <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
+              <!-- Shown while a next-map vote is open (see votepeek.js). -->
+              <a class="btn btn-vote" id="hero-vote" href="vote" data-keep-query hidden>Vote on the next map</a>
               <a class="btn btn-ghost" href="#server">Server status</a>
             </div>
             <p class="discord-count" id="discord-count" hidden></p>
           </div>
 
-          <article class="card server-card" id="server" aria-labelledby="server-name">
-            <div class="server-top">
-              <span class="status" id="server-status" data-kind="waiting" aria-live="polite">
-                <span class="status-icon" aria-hidden="true"></span>
-                <span class="status-label">Connecting</span>
-              </span>
-              <span class="updated" id="server-updated"></span>
-            </div>
-            <h2 class="server-name" id="server-name">Game server</h2>
-            <p class="server-detail" id="server-detail">Loading live status…</p>
-            <p class="server-help" id="server-help" hidden><a href="seeding" data-keep-query>What is seeding?</a></p>
-            <div class="players">
-              <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
-              <div
-                class="meter"
-                id="players-meter"
-                role="meter"
-                aria-label="Players online"
-                aria-valuemin="0"
-                aria-valuemax="1"
-                aria-valuenow="0"
-              >
-                <span class="meter-fill"></span>
-                <span class="meter-mark"><span class="meter-label" id="meter-label"></span></span>
+          <div class="hero-side">
+            <article class="card server-card" id="server" aria-labelledby="server-name">
+              <div class="server-top">
+                <span class="status" id="server-status" data-kind="waiting" aria-live="polite">
+                  <span class="status-icon" aria-hidden="true"></span>
+                  <span class="status-label">Connecting</span>
+                </span>
+                <span class="updated" id="server-updated"></span>
               </div>
-            </div>
-            <dl class="server-facts">
-              <div>
-                <dt>Map</dt>
-                <dd id="server-map">–</dd>
+              <h2 class="server-name" id="server-name">Game server</h2>
+              <p class="server-detail" id="server-detail">Loading live status…</p>
+              <p class="server-help" id="server-help" hidden><a href="seeding" data-keep-query>What is seeding?</a></p>
+              <div class="players">
+                <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
+                <div
+                  class="meter"
+                  id="players-meter"
+                  role="meter"
+                  aria-label="Players online"
+                  aria-valuemin="0"
+                  aria-valuemax="1"
+                  aria-valuenow="0"
+                >
+                  <span class="meter-fill"></span>
+                  <span class="meter-mark"><span class="meter-label" id="meter-label"></span></span>
+                </div>
               </div>
-              <div>
-                <dt>Score</dt>
-                <dd id="server-score">–</dd>
-              </div>
-            </dl>
-          </article>
+              <dl class="server-facts">
+                <div>
+                  <dt>Map</dt>
+                  <dd id="server-map">–</dd>
+                </div>
+                <div>
+                  <dt>Score</dt>
+                  <dd id="server-score">–</dd>
+                </div>
+              </dl>
+            </article>
+            <!-- The next-map vote: open while a match is on, then its result for a while. Hidden otherwise. See votepeek.js. -->
+            <article class="card vote-peek" id="vote-peek" aria-labelledby="vote-peek-title" hidden>
+              <p class="vote-peek-top"><span class="vip-tag">Next map vote</span></p>
+              <h2 class="vote-peek-title" id="vote-peek-title">Vote for the next map</h2>
+              <p class="vote-peek-detail" id="vote-peek-detail"></p>
+              <ol class="vote-peek-list" id="vote-peek-list"></ol>
+              <p class="vote-peek-actions" id="vote-peek-actions">
+                <a class="btn btn-discord" id="vote-peek-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                  <span>Vote in Discord</span>
+                </a>
+                <a href="vote" data-keep-query>How it works</a>
+              </p>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -224,7 +244,7 @@
               <h3>Watch for the alerts</h3>
               <p>
                 The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
-                going.
+                going. Every match it also opens a vote for the next map.
               </p>
             </li>
             <li class="card step">

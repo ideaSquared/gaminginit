@@ -1,3 +1,4 @@
+import './votepeek.js';
 import { populationChart } from './charts.js';
 import {
   BOARDS,

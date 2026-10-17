@@ -8,11 +8,16 @@ What it shows:
   - Server status (live, seeding, empty or offline), players online, map and score. While seeding it says how many
     more players are needed to go live. The players bar has a mark labelled "Live at 20" (the bot's
     `thresholds.live`) where the server goes live.
+  - The next-map vote, while the bot has one open: a "Vote on the next map" button in the hero and a card under the
+    server card with each map's votes, which closes when a team reaches the bot's close score (95 of 100). It has a
+    Vote in Discord button to the vote channel (votes are cast in Discord, see the vote page below). Once the vote
+    closes, the card says "Next map: <map>" for 15 minutes, then goes. With no vote, or a bot without one, there is no
+    card and no button. `?demo` shows a sample vote.
   - Discord member and online counts.
   - A first look at the other pages, each linking to its page: the match on now with its top 3, the 2 latest matches
     with every side's score (the winner first and in bold), length, peak players and top player, the top 5 by kills
     over the last 30 days, and players over the last 24 hours with the peak, matches and time live.
-  - "Play with us": the steps to find us in game.
+  - "Play with us": the steps to find us in game. Step 2 says the bot also opens the next-map vote each match.
 - A stats page (`/stats`): players now, the peak and the matches in the last 24 hours and time live today; players
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
   The daily chart's day labels give the month on the first label and wherever the month changes ("23 Sep … 1 Oct").
