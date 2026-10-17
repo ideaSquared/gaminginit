@@ -1487,3 +1487,21 @@ export const shoutOuts = (roundup) => {
     roundup.rookie && { title: 'Rookie of the season', why: 'New this season, and played the most', player: roundup.rookie, detail: `${formatHours(roundup.rookie.minutes)} played` },
   ].filter(Boolean);
 };
+
+// Where on the site (or in game) a click on the Discord invite was made, as the staff page's Discord growth card words it: the
+// places are the bot's, such as "home-hero"; "short" is the website's short link, which the welcome message in game gives.
+export const clickPlace = (src) => (src === 'short' ? 'Short link (in game)' : src === 'other' ? 'Other' : src);
+
+// The line above that card: how many players have signed in on the website, linked Steam, are in the Discord, and joined
+// with the website's button. `members` is the Discord's own member count, when the bot has it.
+export const growthText = (growth) => {
+  const { accounts, linked, members, joinedOnSite } = growth.accounts;
+  const parts = [
+    `${accounts} ${accounts === 1 ? 'player has' : 'players have'} signed in on the website`,
+    `${linked} linked Steam`,
+    `${members} ${members === 1 ? 'is' : 'are'} in the Discord`,
+    `${joinedOnSite} joined with the website’s button`,
+  ];
+  const clicks = `Clicks on the Discord invite in the last ${growth.clicks.days} days, by where they were made. A click is not a join.`;
+  return `${parts.join(', ')}.${growth.members === null ? '' : ` The Discord has ${growth.members} members.`} ${clicks}`;
+};

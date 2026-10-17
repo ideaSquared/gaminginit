@@ -1,6 +1,9 @@
 import { demoStats } from './demo.js';
 import { announcement } from './format.js';
 import { el, link } from './views.js';
+// On every page: the header's way in to the account page, and the Discord invite sent through the bot to count its clicks.
+import './chip.js';
+import './discord.js';
 
 // Loads the bot's numbers for each page, and keeps them fresh.
 

@@ -270,6 +270,14 @@ Server's Bans and VIP.
   counts as seeding again. Needs the bot's staff Steam
   accounts (its README, "Staff Steam accounts").
 
+**Discord growth** is a card at the bottom of Bans and VIP: how many players have signed in on the website
+([player accounts](site-pages.md#player-accounts)), linked a Steam account, are in the Discord and joined with the website's
+button, beside the Discord's own member count; and the clicks on the Discord invite over the last 30 days by where they were
+made (`home-hero`, `leaderboard-nav`, `vote`, …; "Short link (in game)" is `gaminginit.com/discord`, which the welcome message
+gives). A click is not a join, but it shows which buttons bring people in. The website counts them through the bot, with no
+analytics service. It loads when Bans and VIP is shown and at most every 5 minutes (the bot counts every account for it), and
+says so if the bot is too old to have it (`GET /api/admin/growth`). `?demo` shows sample numbers.
+
 ## Server: Rotations, the maps for each day
 
 A tab with changes not saved yet (Rotations, Lines or Weapon rules) has a yellow dot by its name, so they are not

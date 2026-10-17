@@ -55,7 +55,7 @@
             <li><a href="season" data-keep-query aria-current="page">Season 1</a></li>
           </ul>
         </nav>
-        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
           <span>Discord</span>
         </a>
@@ -119,6 +119,9 @@
               <div class="review-you">
                 <h3 class="review-you-title" id="you-title">Your season</h3>
                 <p class="review-you-text">Find your name for slides about you. Nowhere to hide.</p>
+                <!-- Signed in with a Steam account linked: their own season in one tap (see season.js). -->
+                <p class="review-you-text" id="you-me" hidden></p>
+                <p class="review-you-text" data-signed-out hidden><a href="account" data-keep-query>Sign in with Discord</a> and link Steam to open yours in one tap.</p>
                 <label class="visually-hidden" for="you-search">Your name in game</label>
                 <input class="review-search" id="you-search" type="search" placeholder="Your name in game" autocomplete="off" spellcheck="false" />
                 <ul class="review-results" id="you-results" aria-labelledby="you-title"></ul>
@@ -282,7 +285,7 @@
               <p id="next-text">Thanks to everyone who played, seeded and squadded up. The records start again with Season 2: see who leads it on the leaderboard.</p>
               <div class="hero-actions">
                 <a class="btn btn-ghost" href="leaderboard" data-keep-query>The leaderboard</a>
-                <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+                <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="end" rel="noopener">
                   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                   <span>Join our Discord</span>
                 </a>

@@ -1,4 +1,5 @@
 import { seasonChart } from './charts.js';
+import { askBot, configured, loadPlayerToken } from './accountsession.js';
 import { demoPlayers, demoProfile, demoSeason } from './demo.js';
 import {
   clockHour,
@@ -505,6 +506,16 @@ const playYours = async (id) => {
     ],
   });
 };
+
+// Signed in with a Steam account linked: their own season in one tap, without searching for their name.
+const showMine = async () => {
+  if (demo || !configured || loadPlayerToken() === null) return;
+  const { status, data } = await askBot('/api/account');
+  if (status !== 200 || !data?.playerId) return;
+  $('you-me').replaceChildren(storyButton('Open my season', () => playYours(data.playerId), 'review-result'));
+  $('you-me').hidden = false;
+};
+showMine();
 
 $('play-season').addEventListener('click', playSeason);
 $('you-search').addEventListener('input', findYou);

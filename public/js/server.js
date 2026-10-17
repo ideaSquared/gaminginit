@@ -1,8 +1,8 @@
 import { ask } from './ask.js';
-import { demoLines, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
-import { SERVER_VIEWS, staffNote } from './format.js';
+import { demoGrowth, demoLines, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
+import { clickPlace, growthText, SERVER_VIEWS, staffNote } from './format.js';
 import { demo, showNotice } from './live.js';
-import { $, badge, call, cell, get, load, loadToken, myProfile, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
+import { $, badge, call, cell, get, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
 import { el } from './views.js';
 
 // The staff page's Server section, once the Server settings page, in four views. Bans and VIP: the bans on the server,
@@ -78,6 +78,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     view = SERVER_VIEWS.includes(name) ? name : SERVER_VIEWS[0];
     showTab(SERVER_VIEWS, view, { focus });
     selected(view);
+    if (data && view === 'bans') loadGrowth();
     if (!data || !EDITORS[view]) return;
     (await editor(view))?.show();
   };
@@ -213,6 +214,35 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
 
   $('staff-steam-mine').addEventListener('click', () => openSteam());
 
+  // Discord growth: clicks on the invite by place, and how many players signed in and linked. Read when Bans and VIP is
+  // shown, at most every few minutes: the bot counts every account for it.
+  let growthAt = 0;
+  const GROWTH_MS = 5 * 60_000;
+  const loadGrowth = async () => {
+    if (Date.now() - growthAt < GROWTH_MS) return;
+    growthAt = Date.now();
+    try {
+      const { ok, status, json } = demo ? { ok: true, status: 200, json: demoGrowth() } : await get('admin/growth');
+      if (!ok) {
+        growthAt = 0;
+        if (status === 404) setStatus($('growth-note'), 'The bot does not count these yet. Deploy the latest bot.');
+        else if (loadToken()) setStatus($('growth-note'), 'Couldn’t load these just now. Try again in a minute.');
+        return;
+      }
+      setStatus($('growth-note'), growthText(json));
+      table(
+        $('growth-clicks'),
+        ['Where', ['Clicks', 'num']],
+        json.clicks.places.map((p) => el('tr', {}, cell(clickPlace(p.src)), number(p.clicks))),
+        'Nobody has clicked the Discord invite yet.',
+      );
+    } catch (error) {
+      growthAt = 0;
+      console.error('Could not load the Discord growth', error);
+      setStatus($('growth-note'), 'Couldn’t reach the bot. Try again in a minute.');
+    }
+  };
+
   // The views: click, or ← → Home End from their row of buttons.
   for (const name of SERVER_VIEWS) $(`tab-${name}`).addEventListener('click', () => show(name));
   tabKeys(SERVER_VIEWS, () => view, show, $('panel-server').querySelector('.server-tabs'));
@@ -229,11 +259,13 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
       renderBans(overview);
       renderReserved(overview);
       renderStaffSteam(overview);
+      if (view === 'bans' && !$('panel-server').hidden) loadGrowth();
       if (open && EDITORS[view]) (await editor(view))?.ensure();
     },
     // Signing out forgets everything the editors had.
     signedOut() {
       data = null;
+      growthAt = 0;
       for (const e of Object.values(editors)) e.reset();
     },
   };

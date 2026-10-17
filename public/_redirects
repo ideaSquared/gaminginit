@@ -1,0 +1,4 @@
+# A short link to the Discord invite that is easy to type, such as from the welcome message in game. It goes through the
+# bot, which counts the click and sends people on to the invite (src=short is where the click is counted).
+# Keep the address the same as the stats URL in the pages' <meta name="stats-url">.
+/discord  https://wardogs-discord-bot.idea-squared.workers.dev/go/discord?src=short  302

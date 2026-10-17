@@ -40,7 +40,7 @@ html {
   scroll-padding-top: 72px;
 }
 
-@media (max-width: 919px) {
+@media (max-width: 1179px) {
   html {
     scroll-padding-top: 112px;
   }
@@ -276,8 +276,9 @@ a {
   background: var(--surface-2);
 }
 
-/* From 920px the seven links fit next to the brand and the Discord button, with more room around them from 1000px. */
-@media (min-width: 920px) {
+/* From 1180px the nine links fit next to the brand, the account and the Discord buttons. Below that the links keep a row of
+   their own, as on phones: at 920 to 1179px they and the buttons did not fit in one row. */
+@media (min-width: 1180px) {
   .nav-inner {
     flex-wrap: nowrap;
   }
@@ -301,7 +302,7 @@ a {
   }
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1180px) {
   .nav-links {
     gap: 4px;
   }
@@ -7498,4 +7499,242 @@ body.rot-grabbing * {
   .vote-peek {
     padding: 16px 20px;
   }
+}
+
+/* The header's way in to the account page (see chip.js): next to the Discord button. */
+.account-chip {
+  white-space: nowrap;
+}
+
+.account-chip .icon {
+  display: none;
+}
+
+/* On phones it is a person icon, so the brand, this and the Discord button share one row. */
+@media (max-width: 479px) {
+  .account-chip {
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+  }
+
+  .account-chip .icon {
+    display: block;
+  }
+
+  .account-chip .chip-text {
+    display: none;
+  }
+}
+
+.account-chip[aria-current='page'] {
+  background: var(--surface-2);
+}
+
+/* The account page (see account.js). */
+.account-card {
+  max-width: 760px;
+  padding: 20px;
+}
+
+.account-sub {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+h3.account-sub {
+  margin-top: 28px;
+}
+
+.account-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.account-top .account-sub {
+  margin: 0;
+}
+
+.account-rows {
+  margin: 12px 0 0;
+}
+
+.account-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 4px 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.account-row[hidden] {
+  display: none;
+}
+
+.account-row dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.account-row dd {
+  margin: 0;
+}
+
+.account-row dd p {
+  margin: 0 0 8px;
+}
+
+@media (max-width: 599px) {
+  .account-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+
+.account-row dd.account-actions {
+  margin: 0;
+}
+
+.account-actions[hidden] {
+  display: none;
+}
+
+.account-perks {
+  margin: 12px 0;
+  padding-left: 1.2em;
+  color: var(--text-2);
+}
+
+.account-perks li + li {
+  margin-top: 4px;
+}
+
+.account-fine {
+  max-width: 62ch;
+  font-size: 0.9rem;
+}
+
+.account-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.account-check[hidden] {
+  display: none;
+}
+
+.account-check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.25em;
+  accent-color: var(--accent);
+}
+
+.account-status {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  color: var(--text-2);
+}
+
+.account-flash {
+  max-width: 760px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+}
+
+.account-flash[hidden] {
+  display: none;
+}
+
+.account-flash-good {
+  border-color: var(--good);
+}
+
+.account-flash-bad {
+  border-color: var(--critical);
+}
+
+/* Voting on the vote page, for a signed-in member (see vote.js): each option is a button. */
+button.vote-option {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.vote-option:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+button.vote-option:disabled {
+  cursor: default;
+}
+
+.vote-option[data-mine] {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.vote-signin {
+  margin: 16px 0 0;
+}
+
+.vote-signin .btn + .btn {
+  margin-left: 12px;
+}
+
+.vote-reply {
+  min-height: 1.5em;
+  margin: 12px 0 0;
+  color: var(--text-2);
+}
+
+[data-signed-out][hidden] {
+  display: none;
+}
+
+/* A reason to sign in, in the middle of a page (see chip.js). */
+.cta-card {
+  max-width: 760px;
+  padding: 20px;
+}
+
+.cta-card h2 {
+  margin-top: 0;
+}
+
+.cta-card p {
+  max-width: 62ch;
+}
+
+/* The account page's buttons are drawn like its ghost links, not the browser's grey. */
+.account-card button.btn {
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-card button.btn:hover {
+  background: var(--surface-2);
 }

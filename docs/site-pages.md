@@ -83,6 +83,9 @@ What it shows:
   "Vote in Discord" button to the channel. When the vote closes, the winner is put on the server as the next map, infantry
   only, and the page says so; with no votes, or if staff picked a map meanwhile, it says why nothing changed. It cannot
   vote itself. The bot's `GET /api/vote` serves it (never who voted), and it is empty unless the bot has `MAP_VOTE` on.
+- An account page (`/account`): players sign in with Discord, and see what the bot knows of them and change it. Not in the
+  sitemap (`noindex`). The header on every page has a **Sign in** button next to Discord (the name they signed in as, once
+  they have; a person icon on a phone) that goes here. See [Player accounts](#player-accounts) below.
 - A season page (`/season`, "Season 1" in the menu, and a box under the home page's intro): the roundup of Season 1,
   from the bot's `GET /api/season`. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC** (1am in the UK),
   so the page is open to everyone. Before a season ends the bot does not send the roundup to anyone, so the page shows
@@ -130,6 +133,45 @@ What it shows:
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
+
+## Player accounts
+
+A player signs in with Discord (`/account`), and the bot, not the website, does the rest: it keeps the account, links the Steam
+account, gives roles and sends messages (the bot's [Player accounts](https://github.com/ParagonJenko/wardogs-discord-bot#player-accounts)).
+The website is the way in and the place to see and change it. No password, and no cookie: the bot sends the browser back with a
+session after a `#`, which is kept in this browser (`localStorage`, `gaminginit-player-session`, or in memory when storage is
+off) and sent as a bearer token to the bot's `/api/account`. It lasts 30 days. A different token from the staff page's: staff
+routes never take it. The bot is the one in each page's `<meta name="stats-url">`, never one named in the address (`?stats=`),
+so a link cannot send someone's session to another site.
+
+- **Signed out**, the account page has two buttons. **Sign in with Discord** asks for the Discord name, whether they are in the
+  server and the Steam account on their profile. **Sign in and join the Discord** also lets the bot add them to the server: Discord's
+  own screen says it can "join servers for you", so it is a button of its own and plain sign-in never does it. The page says
+  what each does.
+- **Signed in**, the page shows: whether they are in the Discord server (with a join button if not); their Steam account and how
+  it was linked (from their Discord profile, or **Link with Steam**: Steam's own sign-in, which proves they own it; **Unlink** takes
+  two presses); their seeder VIP and until when; buttons to **their player page and their season**; and settings, **Message me on
+  Discord about my VIP** (when the bot can send them) and **Make my player page private** (staff keep control of one they made
+  private: the box is off for it). **Delete my account** takes the roles, and forgets the Discord link, the Steam link and the
+  settings, in two presses. The list of what linking gets them only has what the bot can give (`perks` in its answer).
+- **Coming back** from Discord or Steam, the page says once what happened: whether the join worked, whether a Steam account was
+  found, or why it did not work (`#error=cancelled|expired|failed|steam`). A Steam proof (`#steamproof=…`) is sent to the bot with
+  the session, which links it; without a session the page asks them to sign in first.
+- **Voting here.** On `/vote`, a signed-in member of the Discord gets a button for each map and each condition, and can change
+  their vote. It is counted exactly as the Discord button is: one vote per Discord account, in either place, and the vote message in
+  Discord updates. Their own choice is outlined. Someone signed out is offered the sign-in, someone signed in but not in the server
+  the join. The page asks the bot for the account again every minute, as the vote can also change in Discord.
+- **Season.** On `/season` a signed-in player with a Steam account linked gets **Open my season**, which opens their story without
+  searching for their name.
+- **Reasons to sign in, where people are**: a line under "Join the gaminginit Discord" on the home page, a card at the bottom of
+  `/seeding` (VIP messages, and the Seeders role in Discord) and of every player page ("Is this you?"), and a line on the season
+  page. They show only to someone not signed in, and only once the bot is connected.
+- **The Discord links** on every page go through the bot (`/go/discord?src=<place>`), which counts the click by place and sends the
+  browser to the invite (the staff page's Discord growth card shows it). Each place is the page and the part of it, from the link's
+  `data-src` (`home-hero`, `leaderboard-nav`). Without JavaScript, or in `?demo`, the link is the invite itself.
+  **`/discord`** is a short link to the same, for the welcome message in game (`public/_redirects`).
+- `?demo` on `/account` shows a signed-in sample, whose buttons only change the sample.
+- Nothing about an account is on a public page, and a player page does not show whether its player has one.
 
 ## How it behaves
 

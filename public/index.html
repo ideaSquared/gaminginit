@@ -79,7 +79,7 @@
             <li><a href="season" data-keep-query>Season 1</a></li>
           </ul>
         </nav>
-        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+        <a class="btn btn-discord btn-small" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
           <span>Discord</span>
         </a>
@@ -117,7 +117,7 @@
               </p>
             </div>
             <div class="hero-actions">
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="hero" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
@@ -173,7 +173,7 @@
               <p class="vote-peek-detail" id="vote-peek-detail"></p>
               <ol class="vote-peek-list" id="vote-peek-list"></ol>
               <p class="vote-peek-actions" id="vote-peek-actions">
-                <a class="btn btn-discord" id="vote-peek-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+                <a class="btn btn-discord" id="vote-peek-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="vote-peek" rel="noopener">
                   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                   <span>Vote in Discord</span>
                 </a>
@@ -232,12 +232,14 @@
               <span class="step-n" aria-hidden="true">1</span>
               <h3>Join the gaminginit Discord</h3>
               <p>Meet the regulars, find a squad and hear about events first.</p>
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" rel="noopener">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="join" rel="noopener">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
                 <span>Join our Discord</span>
               </a>
               <!-- The invite as text, for when the button doesn't open Discord. -->
               <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code>discord.gg/qsJFYGhSJ4</code>.</p>
+              <!-- For someone not signed in (see chip.js). -->
+              <p class="discord-fallback" data-signed-out hidden>Already playing? <a href="account" data-keep-query>Sign in with Discord</a> to link your Steam account, get a role, and be told when your seeder VIP is earned or ending.</p>
             </li>
             <li class="card step">
               <span class="step-n" aria-hidden="true">2</span>
