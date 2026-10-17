@@ -7371,6 +7371,13 @@ body.rot-grabbing * {
   background: var(--series);
 }
 
+.vote-sub {
+  margin: 24px 0 12px;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .vote-foot {
   margin: 16px 0 0;
 }

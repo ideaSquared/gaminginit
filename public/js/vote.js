@@ -47,6 +47,22 @@ const render = () => {
       return row;
     }),
   );
+  // The conditions vote, when the bot has one: its own share, of the votes on the conditions.
+  const conditions = vote?.conditions ?? [];
+  const conditionVotes = conditions.reduce((sum, c) => sum + c.votes, 0);
+  $('vote-conditions').hidden = conditions.length === 0;
+  $('vote-conditions-list').replaceChildren(
+    ...conditions.map((c) => {
+      const percent = share(c.votes, conditionVotes);
+      return el(
+        'div',
+        { className: 'vote-option' },
+        el('span', { className: 'vote-name', textContent: c.label }),
+        el('span', { className: 'vote-count', textContent: `${c.votes} ${c.votes === 1 ? 'vote' : 'votes'} · ${percent}%` }),
+        el('span', { className: 'vote-bar', 'aria-hidden': 'true' }, el('span', { className: 'vote-fill', style: `width: ${percent}%` })),
+      );
+    }),
+  );
   // The way in: the channel when the bot knows it, else the community's Discord invite already on every page.
   const link = $('vote-discord');
   link.hidden = vote === null || !open;
