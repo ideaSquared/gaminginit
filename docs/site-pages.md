@@ -83,7 +83,7 @@ What it shows:
   "Vote in Discord" button to the channel. When the vote closes, the winner is put on the server as the next map, infantry
   only, and the page says so; with no votes, or if staff picked a map meanwhile, it says why nothing changed. It cannot
   vote itself. The bot's `GET /api/vote` serves it (never who voted), and it is empty unless the bot has `MAP_VOTE` on.
-- A season page (`/season`, "Season 1" in the menu, and a box under the home page's intro): the roundup of Season 1,
+- A season page (`/season`, "Season roundup" in the menu, and a box under the home page's intro): the roundup of Season 1,
   from the bot's `GET /api/season`. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC** (1am in the UK),
   so the page is open to everyone. Before a season ends the bot does not send the roundup to anyone, so the page shows
   a countdown and what the roundup will have. It loads the bot again every minute, so a page left open opens by
@@ -130,6 +130,25 @@ What it shows:
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
+
+## The header
+
+The same on every page (`js/nav.js`, markup in each page's `<header class="nav">`).
+
+- **Menu:** Live and Matches, then three groups: Players (Leaderboard, All players), Stats (Server activity, Team win
+  rates) and Community (Map vote, Seeding & VIP, Season roundup). From 920px wide the groups open as menus on a click,
+  or Down arrow on the group; Escape closes them, and so do a click elsewhere and tabbing out. A group is underlined
+  when the page is one of its pages. Under 920px a Menu button opens a panel with every link and the group names,
+  and the Discord button last; Escape, a click elsewhere and tabbing out of the header close it. Without script the links
+  are all shown, open.
+- **Server chip:** on every page, the server as the bot last saw it: Live and its players out of the maximum, Seeding
+  and its players out of the number needed to go live, Empty or Offline. It links to the home page's "Play with us".
+  It is read from `/api/stats` once a minute while the tab is visible, shows nothing until the bot has given a reading,
+  and keeps its last state if a refresh fails. Under 360px it drops the count.
+- **Vote flag:** while a map vote is open (from `/api/vote`) the Community group and the Menu button get a dot, and
+  Map vote an "Open" label. The flag clears at the vote's deadline (checked every 10 seconds) even if the bot can't be
+  reached. A closed vote's winner is not flagged. A bot without the vote shows no flag.
+- `?demo` shows a live server and an open vote.
 
 ## How it behaves
 
