@@ -51,7 +51,7 @@ What it shows:
   feed scrolls inside its card; on a phone (under 900 px wide) it is a short list in the page, the latest 15 kills with
   "Show more" for 15 more at a time, so scrolling the page is never caught in a box of its own.
 - A leaderboard page (`/leaderboard`) for the last 30 days: most kills, best K/D (from the bot's number of matches,
-  10), most time played and top seeders (players with no seed days are left out).
+  10), most time played and top seeders (players with no seed days are left out), which covers the last 7 days.
   Under it, the weapons: the 10 with the most kills over the last 30 days, each with its share of headshots, average
   distance and longest kill, plus the kills recorded, the share of headshots and the longest kill of all with a
   hand-held weapon (not mines, emplacements, vehicles, anything built or lock-on launchers such as the 9K333 Verba).
