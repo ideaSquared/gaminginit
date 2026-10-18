@@ -108,6 +108,7 @@ export const demoStats = (now) => {
         : null,
     discord: { name: 'gaminginit', members: 1284, online: 213, fetchedAt: minute },
     leaderboard: leaderboard(),
+    recentSeeders: recentSeeders(),
     weapons: weapons(now),
     vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
     seederVip: seederVip(now),
@@ -142,6 +143,16 @@ const leaderboard = () => {
     playtime: by((p) => p.seedingMinutes + p.liveMinutes),
     seeding: by((p) => p.seedDays * 1e6 + p.seedingMinutes).filter((p) => p.seedingMinutes > 0),
   };
+};
+
+// The last 7 days of the same regulars' seeding: no more than 7 seed days, and a week's share of the minutes.
+const recentSeeders = () => {
+  const { seeding } = leaderboard();
+  const rows = seeding
+    .map((p) => ({ ...p, seedDays: Math.min(p.seedDays, 7), seedingMinutes: Math.round(p.seedingMinutes / 4) }))
+    .filter((p) => p.seedingMinutes > 0)
+    .sort((a, b) => b.seedDays - a.seedDays || b.seedingMinutes - a.seedingMinutes);
+  return { days: 7, rows };
 };
 
 // Who has VIP from seeding: the regulars with 3 seed days or more, each with some of their week left.

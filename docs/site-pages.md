@@ -75,7 +75,7 @@ What it shows:
   kill feed, the seeding page and the weapons. They are left off the players page, and their player page says no player
   was found. The staff pages still show them as they are.
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
-  and how to help. Then our seeders: the top seeders over the last 30 days (only players with at least one seed day),
+  and how to help. Then our seeders: the top seeders over the last 7 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
 - A vote page (`/vote`): the next map. People vote in Discord, with buttons on a message in one channel that the bot posts
   when a match goes live (random maps, never the one playing or one of the last few played; one vote per Discord account,
