@@ -22,17 +22,17 @@ const renderSeeding = (stats) => {
   setText($('seed-live'), String(stats.thresholds.live));
 };
 
-// The leaderboard's top seeders board.
+// The top seeders of the last week, which the bot works out apart from the leaderboard's month.
 const renderTopSeeders = (stats) => {
   const root = $('top-seeders');
-  const leaderboard = stats?.leaderboard;
-  if (!leaderboard) {
+  const seeders = stats?.recentSeeders;
+  if (!seeders) {
     const message = stats ? 'The top seeders appear once the bot keeps player records.' : 'Waiting for live stats.';
     root.replaceChildren(el('p', { className: 'muted', textContent: message }));
     return;
   }
-  setText($('top-seeders-sub'), `Time on the server before it went live, over the last ${leaderboard.days} days (UTC days).`);
-  const rows = boardRows(SEEDERS, leaderboard);
+  setText($('top-seeders-sub'), `Time on the server before it went live, over the last ${seeders.days} days (UTC days).`);
+  const rows = boardRows(SEEDERS, { seeding: seeders.rows });
   root.replaceChildren(rows.length > 0 ? boardTable(SEEDERS, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }));
 };
 

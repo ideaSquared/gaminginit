@@ -21,12 +21,15 @@ const renderLeaderboard = (stats) => {
   setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
   root.replaceChildren(
     ...BOARDS.map((board) => {
-      const rows = boardRows(board, leaderboard);
+      // Top seeders cover the last week, not the month, when the bot sends them.
+      const week = board.key === 'seeding' ? stats.recentSeeders : undefined;
+      const rows = boardRows(board, week ? { seeding: week.rows } : leaderboard);
+      const sub = board.sub && (week ? `${board.sub(leaderboard)} Over the last ${week.days} days.` : board.sub(leaderboard));
       return el(
         'article',
         { className: 'card board' },
         el('h3', { textContent: board.title }),
-        board.sub ? el('p', { className: 'board-sub', textContent: board.sub(leaderboard) }) : null,
+        sub ? el('p', { className: 'board-sub', textContent: sub }) : null,
         rows.length > 0 ? boardTable(board, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }),
       );
     }),
