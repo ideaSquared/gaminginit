@@ -82,7 +82,7 @@ const syncRows = (list, rows) => {
   [...list.children].forEach((node, i) => updateRow(node, rows[i]));
 };
 
-// What a row needs: `voting` says whether this player can vote, and `kind` is the map, the time of day ('light'), the weather or the circles ('zone').
+// What a row needs: `voting` says whether this player can vote, and `kind` is the map, the time of day ('light') or the weather ('weather').
 const rowsFor = (items, kind, total, voting, winner = null) =>
   items.map((item) => {
     const key = kind === 'map' ? item.map : item.key;
@@ -172,11 +172,10 @@ const render = () => {
   }
   const voting = canVote(account, vote, now);
   syncRows($('vote-options'), rowsFor(vote?.options ?? [], 'map', vote?.total ?? 0, voting, winnerOf(vote)));
-  // The time of day, weather and circles votes, when the bot has them: each its own share, of the votes on it.
+  // The time of day and weather votes, when the bot has them: each its own share, of the votes on it.
   for (const [kind, section, items] of [
     ['light', 'vote-conditions', vote?.conditions ?? []],
     ['weather', 'vote-weather', vote?.weather ?? []],
-    ['zone', 'vote-zones', vote?.zones ?? []],
   ]) {
     $(section).hidden = items.length === 0;
     syncRows($(`${section}-list`), rowsFor(items, kind, items.reduce((sum, c) => sum + c.votes, 0), voting));
