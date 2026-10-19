@@ -164,22 +164,65 @@
                 <h3>Busy times</h3>
                 <p class="chart-sub" id="busiest-sub">Average players in each hour of the day, your local time.</p>
               </figcaption>
-              <p class="busiest-summary" id="busiest-summary" hidden>
-                <span class="busiest-key" id="busiest-key" aria-hidden="true"></span>
-                <strong id="busiest-when"></strong>
-                <span id="busiest-players"></span>
-              </p>
-              <div
-                class="chart chart-short"
-                id="busiest-chart"
-                tabindex="0"
-                role="img"
-                aria-label="Average players in each hour of the day. Use the left and right arrow keys to read values."
-              ></div>
-              <details class="table-view">
-                <summary>Show as table</summary>
-                <div class="table-scroll"><table id="busiest-table"></table></div>
-              </details>
+              <div class="busiest-parts">
+                <section class="busiest-part" id="busiest-all" aria-labelledby="busiest-all-heading">
+                  <h4 id="busiest-all-heading" class="busiest-heading" hidden>All days</h4>
+                  <p class="busiest-summary" id="busiest-all-summary" hidden>
+                    <span class="busiest-key" id="busiest-all-key" aria-hidden="true"></span>
+                    <strong id="busiest-all-when"></strong>
+                    <span id="busiest-all-players"></span>
+                  </p>
+                  <div
+                    class="chart chart-short"
+                    id="busiest-all-chart"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Average players in each hour of the day, all days. Use the left and right arrow keys to read values."
+                  ></div>
+                  <details class="table-view">
+                    <summary>Show as table</summary>
+                    <div class="table-scroll"><table id="busiest-all-table"></table></div>
+                  </details>
+                </section>
+                <section class="busiest-part" id="busiest-weekdays" aria-labelledby="busiest-weekdays-heading">
+                  <h4 id="busiest-weekdays-heading" class="busiest-heading">Weekdays</h4>
+                  <p class="busiest-summary" id="busiest-weekdays-summary" hidden>
+                    <span class="busiest-key" id="busiest-weekdays-key" aria-hidden="true"></span>
+                    <strong id="busiest-weekdays-when"></strong>
+                    <span id="busiest-weekdays-players"></span>
+                  </p>
+                  <div
+                    class="chart chart-short"
+                    id="busiest-weekdays-chart"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Average players in each hour of the day, weekdays. Use the left and right arrow keys to read values."
+                  ></div>
+                  <details class="table-view">
+                    <summary>Show as table</summary>
+                    <div class="table-scroll"><table id="busiest-weekdays-table"></table></div>
+                  </details>
+                </section>
+                <section class="busiest-part" id="busiest-weekends" aria-labelledby="busiest-weekends-heading">
+                  <h4 id="busiest-weekends-heading" class="busiest-heading">Weekends</h4>
+                  <p class="busiest-summary" id="busiest-weekends-summary" hidden>
+                    <span class="busiest-key" id="busiest-weekends-key" aria-hidden="true"></span>
+                    <strong id="busiest-weekends-when"></strong>
+                    <span id="busiest-weekends-players"></span>
+                  </p>
+                  <div
+                    class="chart chart-short"
+                    id="busiest-weekends-chart"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Average players in each hour of the day, weekends. Use the left and right arrow keys to read values."
+                  ></div>
+                  <details class="table-view">
+                    <summary>Show as table</summary>
+                    <div class="table-scroll"><table id="busiest-weekends-table"></table></div>
+                  </details>
+                </section>
+              </div>
             </figure>
           </div>
         </div>

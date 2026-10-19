@@ -27,6 +27,9 @@ What it shows:
   bot sends `hourly` with `busy`, otherwise over the last 24 hours. The bot takes each hour from its median day of the
   14, so one bad day, like a quiet evening, does not take an hour off the busy times, and it leaves crashes out until
   the players are back.
+  When the bot sends `hourly.weekdays` and `hourly.weekends` (Monday to Friday and Saturday and Sunday, by UTC day) the
+  busy times are two charts, weekdays and weekends, each with its own busy hours and table; otherwise one chart for all
+  days.
 - A matches page (`/matches`) with the last 10 matches, each with every side's score, highest first, with the side
   names in their colour in game (the winner in bold, and "No result:" when the top sides were level, as teams never
   draw; a side the bot sent no colour for gets its faction's usual one), and its top 5. Each match is also a link

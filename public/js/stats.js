@@ -16,7 +16,8 @@ let stats = null;
 
 const population = populationChart($('population-chart'));
 const daily = dailyChart($('daily-chart'));
-const busiestView = busiestChart($('busiest-chart'));
+const BUSIEST_PARTS = ['all', 'weekdays', 'weekends'];
+const busiestViews = Object.fromEntries(BUSIEST_PARTS.map((key) => [key, busiestChart($(`busiest-${key}-chart`))]));
 
 const renderTiles = (now) => {
   const state = serverState(stats, now);
@@ -52,30 +53,51 @@ const renderCharts = (now) => {
 
   // When the server is busy: the hours with the busy threshold or more players at least half the time. Over the last
   // 14 days when the bot sends hourly figures, each hour from its median day so one bad day does not drag it down,
-  // and with crashes left out; otherwise over the last 24 hours of readings.
+  // and with crashes left out; otherwise over the last 24 hours of readings. The weekdays and the weekends get a chart
+  // each when the bot sends them apart, as the server is busy at different times on each.
   const recent = history.filter(([t]) => t >= now - DAY);
   const threshold = stats?.thresholds?.busy ?? BUSY_PLAYERS;
   const hourly = stats?.hourly?.busy ? stats.hourly : null;
-  const period = hourly ? `the last ${hourly.days} days` : 'the last 24 hours';
+  const split = hourly?.weekdays?.busy && hourly?.weekends?.busy;
   const offset = new Date(now).getTimezoneOffset();
-  const averages = hourly ? toLocalHours(hourly.players, offset) : hourlyAverages(recent);
-  const shares = hourly ? toLocalHours(hourly.busy, offset) : busyShares(recent, threshold);
-  busiestView.update({ averages, busy: shares.map(isBusy), period });
-  tableOf(
-    $('busiest-table'),
-    ['Hour', 'Average players', `Time at ${threshold}+`],
-    averages.map((average, hour) => [
-      hourRange(hour),
-      average === null ? '–' : Math.round(average),
-      shares[hour] === null ? '–' : `${Math.round(shares[hour] * 100)}%`,
-    ]),
+  const period = hourly ? `the last ${hourly.days} days` : 'the last 24 hours';
+  const figures = hourly
+    ? {
+        all: [hourly.players, hourly.busy],
+        weekdays: [hourly.weekdays?.players, hourly.weekdays?.busy],
+        weekends: [hourly.weekends?.players, hourly.weekends?.busy],
+      }
+    : null;
+  $('busiest-all').hidden = Boolean(split);
+  $('busiest-weekdays').hidden = !split;
+  $('busiest-weekends').hidden = !split;
+  setText(
+    $('busiest-sub'),
+    split
+      ? 'Average players in each hour of the day, your local time. Weekdays are Monday to Friday and weekends Saturday and Sunday (UTC days).'
+      : 'Average players in each hour of the day, your local time.',
   );
-  const runs = busyRuns(shares);
-  const range = ({ start, length }) => (length === 24 ? 'All day' : hourRange(start, length));
-  $('busiest-summary').hidden = averages.every((a) => a === null);
-  $('busiest-key').hidden = runs.length === 0;
-  setText($('busiest-when'), runs.length === 0 ? 'No busy hours' : runs.map(range).join(', '));
-  setText($('busiest-players'), runs.length === 0 ? `in ${period}` : `usually ${threshold}+ players`);
+  for (const key of split ? ['weekdays', 'weekends'] : ['all']) {
+    const averages = figures ? toLocalHours(figures[key][0], offset) : hourlyAverages(recent);
+    const shares = figures ? toLocalHours(figures[key][1], offset) : busyShares(recent, threshold);
+    const label = key === 'all' ? period : `${period} on ${key}`;
+    busiestViews[key].update({ averages, busy: shares.map(isBusy), period: label });
+    tableOf(
+      $(`busiest-${key}-table`),
+      ['Hour', 'Average players', `Time at ${threshold}+`],
+      averages.map((average, hour) => [
+        hourRange(hour),
+        average === null ? '–' : Math.round(average),
+        shares[hour] === null ? '–' : `${Math.round(shares[hour] * 100)}%`,
+      ]),
+    );
+    const runs = busyRuns(shares);
+    const range = ({ start, length }) => (length === 24 ? 'All day' : hourRange(start, length));
+    $(`busiest-${key}-summary`).hidden = averages.every((a) => a === null);
+    $(`busiest-${key}-key`).hidden = runs.length === 0;
+    setText($(`busiest-${key}-when`), runs.length === 0 ? 'No busy hours' : runs.map(range).join(', '));
+    setText($(`busiest-${key}-players`), runs.length === 0 ? `in ${label}` : `usually ${threshold}+ players`);
+  }
 
   // Hourly summary of the 24-hour chart, newest first.
   const hours = new Map();

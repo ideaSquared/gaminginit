@@ -1390,6 +1390,32 @@ h1 {
   margin-top: 8px;
 }
 
+/* Weekdays and weekends side by side where there is room, one above the other where there is not. */
+.busiest-parts {
+  display: grid;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.busiest-part {
+  min-width: 0;
+}
+
+.busiest-part[hidden] {
+  display: none;
+}
+
+.busiest-heading {
+  font-size: 1rem;
+  margin-top: 12px;
+}
+
+@media (min-width: 900px) {
+  .busiest-parts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Tables */
 
 .table-view {

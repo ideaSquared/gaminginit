@@ -22,6 +22,15 @@ const BUSY = 60;
 // Deterministic wobble, so the preview looks the same on every load.
 const wobble = (n) => Math.sin(n * 0.11) * 0.6 + Math.sin(n * 0.029) * 0.4;
 
+// One set of hourly figures: the curve scaled, and moved `late` hours later.
+const demoHourly = (scale, late = 0) => {
+  const curve = CURVE.map((_, hour) => CURVE[(hour - late + 24) % 24] * scale);
+  return {
+    players: curve.map((p, hour) => Math.max(0, p + wobble(hour * 7) * 3)),
+    busy: curve.map((p) => Math.max(0, Math.min(1, (p - 55) / 10))),
+  };
+};
+
 const playersAt = (at) => {
   const hours = (at % DAY) / HOUR;
   const i = Math.floor(hours);
@@ -116,8 +125,10 @@ export const demoStats = (now) => {
     // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
     hourly: {
       days: 14,
-      players: CURVE.map((p, hour) => Math.max(0, p + wobble(hour * 7) * 3)),
-      busy: CURVE.map((p) => Math.max(0, Math.min(1, (p - 55) / 10))),
+      ...demoHourly(1),
+      // Weekends start later and run busier, which is why they get a chart of their own.
+      weekdays: demoHourly(1),
+      weekends: demoHourly(1.15, 2),
     },
   };
 };
