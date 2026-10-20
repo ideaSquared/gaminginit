@@ -3912,6 +3912,82 @@ html.story-open {
   white-space: nowrap;
 }
 
+/* Lifetime (lifetime.js, trends.js): the daily line is quiet and its 7-day average is the one to read; new players are picked out
+   in the accent on top of the others. */
+.chart .line-raw {
+  stroke: var(--series-quiet);
+  stroke-width: 1.5;
+}
+
+.chart .dot-quiet {
+  fill: var(--series-quiet);
+}
+
+.chart .column-new {
+  fill: var(--accent);
+}
+
+.chart .hover-band {
+  fill: var(--text);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.pt-chart:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.pt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  padding: 0;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  list-style: none;
+}
+
+.pt-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pt-key {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.pt-key-raw {
+  background: var(--series-quiet);
+}
+
+.pt-key-avg,
+.pt-key-returning {
+  background: var(--series);
+}
+
+.pt-key-returning,
+.pt-key-new {
+  height: 10px;
+  border-radius: 3px;
+}
+
+.pt-key-new {
+  background: var(--accent);
+}
+
+.pt-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 /* Leaves by hour. */
 .heatmap {
   min-width: 640px;

@@ -1,8 +1,8 @@
 import { ask } from './ask.js';
-import { demoGrowth, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
+import { demoGrowth, demoLifetime, demoLifetimeCsv, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
 import { clickPlace, growthText, SERVER_VIEWS, staffNote } from './format.js';
 import { demo, showNotice } from './live.js';
-import { $, badge, call, cell, get, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
+import { $, badge, call, cell, get, getText, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
 import { el } from './views.js';
 
 // The staff page's Server section, once the Server settings page, in four views. Bans and VIP: the bans on the server,
@@ -80,6 +80,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     selected(view);
     if (data && view === 'bans') loadGrowth();
     if (data && view === 'playtime') loadPlaytime();
+    if (data && view === 'lifetime') loadLifetime();
     if (!data || !EDITORS[view]) return;
     (await editor(view))?.show();
   };
@@ -286,6 +287,59 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     });
   }
 
+  // Lifetime: what the bot has kept for good (see lifetime.js). Read when the view is shown, at most every few minutes: the
+  // bot adds a day once a day. The range buttons only change which days the daily lines show.
+  let lifetimeAt = 0;
+  const LIFETIME_MS = 10 * 60_000;
+  let lifetimeRequest = 0;
+  let lifetimeView = null;
+  let lifetimeData = null;
+  const lifetimeRange = () => $('lifetime-range').querySelector('[aria-pressed="true"]')?.dataset.range ?? 'all';
+
+  // Saves a table as a file: the bot's CSV, or sample rows with ?demo.
+  const downloadTable = async (table) => {
+    const { ok, text } = demo ? { ok: true, text: demoLifetimeCsv(table) } : await getText(`admin/lifetime.csv?table=${table}`);
+    if (!ok) return false;
+    const link = el('a', { href: URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })), download: `wardogs-${table}.csv` });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+    return true;
+  };
+
+  const loadLifetime = async () => {
+    if (lifetimeData !== null && Date.now() - lifetimeAt < LIFETIME_MS) return;
+    lifetimeAt = Date.now();
+    const request = ++lifetimeRequest;
+    try {
+      const { ok, status, json } = demo ? { ok: true, status: 200, json: demoLifetime() } : await get('admin/lifetime');
+      if (request !== lifetimeRequest) return;
+      if (!ok) {
+        lifetimeAt = 0;
+        if (status === 404) setStatus($('lifetime-note'), 'The bot does not keep these yet. Deploy the latest bot.');
+        else if (loadToken()) setStatus($('lifetime-note'), 'Couldn’t load this just now. Try again in a minute.');
+        return;
+      }
+      lifetimeView ??= (await import('./lifetime.js')).createLifetime($('lifetime-root'), { download: downloadTable });
+      if (request !== lifetimeRequest) return;
+      lifetimeData = json;
+      setStatus($('lifetime-note'), lifetimeView.text(json));
+      lifetimeView.render(json, lifetimeRange());
+    } catch (error) {
+      if (request !== lifetimeRequest) return;
+      lifetimeAt = 0;
+      console.error('Could not load the lifetime records', error);
+      setStatus($('lifetime-note'), 'Couldn’t reach the bot. Try again in a minute.');
+    }
+  };
+  for (const button of $('lifetime-range').querySelectorAll('button')) {
+    button.addEventListener('click', () => {
+      for (const other of $('lifetime-range').querySelectorAll('button')) other.setAttribute('aria-pressed', String(other === button));
+      if (lifetimeData !== null && lifetimeView !== null) lifetimeView.render(lifetimeData, lifetimeRange());
+    });
+  }
+
   // The views: click, or ← → Home End from their row of buttons.
   for (const name of SERVER_VIEWS) $(`tab-${name}`).addEventListener('click', () => show(name));
   tabKeys(SERVER_VIEWS, () => view, show, $('panel-server').querySelector('.server-tabs'));
@@ -304,6 +358,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
       renderStaffSteam(overview);
       if (view === 'bans' && !$('panel-server').hidden) loadGrowth();
       if (view === 'playtime' && !$('panel-server').hidden) loadPlaytime();
+      if (view === 'lifetime' && !$('panel-server').hidden) loadLifetime();
       if (open && EDITORS[view]) (await editor(view))?.ensure();
     },
     // Signing out forgets everything the editors had.
@@ -312,6 +367,9 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
       growthAt = 0;
       playtimeAt = 0;
       playtimeRequest += 1;
+      lifetimeAt = 0;
+      lifetimeRequest += 1;
+      lifetimeData = null;
       for (const e of Object.values(editors)) e.reset();
     },
   };

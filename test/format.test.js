@@ -2,6 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   barLengths,
+  dailyPoints,
+  lifetimeLeaves,
+  lifetimeText,
+  lifetimeTiles,
+  peopleSlots,
+  rowShare,
   bounceText,
   funnelText,
   heatGrid,
@@ -1790,5 +1796,40 @@ describe('play time, the look of it', () => {
       seeding: { matches: 2, averageMinutes: 30, seeders: 10, reachedLive: 4 },
     });
     assert.deepEqual(full.map((t) => t.value), ['10', '58 min', '50%', '25%', '50%', '40%']);
+  });
+});
+
+describe('the Lifetime view', () => {
+  const rows = [
+    { day: '2026-10-01', unique_players: 10, new_players: null, returning_players: null, player_minutes: 600, stays_new: null, short_stays_new: null, leaves_early: null, leaves_mid: null, leaves_late: null, leaves_end: null, leaves_between: null, leaves_finale: null },
+    { day: '2026-10-02', unique_players: 12, new_players: 4, returning_players: 8, player_minutes: 900, stays_new: 10, short_stays_new: 5, leaves_early: 2, leaves_mid: 1, leaves_late: 1, leaves_end: 4, leaves_between: 2, leaves_finale: 3 },
+    { day: '2026-10-03', unique_players: 15, new_players: 3, returning_players: 12, player_minutes: 1200, stays_new: 0, short_stays_new: 0, leaves_early: 1, leaves_mid: 0, leaves_late: 0, leaves_end: 2, leaves_between: 0, leaves_finale: 1 },
+  ];
+
+  it('says what has been kept', () => {
+    assert.match(lifetimeText({ since: null }), /Nothing kept yet/);
+    assert.match(lifetimeText({ since: '2026-10-01', through: '2026-10-03', summary: { days: 3 } }), /3 days kept, from 2026-10-01 to 2026-10-03/);
+  });
+
+  it('makes the headline tiles', () => {
+    const tiles = lifetimeTiles({ since: '2026-06-22', summary: { unique_players: 1234, active_last_30: 280, new_last_30: 117, regulars: 71, lapsed_regulars: 38, player_hours: 14210, matches: 590, days: 120 } });
+    assert.deepEqual(tiles.map((t) => t.value), ['1,234', '280', '71', '38', '14,210', '590']);
+    assert.equal(tiles[1].sub, '117 of them new');
+  });
+
+  it('takes the last days of a daily figure, with gaps where a row has none', () => {
+    const points = dailyPoints(rows, (r) => rowShare(r, 'short_stays_new', 'stays_new'));
+    assert.deepEqual(points.map((p) => p.value), [null, 50, null]);
+    assert.deepEqual(dailyPoints(rows, (r) => r.unique_players, 2).map((p) => p.day), ['2026-10-02', '2026-10-03']);
+  });
+
+  it('makes chart columns, the new players null where not known', () => {
+    const slots = peopleSlots(rows, { key: 'day', total: 'unique_players', fresh: 'new_players', label: (r) => r.day.slice(8), title: (r) => r.day });
+    assert.deepEqual(slots.map((s) => [s.label, s.total, s.fresh]), [['01', 10, null], ['02', 12, 4], ['03', 15, 3]]);
+    assert.equal(peopleSlots(rows, { key: 'day', total: 'unique_players', fresh: 'new_players', label: (r) => r.day, title: (r) => r.day }, 1).length, 1);
+  });
+
+  it('adds up where players left over the days that have stays', () => {
+    assert.deepEqual(lifetimeLeaves(rows), { total: 13, timing: { early: 3, mid: 1, late: 1, end: 6, between: 2 }, finale: 4 });
   });
 });

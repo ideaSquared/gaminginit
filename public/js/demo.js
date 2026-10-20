@@ -1812,3 +1812,111 @@ export const demoPlaytime = (days = 7) => {
     ],
   };
 };
+
+// The staff page's Lifetime view: the bot's GET /api/admin/lifetime, with sample numbers for 120 days, busier at weekends
+// and slowly growing. Stays are only there for the last 30 days, as on the bot.
+export const demoLifetime = () => {
+  const day = 86_400_000;
+  const through = Date.UTC(2026, 9, 19);
+  const count = 120;
+  const wave = (i, k) => Math.sin(i * k) * 0.5 + 0.5;
+  const daily = Array.from({ length: count }, (_, i) => {
+    const at = through - (count - 1 - i) * day;
+    const date = new Date(at);
+    const weekend = [0, 5, 6].includes(date.getUTCDay());
+    const players = Math.round(28 + i * 0.35 + (weekend ? 22 : 0) + wave(i, 1.7) * 9);
+    const fresh = i === 0 ? null : Math.round(players * (0.34 - i * 0.0012) * (0.8 + wave(i, 2.3) * 0.4));
+    const hasStays = i >= count - 30;
+    const stays = Math.round(players * 1.15);
+    const seeded = weekend ? 1 : 2;
+    return {
+      day: date.toISOString().slice(0, 10),
+      unique_players: players,
+      new_players: fresh,
+      returning_players: fresh === null ? null : players - fresh,
+      player_minutes: Math.round(players * (62 + wave(i, 0.9) * 22)),
+      matches: 4 + Math.round(wave(i, 1.3) * 5) + (weekend ? 3 : 0),
+      peak_players: Math.round(players * 0.62 + 12),
+      stays: hasStays ? stays : null,
+      average_stay_minutes: hasStays ? 70 + Math.round(wave(i, 1.1) * 18) : null,
+      median_stay_minutes: hasStays ? 52 + Math.round(wave(i, 0.8) * 16) : null,
+      short_stays_new: hasStays ? Math.round(stays * 0.18) : null,
+      stays_new: hasStays ? Math.round(stays * 0.4) : null,
+      short_stays_other: hasStays ? Math.round(stays * 0.05) : null,
+      stays_other: hasStays ? Math.round(stays * 0.6) : null,
+      leaves_early: hasStays ? Math.round(stays * 0.19) : null,
+      leaves_mid: hasStays ? Math.round(stays * 0.13) : null,
+      leaves_late: hasStays ? Math.round(stays * 0.17) : null,
+      leaves_end: hasStays ? Math.round(stays * 0.36) : null,
+      leaves_between: hasStays ? Math.round(stays * 0.14) : null,
+      leaves_finale: hasStays ? Math.round(stays * 0.34) : null,
+      excluded_stays: hasStays ? 1 : null,
+      seeded_matches: hasStays ? seeded : null,
+      seeding_minutes: hasStays ? seeded * (34 - Math.min(14, i * 0.1) + wave(i, 2.9) * 8) : null,
+      seeders: hasStays ? seeded * 12 : null,
+      seeders_at_go_live: hasStays ? Math.round(seeded * 12 * (0.55 + i * 0.002)) : null,
+      invite_clicks: i >= count - 45 ? 4 + Math.round(wave(i, 1.9) * 9) : null,
+      accounts: null,
+      linked_accounts: null,
+    };
+  });
+  const week = (row) => {
+    const d = new Date(Date.parse(`${row.day}T00:00:00Z`));
+    return new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * day).toISOString().slice(0, 10);
+  };
+  const weeks = new Map();
+  for (const r of daily) {
+    const w = weeks.get(week(r)) ?? { period: week(r), unique_players: 0, new_players: 0, regulars: 0, player_minutes: 0, matches: 0, days: 0, total: 0 };
+    w.days += 1;
+    w.total += r.unique_players;
+    w.player_minutes += r.player_minutes;
+    w.matches += r.matches;
+    w.new_players += r.new_players ?? 0;
+    weeks.set(w.period, w);
+  }
+  const weekly = [...weeks.values()].map((w) => ({
+    period: w.period,
+    unique_players: Math.round((w.total / w.days) * 2.1),
+    new_players: Math.round(w.new_players * 0.45),
+    regulars: Math.round(w.total / w.days / 2.4),
+    player_minutes: w.player_minutes,
+    matches: w.matches,
+    stickiness: Math.round(((w.total / w.days) / ((w.total / w.days) * 2.1)) * 1000) / 1000,
+  }));
+  const monthly = [
+    { period: '2026-07', unique_players: 221, new_players: 140, regulars: 31, player_minutes: 168_000, matches: 118, stickiness: 0.27 },
+    { period: '2026-08', unique_players: 312, new_players: 181, regulars: 58, player_minutes: 289_000, matches: 163, stickiness: 0.31 },
+    { period: '2026-09', unique_players: 398, new_players: 203, regulars: 84, player_minutes: 402_000, matches: 188, stickiness: 0.34 },
+    { period: '2026-10', unique_players: 281, new_players: 117, regulars: 71, player_minutes: 301_000, matches: 121, stickiness: 0.36 },
+  ];
+  const cohortWeeks = ['2026-07-06', '2026-07-13', '2026-07-20', '2026-07-27', '2026-08-03', '2026-09-28', '2026-10-05', '2026-10-12'];
+  const cohorts = cohortWeeks.map((w, i) => {
+    const n = 30 + i * 7;
+    const old = i < 5;
+    const win = (d, share, over) => ({ days: d, eligible: over ? n : 0, returned: over ? Math.round(n * share) : 0 });
+    return { week: w, new_players: n, windows: [win(1, 0.33, true), win(7, 0.42 - i * 0.01, i < 7), win(30, 0.3, old || i < 6), win(90, 0.2, i < 3)] };
+  });
+  return {
+    since: daily[0].day,
+    through: daily[daily.length - 1].day,
+    summary: { days: count, unique_players: 962, new_last_30: 117, active_last_30: 281, regulars: 71, lapsed_regulars: 38, player_hours: 14_210, matches: 590 },
+    daily,
+    weekly,
+    monthly,
+    cohorts,
+    maps: [
+      { map: 'Narva', matches: 210, average_peak: 62.4, average_minutes: 58.1, players_at_start: 9800, left_early: 1900, one_sided: 41, with_scores: 205 },
+      { map: 'Mutaha', matches: 164, average_peak: 58.9, average_minutes: 55.3, players_at_start: 7400, left_early: 1180, one_sided: 22, with_scores: 160 },
+      { map: 'Kokan', matches: 117, average_peak: 55.2, average_minutes: 49.7, players_at_start: 5100, left_early: 1330, one_sided: 49, with_scores: 112 },
+      { map: 'Sumari', matches: 9, average_peak: 40.1, average_minutes: 38, players_at_start: 12, left_early: 5, one_sided: 3, with_scores: 9 },
+    ],
+    heat: {
+      days: 30,
+      minutes: Array.from({ length: 168 }, (_, i) => ((i % 24) >= 17 && (i % 24) <= 23 ? 4200 : (i % 24) >= 12 ? 1300 : 250)),
+      leaves: Array.from({ length: 168 }, (_, i) => ((i % 24) === 22 || (i % 24) === 23 ? 95 : (i % 24) >= 17 ? 41 : (i % 24) >= 12 ? 17 : 3)),
+    },
+  };
+};
+
+// A few rows of a Lifetime table as CSV, for ?demo.
+export const demoLifetimeCsv = (table) => `# sample rows for ?demo (${table})\r\nday,unique_players\r\n2026-10-18,74\r\n2026-10-19,81\r\n`;

@@ -173,6 +173,21 @@ export const get = async (path) => {
   return { ok: response.ok, status: response.status, json: await response.json().catch(() => null) };
 };
 
+// Reads a file (a CSV) from the bot's staff API as the signed-in staff member, as text.
+export const getText = async (path) => {
+  const token = loadToken();
+  if (!token) {
+    signedOut(RAN_OUT);
+    return { ok: false, status: 401, text: '' };
+  }
+  const response = await fetch(botUrl(path), { headers: { authorization: `Bearer ${token}` } });
+  if (response.status === 401) {
+    forgetToken();
+    signedOut(RAN_OUT);
+  }
+  return { ok: response.ok, status: response.status, text: await response.text().catch(() => '') };
+};
+
 // Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.
 export const call = async (path, body) => {
   if (demo) return demoCall(path, body);

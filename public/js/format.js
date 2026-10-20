@@ -1236,7 +1236,7 @@ export const recentPlayers = ({ moderation = [], joins = [], limit = 10 }) => {
 // such as the bot's answer to signing in.
 export const SECTIONS = ['now', 'queue', 'players', 'server'];
 export const QUEUE_VIEWS = ['flagged', 'flags', 'teamkills', 'log'];
-export const SERVER_VIEWS = ['bans', 'playtime', 'rotations', 'lines', 'rules'];
+export const SERVER_VIEWS = ['bans', 'playtime', 'lifetime', 'rotations', 'lines', 'rules'];
 const OLD_SECTIONS = { live: 'now', review: 'queue', alerts: 'queue', history: 'players' };
 export const staffRoute = (hash) => {
   const [asked = '', sub = ''] = hash.replace(/^#/, '').split('/');
@@ -1630,3 +1630,55 @@ export const peakHourText = (grid) => {
   grid.forEach((row, day) => row.forEach((c, hour) => c.rate !== null && (best === null || c.rate > best.rate) && (best = { day, hour, rate: c.rate })));
   return best === null ? 'Not enough play yet to say when people leave most.' : `Most leaves per hour of play: ${names[best.day]} ${String(best.hour).padStart(2, '0')}:00 UTC, ${Math.round(best.rate)} per 100 hours.`;
 };
+
+// The Lifetime view (the bot's GET /api/admin/lifetime).
+
+// The line above it: how much the bot has kept.
+export const lifetimeText = (l) =>
+  l.since === null
+    ? 'Nothing kept yet. The bot adds each UTC day once it is over, and the first time, the days its player records go back to.'
+    : `${plural(l.summary.days, 'day')} kept, from ${l.since} to ${l.through}. Each UTC day is added once it is over, so today is not here yet. Times are UTC.`;
+
+// The headline figures as tiles.
+export const lifetimeTiles = (l) => {
+  const s = l.summary;
+  return [
+    { label: 'Players ever', value: s.unique_players.toLocaleString('en-GB'), sub: `since ${l.since ?? '–'}` },
+    { label: 'Played in the last 30 days', value: s.active_last_30.toLocaleString('en-GB'), sub: `${s.new_last_30.toLocaleString('en-GB')} of them new` },
+    { label: 'Regulars', value: s.regulars.toLocaleString('en-GB'), sub: '5 or more days in 30' },
+    { label: 'Regulars who stopped', value: s.lapsed_regulars.toLocaleString('en-GB'), sub: 'not seen for 30 days' },
+    { label: 'Player hours', value: s.player_hours.toLocaleString('en-GB'), sub: 'on the server, in all' },
+    { label: 'Matches', value: s.matches.toLocaleString('en-GB'), sub: `in ${plural(s.days, 'day')}` },
+  ];
+};
+
+// The last `range` days of the bot's daily rows (all of them when `range` is null) as chart points: the day and a value
+// from `pick(row)`, null where the row has none.
+export const dailyPoints = (daily, pick, range = null) =>
+  (range === null ? daily : daily.slice(-range)).map((row) => {
+    const value = pick(row);
+    return { day: row.day, value: value === null || value === undefined || Number.isNaN(value) ? null : value };
+  });
+
+// A share of two columns of a row, as a percent from 0 to 100, null when there is nothing to share.
+export const rowShare = (row, part, whole) => (row[part] === null || row[whole] === null || row[whole] === 0 ? null : (row[part] / row[whole]) * 100);
+
+// Columns for the players-by-day or by-week chart, the last `range` of them: `fresh` null where who is new is not known.
+export const peopleSlots = (rows, { key, total, fresh, label, title }, range = null) =>
+  (range === null ? rows : rows.slice(-range)).map((r) => ({ key: r[key], label: label(r), title: title(r), total: r[total], fresh: r[fresh] }));
+
+// The lifetime leave timing as the Play time view's rows: leaves summed over the daily rows.
+export const lifetimeLeaves = (daily) => {
+  const sum = (key) => daily.reduce((a, r) => a + (r[key] ?? 0), 0);
+  const timing = { early: sum('leaves_early'), mid: sum('leaves_mid'), late: sum('leaves_late'), end: sum('leaves_end'), between: sum('leaves_between') };
+  return { total: Object.values(timing).reduce((a, b) => a + b, 0), timing, finale: sum('leaves_finale') };
+};
+
+// The CSV tables the Lifetime view offers, as [key, label, what it is].
+export const LIFETIME_TABLES = [
+  ['daily', 'Each day', 'one row a day: players, stays, leaves, seeding, Discord'],
+  ['matches', 'Each match', 'one row a match: map, length, score, who left early'],
+  ['weekly', 'Each week', 'unique and new players, regulars, stickiness'],
+  ['monthly', 'Each month', 'the same by month'],
+  ['cohorts', 'New players by week', 'how many came back within 1, 7, 30 and 90 days'],
+];

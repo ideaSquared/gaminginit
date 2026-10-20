@@ -412,3 +412,26 @@ More on the same view, for the same period:
 
 Server's **Bans and VIP** also has, in the Discord growth card, how many of the players who signed in and linked Steam
 have played a match in the last 90 days, and how many 5 or more.
+
+## Server: Lifetime
+
+Server's **Lifetime** view (`/admin#server/lifetime`) shows what the bot has kept for good since it began (the bot's README,
+"Lifetime records"). The stays, kill feed and hourly figures only keep a few weeks; this keeps a row for each day and each
+match. Each UTC day is added once it is over, so today is not in it.
+
+- **Headline figures:** players ever, players in the last 30 days (and how many are new), regulars (5 or more days in 30),
+  regulars who stopped (not seen for 30 days), player hours and matches.
+- **Players each day** (the latest 90) and **each week** (all time): columns of different players, with the new ones picked
+  out on top. Hover, or Tab to a chart and use the arrow keys, to read a day or week.
+- **By month:** players, new players, regulars, hours, matches and stickiness (the average day's players as a share of the
+  month's: how often those who play come on).
+- **Do new players come back?** By the week a player was first seen: how many came back within 1, 7, 30 and 90 days, out of
+  those whose days are over. This is true from the first day the bot kept, not just the last 90 days.
+- **Lines** for player hours, peak players, typical stay, new players gone within 10 minutes, minutes to fill the server and
+  seeders still there at go-live, each with its 7-day average. The range buttons (All time, 90 days, 30 days) set the days
+  they show. The stay figures only go back to when the bot began keeping stays.
+- **Where players leave, by map, and by hour** over every day kept.
+- **Download the data:** each day, match, week, month and the new-player weeks as CSV, for a spreadsheet or a notebook. There
+  are no Steam IDs in them.
+
+Each chart has its numbers under "Show as table".
