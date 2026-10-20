@@ -1729,6 +1729,7 @@ export const demoGrowth = () => ({
     ],
   },
   accounts: { accounts: 64, linked: 51, members: 58, joinedOnSite: 19, withVipRole: 6 },
+  funnel: { linked: 51, played: 38, regulars: 22 },
   members: 412,
 });
 
@@ -1761,6 +1762,49 @@ export const demoPlaytime = (days = 7) => {
       total: 380,
       timing: { early: 72, mid: 49, late: 66, end: 138, between: 55 },
       finale: { early: 12, mid: 9, late: 21, end: 64, between: 30 },
+    },
+    excluded: 3,
+    byMap: [
+      { map: 'Narva', matches: 9, present: 640, leftBefore: 131 },
+      { map: 'Mutaha', matches: 7, present: 498, leftBefore: 82 },
+      { map: 'Kokan', matches: 4, present: 277, leftBefore: 71 },
+    ],
+    byBalance: [
+      { label: 'Close (lead under 20%)', matches: 8, present: 560, leftBefore: 70 },
+      { label: 'Clear win', matches: 9, present: 640, leftBefore: 120 },
+      { label: 'One-sided (lead over 50%)', matches: 3, present: 215, leftBefore: 94 },
+    ],
+    joins: [
+      { timing: 'seeding', sessions: 48, medianMinutes: 96, stayedShare: 0.81 },
+      { timing: 'early', sessions: 130, medianMinutes: 71, stayedShare: 0.7 },
+      { timing: 'mid', sessions: 96, medianMinutes: 38, stayedShare: 0.55 },
+      { timing: 'late', sessions: 61, medianMinutes: 22, stayedShare: 0.33 },
+      { timing: 'end', sessions: 40, medianMinutes: 64, stayedShare: 0.68 },
+      { timing: 'between', sessions: 22, medianMinutes: 60, stayedShare: 0.64 },
+    ],
+    seeding: {
+      matches: 5,
+      averageMinutes: 24.6,
+      seeders: 63,
+      reachedLive: 41,
+      list: [
+        { map: 'Narva', startedAt: start - 30 * 60_000, liveAt: start, seedingMinutes: 30, seeders: 14, reachedLive: 9 },
+        { map: 'Kokan', startedAt: start - 2 * day - 20 * 60_000, liveAt: start - 2 * day, seedingMinutes: 20, seeders: 11, reachedLive: 8 },
+      ],
+    },
+    bounce: { newPlayers: { sessions: 85, short: 37 }, others: { sessions: 327, short: 41 } },
+    newPlayers: {
+      lookbackDays: 90,
+      cohorts: [
+        { week: '2026-10-19', newPlayers: 21, windows: [{ days: 1, eligible: 14, returned: 5 }, { days: 7, eligible: 0, returned: 0 }, { days: 30, eligible: 0, returned: 0 }] },
+        { week: '2026-10-12', newPlayers: 34, windows: [{ days: 1, eligible: 34, returned: 11 }, { days: 7, eligible: 30, returned: 12 }, { days: 30, eligible: 0, returned: 0 }] },
+        { week: '2026-10-05', newPlayers: 29, windows: [{ days: 1, eligible: 29, returned: 9 }, { days: 7, eligible: 29, returned: 10 }, { days: 30, eligible: 5, returned: 2 }] },
+      ],
+    },
+    heat: {
+      // Evenings busy, with leaves piling up late.
+      minutes: Array.from({ length: 168 }, (_, i) => ((i % 24) >= 17 && (i % 24) <= 23 ? 3000 : (i % 24) >= 12 ? 900 : 200)),
+      leaves: Array.from({ length: 168 }, (_, i) => ((i % 24) === 22 || (i % 24) === 23 ? 60 : (i % 24) >= 17 ? 28 : (i % 24) >= 12 ? 12 : 2)),
     },
     matches: [
       { map: 'Narva', startedAt: start, endedAt: start + 62 * 60_000, lastOfNight: true, present: 71, leftBefore: 14 },

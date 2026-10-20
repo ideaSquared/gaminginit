@@ -3652,6 +3652,23 @@ html.story-open {
   margin-bottom: 12px;
 }
 
+.heatmap {
+  table-layout: fixed;
+  min-width: 640px;
+}
+
+.heatmap th {
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.heatmap .heat-cell {
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--surface);
+}
+
 .panel-subtitle {
   text-transform: uppercase;
   letter-spacing: 0.08em;
