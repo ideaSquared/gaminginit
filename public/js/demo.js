@@ -1920,3 +1920,29 @@ export const demoLifetime = () => {
 
 // A few rows of a Lifetime table as CSV, for ?demo.
 export const demoLifetimeCsv = (table) => `# sample rows for ?demo (${table})\r\nday,unique_players\r\n2026-10-18,74\r\n2026-10-19,81\r\n`;
+
+// The stats page's "Since we started": the bot's GET /api/lifetime, with sample numbers (from the staff sample).
+export const demoPublicLifetime = () => {
+  const l = demoLifetime();
+  const best = (rows, key) => rows.reduce((top, r) => (top === null || (r[key] ?? 0) > (top[key] ?? 0) ? r : top), null);
+  const people = best(l.daily, 'unique_players');
+  const peak = best(l.daily, 'peak_players');
+  const most = best(l.daily, 'matches');
+  const heat = l.heat.minutes.map((m) => Math.round((m / 60 / (l.heat.days / 7)) * 10) / 10);
+  return {
+    since: l.since,
+    through: l.through,
+    totals: { players: l.summary.unique_players, player_hours: l.summary.player_hours, matches: l.summary.matches, days: l.summary.days, players_last_30: l.summary.active_last_30, regulars: l.summary.regulars },
+    records: {
+      most_players: { day: people.day, players: people.unique_players },
+      biggest_match: { day: peak.day, players: peak.peak_players },
+      most_matches: { day: most.day, matches: most.matches },
+    },
+    typical_stay_minutes: 58.4,
+    days: l.daily.slice(-90).map((r) => ({ day: r.day, players: r.unique_players, peak: r.peak_players })),
+    weeks: l.weekly.map((w) => ({ week: w.period, players: w.unique_players, new_players: w.new_players })),
+    months: l.monthly.map((m) => ({ month: m.period, players: m.unique_players, new_players: m.new_players, hours: Math.round(m.player_minutes / 60), matches: m.matches })),
+    maps: l.maps.slice(0, 3).map((m) => ({ map: m.map, matches: m.matches })),
+    busy: { days: l.heat.days, players: heat },
+  };
+};

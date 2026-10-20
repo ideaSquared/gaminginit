@@ -3988,6 +3988,24 @@ html.story-open {
   margin-bottom: 8px;
 }
 
+/* The public stats page's records, under its tiles, and its bars under their captions. */
+.chart-card > .pt-bars {
+  margin-top: 16px;
+}
+
+.lifetime-records {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0 0;
+  padding: 0;
+  color: var(--text-2);
+  list-style: none;
+}
+
+.lifetime-records:empty {
+  display: none;
+}
+
 /* Leaves by hour. */
 .heatmap {
   min-width: 640px;

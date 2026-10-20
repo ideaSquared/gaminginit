@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   barLengths,
+  busiestHourText,
+  busyLevels,
+  localWeek,
+  publicLifetimeTiles,
+  publicRecords,
   dailyPoints,
   lifetimeLeaves,
   lifetimeText,
@@ -1831,5 +1836,43 @@ describe('the Lifetime view', () => {
 
   it('adds up where players left over the days that have stays', () => {
     assert.deepEqual(lifetimeLeaves(rows), { total: 13, timing: { early: 3, mid: 1, late: 1, end: 6, between: 2 }, finale: 4 });
+  });
+});
+
+describe('the public Lifetime section', () => {
+  it('turns the bot’s UTC week into the reader’s own', () => {
+    const players = Array.from({ length: 168 }, (_, i) => (i === 19 ? 30 : 0));
+    // Monday 19:00 UTC is Monday 20:00 in UTC+1 (getTimezoneOffset is -60), and Monday 14:00 in UTC-5 (300).
+    assert.equal(localWeek(players, -60)[0][20], 30);
+    assert.equal(localWeek(players, 300)[0][14], 30);
+    // A week's start wraps: Monday 00:00 UTC is Sunday 23:00 in UTC-1.
+    const first = Array.from({ length: 168 }, (_, i) => (i === 0 ? 9 : 0));
+    assert.equal(localWeek(first, 60)[6][23], 9);
+  });
+
+  it('colours hours against the busiest and says which is the busiest', () => {
+    const week = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    week[4][21] = 40;
+    week[4][20] = 10;
+    assert.equal(busyLevels(week)[4][21], 4);
+    assert.equal(busyLevels(week)[4][20], 1);
+    assert.equal(busyLevels(week)[0][0], 0);
+    assert.match(busiestHourText(week), /Friday around 21:00, about 40 players/);
+    assert.equal(busiestHourText(busyLevels(week).map((r) => r.map(() => 0))), '');
+  });
+
+  it('makes the tiles and the records, leaving out what the bot has none of', () => {
+    const l = {
+      since: '2026-06-22',
+      totals: { players: 1234, player_hours: 14210, matches: 590, players_last_30: 280, regulars: 71 },
+      typical_stay_minutes: 58,
+      records: { most_players: { day: '2026-09-13', players: 142 }, biggest_match: null, most_matches: { day: '2026-10-03', matches: 12 } },
+    };
+    assert.deepEqual(publicLifetimeTiles(l).map((t) => t[1]), ['1,234', '14,210', '590', '58 min']);
+    assert.deepEqual(publicRecords(l), [
+      'Busiest day: 142 different players, on 2026-09-13.',
+      'Most matches in a day: 12, on 2026-10-03.',
+      '71 regulars: players who came on 5 or more days in the last 30.',
+    ]);
   });
 });

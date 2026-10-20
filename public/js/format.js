@@ -1682,3 +1682,49 @@ export const LIFETIME_TABLES = [
   ['monthly', 'Each month', 'the same by month'],
   ['cohorts', 'New players by week', 'how many came back within 1, 7, 30 and 90 days'],
 ];
+
+// The public Lifetime section of the stats page (the bot's GET /api/lifetime).
+
+// The bot's average players for each hour of the week in UTC, Monday 00:00 first, as the reader's own week: 7 rows of 24
+// hours, Monday first. `offset` is the reader's `getTimezoneOffset()` (minutes UTC is ahead of local); a part-hour offset
+// is rounded to the hour.
+export const localWeek = (players, offset = 0) => {
+  const shift = Math.round(offset / 60);
+  const local = Array.from({ length: 168 }, () => 0);
+  players.forEach((value, i) => {
+    local[(((i - shift) % 168) + 168) % 168] = value;
+  });
+  return Array.from({ length: 7 }, (_, day) => local.slice(day * 24, day * 24 + 24));
+};
+
+// A colour level 0 to 4 for each hour of a week, against the busiest (0 for an hour with nobody).
+export const busyLevels = (week) => {
+  const top = Math.max(0, ...week.flat());
+  return week.map((row) => row.map((v) => (v <= 0 || top <= 0 ? 0 : Math.max(1, Math.ceil((v / top) * 4)))));
+};
+
+// The busiest hour of the reader's week, in words.
+export const busiestHourText = (week) => {
+  const names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  let best = null;
+  week.forEach((row, day) => row.forEach((v, hour) => (best === null || v > best.v) && (best = { day, hour, v })));
+  if (best === null || best.v <= 0) return '';
+  return `Busiest: ${names[best.day]} around ${String(best.hour).padStart(2, '0')}:00, about ${Math.round(best.v)} players on at once on average.`;
+};
+
+// The public tiles: what has been kept in all, as [label, value, sub].
+export const publicLifetimeTiles = (l) => [
+  ['Players so far', l.totals.players.toLocaleString('en-GB'), `${l.totals.players_last_30.toLocaleString('en-GB')} in the last 30 days`],
+  ['Hours played', l.totals.player_hours.toLocaleString('en-GB'), 'added up across everyone'],
+  ['Matches played', l.totals.matches.toLocaleString('en-GB'), `since ${l.since}`],
+  ['Typical stay', l.typical_stay_minutes === null ? '–' : formatHours(l.typical_stay_minutes), 'how long a player stays on'],
+];
+
+// The records, one line each, for those the bot has.
+export const publicRecords = (l) =>
+  [
+    l.records.most_players && `Busiest day: ${l.records.most_players.players} different players, on ${l.records.most_players.day}.`,
+    l.records.biggest_match && `Biggest match: ${l.records.biggest_match.players} players at once, on ${l.records.biggest_match.day}.`,
+    l.records.most_matches && `Most matches in a day: ${l.records.most_matches.matches}, on ${l.records.most_matches.day}.`,
+    l.totals.regulars > 0 && `${l.totals.regulars} regulars: players who came on 5 or more days in the last 30.`,
+  ].filter(Boolean);

@@ -63,6 +63,8 @@ export const lineChart = (root) => {
       return;
     }
     const width = root.clientWidth;
+    // Not on screen yet (a hidden section): the resize observer draws it when it is.
+    if (width < 120) return;
     const height = width < 480 ? 190 : 220;
     const m = { top: 16, right: 12, bottom: 28, left: 40 };
     const plotW = width - m.left - m.right;
@@ -154,6 +156,7 @@ export const peopleChart = (root) => {
       return;
     }
     const width = root.clientWidth;
+    if (width < 120) return;
     const height = width < 480 ? 190 : 220;
     const m = { top: 12, right: 8, bottom: 28, left: 40 };
     const plotW = width - m.left - m.right;
