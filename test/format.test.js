@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  bounceText,
+  funnelText,
+  heatGrid,
+  leftShare,
+  newPlayersText,
   playtimeText,
+  returnShare,
+  seedingText,
   shareOf,
   announcement,
   countdown,
@@ -1706,5 +1713,37 @@ describe('play time', () => {
     assert.match(playtimeText(r), /10 times on the server in the last 7 days/);
     assert.match(playtimeText(r), /50% were in the night/);
     assert.match(playtimeText({ days: 1, sessions: 0 }), /No finished times/);
+  });
+});
+
+describe('play time, the rest', () => {
+  it('shares those who left early, and those who came back', () => {
+    assert.equal(leftShare({ present: 8, leftBefore: 2 }), '25%');
+    assert.equal(leftShare({ present: 0, leftBefore: 0 }), '–');
+    assert.equal(returnShare({ days: 7, eligible: 0, returned: 0 }), '–');
+    assert.equal(returnShare({ days: 7, eligible: 4, returned: 1 }), '25%');
+  });
+
+  it('colours hours by leaves per 100 hours of play, and leaves the thin ones blank', () => {
+    const minutes = Array.from({ length: 168 }, () => 6000);
+    const leaves = Array.from({ length: 168 }, () => 10);
+    leaves[5] = 50;
+    minutes[7] = 100;
+    const grid = heatGrid({ minutes, leaves });
+    assert.equal(grid.length, 7);
+    assert.equal(grid[0][5].level, 4);
+    assert.equal(grid[0][6].level, 1);
+    assert.equal(grid[0][7].level, 0);
+    assert.equal(grid[0][7].rate, null);
+  });
+
+  it('words seeding, short stays, new players and the funnel', () => {
+    assert.match(seedingText({ matches: 0 }), /No match/);
+    assert.match(seedingText({ matches: 2, averageMinutes: 30, seeders: 10, reachedLive: 4 }), /2 matches.*40%/);
+    assert.equal(bounceText(null), '');
+    assert.match(bounceText({ newPlayers: { sessions: 10, short: 5 }, others: { sessions: 20, short: 2 } }), /50% of new players’ \(10\), 10% of everyone/);
+    assert.match(newPlayersText({ cohorts: [{}], lookbackDays: 1 }), /1 day the bot/);
+    assert.equal(funnelText({ linked: 0 }), '');
+    assert.match(growthText({ clicks: { days: 30 }, accounts: { accounts: 3, linked: 2, members: 1, joinedOnSite: 1 }, members: null, funnel: { linked: 2, played: 1, regulars: 0 } }), /Of 2 who linked Steam, 1 have played/);
   });
 });

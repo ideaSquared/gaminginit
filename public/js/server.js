@@ -1,6 +1,22 @@
 import { ask } from './ask.js';
 import { demoGrowth, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
-import { clickPlace, formatHours, growthText, LEAVE_TIMINGS, playtimeText, SERVER_VIEWS, shareOf, staffNote } from './format.js';
+import {
+  bounceText,
+  clickPlace,
+  formatHours,
+  growthText,
+  heatGrid,
+  JOIN_TIMINGS,
+  LEAVE_TIMINGS,
+  leftShare,
+  newPlayersText,
+  playtimeText,
+  returnShare,
+  SERVER_VIEWS,
+  seedingText,
+  shareOf,
+  staffNote,
+} from './format.js';
 import { demo, showNotice } from './live.js';
 import { $, badge, call, cell, get, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
 import { el } from './views.js';
@@ -252,6 +268,58 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
   let playtimeRequest = 0;
   const PLAYTIME_MS = 5 * 60_000;
   const minutes = (value) => formatHours(value);
+  // The rest of the Play time view, which an older bot's answer has none of.
+  const renderPlaytimeMore = (json) => {
+    const leftHeads = ['', ['Matches', 'num'], ['In game at start', 'num'], ['Left before the end', 'num'], ['Left', 'num']];
+    const leftRow = (label, r) => el('tr', {}, cell(label), number(r.matches), number(r.present), number(r.leftBefore), number(leftShare(r)));
+    table($('playtime-maps'), ['Map', ...leftHeads.slice(1)], json.byMap.map((m) => leftRow(m.map, m)), 'No matches finished in this period.');
+    table($('playtime-balance'), ['Match', ...leftHeads.slice(1)], json.byBalance.filter((b) => b.matches > 0).map((b) => leftRow(b.label, b)), 'No matches with scores in this period.');
+    table(
+      $('playtime-joins'),
+      ['Joined', ['Stays', 'num'], ['Median stay', 'num'], ['Stayed 30 min or more', 'num']],
+      json.joins.filter((j) => j.sessions > 0).map((j) => el('tr', {}, cell(JOIN_TIMINGS[j.timing] ?? j.timing), number(j.sessions), number(minutes(j.medianMinutes)), number(shareOf(j.stayedShare, 1)))),
+      'Nothing yet.',
+    );
+    setStatus($('playtime-seeding-note'), seedingText(json.seeding));
+    table(
+      $('playtime-seeding'),
+      ['Match', ['Went live', 'num'], ['Seeded for', 'num'], ['In game while seeding', 'num'], ['There at go-live', 'num']],
+      json.seeding.list.map((m) =>
+        el('tr', {}, cell(m.map), el('td', { className: 'num when', textContent: when.format(m.liveAt) }), number(minutes(m.seedingMinutes)), number(m.seeders), number(m.reachedLive)),
+      ),
+      'Nothing to show.',
+    );
+    setStatus($('playtime-new-note'), json.newPlayers ? newPlayersText(json.newPlayers) : '');
+    table(
+      $('playtime-new'),
+      ['Week of', ['New players', 'num'], ['Back within a day', 'num'], ['Within 7 days', 'num'], ['Within 30 days', 'num']],
+      (json.newPlayers?.cohorts ?? []).map((c) => el('tr', {}, cell(c.week), number(c.newPlayers), ...c.windows.map((w) => number(returnShare(w))))),
+      'No new players yet.',
+    );
+    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const hours = Array.from({ length: 24 }, (_, h) => h);
+    $('playtime-heat').replaceChildren(
+      el('thead', {}, el('tr', {}, el('th', { scope: 'col', textContent: 'UTC' }), ...hours.map((h) => el('th', { scope: 'col', className: 'heat-hour', textContent: String(h) })))),
+      el(
+        'tbody',
+        {},
+        ...heatGrid(json.heat).map((row, day) =>
+          el(
+            'tr',
+            {},
+            el('th', { scope: 'row', textContent: names[day] }),
+            ...row.map((c, h) =>
+              el('td', {
+                className: `heat-cell heat-${c.level}`,
+                title: `${names[day]} ${String(h).padStart(2, '0')}:00 UTC: ${c.leaves} leaves in ${formatHours(c.minutes)} of play${c.rate === null ? '' : ` (${Math.round(c.rate)} per 100 hours)`}`,
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  };
+
   const loadPlaytime = async () => {
     const days = $('playtime-days').value;
     if (days === playtimeKey && Date.now() - playtimeAt < PLAYTIME_MS) return;
@@ -267,7 +335,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
         else if (loadToken()) setStatus($('playtime-note'), 'Couldn’t load this just now. Try again in a minute.');
         return;
       }
-      setStatus($('playtime-note'), playtimeText(json));
+      setStatus($('playtime-note'), `${playtimeText(json)} ${bounceText(json.bounce)}`.trim());
       table(
         $('playtime-daily'),
         ['Day', ['Players', 'num'], ['Stays', 'num'], ['Average stay', 'num'], ['Typical stay', 'num'], ['Per player', 'num']],
@@ -310,6 +378,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
         ),
         'No matches finished in this period.',
       );
+      if (json.byMap) renderPlaytimeMore(json);
     } catch (error) {
       if (request !== playtimeRequest) return;
       playtimeAt = 0;

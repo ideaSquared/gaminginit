@@ -387,3 +387,22 @@ or 30 days (the bot keeps 30). It reads the bot's `GET /api/admin/retention` (se
 
 Leaves the bot only noticed after a gap in its checks are in the lengths but not in the timing, as it can't say when
 they left. Players on when the bot began keeping the log have no length.
+
+More on the same view, for the same period:
+
+- **By map** and **by how one-sided the match was** (the winner's lead as a share of its score: under 20%, up to 50%, over
+  50%): how many were in game when matches went live and the share who left before the last 3 minutes. A map or kind of
+  match that loses more players than the rest is worth a look when picking rotations.
+- **How long people stay, by when they joined:** while the server was seeding, in a third of a match, at its end or
+  between matches, with the median stay and the share who stayed 30 minutes or more.
+- **Seeding:** matches that started with the server seeding, how long it took, how many were in game while it seeded and
+  how many were still there when it went live.
+- **New players:** by the week a player was first seen, how many came back within 1, 7 and 30 days, counted once those
+  days are over. New means not seen in the days the bot keeps (up to 90), so it counts more as new while that is short.
+  The line at the top also says how many of new players' stays were under 10 minutes, against everyone else's.
+- **Leaves by hour:** a heatmap of leaves per 100 hours of play by hour of the week in UTC. Hours with under 10 hours of
+  play are left blank.
+- Stays that ended in a staff kick or ban are left out of all of it, and the line at the top says how many.
+
+Server's **Bans and VIP** also has, in the Discord growth card, how many of the players who signed in and linked Steam
+have played a match in the last 90 days, and how many 5 or more.

@@ -1503,7 +1503,7 @@ export const growthText = (growth) => {
     `${joinedOnSite} joined with the website’s button`,
   ];
   const clicks = `Clicks on the Discord invite in the last ${growth.clicks.days} days, by where they were made. A click is not a join.`;
-  return `${parts.join(', ')}.${growth.members === null ? '' : ` The Discord has ${growth.members} members.`} ${clicks}`;
+  return `${parts.join(', ')}.${growth.funnel ? funnelText(growth.funnel) : ''}${growth.members === null ? '' : ` The Discord has ${growth.members} members.`} ${clicks}`;
 };
 
 // The Play time view: when in a match players left, as the bot's GET /api/admin/retention counts them (`leaves.timing`).
@@ -1525,5 +1525,62 @@ export const playtimeText = (r) => {
   const last = Object.values(finale).reduce((a, b) => a + b, 0);
   return `${plural(r.sessions, 'time')} on the server in the last ${plural(r.days, 'day')}: ${formatHours(r.averageMinutes)} on average, ${formatHours(r.medianMinutes)} typically. ${
     total === 0 ? '' : `Of ${plural(total, 'leave')} we could place, ${shareOf(last, total)} were in the night’s last match or after it.`
-  }`;
+  }${excludedText(r.excluded ?? 0)}`;
 };
+
+// Leaves on a map or by how one-sided the match was: the share who left before its last minutes, "–" with no one counted.
+export const leftShare = (row) => shareOf(row.leftBefore, row.present);
+
+// When in a match a stay began, as the bot's `joins` name it.
+export const JOIN_TIMINGS = {
+  seeding: 'While it was seeding',
+  early: 'First third of a match',
+  mid: 'Middle third',
+  late: 'Last third',
+  end: 'At the end of a match',
+  between: 'Between matches',
+};
+
+// A cell of the leaves-by-hour heatmap from the bot's `heat`: leaves per 100 hours of play, and a colour level 1 to 4
+// against the busiest hour, or 0 for an hour with too little play (under HEAT_LEAST_MINUTES) to say. Monday first, UTC.
+export const HEAT_LEAST_MINUTES = 600;
+export const heatGrid = (heat) => {
+  const cells = heat.minutes.map((minutes, i) => {
+    const leaves = heat.leaves[i] ?? 0;
+    return { leaves, minutes, rate: minutes >= HEAT_LEAST_MINUTES ? (leaves / minutes) * 6000 : null, level: 0 };
+  });
+  const top = Math.max(0, ...cells.map((c) => c.rate ?? 0));
+  for (const c of cells) if (c.rate !== null && top > 0) c.level = Math.max(1, Math.ceil((c.rate / top) * 4));
+  return Array.from({ length: 7 }, (_, day) => cells.slice(day * 24, day * 24 + 24));
+};
+
+// The line above the seeding table: how long matches took to fill and how many seeders were there when they went live.
+export const seedingText = (seeding) =>
+  seeding.matches === 0
+    ? 'No match in this period started with the server seeding.'
+    : `${seeding.matches} ${seeding.matches === 1 ? 'match' : 'matches'} started with the server seeding, for ${formatHours(seeding.averageMinutes)} on average. ${shareOf(seeding.reachedLive, seeding.seeders)} of those in game while it seeded were still there when it went live.`;
+
+// Short stays by new players and everyone else, in a line.
+export const bounceText = (bounce, minutes = 10) => {
+  if (bounce === null) return '';
+  const { newPlayers: n, others: o } = bounce;
+  if (n.sessions === 0) return `Stays under ${minutes} minutes: ${shareOf(o.short, o.sessions)} of everyone else’s. No new players’ stays yet.`;
+  return `Stays under ${minutes} minutes: ${shareOf(n.short, n.sessions)} of new players’ (${n.sessions}), ${shareOf(o.short, o.sessions)} of everyone else’s (${o.sessions}).`;
+};
+
+// The week's row on the new players' table: those who came back within each window, or "–" while no one's days are over.
+export const returnShare = (window) => shareOf(window.returned, window.eligible);
+
+// The line above the new players' table.
+export const newPlayersText = (newPlayers) =>
+  newPlayers.cohorts.length === 0
+    ? 'No new players yet.'
+    : `By the week a player was first seen, out of those whose days are over. New means not seen in the ${plural(newPlayers.lookbackDays, 'day')} the bot has records for, so it counts more as new while that is short.`;
+
+// The line about staff kicks and bans, when any were left out.
+export const excludedText = (excluded) =>
+  excluded === 0 ? '' : ` ${plural(excluded, 'stay')} ended by a staff kick or ban ${excluded === 1 ? 'is' : 'are'} left out.`;
+
+// The Discord growth card's funnel line: of the players who signed in and linked Steam, how many played.
+export const funnelText = (funnel) =>
+  funnel.linked === 0 ? '' : ` Of ${funnel.linked} who linked Steam, ${funnel.played} have played a match in the last 90 days and ${funnel.regulars} played 5 or more.`;
