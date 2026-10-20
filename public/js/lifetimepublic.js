@@ -1,12 +1,12 @@
 import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, shareOf } from './format.js';
-import { apiUrl, demo } from './live.js';
+import { apiUrl, demo, showNotice, thisPage } from './live.js';
 import { demoPublicLifetime } from './demo.js';
 import { lineChart, peopleChart } from './trends.js';
-import { el } from './views.js';
+import { el, link } from './views.js';
 
-// The stats page's "Since we started": what our Discord bot has kept for good about the server, only the figures players
-// would like to see (the bot's GET /api/lifetime). It stays hidden until the bot answers with something, so an older
-// bot or one that has no days kept yet leaves the page as it was.
+// The lifetime stats page (lifetime.html): what our Discord bot has kept for good about the server, only the figures players
+// would like to see (the bot's GET /api/lifetime). The figures stay hidden, with a line saying why, until the bot answers
+// with something.
 
 const $ = (id) => document.getElementById(id);
 
@@ -106,20 +106,37 @@ const render = (l) => {
   $('people-legend').replaceChildren(legend(['pt-key-raw', 'Each day'], ['pt-key-avg', '7-day average']));
 };
 
+// What the page says in place of the figures, and nothing else.
+const status = (text) => {
+  $('lifetime-status').hidden = false;
+  $('lifetime-status').textContent = text;
+};
+
 const load = async () => {
   try {
     let data;
-    if (demo) data = demoPublicLifetime();
-    else {
+    if (demo) {
+      data = demoPublicLifetime();
+      // Sample numbers must never pass for the real server's.
+      showNotice('Showing sample numbers, not the real server. ', link(thisPage((p) => p.delete('demo')), 'See the real lifetime stats'));
+    } else {
       const url = apiUrl('lifetime');
-      if (url === '') return;
+      if (url === '') {
+        showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with sample numbers'));
+        return status('Live stats are not connected yet.');
+      }
       const response = await fetch(url, { headers: { accept: 'application/json' } });
-      if (!response.ok) return;
+      // An older bot has no lifetime figures to give.
+      if (response.status === 404) return status('The bot is not keeping lifetime stats yet. They will appear here once it is.');
+      if (!response.ok) return status('We couldn’t load the lifetime stats just now. Try again in a minute.');
       data = await response.json();
     }
-    if (data?.since) render(data);
+    if (!data?.since) return status('We have not kept any full days yet. The lifetime stats appear after the bot’s first night.');
+    $('lifetime-status').hidden = true;
+    render(data);
   } catch (error) {
     console.error('Could not load the lifetime figures', error);
+    status('We couldn’t reach the bot just now. Try again in a minute.');
   }
 };
 

@@ -22,12 +22,7 @@ What it shows:
   over the last 24 hours, and the daily peak for the last 14 days. Each chart has a table view.
   The daily chart's day labels give the month on the first label and wherever the month changes ("23 Sep … 1 Oct").
   Today is not over, so its bar is dashed and lighter, and its row in the table says "so far".
-  Below them, "Since we started" shows what the bot has kept for good (its `/api/lifetime`), and only the figures players
-  would like to see: players so far, hours played, matches played and the typical stay; the busiest day, biggest match and
-  most matches in a day; players each week (new players picked out) and each day (with a 7-day average); when the server is
-  busiest across the week in the reader's own time; the favourite maps; and month by month. Nothing about who left or
-  stopped coming, how new players fared, seeding or Discord (those are on the staff page's Lifetime view). The section stays
-  hidden until the bot answers, so an older bot leaves the page as it was.
+  Under the charts, a card links to the lifetime stats page.
   It also has the busy times of day: average players in each hour, with the busy hours highlighted. An hour is busy
   when the server had 97+ players (the bot's `thresholds.busy`) at least half the time. Over the last 14 days when the
   bot sends `hourly` with `busy`, otherwise over the last 24 hours. The bot takes each hour from its median day of the
@@ -42,6 +37,14 @@ What it shows:
   target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
   it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
   link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
+- A lifetime stats page (`/lifetime`, in the Stats menu): "Here are lifetime stats that you might find interesting",
+  from what the bot has kept for good (its `/api/lifetime`), and only the figures players would like to see: players so far,
+  hours played, matches played and the typical stay; the busiest day, biggest match, most matches in a day and how many
+  regulars there are; players each week (new players picked out) and each day (with a 7-day average); when the server is
+  busiest across the week in the reader's own time; the favourite maps; and month by month. Nothing about who left or
+  stopped coming, how new players fared, seeding or Discord (those are on the staff page's Lifetime view). Each chart has
+  a table view, and a chart can be read from the keyboard (Tab to it, then the arrow keys). Until the bot has figures to
+  give, the page says why instead of showing them: not connected, an older bot, or no full day kept yet.
 - A teams page (`/teams`): which team wins most over the last 30 days. The matches, the team with the most wins and
   the latest winner's streak; each team's wins and win rate (and matches played, only when the teams played different
   numbers of them); each map's matches split by the team that won them, with the average length (also as a

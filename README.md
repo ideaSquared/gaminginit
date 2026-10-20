@@ -13,6 +13,7 @@ once a minute and serves them at `GET /api/stats`.
 | ---- | ---------- |
 | `/` | Server status, players, Discord, and how to play with us |
 | `/stats`, `/matches`, `/teams` | Player numbers, recent matches, which team wins most |
+| `/lifetime` | Lifetime stats: players so far, hours played, records, favourite maps and when we are busiest |
 | `/live` | The match on now: score, kill feed, highlights |
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
 | `/seeding` | What seeding is, top seeders, who has seeder VIP |
@@ -42,12 +43,12 @@ named in the bot's README.
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `vote.html`, `season.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `lifetime.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `vote.html`, `season.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all eleven pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
-| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 15. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
+| Stats URL       | `<meta name="stats-url" content="…">`: set it to the URL from step 1, ending in `/api/stats`. Same in all twelve pages. The player pages read `/api/players` and `/api/player` from the same place, and the live page `/api/live` and its WebSocket. |
+| Discord invite  | Already `https://discord.gg/qsJFYGhSJ4`: 5 places in `index.html` (one is the invite as text under the Join button) and 1 in each other page. If the invite changes, change all 16. Set it to never expire with no use limit: Discord invites expire after 7 days by default. |
 | Discord links   | Every Discord button goes through the bot (`/go/discord?src=<place>`, set by `js/discord.js` from the page and the link's `data-src`), which counts the click and sends people to the bot's `DISCORD_INVITE`: keep it the same as the invite above. Without JavaScript the button is the invite itself. `public/_redirects` has `/discord`, a short link for the welcome message in game; it points at the bot's `/go/discord`, so change it with the stats URL. **Deploy the bot first**: the links need its `/go/discord`. |
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
