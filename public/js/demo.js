@@ -1468,8 +1468,8 @@ export const demoRotationsChange = async (body) => {
 // The staff page's Lines tab, as the bot sends it: each list with what the bot puts around its lines and fills in,
 // for gaminginit.com with seeder VIP on, 20 players to go live and 100 points to win.
 const DEMO_SITE = 'gaminginit.com';
-const DEMO_HALFWAY_AFTER = ` Check the leaderboard and stats at ${DEMO_SITE}`;
-const DEMO_NEARLY_AFTER = ` Where do you rank? Leaderboard and stats at ${DEMO_SITE}`;
+const DEMO_HALFWAY_AFTER = ` Watch this match live: ${DEMO_SITE}/live`;
+const DEMO_NEARLY_AFTER = ` Where do you rank? ${DEMO_SITE}`;
 const demoList = (id, group, name, note, frame, lines) => ({ id, group, name, note, off: null, ...frame, lines, changed: null });
 const demoFaction = (group, key, name, note, frame, lines) => demoList(`${group === 'Halfway' ? 'halfway' : 'nearly'}.${key}`, group, name, note, frame, lines);
 const DEMO_TEAM_LONGEST = 'x'.repeat(16);
@@ -1488,37 +1488,40 @@ const DEMO_LISTS = [
     'Seeding',
     'Seeding',
     'Every few minutes while the server seeds, and 30 seconds after someone joins. What seeding earns goes after it.',
-    exactFrame({ needed: '19 more players' }, '', ` Seed for over 10 min on 3 days in a week and get a whitelist slot. How at ${DEMO_SITE}`),
-    ["We're seeding! {needed} and we go live.", 'Seeding now: {needed} to go live. Stick around and bring a friend.', "Quiet, isn't it? {needed} and it won't be."],
+    exactFrame({ needed: '19 more players' }, '', ` Seed over 10 min on 3 days in a week for free VIP: ${DEMO_SITE}/seeding`),
+    ["Seeding! {needed} and we're live.", '{needed} to go live. Stick around and bring your squad.', "Quiet, isn't it? {needed} and it won't be."],
   ),
   demoList(
     'welcome',
     'Welcome',
     'Welcome',
     'A private message to each player a couple of minutes after they join, and not again for 6 hours. Say the basic rules: the Discord and the website go after it.',
-    exactFrame({}, '', ` Discord: discord.gg/qsJFYGhSJ4 | Website: ${DEMO_SITE}`),
-    ['Welcome! Rules: no cheating or exploits, no team killing or griefing, no racism or abuse, and listen to admins. Full rules on our Discord.'],
+    { values: { name: 'Ghost' }, longest: { name: 'x'.repeat(20) }, before: '', after: ` Discord: ${DEMO_SITE}/discord | Stats: ${DEMO_SITE}` },
+    [
+      'Welcome, {name}! Play fair: no cheats, exploits, team kills, griefing, racism or abuse. Admins have the final say.',
+      'Welcome in, {name}! House rules: no cheats, exploits, TKs, griefing, racism or abuse. Listen to admins.',
+    ],
   ),
   demoList(
     'tenMinutes',
     '10 minutes in',
     '10 minutes in',
-    '10 minutes after the match goes live. The line is the whole message, so say where the rules and the website are.',
+    '10 minutes after the match goes live. The line is the whole message, so end it with one link to type: {site}, a page on it, or {site}/discord for the rules.',
     exactFrame({ site: DEMO_SITE }, '', ''),
-    ['10 minutes in and nobody has rage quit yet. Rules are in our Discord, leaderboard at {site}', 'Still alive? Impressive. Rules are in our Discord, and your K/D is on the leaderboard at {site}'],
+    ["10 minutes in and nobody's rage quit yet. See where your K/D ranks: {site}", 'Enjoying the chaos, soldier? Rules are in our Discord: {site}/discord'],
   ),
   ...[
     ['lonestar', 'Lonestar', ['Lonestar leads on {score}! Screenshot it, this never happens.', 'Lonestar leads on {score}! The default pick is cooking. Yeehaw.']],
     ['manticore', 'Manticore', ['Manticore leads on {score}. Green winning? Shocking. Truly.', 'Manticore leads on {score}. Green is winning. Water is also wet.']],
     ['valkyra', 'Valkyra', ['Valkyra leads on {score}. Not my points, OUR points, comrade.', 'Valkyra leads on {score}. The motherland is pleased. For now.']],
   ].map(([key, name, lines]) =>
-    demoFaction('Halfway', key, name, `When ${name} is in front at half the winning score. "Halfway there!" goes before it, and the leaderboard after it.`, halfwayFrame(name), lines),
+    demoFaction('Halfway', key, name, `When ${name} is in front at half the winning score. "Halfway there!" goes before it, and the vote (while it runs) or the live match after it.`, halfwayFrame(name), lines),
   ),
   demoList(
     'halfwayLevel',
     'Halfway',
     'Level scores',
-    'At half the winning score when the top teams are level. These go in place of "Halfway there!", with the leaderboard after them.',
+    'At half the winning score when the top teams are level. These go in place of "Halfway there!", with the vote (while it runs) or the live match after them.',
     exactFrame({}, '', DEMO_HALFWAY_AFTER),
     ["Halfway there and it's neck and neck!", 'Halfway there and dead level. Somebody do something.'],
   ),
@@ -1526,7 +1529,7 @@ const DEMO_LISTS = [
     'halfwayOther',
     'Halfway',
     'Any other team',
-    'When a team without a list of its own is in front at half the winning score. "Halfway there!" goes before it, and the leaderboard after it.',
+    'When a team without a list of its own is in front at half the winning score. "Halfway there!" goes before it, and the vote (while it runs) or the live match after it.',
     halfwayFrame('Other team'),
     ['{team} leads on {score}!'],
   ),
@@ -1535,13 +1538,13 @@ const DEMO_LISTS = [
     ['manticore', 'Manticore', ['Manticore has {score}. Green about to win again. Groundbreaking.', 'Manticore has {score}. Green diff incoming.']],
     ['valkyra', 'Valkyra', ['Valkyra has {score}! Victory for the motherland is in sight, comrades.', 'Valkyra has {score}! Start rehearsing the victory parade.']],
   ].map(([key, name, lines]) =>
-    demoFaction('Nearly won', key, name, `When ${name} is the first team to reach 90% of the winning score. The leaderboard goes after it.`, nearlyFrame(name), lines),
+    demoFaction('Nearly won', key, name, `When ${name} is the first team to reach 90% of the winning score. The vote (while it runs) or the leaderboard goes after it.`, nearlyFrame(name), lines),
   ),
   demoList(
     'nearlyOther',
     'Nearly won',
     'Any other team',
-    'When a team without a list of its own is the first to reach 90% of the winning score. The leaderboard goes after it.',
+    'When a team without a list of its own is the first to reach 90% of the winning score. The vote (while it runs) or the leaderboard goes after it.',
     nearlyFrame('Other team'),
     ['{team} has {score} points!'],
   ),
