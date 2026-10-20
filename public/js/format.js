@@ -1520,7 +1520,7 @@ export const shareOf = (part, whole) => percent(whole === 0 ? null : part / whol
 
 // The line above the Play time view's tables.
 export const playtimeText = (r) => {
-  if (r.sessions === 0) return `No finished times on the server in the last ${plural(r.days, 'day')} yet.`;
+  if (r.sessions === 0) return `No finished times on the server in the last ${plural(r.days, 'day')} yet.${excludedText(r.excluded ?? 0)}`;
   const { total, finale } = r.leaves;
   const last = Object.values(finale).reduce((a, b) => a + b, 0);
   return `${plural(r.sessions, 'time')} on the server in the last ${plural(r.days, 'day')}: ${formatHours(r.averageMinutes)} on average, ${formatHours(r.medianMinutes)} typically. ${
@@ -1562,7 +1562,7 @@ export const seedingText = (seeding) =>
 
 // Short stays by new players and everyone else, in a line.
 export const bounceText = (bounce, minutes = 10) => {
-  if (bounce === null) return '';
+  if (bounce == null) return '';
   const { newPlayers: n, others: o } = bounce;
   if (n.sessions === 0) return `Stays under ${minutes} minutes: ${shareOf(o.short, o.sessions)} of everyone else’s. No new players’ stays yet.`;
   return `Stays under ${minutes} minutes: ${shareOf(n.short, n.sessions)} of new players’ (${n.sessions}), ${shareOf(o.short, o.sessions)} of everyone else’s (${o.sessions}).`;

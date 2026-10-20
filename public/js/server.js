@@ -308,12 +308,16 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
             'tr',
             {},
             el('th', { scope: 'row', textContent: names[day] }),
-            ...row.map((c, h) =>
-              el('td', {
-                className: `heat-cell heat-${c.level}`,
-                title: `${names[day]} ${String(h).padStart(2, '0')}:00 UTC: ${c.leaves} leaves in ${formatHours(c.minutes)} of play${c.rate === null ? '' : ` (${Math.round(c.rate)} per 100 hours)`}`,
-              }),
-            ),
+            ...row.map((c, h) => {
+              const text = `${names[day]} ${String(h).padStart(2, '0')}:00 UTC: ${c.leaves} leaves in ${formatHours(c.minutes)} of play${c.rate === null ? ', too little to say' : ` (${Math.round(c.rate)} per 100 hours)`}`;
+              const td = el('td', { className: `heat-cell heat-${c.level}`, title: text, tabIndex: 0 });
+              td.setAttribute('aria-label', text);
+              // A tooltip does not open from the keyboard, so the numbers are also written under the heatmap.
+              const show = () => ($('playtime-heat-note').textContent = text);
+              td.addEventListener('focus', show);
+              td.addEventListener('mouseenter', show);
+              return td;
+            }),
           ),
         ),
       ),

@@ -1741,6 +1741,8 @@ describe('play time, the rest', () => {
     assert.match(seedingText({ matches: 0 }), /No match/);
     assert.match(seedingText({ matches: 2, averageMinutes: 30, seeders: 10, reachedLive: 4 }), /2 matches.*40%/);
     assert.equal(bounceText(null), '');
+    assert.equal(bounceText(undefined), '');
+    assert.match(playtimeText({ days: 7, sessions: 0, excluded: 2 }), /2 stays ended by a staff kick or ban are left out/);
     assert.match(bounceText({ newPlayers: { sessions: 10, short: 5 }, others: { sessions: 20, short: 2 } }), /50% of new players’ \(10\), 10% of everyone/);
     assert.match(newPlayersText({ cohorts: [{}], lookbackDays: 1 }), /1 day the bot/);
     assert.equal(funnelText({ linked: 0 }), '');
