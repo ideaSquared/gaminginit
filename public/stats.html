@@ -29,7 +29,6 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="js/stats.js"></script>
-    <script type="module" src="js/lifetimepublic.js"></script>
     <script type="module" src="js/nav.js"></script>
   </head>
   <body>
@@ -66,6 +65,7 @@
               <ul class="nav-sub" id="nav-sub-stats">
                 <li><a href="stats" data-keep-query aria-current="page"><span class="nav-link-title">Server activity</span><span class="nav-link-note">Players over time and busy hours</span></a></li>
                 <li><a href="teams" data-keep-query><span class="nav-link-title">Team win rates</span><span class="nav-link-note">Which side wins most</span></a></li>
+                <li><a href="lifetime" data-keep-query><span class="nav-link-title">Lifetime stats</span><span class="nav-link-note">Everything since we started</span></a></li>
               </ul>
             </li>
             <li class="nav-group">
@@ -229,69 +229,15 @@
         </div>
       </section>
 
-      <!-- What the bot has kept for good: only the figures players like to see. Hidden until the bot sends them (js/lifetimepublic.js). -->
-      <section class="section" id="lifetime" aria-labelledby="lifetime-title" hidden>
+      <!-- A way into the lifetime stats page. -->
+      <section class="section" aria-labelledby="lifetime-teaser-title">
         <div class="wrap">
-          <div class="section-head">
-            <h2 class="page-title" id="lifetime-title">Since we started</h2>
-            <p class="section-note" id="lifetime-sub"></p>
-          </div>
-
-          <div class="tiles" id="lifetime-tiles"></div>
-          <ul class="lifetime-records" id="lifetime-records"></ul>
-
-          <div class="charts">
-            <figure class="card chart-card chart-card-wide">
-              <figcaption>
-                <h3>Players each week</h3>
-                <p class="chart-sub">Different players each week. The brighter part is people playing with us for the first time.</p>
-              </figcaption>
-              <div class="chart" id="weeks-chart"></div>
-              <div id="weeks-legend"></div>
-              <details class="table-view">
-                <summary>Show as table</summary>
-                <div class="table-scroll"><table id="weeks-table"></table></div>
-              </details>
-            </figure>
-
-            <figure class="card chart-card chart-card-wide">
-              <figcaption>
-                <h3>Players each day</h3>
-                <p class="chart-sub">Different players each day, the latest 90 days (UTC days), with the average of the last 7.</p>
-              </figcaption>
-              <div class="chart" id="people-chart"></div>
-              <div id="people-legend"></div>
-              <details class="table-view">
-                <summary>Show as table</summary>
-                <div class="table-scroll"><table id="people-table"></table></div>
-              </details>
-            </figure>
-
-            <figure class="card chart-card chart-card-wide" id="lifetime-busy" hidden>
-              <figcaption>
-                <h3>When we are busiest</h3>
-                <p class="chart-sub" id="busy-note"></p>
-              </figcaption>
-              <p class="section-note pt-peak" id="busy-readout" aria-live="polite"></p>
-              <div class="table-scroll"><table class="heatmap" id="busy-grid"></table></div>
-              <ul class="pt-legend"><li>Quieter</li><li><span class="pt-swatch heat-1" aria-hidden="true"></span><span class="pt-swatch heat-2" aria-hidden="true"></span><span class="pt-swatch heat-3" aria-hidden="true"></span><span class="pt-swatch heat-4" aria-hidden="true"></span></li><li>Busier</li></ul>
-            </figure>
-
-            <figure class="card chart-card" id="lifetime-maps" hidden>
-              <figcaption>
-                <h3>Favourite maps</h3>
-                <p class="chart-sub">Share of the matches we have played.</p>
-              </figcaption>
-              <ul class="pt-bars" id="maps-bars"></ul>
-            </figure>
-
-            <figure class="card chart-card">
-              <figcaption>
-                <h3>Month by month</h3>
-                <p class="chart-sub">Players, new players, hours played and matches.</p>
-              </figcaption>
-              <div class="table-scroll"><table id="months-table"></table></div>
-            </figure>
+          <div class="card lifetime-teaser">
+            <div>
+              <h2 id="lifetime-teaser-title">Lifetime stats</h2>
+              <p class="section-note">Players so far, hours played, the busiest day, favourite maps and when we are busiest, since we started keeping count.</p>
+            </div>
+            <a class="btn btn-ghost" href="lifetime" data-keep-query>See the lifetime stats</a>
           </div>
         </div>
       </section>

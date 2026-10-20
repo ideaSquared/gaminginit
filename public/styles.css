@@ -3988,6 +3988,39 @@ html.story-open {
   margin-bottom: 8px;
 }
 
+/* The way into the lifetime stats from the stats page. */
+.lifetime-teaser {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 20px;
+}
+
+.lifetime-teaser h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.lifetime-teaser .section-note {
+  margin-top: 4px;
+  max-width: 60ch;
+}
+
+.lifetime-sub {
+  margin-bottom: 16px;
+}
+
+/* The lifetime page's heading and its figures are one page, not two sections. */
+.section-flush-bottom {
+  padding-bottom: 0;
+}
+
+#lifetime.section {
+  padding-top: 24px;
+}
+
 /* The public stats page's records, under its tiles, and its bars under their captions. */
 .chart-card > .pt-bars {
   margin-top: 16px;
