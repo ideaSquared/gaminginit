@@ -8,14 +8,14 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-const svg = (tag, attrs = {}, parent = null) => {
+export const svg = (tag, attrs = {}, parent = null) => {
   const node = document.createElementNS(SVG_NS, tag);
   for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, String(value));
   parent?.appendChild(node);
   return node;
 };
 
-const text = (parent, attrs, content) => {
+export const text = (parent, attrs, content) => {
   const node = svg('text', attrs, parent);
   node.textContent = content;
   return node;
@@ -28,7 +28,7 @@ const dayMonth = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'sh
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 // One tooltip per chart. Values lead, labels follow; everything goes in with textContent.
-const makeTooltip = (root) => {
+export const makeTooltip = (root) => {
   const tip = document.createElement('div');
   tip.className = 'chart-tip';
   tip.hidden = true;
@@ -52,7 +52,7 @@ const makeTooltip = (root) => {
   };
 };
 
-const onResize = (root, draw) => {
+export const onResize = (root, draw) => {
   let width = 0;
   new ResizeObserver(() => {
     if (root.clientWidth !== width) {
@@ -62,7 +62,7 @@ const onResize = (root, draw) => {
   }).observe(root);
 };
 
-const emptyMessage = (root, message) => {
+export const emptyMessage = (root, message) => {
   const p = document.createElement('p');
   p.className = 'chart-empty';
   p.textContent = message;
@@ -191,7 +191,7 @@ export const populationChart = (root) => {
 };
 
 // Rounded top, square base: the data end is the only rounded end.
-const columnPath = (x, y, w, h) => {
+export const columnPath = (x, y, w, h) => {
   const r = Math.min(4, w / 2, h);
   return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
 };

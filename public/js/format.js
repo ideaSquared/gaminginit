@@ -1236,7 +1236,7 @@ export const recentPlayers = ({ moderation = [], joins = [], limit = 10 }) => {
 // such as the bot's answer to signing in.
 export const SECTIONS = ['now', 'queue', 'players', 'server'];
 export const QUEUE_VIEWS = ['flagged', 'flags', 'teamkills', 'log'];
-export const SERVER_VIEWS = ['bans', 'playtime', 'rotations', 'lines', 'rules'];
+export const SERVER_VIEWS = ['bans', 'playtime', 'lifetime', 'rotations', 'lines', 'rules'];
 const OLD_SECTIONS = { live: 'now', review: 'queue', alerts: 'queue', history: 'players' };
 export const staffRoute = (hash) => {
   const [asked = '', sub = ''] = hash.replace(/^#/, '').split('/');
@@ -1629,4 +1629,116 @@ export const peakHourText = (grid) => {
   let best = null;
   grid.forEach((row, day) => row.forEach((c, hour) => c.rate !== null && (best === null || c.rate > best.rate) && (best = { day, hour, rate: c.rate })));
   return best === null ? 'Not enough play yet to say when people leave most.' : `Most leaves per hour of play: ${names[best.day]} ${String(best.hour).padStart(2, '0')}:00 UTC, ${Math.round(best.rate)} per 100 hours.`;
+};
+
+// The Lifetime view (the bot's GET /api/admin/lifetime).
+
+// The line above it: how much the bot has kept.
+export const lifetimeText = (l) =>
+  l.since === null
+    ? 'Nothing kept yet. The bot adds each UTC day once it is over, and the first time, the days its player records go back to.'
+    : `${plural(l.summary.days, 'day')} kept, from ${l.since} to ${l.through}. Each UTC day is added once it is over, so today is not here yet. Times are UTC.`;
+
+// The headline figures as tiles.
+export const lifetimeTiles = (l) => {
+  const s = l.summary;
+  return [
+    { label: 'Players ever', value: s.unique_players.toLocaleString('en-GB'), sub: `since ${l.since ?? '–'}` },
+    { label: 'Played in the last 30 days', value: s.active_last_30.toLocaleString('en-GB'), sub: `${s.new_last_30.toLocaleString('en-GB')} of them new` },
+    { label: 'Regulars', value: s.regulars.toLocaleString('en-GB'), sub: '5 or more days in 30' },
+    { label: 'Regulars who stopped', value: s.lapsed_regulars.toLocaleString('en-GB'), sub: 'not seen for 30 days' },
+    { label: 'Player hours', value: s.player_hours.toLocaleString('en-GB'), sub: 'on the server, in all' },
+    { label: 'Matches', value: s.matches.toLocaleString('en-GB'), sub: `in ${plural(s.days, 'day')}` },
+  ];
+};
+
+// The last `range` days of the bot's daily rows (all of them when `range` is null) as chart points: the day and a value
+// from `pick(row)`, null where the row has none.
+export const dailyPoints = (daily, pick, range = null) =>
+  (range === null ? daily : daily.slice(-range)).map((row) => {
+    const value = pick(row);
+    return { day: row.day, value: value === null || value === undefined || Number.isNaN(value) ? null : value };
+  });
+
+// A share of two columns of a row, as a percent from 0 to 100, null when there is nothing to share.
+export const rowShare = (row, part, whole) => (row[part] === null || row[whole] === null || row[whole] === 0 ? null : (row[part] / row[whole]) * 100);
+
+// Columns for the players-by-day or by-week chart, the last `range` of them: `fresh` null where who is new is not known.
+export const peopleSlots = (rows, { key, total, fresh, label, title }, range = null) =>
+  (range === null ? rows : rows.slice(-range)).map((r) => ({ key: r[key], label: label(r), title: title(r), total: r[total], fresh: r[fresh] }));
+
+// The lifetime leave timing as the Play time view's rows: leaves summed over the daily rows.
+export const lifetimeLeaves = (daily) => {
+  const sum = (key) => daily.reduce((a, r) => a + (r[key] ?? 0), 0);
+  const timing = { early: sum('leaves_early'), mid: sum('leaves_mid'), late: sum('leaves_late'), end: sum('leaves_end'), between: sum('leaves_between') };
+  return { total: Object.values(timing).reduce((a, b) => a + b, 0), timing, finale: sum('leaves_finale') };
+};
+
+// The CSV tables the Lifetime view offers, as [key, label, what it is].
+export const LIFETIME_TABLES = [
+  ['daily', 'Each day', 'one row a day: players, stays, leaves, seeding, Discord'],
+  ['matches', 'Each match', 'one row a match: map, length, score, who left early'],
+  ['weekly', 'Each week', 'unique and new players, regulars, stickiness'],
+  ['monthly', 'Each month', 'the same by month'],
+  ['cohorts', 'New players by week', 'how many came back within 1, 7, 30 and 90 days'],
+];
+
+// The public Lifetime section of the stats page (the bot's GET /api/lifetime).
+
+// The bot's average players for each hour of the week in UTC, Monday 00:00 first, as the reader's own week: 7 rows of 24
+// hours, Monday first. `offset` is the reader's `getTimezoneOffset()` (minutes UTC is ahead of local); a part-hour offset
+// is rounded to the hour.
+export const localWeek = (players, offset = 0) => {
+  const shift = Math.round(offset / 60);
+  const local = Array.from({ length: 168 }, () => 0);
+  players.forEach((value, i) => {
+    local[(((i - shift) % 168) + 168) % 168] = value;
+  });
+  return Array.from({ length: 7 }, (_, day) => local.slice(day * 24, day * 24 + 24));
+};
+
+// A colour level 0 to 4 for each hour of a week, against the busiest (0 for an hour with nobody).
+export const busyLevels = (week) => {
+  const top = Math.max(0, ...week.flat());
+  return week.map((row) => row.map((v) => (v <= 0 || top <= 0 ? 0 : Math.max(1, Math.ceil((v / top) * 4)))));
+};
+
+// The busiest hour of the reader's week, in words.
+export const busiestHourText = (week) => {
+  const names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  let best = null;
+  week.forEach((row, day) => row.forEach((v, hour) => (best === null || v > best.v) && (best = { day, hour, v })));
+  if (best === null || best.v <= 0) return '';
+  return `Busiest: ${names[best.day]} around ${String(best.hour).padStart(2, '0')}:00, about ${Math.round(best.v)} players on at once on average.`;
+};
+
+// The public tiles: what has been kept in all, as [label, value, sub].
+export const publicLifetimeTiles = (l) => [
+  ['Players so far', l.totals.players.toLocaleString('en-GB'), `${l.totals.players_last_30.toLocaleString('en-GB')} in the last 30 days`],
+  ['Hours played', l.totals.player_hours.toLocaleString('en-GB'), 'added up across everyone'],
+  ['Matches played', l.totals.matches.toLocaleString('en-GB'), `since ${l.since}`],
+  ['Typical stay', l.typical_stay_minutes === null ? '–' : formatHours(l.typical_stay_minutes), 'how long a player stays on'],
+];
+
+// The records, one line each, for those the bot has.
+export const publicRecords = (l) =>
+  [
+    l.records.most_players && `Busiest day: ${l.records.most_players.players} different players, on ${l.records.most_players.day}.`,
+    l.records.biggest_match && `Biggest match: ${l.records.biggest_match.players} players at once, on ${l.records.biggest_match.day}.`,
+    l.records.most_matches && `Most matches in a day: ${l.records.most_matches.matches}, on ${l.records.most_matches.day}.`,
+    l.totals.regulars > 0 && `${l.totals.regulars} regulars: players who came on 5 or more days in the last 30.`,
+  ].filter(Boolean);
+
+// A daily line cut to the last `range` days (all when null): its points, and the average of each worked out over every day
+// first (`average` takes the values and gives an average for each) so the first days of a range keep the average they had.
+// It runs from the first day with a figure to the last.
+export const croppedLine = (daily, pick, range, average) => {
+  const all = dailyPoints(daily, pick, null);
+  const averages = average(all.map((p) => p.value));
+  const start = range === null ? 0 : Math.max(0, all.length - range);
+  const shown = all.slice(start);
+  const first = shown.findIndex((p) => p.value !== null);
+  const last = shown.findLastIndex((p) => p.value !== null);
+  if (first < 0) return { points: [], smooth: [] };
+  return { points: shown.slice(first, last + 1), smooth: averages.slice(start).slice(first, last + 1) };
 };

@@ -29,7 +29,7 @@ const minutes = (value) => formatHours(value);
 
 // One row of a bar list: `label` and `sub` on the left, the bar, and `text` after it. `length` is 0 to 1; `inner`, 0 to 1,
 // is the part of the bar picked out (those in the night's last match, those still there at go-live).
-const barRow = ({ label, sub = '', length, inner = null, text, hot = false, thin = false, title = '' }) => {
+export const barRow = ({ label, sub = '', length, inner = null, text, hot = false, thin = false, title = '' }) => {
   const fill = el('span', { className: 'pt-fill' });
   fill.style.width = `${Math.round(length * 1000) / 10}%`;
   if (inner !== null) {
@@ -46,16 +46,61 @@ const barRow = ({ label, sub = '', length, inner = null, text, hot = false, thin
   );
 };
 
-const barList = (rows, empty) => (rows.length === 0 ? el('p', { className: 'muted pt-empty', textContent: empty }) : el('ul', { className: 'pt-bars' }, ...rows.map(barRow)));
+export const barList = (rows, empty) => (rows.length === 0 ? el('p', { className: 'muted pt-empty', textContent: empty }) : el('ul', { className: 'pt-bars' }, ...rows.map(barRow)));
 
 // A card: title, a line on how to read it, its chart, and its numbers as a table.
-const card = (className, title, note) => {
+export const card = (className, title, note) => {
   const chart = el('div', { className: 'pt-chart' });
   const grid = el('table', { className: 'admin-table' });
   const details = el('details', { className: 'pt-details' }, el('summary', { textContent: 'Show as table' }), el('div', { className: 'admin-scroll' }, grid));
   const noteNode = el('p', { className: 'section-note pt-note', textContent: note });
   const node = el('section', { className: `card pt-card ${className}` }, el('h3', { className: 'pt-title', textContent: title }), noteNode, chart, details);
   return { node, chart, grid, noteNode };
+};
+
+// A heatmap of leaves per 100 hours of play by hour of the week (UTC) into `grid` (a table), with the peak hour (and each
+// hour on hover or focus) in `note` and the scale in `scale`. `heat` is the bot's { leaves, minutes }.
+export const drawHeatmap = (grid, note, scale, heat) => {
+  const cells = heatGrid(heat);
+  setStatus(note, peakHourText(cells));
+  const hours = Array.from({ length: 24 }, (_, h) => h);
+  grid.replaceChildren(
+    el('thead', {}, el('tr', {}, el('th', { scope: 'col', textContent: 'UTC' }), ...hours.map((h) => el('th', { scope: 'col', className: 'heat-hour', textContent: h % 3 === 0 ? String(h) : '' })))),
+    el(
+      'tbody',
+      {},
+      ...cells.map((row, day) =>
+        el(
+          'tr',
+          {},
+          el('th', { scope: 'row', textContent: DAY_NAMES[day] }),
+          ...row.map((c, h) => {
+            const label = `${DAY_NAMES[day]} ${String(h).padStart(2, '0')}:00 UTC: ${c.leaves} leaves in ${formatHours(c.minutes)} of play${c.rate === null ? ', too little to say' : ` (${Math.round(c.rate)} per 100 hours)`}`;
+            const td = el('td', { className: `heat-cell heat-${c.level}`, title: label, tabIndex: 0 });
+            td.setAttribute('aria-label', label);
+            // A tooltip does not open from the keyboard, so the numbers are also written above the heatmap.
+            const show = () => setStatus(note, label);
+            const reset = () => setStatus(note, peakHourText(cells));
+            td.addEventListener('focus', show);
+            td.addEventListener('mouseenter', show);
+            td.addEventListener('mouseleave', reset);
+            td.addEventListener('blur', reset);
+            return td;
+          }),
+        ),
+      ),
+    ),
+  );
+  // The scale: from the quietest hour to the busiest.
+  scale.replaceChildren(
+    el(
+      'div',
+      { className: 'pt-scale' },
+      el('span', { textContent: 'Fewer leaves' }),
+      ...[1, 2, 3, 4].map((level) => el('span', { className: `pt-swatch heat-${level}`, ariaHidden: 'true' })),
+      el('span', { textContent: 'More leaves' }),
+    ),
+  );
 };
 
 export const createPlaytime = (root) => {
@@ -252,45 +297,7 @@ export const createPlaytime = (root) => {
   };
 
   const renderHeat = (json) => {
-    const grid = heatGrid(json.heat);
-    setStatus(heatNote, peakHourText(grid));
-    const hours = Array.from({ length: 24 }, (_, h) => h);
-    heatGridNode.replaceChildren(
-      el('thead', {}, el('tr', {}, el('th', { scope: 'col', textContent: 'UTC' }), ...hours.map((h) => el('th', { scope: 'col', className: 'heat-hour', textContent: h % 3 === 0 ? String(h) : '' })))),
-      el(
-        'tbody',
-        {},
-        ...grid.map((row, day) =>
-          el(
-            'tr',
-            {},
-            el('th', { scope: 'row', textContent: DAY_NAMES[day] }),
-            ...row.map((c, h) => {
-              const text = `${DAY_NAMES[day]} ${String(h).padStart(2, '0')}:00 UTC: ${c.leaves} leaves in ${formatHours(c.minutes)} of play${c.rate === null ? ', too little to say' : ` (${Math.round(c.rate)} per 100 hours)`}`;
-              const td = el('td', { className: `heat-cell heat-${c.level}`, title: text, tabIndex: 0 });
-              td.setAttribute('aria-label', text);
-              // A tooltip does not open from the keyboard, so the numbers are also written above the heatmap.
-              const show = () => setStatus(heatNote, text);
-              td.addEventListener('focus', show);
-              td.addEventListener('mouseenter', show);
-              td.addEventListener('mouseleave', () => setStatus(heatNote, peakHourText(grid)));
-              td.addEventListener('blur', () => setStatus(heatNote, peakHourText(grid)));
-              return td;
-            }),
-          ),
-        ),
-      ),
-    );
-    // The scale: from the quietest hour to the busiest.
-    heatChart.replaceChildren(
-      el(
-        'div',
-        { className: 'pt-scale' },
-        el('span', { textContent: 'Fewer leaves' }),
-        ...[1, 2, 3, 4].map((level) => el('span', { className: `pt-swatch heat-${level}`, ariaHidden: 'true' })),
-        el('span', { textContent: 'More leaves' }),
-      ),
-    );
+    drawHeatmap(heatGridNode, heatNote, heatChart, json.heat);
   };
 
   const renderMatches = (json) => {
