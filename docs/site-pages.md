@@ -154,7 +154,7 @@ so a link cannot send someone's session to another site.
 - **Signed in**, the page shows: whether they are in the Discord server (with a join button if not); their Steam account and how
   it was linked (from their Discord profile, or **Link with Steam**: Steam's own sign-in, which proves they own it; **Unlink** takes
   two presses); their seeder VIP and until when; buttons to **their player page and their season**; and settings, **Message me on
-  Discord about my VIP** (when the bot can send them) and **Make my player page private** (staff keep control of one they made
+  Discord** about their VIP, and when the server needs seeders after they have been away (when the bot can send them) and **Make my player page private** (staff keep control of one they made
   private: the box is off for it). **Delete my account** takes the roles, and forgets the Discord link, the Steam link and the
   settings, in two presses. The list of what linking gets them only has what the bot can give (`perks` in its answer).
 - **Coming back** from Discord or Steam, the page says once what happened: whether the join worked, whether a Steam account was
