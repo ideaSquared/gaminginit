@@ -1,8 +1,8 @@
 import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, shareOf } from './format.js';
-import { apiUrl, demo } from './live.js';
+import { apiUrl, demo, showNotice, thisPage } from './live.js';
 import { demoPublicLifetime } from './demo.js';
 import { lineChart, peopleChart } from './trends.js';
-import { el } from './views.js';
+import { el, link } from './views.js';
 
 // The lifetime stats page (lifetime.html): what our Discord bot has kept for good about the server, only the figures players
 // would like to see (the bot's GET /api/lifetime). The figures stay hidden, with a line saying why, until the bot answers
@@ -115,10 +115,16 @@ const status = (text) => {
 const load = async () => {
   try {
     let data;
-    if (demo) data = demoPublicLifetime();
-    else {
+    if (demo) {
+      data = demoPublicLifetime();
+      // Sample numbers must never pass for the real server's.
+      showNotice('Showing sample numbers, not the real server. ', link(thisPage((p) => p.delete('demo')), 'See the real lifetime stats'));
+    } else {
       const url = apiUrl('lifetime');
-      if (url === '') return status('Live stats are not connected yet.');
+      if (url === '') {
+        showNotice('Live stats are not connected yet. ', link(thisPage((p) => p.set('demo', '')), 'Preview with sample numbers'));
+        return status('Live stats are not connected yet.');
+      }
       const response = await fetch(url, { headers: { accept: 'application/json' } });
       // An older bot has no lifetime figures to give.
       if (response.status === 404) return status('The bot is not keeping lifetime stats yet. They will appear here once it is.');
