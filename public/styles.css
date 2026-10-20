@@ -3652,22 +3652,320 @@ html.story-open {
   margin-bottom: 12px;
 }
 
+/* Play time (playtime.js): bars are one hue, as long as their value; the one row that is the point is picked out. */
+.pt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.pt-head .section-note {
+  max-width: 70ch;
+  margin-top: 4px;
+}
+
+.pt-tiles {
+  margin-top: 16px;
+}
+
+@media (min-width: 760px) {
+  .pt-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.pt-tiles .tile-value {
+  font-size: 1.75rem;
+}
+
+.pt-tiles .tile-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.pt-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 1100px) {
+  .pt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pt-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.pt-card {
+  min-width: 0;
+  padding: 16px 18px;
+}
+
+.pt-card[hidden] {
+  display: none;
+}
+
+.pt-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.pt-note {
+  margin: 4px 0 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.pt-empty {
+  margin: 8px 0;
+}
+
+.pt-bars {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pt-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr) 4.5rem;
+  align-items: center;
+  gap: 12px;
+}
+
+.pt-label {
+  display: grid;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.pt-sub {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.pt-track {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+.pt-fill {
+  position: relative;
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: var(--series);
+}
+
+.pt-inner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+}
+
+/* The one row that is the point, the rest quiet. */
+.pt-hot .pt-fill {
+  background: var(--accent);
+}
+
+.pt-hot .pt-label {
+  font-weight: 700;
+}
+
+/* Few players behind it: too little to read much into. */
+.pt-thin {
+  opacity: 0.55;
+}
+
+.pt-value {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .pt-row {
+    grid-template-columns: minmax(0, 1fr) 4.5rem;
+    gap: 4px 12px;
+  }
+
+  .pt-label {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A day's typical stay, one column each. */
+.pt-cols {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  height: 210px;
+  padding-top: 4px;
+}
+
+.pt-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pt-colvalue {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 0.75rem;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.pt-colwell {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid var(--axis);
+}
+
+.pt-colbar {
+  display: block;
+  width: min(100%, 40px);
+  border-radius: 4px 4px 0 0;
+  background: var(--series);
+}
+
+.pt-col:hover .pt-colbar {
+  background: var(--accent);
+}
+
+.pt-collabel {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.pt-cols-many .pt-col:not(:nth-child(5n + 1)) .pt-collabel {
+  visibility: hidden;
+}
+
+.pt-cols-many .pt-colvalue {
+  display: none;
+}
+
+.pt-cols-many {
+  gap: 3px;
+}
+
+.pt-details {
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.pt-details summary {
+  width: max-content;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.pt-details summary:hover {
+  color: var(--text);
+}
+
+.pt-details[open] summary {
+  margin-bottom: 8px;
+}
+
+/* New players: each share tinted by how large it is. */
+.pt-tint {
+  background: color-mix(in srgb, var(--series) calc(var(--share, 0) * 75%), transparent);
+}
+
+.pt-cohorts {
+  min-width: 0;
+}
+
+.pt-cohorts td:first-child {
+  white-space: nowrap;
+}
+
+/* Leaves by hour. */
 .heatmap {
-  table-layout: fixed;
   min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 2px;
+  table-layout: fixed;
+}
+
+.heatmap th,
+.heatmap td {
+  border: 0;
 }
 
 .heatmap th {
-  padding: 2px 4px;
+  padding: 2px 0;
+  color: var(--muted);
   font-size: 0.7rem;
+  font-weight: 400;
   text-align: center;
+}
+
+.heatmap tbody th {
+  width: 3rem;
+  text-align: left;
 }
 
 .heatmap .heat-cell {
   height: 22px;
   padding: 0;
-  border: 1px solid var(--surface);
+  border-radius: 3px;
 }
+
+.heatmap .heat-cell:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.pt-peak {
+  min-height: 1.4em;
+  margin: 0 0 12px;
+  color: var(--text-2);
+}
+
+.pt-scale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.pt-swatch {
+  width: 22px;
+  height: 12px;
+  border-radius: 3px;
+}
+
 
 .panel-subtitle {
   text-transform: uppercase;
