@@ -1733,15 +1733,15 @@ export const demoGrowth = () => ({
 });
 
 // The staff page's Play time view: the bot's GET /api/admin/retention, with sample numbers.
-export const demoPlaytime = () => {
+export const demoPlaytime = (days = 7) => {
   const day = 86_400_000;
   const start = Date.UTC(2026, 9, 20, 19);
   return {
-    days: 7,
-    sessions: 412,
+    days,
+    sessions: 60 * days,
     averageMinutes: 74.2,
     medianMinutes: 58,
-    daily: [4, 3, 2, 1, 0].map((ago, i) => ({
+    daily: Array.from({ length: Math.min(days, 14) }, (_, i, all) => all.length - 1 - i).map((ago, i) => ({
       day: new Date(start - ago * day).toISOString().slice(0, 10),
       players: 60 + i * 7,
       sessions: 70 + i * 9,

@@ -248,6 +248,8 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
   // changes, at most every few minutes for one period.
   let playtimeKey = '';
   let playtimeAt = 0;
+  // Which request is the latest: an answer to an earlier one (another period, or before signing out) is dropped.
+  let playtimeRequest = 0;
   const PLAYTIME_MS = 5 * 60_000;
   const minutes = (value) => formatHours(value);
   const loadPlaytime = async () => {
@@ -255,8 +257,10 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     if (days === playtimeKey && Date.now() - playtimeAt < PLAYTIME_MS) return;
     playtimeKey = days;
     playtimeAt = Date.now();
+    const request = ++playtimeRequest;
     try {
-      const { ok, status, json } = demo ? { ok: true, status: 200, json: demoPlaytime() } : await get(`admin/retention?days=${days}`);
+      const { ok, status, json } = demo ? { ok: true, status: 200, json: demoPlaytime(Number(days)) } : await get(`admin/retention?days=${days}`);
+      if (request !== playtimeRequest) return;
       if (!ok) {
         playtimeAt = 0;
         if (status === 404) setStatus($('playtime-note'), 'The bot does not count this yet. Deploy the latest bot.');
@@ -307,6 +311,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
         'No matches finished in this period.',
       );
     } catch (error) {
+      if (request !== playtimeRequest) return;
       playtimeAt = 0;
       console.error('Could not load the play time', error);
       setStatus($('playtime-note'), 'Couldn’t reach the bot. Try again in a minute.');
@@ -339,6 +344,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
       data = null;
       growthAt = 0;
       playtimeAt = 0;
+      playtimeRequest += 1;
       for (const e of Object.values(editors)) e.reset();
     },
   };
