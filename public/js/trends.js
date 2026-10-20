@@ -21,6 +21,18 @@ export const rolling = (values, window = 7) =>
     return part.reduce((a, b) => a + b, 0) / part.length;
   });
 
+// A line of text for screen readers, read out when it changes: what the arrow keys have landed on. It is added after the chart
+// is drawn (a redraw replaces the container's children).
+const announcer = (root) => {
+  const node = document.createElement('p');
+  node.className = 'visually-hidden';
+  node.setAttribute('aria-live', 'polite');
+  root.appendChild(node);
+  return (message) => {
+    if (node.textContent !== message) node.textContent = message;
+  };
+};
+
 // Hover, touch and keyboard for a chart whose points are at `xs` (pixels from the container's left): `show(i)` for the
 // nearest, `hide()` when it leaves.
 const scrub = (root, xs, show, hide) => {
@@ -51,7 +63,9 @@ const labelPoints = (count, plotW, minGap = 64) => {
 };
 
 // A line over the days. data: { points: { day, value: number | null }[], format: (value) => string, label: string,
-// average: boolean }. The daily values are the quiet line, the 7-day average the one to read.
+// average: boolean, smooth?: (number | null)[] }. The daily values are the quiet line, the 7-day average the one to read.
+// `smooth` is the average for each point, worked out over the whole history before the points were cut to a range, so the
+// first days of a range keep the average they had; without it the average is worked out over the points given.
 export const lineChart = (root) => {
   let data = null;
   const draw = () => {
@@ -69,7 +83,7 @@ export const lineChart = (root) => {
     const m = { top: 16, right: 12, bottom: 28, left: 40 };
     const plotW = width - m.left - m.right;
     const plotH = height - m.top - m.bottom;
-    const smooth = average ? rolling(points.map((p) => p.value)) : null;
+    const smooth = average ? (data.smooth ?? rolling(points.map((p) => p.value))) : null;
     const { max, ticks } = niceScale(Math.max(...known.map((p) => p.value)), 3);
     const t0 = at(points[0].day);
     const span = Math.max(DAY, at(points[points.length - 1].day) - t0);
@@ -115,6 +129,7 @@ export const lineChart = (root) => {
     root.setAttribute('role', 'group');
     root.setAttribute('aria-label', `${label}: ${format(known[known.length - 1].value)} on the latest day. Use the arrow keys to read the days.`);
     const tip = makeTooltip(root);
+    const say = announcer(root);
     const atX = points.map((p) => x(p.day));
     scrub(
       root,
@@ -126,7 +141,9 @@ export const lineChart = (root) => {
           [cross, { x1: atX[i], x2: atX[i], visibility: 'visible' }],
           [dot, { cx: atX[i], cy: shown === null ? -10 : y(shown), visibility: shown === null ? 'hidden' : 'visible' }],
         ]) for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, String(value));
-        tip.show(atX[i], shown === null ? y(0) : y(shown), p.value === null ? 'No data' : format(p.value), `${dayLong.format(at(p.day))}${smooth && smooth[i] !== null ? ` · 7-day average ${format(smooth[i])}` : ''}`);
+        const when = `${dayLong.format(at(p.day))}${smooth && smooth[i] !== null ? ` · 7-day average ${format(smooth[i])}` : ''}`;
+        tip.show(atX[i], shown === null ? y(0) : y(shown), p.value === null ? 'No data' : format(p.value), when);
+        say(`${dayLong.format(at(p.day))}: ${p.value === null ? 'no data' : format(p.value)}${smooth && smooth[i] !== null ? `, 7-day average ${format(smooth[i])}` : ''}`);
       },
       () => {
         cross.setAttribute('visibility', 'hidden');
@@ -194,6 +211,7 @@ export const peopleChart = (root) => {
     root.setAttribute('role', 'group');
     root.setAttribute('aria-label', `Players by ${unit}. Use the arrow keys to read them.`);
     const tip = makeTooltip(root);
+    const say = announcer(root);
     scrub(
       root,
       slots.map((_, i) => cx(i)),
@@ -202,6 +220,7 @@ export const peopleChart = (root) => {
         cross.setAttribute('x', String(cx(i) - band / 2));
         cross.setAttribute('visibility', 'visible');
         tip.show(cx(i), y(s.total), `${s.total} players`, `${s.fresh === null ? 'new players not known' : `${s.fresh} new`} · ${s.title ?? s.label}`);
+        say(`${s.title ?? s.label}: ${s.total} players, ${s.fresh === null ? 'new players not known' : `${s.fresh} new`}`);
       },
       () => {
         cross.setAttribute('visibility', 'hidden');

@@ -1728,3 +1728,17 @@ export const publicRecords = (l) =>
     l.records.most_matches && `Most matches in a day: ${l.records.most_matches.matches}, on ${l.records.most_matches.day}.`,
     l.totals.regulars > 0 && `${l.totals.regulars} regulars: players who came on 5 or more days in the last 30.`,
   ].filter(Boolean);
+
+// A daily line cut to the last `range` days (all when null): its points, and the average of each worked out over every day
+// first (`average` takes the values and gives an average for each) so the first days of a range keep the average they had.
+// It runs from the first day with a figure to the last.
+export const croppedLine = (daily, pick, range, average) => {
+  const all = dailyPoints(daily, pick, null);
+  const averages = average(all.map((p) => p.value));
+  const start = range === null ? 0 : Math.max(0, all.length - range);
+  const shown = all.slice(start);
+  const first = shown.findIndex((p) => p.value !== null);
+  const last = shown.findLastIndex((p) => p.value !== null);
+  if (first < 0) return { points: [], smooth: [] };
+  return { points: shown.slice(first, last + 1), smooth: averages.slice(start).slice(first, last + 1) };
+};

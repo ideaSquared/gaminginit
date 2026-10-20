@@ -185,7 +185,8 @@ export const getText = async (path) => {
     forgetToken();
     signedOut(RAN_OUT);
   }
-  return { ok: response.ok, status: response.status, text: await response.text().catch(() => '') };
+  // A body that can't be read is an error for the caller, not an empty file.
+  return { ok: response.ok, status: response.status, text: await response.text() };
 };
 
 // Posts to the bot's staff API as the signed-in staff member, for the admin tools. ?demo answers with sample data.

@@ -1,5 +1,6 @@
 import {
   barLengths,
+  croppedLine,
   dailyPoints,
   formatHours,
   hottest,
@@ -16,7 +17,7 @@ import {
 } from './format.js';
 import { barList, card, drawHeatmap } from './playtime.js';
 import { cell, number, setStatus, table } from './staff.js';
-import { lineChart, peopleChart } from './trends.js';
+import { lineChart, peopleChart, rolling } from './trends.js';
 import { el } from './views.js';
 
 // The staff page's Lifetime view (Server, see server.js): what the bot has kept for good about the server since it began
@@ -159,13 +160,10 @@ export const createLifetime = (root, { download }) => {
 
   const renderLines = (l, range) => {
     for (const x of lines) {
-      // From the first day with a figure to the last: the stays only go back a month, and a line is no use with a blank start.
-      const all = dailyPoints(l.daily, x.spec.pick, range);
-      const first = all.findIndex((p) => p.value !== null);
-      const last = all.findLastIndex((p) => p.value !== null);
-      const points = first < 0 ? [] : all.slice(first, last + 1);
+      // The 7-day average is worked out over every day kept and then cut to the range with the days.
+      const { points, smooth } = croppedLine(l.daily, x.spec.pick, range, rolling);
       const format = FORMATS[x.spec.format];
-      x.line.update({ points, format, label: x.spec.title, average: true });
+      x.line.update({ points, smooth, format, label: x.spec.title, average: true });
       valueTable(x.grid, points, format, x.spec.title);
     }
   };
