@@ -1741,7 +1741,7 @@ export const demoPlaytime = (days = 7) => {
     sessions: 60 * days,
     averageMinutes: 74.2,
     medianMinutes: 58,
-    daily: Array.from({ length: Math.min(days, 14) }, (_, i, all) => all.length - 1 - i).map((ago, i) => ({
+    daily: Array.from({ length: Math.min(days, 14) }, (_, i) => Math.min(days, 14) - 1 - i).map((ago, i) => ({
       day: new Date(start - ago * day).toISOString().slice(0, 10),
       players: 60 + i * 7,
       sessions: 70 + i * 9,
