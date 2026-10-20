@@ -370,3 +370,20 @@ forgotten while on another tab.
   member's sign-in to another site. To try them against a local bot, change the meta tag in local copies.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only
   lets that site read the staff data.
+
+## Server: Play time
+
+Server's **Play time** view (`/admin#server/playtime`) shows how long players stay and when they leave, for today, 7
+or 30 days (the bot keeps 30). It reads the bot's `GET /api/admin/retention` (see the bot's README, "Play time").
+
+- **Each day:** players who left that day, their stays, the average and typical (median) stay, and the average time
+  per player.
+- **How long each stay was**, in bands from under 15 minutes to 3 hours or more.
+- **When players leave:** the first, middle or last third of a match, at the end of a match (the last 3 minutes, and
+  the minutes after it until the next starts), or between matches or while seeding. The last column counts those who
+  left in the night's last match or after it. A night is a run of matches with less than 2 hours between them.
+- **Match by match:** the latest 20 matches, with how many were in game when it went live, how many left before the
+  last 3 minutes, and the share who stayed.
+
+Leaves the bot only noticed after a gap in its checks are in the lengths but not in the timing, as it can't say when
+they left. Players on when the bot began keeping the log have no length.

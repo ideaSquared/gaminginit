@@ -463,6 +463,9 @@
                 <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans" title="Bans, whitelist slots and staff spots">
                   <span class="tab-name">Bans and VIP</span>
                 </button>
+                <button type="button" role="tab" id="tab-playtime" aria-controls="panel-playtime" aria-selected="false" tabindex="-1" data-tab="playtime" title="How long players stay each day and when they leave">
+                  <span class="tab-name">Play time</span>
+                </button>
                 <button type="button" role="tab" id="tab-rotations" aria-controls="panel-rotations" aria-selected="false" tabindex="-1" data-tab="rotations" title="The maps for each day">
                   <span class="tab-name">Rotations <span class="tab-dirty" id="dirty-rotations" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 </button>
@@ -514,6 +517,28 @@
                   <div class="admin-scroll">
                     <table class="admin-table" id="growth-clicks"></table>
                   </div>
+                </article>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-playtime" aria-labelledby="tab-playtime" hidden>
+                <article class="card panel admin-panel" aria-labelledby="playtime-title">
+                  <h2 class="panel-title" id="playtime-title">Play time</h2>
+                  <p class="section-note" id="playtime-note">Loading…</p>
+                  <label class="finder">Period
+                    <select class="finder-input list-sort" id="playtime-days">
+                      <option value="7" selected>Last 7 days</option>
+                      <option value="30">Last 30 days</option>
+                      <option value="1">Today</option>
+                    </select>
+                  </label>
+                  <h3 class="panel-subtitle">Each day</h3>
+                  <div class="admin-scroll"><table class="admin-table" id="playtime-daily"></table></div>
+                  <h3 class="panel-subtitle">How long each stay was</h3>
+                  <div class="admin-scroll"><table class="admin-table" id="playtime-lengths"></table></div>
+                  <h3 class="panel-subtitle">When players leave</h3>
+                  <div class="admin-scroll"><table class="admin-table" id="playtime-leaves"></table></div>
+                  <h3 class="panel-subtitle">Match by match</h3>
+                  <div class="admin-scroll"><table class="admin-table" id="playtime-matches"></table></div>
                 </article>
               </div>
 
