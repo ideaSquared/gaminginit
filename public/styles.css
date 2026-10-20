@@ -3789,9 +3789,13 @@ html.story-open {
   font-weight: 700;
 }
 
-/* Few players behind it: too little to read much into. */
-.pt-thin {
-  opacity: 0.55;
+/* Few players behind it: too little to read much into. Only the bar is quieted, so the words keep their contrast. */
+.pt-thin .pt-fill {
+  background: var(--series-quiet);
+}
+
+.pt-thin .pt-inner {
+  background: var(--text-2);
 }
 
 .pt-value {
@@ -3897,7 +3901,7 @@ html.story-open {
 
 /* New players: each share tinted by how large it is. */
 .pt-tint {
-  background: color-mix(in srgb, var(--series) calc(var(--share, 0) * 75%), transparent);
+  background: color-mix(in srgb, var(--series) calc(var(--share, 0) * 65%), transparent);
 }
 
 .pt-cohorts {
