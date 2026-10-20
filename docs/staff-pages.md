@@ -373,6 +373,12 @@ forgotten while on another tab.
 
 ## Server: Play time
 
+The view starts with six headline figures (stays, typical stay, how many leave at a match's end and in the night's last match, how
+many new players are gone within 10 minutes, and how many seeders are there at go-live), then a card for each question. Each
+chart has its numbers under **Show as table**. Bars are as long as their value; where one row is the point (the map or
+kind of match that loses most players) it is picked out, and rows with under 20 players behind them are dimmed and never
+picked. The period buttons at the top are Today, 7 days and 30 days.
+
 Server's **Play time** view (`/admin#server/playtime`) shows how long players stay and when they leave, for today, 7
 or 30 days (the bot keeps 30). It reads the bot's `GET /api/admin/retention` (see the bot's README, "Play time").
 

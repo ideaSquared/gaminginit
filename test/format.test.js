@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  barLengths,
   bounceText,
   funnelText,
   heatGrid,
+  hottest,
+  peakHourText,
+  playtimeTiles,
   leftShare,
   newPlayersText,
   playtimeText,
@@ -1747,5 +1751,44 @@ describe('play time, the rest', () => {
     assert.match(newPlayersText({ cohorts: [{}], lookbackDays: 1 }), /1 day the bot/);
     assert.equal(funnelText({ linked: 0 }), '');
     assert.match(growthText({ clicks: { days: 30 }, accounts: { accounts: 3, linked: 2, members: 1, joinedOnSite: 1 }, members: null, funnel: { linked: 2, played: 1, regulars: 0 } }), /Of 2 who linked Steam, 1 have played/);
+  });
+});
+
+describe('play time, the look of it', () => {
+  it('sizes bars against the longest, or a fixed ceiling', () => {
+    assert.deepEqual(barLengths([2, 4, 1]), [0.5, 1, 0.25]);
+    assert.deepEqual(barLengths([0, 0]), [0, 0]);
+    assert.deepEqual(barLengths([0.5, 2], 1), [0.5, 1]);
+  });
+
+  it('picks out the highest share among rows with enough players behind them', () => {
+    const rows = [{ n: 100, share: 0.2 }, { n: 5, share: 0.9 }, { n: 80, share: 0.3 }, { n: 60, share: null }];
+    assert.equal(hottest(rows), 2);
+    assert.equal(hottest([{ n: 3, share: 0.5 }]), -1);
+    assert.equal(hottest([]), -1);
+  });
+
+  it('names the peak hour', () => {
+    const empty = () => ({ leaves: 0, minutes: 0, rate: null, level: 0 });
+    const grid = Array.from({ length: 7 }, () => Array.from({ length: 24 }, empty));
+    assert.match(peakHourText(grid), /Not enough play/);
+    grid[2][22] = { leaves: 80, minutes: 6000, rate: 80, level: 4 };
+    assert.match(peakHourText(grid), /Wed 22:00 UTC, 80 per 100 hours/);
+  });
+
+  it('makes the headline tiles, with dashes when there is nothing to say', () => {
+    const none = playtimeTiles({ days: 7, sessions: 0, leaves: { total: 0, timing: {}, finale: {} } });
+    assert.equal(none.length, 6);
+    assert.deepEqual(none.map((t) => t.value), ['–', '–', '–', '–', '–', '–']);
+    const full = playtimeTiles({
+      days: 7,
+      sessions: 10,
+      averageMinutes: 74,
+      medianMinutes: 58,
+      leaves: { total: 8, timing: { end: 4 }, finale: { early: 1, end: 1 } },
+      bounce: { newPlayers: { sessions: 10, short: 5 }, others: { sessions: 20, short: 2 } },
+      seeding: { matches: 2, averageMinutes: 30, seeders: 10, reachedLive: 4 },
+    });
+    assert.deepEqual(full.map((t) => t.value), ['10', '58 min', '50%', '25%', '50%', '40%']);
   });
 });

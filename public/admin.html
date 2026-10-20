@@ -521,42 +521,18 @@
               </div>
 
               <div class="tab-panel" role="tabpanel" id="panel-playtime" aria-labelledby="tab-playtime" hidden>
-                <article class="card panel admin-panel" aria-labelledby="playtime-title">
-                  <h2 class="panel-title" id="playtime-title">Play time</h2>
-                  <p class="section-note" id="playtime-note">Loading…</p>
-                  <label class="finder">Period
-                    <select class="finder-input list-sort" id="playtime-days">
-                      <option value="7" selected>Last 7 days</option>
-                      <option value="30">Last 30 days</option>
-                      <option value="1">Today</option>
-                    </select>
-                  </label>
-                  <h3 class="panel-subtitle">Each day</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-daily"></table></div>
-                  <h3 class="panel-subtitle">How long each stay was</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-lengths"></table></div>
-                  <h3 class="panel-subtitle">When players leave</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-leaves"></table></div>
-                  <h3 class="panel-subtitle">Match by match</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-matches"></table></div>
-                  <h3 class="panel-subtitle">By map</h3>
-                  <p class="section-note">In game when matches went live, and how many left before their last 3 minutes.</p>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-maps"></table></div>
-                  <h3 class="panel-subtitle">By how one-sided the match was</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-balance"></table></div>
-                  <h3 class="panel-subtitle">How long people stay, by when they joined</h3>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-joins"></table></div>
-                  <h3 class="panel-subtitle">Seeding</h3>
-                  <p class="section-note" id="playtime-seeding-note"></p>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-seeding"></table></div>
-                  <h3 class="panel-subtitle">New players</h3>
-                  <p class="section-note" id="playtime-new-note"></p>
-                  <div class="admin-scroll"><table class="admin-table" id="playtime-new"></table></div>
-                  <h3 class="panel-subtitle">Leaves by hour</h3>
-                  <p class="section-note">Leaves per 100 hours of play, by hour of the week (UTC). Brighter is more. Hours with under 10 hours of play are left blank. Hover or focus a cell (Tab) to read its numbers below.</p>
-                  <p class="section-note" id="playtime-heat-note" aria-live="polite"></p>
-                  <div class="admin-scroll"><table class="admin-table heatmap" id="playtime-heat"></table></div>
-                </article>
+                <div class="pt-head">
+                  <div>
+                    <h2 class="panel-title" id="playtime-title">Play time</h2>
+                    <p class="section-note" id="playtime-note">Loading…</p>
+                  </div>
+                  <div class="period" role="group" aria-label="Period" id="playtime-days">
+                    <button type="button" data-days="1" aria-pressed="false">Today</button>
+                    <button type="button" data-days="7" aria-pressed="true">7 days</button>
+                    <button type="button" data-days="30" aria-pressed="false">30 days</button>
+                  </div>
+                </div>
+                <div id="playtime-root"></div>
               </div>
 
               <div class="tab-panel" role="tabpanel" id="panel-rotations" aria-labelledby="tab-rotations" hidden>

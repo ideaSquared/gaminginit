@@ -1584,3 +1584,49 @@ export const excludedText = (excluded) =>
 // The Discord growth card's funnel line: of the players who signed in and linked Steam, how many played.
 export const funnelText = (funnel) =>
   funnel.linked === 0 ? '' : ` Of ${funnel.linked} who linked Steam, ${funnel.played} have played a match in the last 90 days and ${funnel.regulars} played 5 or more.`;
+
+// The headline figures at the top of the Play time view, as tiles: label, value, and a line under it.
+export const playtimeTiles = (r) => {
+  const { total, timing, finale } = r.leaves;
+  const last = Object.values(finale).reduce((a, b) => a + b, 0);
+  const none = r.sessions === 0;
+  const b = r.bounce ?? null;
+  const seeding = r.seeding ?? null;
+  return [
+    { label: 'Stays', value: none ? '–' : String(r.sessions), sub: `in the last ${plural(r.days, 'day')}` },
+    { label: 'Typical stay', value: none ? '–' : formatHours(r.medianMinutes), sub: none ? '' : `${formatHours(r.averageMinutes)} on average` },
+    { label: 'Leave at a match’s end', value: total === 0 ? '–' : shareOf(timing.end, total), sub: total === 0 ? '' : `of ${plural(total, 'leave')} we could place` },
+    { label: 'Leave in the night’s last match or after', value: total === 0 ? '–' : shareOf(last, total), sub: 'the last full game of the night' },
+    {
+      label: 'New players gone in 10 minutes',
+      value: b === null || b.newPlayers.sessions === 0 ? '–' : shareOf(b.newPlayers.short, b.newPlayers.sessions),
+      sub: b === null || b.others.sessions === 0 ? '' : `${shareOf(b.others.short, b.others.sessions)} for everyone else`,
+    },
+    {
+      label: 'Seeders there at go-live',
+      value: seeding === null || seeding.seeders === 0 ? '–' : shareOf(seeding.reachedLive, seeding.seeders),
+      sub: seeding === null || seeding.matches === 0 ? '' : `${seeding.matches} seeded, ${formatHours(seeding.averageMinutes)} on average`,
+    },
+  ];
+};
+
+// Bar lengths for a list of values: each as a share of the longest, so the longest fills the track. `ceiling` fixes the
+// length that fills it instead (1 for shares of a whole, which should look as large as they are).
+export const barLengths = (values, ceiling = null) => {
+  const top = ceiling ?? Math.max(0, ...values);
+  return values.map((v) => (top > 0 ? Math.max(0, Math.min(1, v / top)) : 0));
+};
+
+// How many in a row's group it takes before its share means much; fewer and the row is dimmed and never picked out.
+export const THIN_LEAST = 20;
+// The index of the row to pick out: the highest share among those with enough behind them, or -1 when none has.
+export const hottest = (rows) =>
+  rows.reduce((best, row, i) => (row.n >= THIN_LEAST && row.share !== null && (best < 0 || row.share > rows[best].share) ? i : best), -1);
+
+// The peak hour on the leaves-by-hour heatmap, in words: "Wed 22:00 UTC, 80 leaves per 100 hours".
+export const peakHourText = (grid) => {
+  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let best = null;
+  grid.forEach((row, day) => row.forEach((c, hour) => c.rate !== null && (best === null || c.rate > best.rate) && (best = { day, hour, rate: c.rate })));
+  return best === null ? 'Not enough play yet to say when people leave most.' : `Most leaves per hour of play: ${names[best.day]} ${String(best.hour).padStart(2, '0')}:00 UTC, ${Math.round(best.rate)} per 100 hours.`;
+};
