@@ -3652,6 +3652,14 @@ html.story-open {
   margin-bottom: 12px;
 }
 
+.panel-subtitle {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  margin: 24px 0 8px;
+}
+
 .panel[hidden] {
   display: none;
 }

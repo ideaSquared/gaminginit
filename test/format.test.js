@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  playtimeText,
+  shareOf,
   announcement,
   countdown,
   countdownText,
@@ -1602,6 +1604,7 @@ describe('staff page addresses', () => {
     assert.deepEqual(staffRoute('#queue/teamkills'), { section: 'queue', view: 'teamkills', steamId: null, search: false });
     assert.deepEqual(staffRoute(`#players/${id}`), { section: 'players', view: null, steamId: id, search: false });
     assert.deepEqual(staffRoute('#server/lines'), { section: 'server', view: 'lines', steamId: null, search: false });
+    assert.deepEqual(staffRoute('#server/playtime'), { section: 'server', view: 'playtime', steamId: null, search: false });
     assert.equal(staffRoute('#queue/nonsense').view, 'flagged');
   });
   it('sends every old link where it is now', () => {
@@ -1691,5 +1694,17 @@ describe('the Discord growth card', () => {
     const text = growthText({ clicks: { days: 30, total: 0, places: [] }, accounts: { accounts: 1, linked: 0, members: 1, joinedOnSite: 0, withVipRole: 0 }, members: null });
     assert.match(text, /^1 player has signed in on the website, 0 linked Steam, 1 is in the Discord, 0 joined/);
     assert.doesNotMatch(text, /The Discord has/);
+  });
+});
+
+describe('play time', () => {
+  it('words shares and the headline', () => {
+    assert.equal(shareOf(1, 3), '33%');
+    assert.equal(shareOf(0, 0), '–');
+    const finale = { early: 1, mid: 0, late: 1, end: 2, between: 0 };
+    const r = { days: 7, sessions: 10, averageMinutes: 74, medianMinutes: 58, leaves: { total: 8, timing: { early: 2, mid: 1, late: 1, end: 3, between: 1 }, finale } };
+    assert.match(playtimeText(r), /10 times on the server in the last 7 days/);
+    assert.match(playtimeText(r), /50% were in the night/);
+    assert.match(playtimeText({ days: 1, sessions: 0 }), /No finished times/);
   });
 });

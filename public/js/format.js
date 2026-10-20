@@ -1236,7 +1236,7 @@ export const recentPlayers = ({ moderation = [], joins = [], limit = 10 }) => {
 // such as the bot's answer to signing in.
 export const SECTIONS = ['now', 'queue', 'players', 'server'];
 export const QUEUE_VIEWS = ['flagged', 'flags', 'teamkills', 'log'];
-export const SERVER_VIEWS = ['bans', 'rotations', 'lines', 'rules'];
+export const SERVER_VIEWS = ['bans', 'playtime', 'rotations', 'lines', 'rules'];
 const OLD_SECTIONS = { live: 'now', review: 'queue', alerts: 'queue', history: 'players' };
 export const staffRoute = (hash) => {
   const [asked = '', sub = ''] = hash.replace(/^#/, '').split('/');
@@ -1504,4 +1504,26 @@ export const growthText = (growth) => {
   ];
   const clicks = `Clicks on the Discord invite in the last ${growth.clicks.days} days, by where they were made. A click is not a join.`;
   return `${parts.join(', ')}.${growth.members === null ? '' : ` The Discord has ${growth.members} members.`} ${clicks}`;
+};
+
+// The Play time view: when in a match players left, as the bot's GET /api/admin/retention counts them (`leaves.timing`).
+export const LEAVE_TIMINGS = [
+  ['early', 'First third of a match'],
+  ['mid', 'Middle third'],
+  ['late', 'Last third'],
+  ['end', 'At the end of a match'],
+  ['between', 'Between matches, or while seeding'],
+];
+
+// A share as a whole percent, "–" with nothing to share.
+export const shareOf = (part, whole) => percent(whole === 0 ? null : part / whole);
+
+// The line above the Play time view's tables.
+export const playtimeText = (r) => {
+  if (r.sessions === 0) return `No finished times on the server in the last ${plural(r.days, 'day')} yet.`;
+  const { total, finale } = r.leaves;
+  const last = Object.values(finale).reduce((a, b) => a + b, 0);
+  return `${plural(r.sessions, 'time')} on the server in the last ${plural(r.days, 'day')}: ${formatHours(r.averageMinutes)} on average, ${formatHours(r.medianMinutes)} typically. ${
+    total === 0 ? '' : `Of ${plural(total, 'leave')} we could place, ${shareOf(last, total)} were in the night’s last match or after it.`
+  }`;
 };

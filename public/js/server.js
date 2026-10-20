@@ -1,6 +1,6 @@
 import { ask } from './ask.js';
-import { demoGrowth, demoLines, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
-import { clickPlace, growthText, SERVER_VIEWS, staffNote } from './format.js';
+import { demoGrowth, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
+import { clickPlace, formatHours, growthText, LEAVE_TIMINGS, playtimeText, SERVER_VIEWS, shareOf, staffNote } from './format.js';
 import { demo, showNotice } from './live.js';
 import { $, badge, call, cell, get, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
 import { el } from './views.js';
@@ -79,6 +79,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     showTab(SERVER_VIEWS, view, { focus });
     selected(view);
     if (data && view === 'bans') loadGrowth();
+    if (data && view === 'playtime') loadPlaytime();
     if (!data || !EDITORS[view]) return;
     (await editor(view))?.show();
   };
@@ -243,6 +244,76 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     }
   };
 
+  // Play time: how long players stay each day and when in a match they leave. Read when the view is shown or its period
+  // changes, at most every few minutes for one period.
+  let playtimeKey = '';
+  let playtimeAt = 0;
+  const PLAYTIME_MS = 5 * 60_000;
+  const minutes = (value) => formatHours(value);
+  const loadPlaytime = async () => {
+    const days = $('playtime-days').value;
+    if (days === playtimeKey && Date.now() - playtimeAt < PLAYTIME_MS) return;
+    playtimeKey = days;
+    playtimeAt = Date.now();
+    try {
+      const { ok, status, json } = demo ? { ok: true, status: 200, json: demoPlaytime() } : await get(`admin/retention?days=${days}`);
+      if (!ok) {
+        playtimeAt = 0;
+        if (status === 404) setStatus($('playtime-note'), 'The bot does not count this yet. Deploy the latest bot.');
+        else if (loadToken()) setStatus($('playtime-note'), 'Couldn’t load this just now. Try again in a minute.');
+        return;
+      }
+      setStatus($('playtime-note'), playtimeText(json));
+      table(
+        $('playtime-daily'),
+        ['Day', ['Players', 'num'], ['Stays', 'num'], ['Average stay', 'num'], ['Typical stay', 'num'], ['Per player', 'num']],
+        json.daily.map((d) =>
+          el('tr', {}, cell(d.day), number(d.players), number(d.sessions), number(minutes(d.averageMinutes)), number(minutes(d.medianMinutes)), number(minutes(d.minutesPerPlayer))),
+        ),
+        'Nobody has left yet in this period.',
+      );
+      const stays = json.lengths.reduce((sum, l) => sum + l.sessions, 0);
+      table(
+        $('playtime-lengths'),
+        ['Stay', ['Stays', 'num'], ['Share', 'num']],
+        json.lengths.map((l) => el('tr', {}, cell(l.label), number(l.sessions), number(shareOf(l.sessions, stays)))),
+        'Nothing yet.',
+      );
+      const { total, timing, finale } = json.leaves;
+      const last = Object.values(finale).reduce((a, b) => a + b, 0);
+      table(
+        $('playtime-leaves'),
+        ['When', ['Leaves', 'num'], ['Share', 'num'], ['In the night’s last match or after', 'num']],
+        [
+          ...LEAVE_TIMINGS.map(([key, label]) => el('tr', {}, cell(label), number(timing[key]), number(shareOf(timing[key], total)), number(finale[key]))),
+          el('tr', {}, cell('All'), number(total), number(shareOf(total, total)), number(last)),
+        ],
+        'Nobody has left yet in this period.',
+      );
+      table(
+        $('playtime-matches'),
+        ['Match', ['Ended', 'num'], ['In game at start', 'num'], ['Left before the end', 'num'], ['Stayed', 'num']],
+        json.matches.map((m) =>
+          el(
+            'tr',
+            {},
+            cell(m.lastOfNight ? `${m.map} (last of the night)` : m.map),
+            el('td', { className: 'num when', textContent: when.format(m.endedAt) }),
+            number(m.present),
+            number(m.leftBefore),
+            number(shareOf(m.present - m.leftBefore, m.present)),
+          ),
+        ),
+        'No matches finished in this period.',
+      );
+    } catch (error) {
+      playtimeAt = 0;
+      console.error('Could not load the play time', error);
+      setStatus($('playtime-note'), 'Couldn’t reach the bot. Try again in a minute.');
+    }
+  };
+  $('playtime-days').addEventListener('change', () => loadPlaytime());
+
   // The views: click, or ← → Home End from their row of buttons.
   for (const name of SERVER_VIEWS) $(`tab-${name}`).addEventListener('click', () => show(name));
   tabKeys(SERVER_VIEWS, () => view, show, $('panel-server').querySelector('.server-tabs'));
@@ -260,12 +331,14 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
       renderReserved(overview);
       renderStaffSteam(overview);
       if (view === 'bans' && !$('panel-server').hidden) loadGrowth();
+      if (view === 'playtime' && !$('panel-server').hidden) loadPlaytime();
       if (open && EDITORS[view]) (await editor(view))?.ensure();
     },
     // Signing out forgets everything the editors had.
     signedOut() {
       data = null;
       growthAt = 0;
+      playtimeAt = 0;
       for (const e of Object.values(editors)) e.reset();
     },
   };

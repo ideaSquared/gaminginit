@@ -1731,3 +1731,40 @@ export const demoGrowth = () => ({
   accounts: { accounts: 64, linked: 51, members: 58, joinedOnSite: 19, withVipRole: 6 },
   members: 412,
 });
+
+// The staff page's Play time view: the bot's GET /api/admin/retention, with sample numbers.
+export const demoPlaytime = () => {
+  const day = 86_400_000;
+  const start = Date.UTC(2026, 9, 20, 19);
+  return {
+    days: 7,
+    sessions: 412,
+    averageMinutes: 74.2,
+    medianMinutes: 58,
+    daily: [4, 3, 2, 1, 0].map((ago, i) => ({
+      day: new Date(start - ago * day).toISOString().slice(0, 10),
+      players: 60 + i * 7,
+      sessions: 70 + i * 9,
+      averageMinutes: 68 + i * 3,
+      medianMinutes: 52 + i * 2,
+      minutesPerPlayer: 81 + i * 2,
+    })),
+    lengths: [
+      { label: 'Under 15 minutes', sessions: 61 },
+      { label: '15 to 30', sessions: 58 },
+      { label: '30 to 60', sessions: 96 },
+      { label: '1 to 2 hours', sessions: 120 },
+      { label: '2 to 3 hours', sessions: 52 },
+      { label: '3 hours or more', sessions: 25 },
+    ],
+    leaves: {
+      total: 380,
+      timing: { early: 72, mid: 49, late: 66, end: 138, between: 55 },
+      finale: { early: 12, mid: 9, late: 21, end: 64, between: 30 },
+    },
+    matches: [
+      { map: 'Narva', startedAt: start, endedAt: start + 62 * 60_000, lastOfNight: true, present: 71, leftBefore: 14 },
+      { map: 'Mutaha', startedAt: start - 75 * 60_000, endedAt: start - 13 * 60_000, lastOfNight: false, present: 68, leftBefore: 9 },
+    ],
+  };
+};
