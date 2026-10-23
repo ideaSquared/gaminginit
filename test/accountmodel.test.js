@@ -93,6 +93,7 @@ describe('what the page says', () => {
     const now = Date.UTC(2026, 9, 17, 12);
     assert.equal(vipText(null, now, 'en-GB'), 'You have no VIP right now. Seed to earn it.');
     assert.match(vipText({ until: now + 4 * 86_400_000, source: 'seeding' }, now, 'en-GB'), /4 days left\), earned by seeding\.$/);
+    assert.match(vipText({ until: now + 3_600_000, source: 'bounty' }, now, 'en-GB'), /less than a day left\), earned by ending a kill streak\.$/);
     assert.match(vipText({ until: now + 3_600_000, source: 'staff' }, now, 'en-GB'), /less than a day left\), given by staff\.$/);
   });
 
