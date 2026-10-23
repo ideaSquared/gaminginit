@@ -1746,7 +1746,8 @@ export const croppedLine = (daily, pick, range, average) => {
 // The regulars on the lifetime page (the bot's `regulars`): the line above them, and one regular's figures.
 export const regularsText = (r) => {
   const more = r.total - r.players.length;
-  return `${plural(r.total, 'regular')}: players who came on 5 or more days in the last 30. Thank you for making the server what it is.${
+  // The headline counts everyone, as the figure above does; `total` is those who could be listed.
+  return `${plural(r.total + r.hidden, 'regular')}: players who came on 5 or more days in the last 30. Thank you for making the server what it is.${
     more > 0 ? ` The ${r.players.length} who came on the most days are here.` : ''
   } Players who keep their profile private are not listed.`;
 };
