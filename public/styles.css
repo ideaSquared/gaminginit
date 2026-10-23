@@ -3988,6 +3988,72 @@ html.story-open {
   margin-bottom: 8px;
 }
 
+/* The regulars on the lifetime page. */
+.regulars {
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.regulars h3 {
+  margin: 0;
+}
+
+.regulars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.regular {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+}
+
+/* The three who came on the most days. */
+.regular-top {
+  border-color: var(--series);
+}
+
+.regular-name {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.regular-name:hover {
+  color: var(--accent);
+}
+
+.regular-meta {
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.regular-since {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.regular-badge {
+  justify-self: start;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 /* The way into the lifetime stats from the stats page. */
 .lifetime-teaser {
   display: flex;

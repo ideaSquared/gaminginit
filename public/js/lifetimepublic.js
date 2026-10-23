@@ -1,8 +1,8 @@
-import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, shareOf } from './format.js';
+import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, regularMeta, regularsText, shareOf } from './format.js';
 import { apiUrl, demo, showNotice, thisPage } from './live.js';
 import { demoPublicLifetime } from './demo.js';
 import { lineChart, peopleChart } from './trends.js';
-import { el, link } from './views.js';
+import { el, link, playerHref } from './views.js';
 
 // The lifetime stats page (lifetime.html): what our Discord bot has kept for good about the server, only the figures players
 // would like to see (the bot's GET /api/lifetime). The figures stay hidden, with a line saying why, until the bot answers
@@ -25,9 +25,31 @@ const tableOf = (table, headings, rows) => {
 const legend = (...items) =>
   el('ul', { className: 'pt-legend' }, ...items.map(([className, name]) => el('li', {}, el('span', { className: `pt-key ${className}`, ariaHidden: 'true' }), name)));
 
+// The regulars: who came on 5 or more days of the last 30, most days first. Names are the game's, so they go in as text.
+const renderRegulars = (regulars) => {
+  const shown = regulars && regulars.players.length > 0;
+  $('lifetime-regulars').hidden = !shown;
+  if (!shown) return;
+  $('regulars-note').textContent = regularsText(regulars);
+  $('regulars-list').replaceChildren(
+    ...regulars.players.map((p, i) => {
+      const name = p.id === null ? el('span', { className: 'regular-name', textContent: p.name }) : el('a', { className: 'regular-name', href: playerHref(p.id), textContent: p.name });
+      return el(
+        'li',
+        { className: `regular${i < 3 ? ' regular-top' : ''}` },
+        name,
+        el('span', { className: 'regular-meta', textContent: regularMeta(p) }),
+        el('span', { className: 'regular-since', textContent: `First seen ${p.since}` }),
+        ...(p.founder ? [el('span', { className: 'regular-badge', textContent: 'There from the start' })] : []),
+      );
+    }),
+  );
+};
+
 const render = (l) => {
   // Shown first, so the charts can measure themselves.
   $('lifetime').hidden = false;
+  renderRegulars(l.regulars);
   $('lifetime-tiles').replaceChildren(
     ...publicLifetimeTiles(l).map(([label, value, sub]) =>
       el('div', { className: 'tile' }, el('p', { className: 'tile-label', textContent: label }), el('p', { className: 'tile-value', textContent: value }), el('p', { className: 'tile-sub', textContent: sub })),
