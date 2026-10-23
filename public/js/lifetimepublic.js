@@ -25,7 +25,7 @@ const tableOf = (table, headings, rows) => {
 const legend = (...items) =>
   el('ul', { className: 'pt-legend' }, ...items.map(([className, name]) => el('li', {}, el('span', { className: `pt-key ${className}`, ariaHidden: 'true' }), name)));
 
-// The regulars: who came on 5 or more days of the last 30, most days first. Names are the game's, so they go in as text.
+// The regulars: who came on 14 or more days of the last 30, most days first. Names are the game's, so they go in as text.
 const renderRegulars = (regulars) => {
   const shown = regulars && regulars.players.length > 0;
   $('lifetime-regulars').hidden = !shown;

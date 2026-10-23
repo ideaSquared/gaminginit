@@ -1866,7 +1866,7 @@ describe('the public Lifetime section', () => {
   it('makes the tiles and the records, leaving out what the bot has none of', () => {
     const l = {
       since: '2026-06-22',
-      totals: { players: 1234, player_hours: 14210, matches: 590, players_last_30: 280, regulars: 71 },
+      totals: { players: 1234, player_hours: 14210, matches: 590, players_last_30: 280, regulars: 71, regular_days: 14 },
       typical_stay_minutes: 58,
       records: { most_players: { day: '2026-09-13', players: 142 }, biggest_match: null, most_matches: { day: '2026-10-03', matches: 12 } },
     };
@@ -1874,16 +1874,16 @@ describe('the public Lifetime section', () => {
     assert.deepEqual(publicRecords(l), [
       'Busiest day: 142 different players, on 2026-09-13.',
       'Most matches in a day: 12, on 2026-10-03.',
-      '71 regulars: players who came on 5 or more days in the last 30.',
+      '71 regulars: players who came on 14 or more days in the last 30.',
     ]);
   });
 });
 
 describe('the regulars on the lifetime page', () => {
   it('says how many there are, and that those who keep their profile private are not listed', () => {
-    const text = regularsText({ total: 71, hidden: 3, players: new Array(60).fill({}) });
+    const text = regularsText({ min_days: 14, total: 71, hidden: 3, players: new Array(60).fill({}) });
     // The 3 who keep their profile private are in the count, as in the figure above it, but not in the list.
-    assert.match(text, /74 regulars: players who came on 5 or more days in the last 30/);
+    assert.match(text, /74 regulars: players who came on 14 or more days in the last 30/);
     assert.match(text, /The 60 who came on the most days are here/);
     assert.match(text, /keep their profile private are not listed/);
     assert.doesNotMatch(regularsText({ total: 1, hidden: 0, players: [{}] }), /who came on the most days are here/);
