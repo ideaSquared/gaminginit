@@ -57,7 +57,7 @@ export const createLifetime = (root, { download }) => {
   const tiles = el('div', { className: 'tiles pt-tiles' });
   const dayPeople = card('pt-wide', 'Players each day', 'Players on the server each day, the latest 90 days. The part picked out is those playing for the first time.');
   const weekPeople = card('pt-wide', 'Players each week', 'Different players each week, since the bot began. The part picked out is those playing for the first time.');
-  const months = card('pt-wide', 'By month', 'Regulars play 14 or more days in a month. Stickiness is the average day’s players as a share of the month’s: how often those who play come on.');
+  const months = card('pt-wide', 'By month', '');
   const cohorts = card('pt-wide', 'Do new players come back?', 'By the week a player was first seen: how many came back within 1, 7, 30 and 90 days, out of those whose days are over.');
   const lines = LINES.map((spec) => ({ spec, ...card('', spec.title, spec.note) }));
   const leaves = card('', 'Where in a match players leave', '');
@@ -135,6 +135,7 @@ export const createLifetime = (root, { download }) => {
   };
 
   const renderMonths = (l) => {
+    months.noteNode.textContent = `Regulars play ${l.summary.regular_days ?? 5} or more days in a month. Stickiness is the average day’s players as a share of the month’s: how often those who play come on.`;
     months.chart.replaceChildren();
     const rows = [...l.monthly].reverse().map((r) => el('tr', {}, cell(MONTHS_SHORT.format(at(`${r.period}-01`))), number(r.unique_players), number(r.new_players ?? '–'), number(r.regulars), number(formatHours(r.player_minutes)), number(r.matches), number(r.stickiness === null ? '–' : shareOf(r.stickiness, 1))));
     table(months.grid, ['Month', ['Players', 'num'], ['New', 'num'], ['Regulars', 'num'], ['Hours', 'num'], ['Matches', 'num'], ['Stickiness', 'num']], rows, 'Nothing yet.');
