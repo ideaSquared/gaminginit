@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   barLengths,
+  regularMeta,
+  regularsText,
   busiestHourText,
   busyLevels,
   localWeek,
@@ -1874,5 +1876,25 @@ describe('the public Lifetime section', () => {
       'Most matches in a day: 12, on 2026-10-03.',
       '71 regulars: players who came on 5 or more days in the last 30.',
     ]);
+  });
+});
+
+describe('the regulars on the lifetime page', () => {
+  it('says how many there are, and that those who keep their profile private are not listed', () => {
+    const text = regularsText({ total: 71, hidden: 3, players: new Array(60).fill({}) });
+    // The 3 who keep their profile private are in the count, as in the figure above it, but not in the list.
+    assert.match(text, /74 regulars: players who came on 5 or more days in the last 30/);
+    assert.match(text, /The 60 who came on the most days are here/);
+    assert.match(text, /keep their profile private are not listed/);
+    assert.doesNotMatch(regularsText({ total: 1, hidden: 0, players: [{}] }), /who came on the most days are here/);
+    assert.match(regularsText({ total: 1, hidden: 0, players: [{}] }), /^1 regular:/);
+    assert.match(regularsText({ total: 1, hidden: 1, players: [{}] }), /^2 regulars:/);
+    // Only those who could be listed make the "most days" line.
+    assert.doesNotMatch(regularsText({ total: 1, hidden: 5, players: [{}] }), /who came on the most days are here/);
+  });
+
+  it('writes a regular’s days and hours', () => {
+    assert.equal(regularMeta({ days: 1, hours: 0.5 }), '1 day in 30 · 30 min');
+    assert.equal(regularMeta({ days: 22, hours: 58 }), '22 days in 30 · 58 h');
   });
 });

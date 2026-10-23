@@ -37,7 +37,10 @@ What it shows:
   target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
   it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
   link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
-- A lifetime stats page (`/lifetime`, in the Stats menu): "Here are lifetime stats that you might find interesting",
+- A lifetime stats page (`/lifetime`, in the Stats menu): "Here are lifetime stats that you might find interesting", with **Our regulars**
+  (players who came on 5 or more days of the last 30, most days first, up to 60, each by name linking to their player page,
+  with days and hours in the last 30, when they were first seen and a "There from the start" badge for those first seen in
+  the first fortnight of the records; players with a private profile are not listed),
   from what the bot has kept for good (its `/api/lifetime`), and only the figures players would like to see: players so far,
   hours played, matches played and the typical stay; the busiest day, biggest match, most matches in a day and how many
   regulars there are; players each week (new players picked out) and each day (with a 7-day average); when the server is

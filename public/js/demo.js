@@ -1932,7 +1932,7 @@ export const demoPublicLifetime = () => {
   return {
     since: l.since,
     through: l.through,
-    totals: { players: l.summary.unique_players, player_hours: l.summary.player_hours, matches: l.summary.matches, days: l.summary.days, players_last_30: l.summary.active_last_30, regulars: l.summary.regulars },
+    totals: { players: l.summary.unique_players, player_hours: l.summary.player_hours, matches: l.summary.matches, days: l.summary.days, players_last_30: l.summary.active_last_30, regulars: l.summary.regulars + 3 },
     records: {
       most_players: { day: people.day, players: people.unique_players },
       biggest_match: { day: peak.day, players: peak.peak_players },
@@ -1944,5 +1944,17 @@ export const demoPublicLifetime = () => {
     months: l.monthly.map((m) => ({ month: m.period, players: m.unique_players, new_players: m.new_players, hours: Math.round(m.player_minutes / 60), matches: m.matches })),
     maps: l.maps.slice(0, 3).map((m) => ({ map: m.map, matches: m.matches })),
     busy: { days: l.heat.days, players: heat },
+    // The sample players, so each link opens a sample profile. 71 are listed and 3 keep their profile private.
+    regulars: {
+      total: 71,
+      hidden: 3,
+      players: demoPlayers(Date.now())
+        .players.slice(0, 12)
+        .map((p, i) => {
+          const days = [30, 29, 27, 25, 22, 21, 18, 16, 12, 9, 7, 5][i];
+          const founder = [0, 1, 3, 7].includes(i);
+          return { name: p.name, id: p.id, days, hours: [96.5, 88, 71.5, 64, 58, 49.5, 41, 38.5, 22, 16.5, 11, 7.5][i], matches: days * 2, since: founder ? `2026-06-${String(22 + (i % 6)).padStart(2, '0')}` : `2026-0${7 + (i % 3)}-1${i % 9}`, founder };
+        }),
+    },
   };
 };
