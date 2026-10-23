@@ -57,7 +57,7 @@ export const createLifetime = (root, { download }) => {
   const tiles = el('div', { className: 'tiles pt-tiles' });
   const dayPeople = card('pt-wide', 'Players each day', 'Players on the server each day, the latest 90 days. The part picked out is those playing for the first time.');
   const weekPeople = card('pt-wide', 'Players each week', 'Different players each week, since the bot began. The part picked out is those playing for the first time.');
-  const months = card('pt-wide', 'By month', 'Regulars play 5 or more days in a month. Stickiness is the average day’s players as a share of the month’s: how often those who play come on.');
+  const months = card('pt-wide', 'By month', 'Regulars play 14 or more days in a month. Stickiness is the average day’s players as a share of the month’s: how often those who play come on.');
   const cohorts = card('pt-wide', 'Do new players come back?', 'By the week a player was first seen: how many came back within 1, 7, 30 and 90 days, out of those whose days are over.');
   const lines = LINES.map((spec) => ({ spec, ...card('', spec.title, spec.note) }));
   const leaves = card('', 'Where in a match players leave', '');

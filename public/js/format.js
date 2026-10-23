@@ -1645,7 +1645,7 @@ export const lifetimeTiles = (l) => {
   return [
     { label: 'Players ever', value: s.unique_players.toLocaleString('en-GB'), sub: `since ${l.since ?? '–'}` },
     { label: 'Played in the last 30 days', value: s.active_last_30.toLocaleString('en-GB'), sub: `${s.new_last_30.toLocaleString('en-GB')} of them new` },
-    { label: 'Regulars', value: s.regulars.toLocaleString('en-GB'), sub: '5 or more days in 30' },
+    { label: 'Regulars', value: s.regulars.toLocaleString('en-GB'), sub: `${l.summary.regular_days ?? 5} or more days in 30` },
     { label: 'Regulars who stopped', value: s.lapsed_regulars.toLocaleString('en-GB'), sub: 'not seen for 30 days' },
     { label: 'Player hours', value: s.player_hours.toLocaleString('en-GB'), sub: 'on the server, in all' },
     { label: 'Matches', value: s.matches.toLocaleString('en-GB'), sub: `in ${plural(s.days, 'day')}` },
@@ -1726,7 +1726,7 @@ export const publicRecords = (l) =>
     l.records.most_players && `Busiest day: ${l.records.most_players.players} different players, on ${l.records.most_players.day}.`,
     l.records.biggest_match && `Biggest match: ${l.records.biggest_match.players} players at once, on ${l.records.biggest_match.day}.`,
     l.records.most_matches && `Most matches in a day: ${l.records.most_matches.matches}, on ${l.records.most_matches.day}.`,
-    l.totals.regulars > 0 && `${l.totals.regulars} regulars: players who came on 5 or more days in the last 30.`,
+    l.totals.regulars > 0 && `${l.totals.regulars} regulars: players who came on ${l.totals.regular_days ?? 5} or more days in the last 30.`,
   ].filter(Boolean);
 
 // A daily line cut to the last `range` days (all when null): its points, and the average of each worked out over every day
@@ -1747,7 +1747,7 @@ export const croppedLine = (daily, pick, range, average) => {
 export const regularsText = (r) => {
   const more = r.total - r.players.length;
   // The headline counts everyone, as the figure above does; `total` is those who could be listed.
-  return `${plural(r.total + r.hidden, 'regular')}: players who came on 5 or more days in the last 30. Thank you for making the server what it is.${
+  return `${plural(r.total + r.hidden, 'regular')}: players who came on ${r.min_days ?? 5} or more days in the last 30. Thank you for making the server what it is.${
     more > 0 ? ` The ${r.players.length} who came on the most days are here.` : ''
   } Players who keep their profile private are not listed.`;
 };
