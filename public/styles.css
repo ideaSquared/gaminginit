@@ -8152,6 +8152,30 @@ body.rot-grabbing * {
   white-space: nowrap;
 }
 
+/* "Found…" by Dealt with: a select dressed as one of the row's ghost buttons, the same height and border. */
+.admin .quick-acts .quick-outcome {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin .quick-acts .quick-outcome:hover {
+  background: var(--surface-2);
+}
+
+.admin .quick-acts .quick-outcome option {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+}
+
 /* A player's record from the bot, as facts: label on the left, what it says on the right. */
 .record-facts {
   display: grid;
