@@ -368,7 +368,8 @@ const checkPlayer = (player, on) =>
   saveMark('admin/check', on ? { action: 'check', steamId: player.steamId, ...checkOf(player) } : { action: 'uncheck', steamId: player.steamId });
 
 // Notes a "Dealt with" on a Queue row, or undoes it (see queue.js).
-const dealWith = (row, on) => saveMark('admin/dealt', on ? { action: 'deal', steamId: row.steamId, ...dealtOf(row) } : { action: 'undo', steamId: row.steamId });
+const dealWith = (row, on, outcome = '') =>
+  saveMark('admin/dealt', on ? { action: 'deal', steamId: row.steamId, ...dealtOf(row), ...(outcome ? { outcome } : {}) } : { action: 'undo', steamId: row.steamId });
 
 const closeMenus = (except = null) => {
   for (const menu of document.querySelectorAll('.act-menu[open]')) if (menu !== except) menu.open = false;

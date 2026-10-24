@@ -13,6 +13,15 @@ import { el } from './views.js';
 
 const KINDS = { headshots: 'Headshots', griefing: 'Griefing', steam: 'Risky Steam' };
 
+// What staff found, as the bot keeps it for good (its outcomes): the bot's automatic marks are judged by these.
+const OUTCOMES = [
+  ['', 'Found…'],
+  ['cheating', 'Cheating'],
+  ['false-alarm', 'False alarm'],
+  ['griefing', 'Griefing'],
+  ['other', 'Something else'],
+];
+
 export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
   // '' for every flag, or one kind; whether to leave out those not in game; and whether to show those dealt with.
   let kind = '';
@@ -21,6 +30,9 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
   let last = null;
   // The row last dealt with, for its Undo.
   let justDealt = null;
+  // What staff picked in a row's "Found…" list and have not saved yet, by Steam ID: the Queue redraws on every refresh and
+  // filter, which would otherwise empty the list.
+  const picked = new Map();
 
   const drawDone = () => {
     $queue.done.replaceChildren(
@@ -29,8 +41,9 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
         : [`✓ Dealt with ${justDealt.name}. `, el('button', { type: 'button', className: 'link-button', textContent: 'Undo', onclick: () => dealRow(justDealt, false) })]),
     );
   };
-  const dealRow = async (r, on) => {
-    if (!(await deal(r, on))) return;
+  const dealRow = async (r, on, outcome = '') => {
+    if (!(await deal(r, on, outcome))) return;
+    picked.delete(r.steamId);
     justDealt = on ? r : null;
     drawDone();
   };
@@ -71,12 +84,12 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
     const shown = listed.filter((r) => (!kind || r.reasons.some((x) => x.kind === kind)) && (!inGameOnly || r.inGame));
     setStatus($queue.note, shown.length === listed.length ? '' : `Showing ${shown.length} of ${listed.length}.`);
     // A ghost button by the Act menu: Dealt with, or Undo on a row dealt with.
-    const dealButton = (r, on) => {
+    const dealButton = (r, on, outcome) => {
       const b = el('button', {
         type: 'button',
         className: `btn btn-ghost btn-small ${on ? 'quick-dealt' : 'quick-undo'}`,
         textContent: on ? '✓ Dealt with' : 'Undo',
-        onclick: () => dealRow(r, on),
+        onclick: () => dealRow(r, on, outcome?.value ?? ''),
       });
       b.title = on ? 'Dealt with: off the Queue for all staff until something new comes up' : 'Put them back on the Queue';
       b.setAttribute('aria-label', `${on ? 'Dealt with' : 'Undo dealt with'}: ${r.name}`);
@@ -86,7 +99,26 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
     // Warn, Kick and Ban for a player in game, and Dealt with or Undo, in one row of buttons.
     const acts = (r, player, held) => {
       const buttons = r.inGame && !held ? quickActs(player) : el('span', { className: 'quick-acts' });
-      if (dealt !== undefined) buttons.append(dealButton(r, !held));
+      if (dealt !== undefined) {
+        // What they found goes with the headshots flag, which the bot's automatic marks are judged by.
+        const outcome =
+          !held && r.reasons.some((x) => x.kind === 'headshots')
+            ? el(
+                'select',
+                {
+                  className: 'quick-outcome',
+                  ariaLabel: `What you found: ${r.name}`,
+                  onchange: (event) => picked.set(r.steamId, event.target.value),
+                },
+                ...OUTCOMES.map(([value, text]) => el('option', { value, textContent: text })),
+              )
+            : null;
+        if (outcome) {
+          outcome.value = picked.get(r.steamId) ?? '';
+          buttons.append(outcome);
+        }
+        buttons.append(dealButton(r, !held, outcome));
+      }
       return buttons.childElementCount > 0 ? buttons : null;
     };
     const row = (r) => {
