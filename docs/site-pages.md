@@ -92,6 +92,9 @@ What it shows:
 - A seeding page (`/seeding`): what seeding is: the empty, seeding and live states with the bot's player thresholds,
   and how to help. Then our seeders: the top seeders over the last 7 days (only players with at least one seed day),
   and who has seeder VIP now and until when (only VIP from seeding, not from staff).
+- A rules page (`/rules`, in the Community menu): the server rules (no cheats, exploits, team kills, dropping crates in HQ,
+  griefing, racism or abuse; admins have the final say). It is static. Keep it in step with the bot's welcome message
+  (`WELCOME` in the bot's `lines.ts`).
 - A vote page (`/vote`): the next map. People vote in Discord, with buttons on a message in one channel that the bot posts
   when a match goes live (random maps, never the one playing or one of the last few played; one vote per Discord account,
   changeable until it closes). The page shows each map's votes and share, and the time of day and weather votes under it (groups such as Morning, Day, Afternoon, Dusk, Clear, Fog, Rain and Random, when the bot has them; the circles are picked at random by the bot, not voted on), refreshed every 5 seconds, with a
