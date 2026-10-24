@@ -33,7 +33,7 @@ What it shows:
   days.
 - A matches page (`/matches`) with the last 10 matches, each with every side's score, highest first, with the side
   names in their colour in game (the winner in bold, and "No result:" when the top sides were level, as teams never
-  draw; a side the bot sent no colour for gets its faction's usual one), and its top 5. Each match is also a link
+  draw; a side the bot sent no colour for gets its faction's usual one), and its top 5. A match the bot noted the circles (control-zone layout) for says so in its details, such as "Circles: Circle" (`zone` in the bot's matches). Each match is also a link
   target: its card has the id `match-<endedAt>`, where `<endedAt>` is the match's `endedAt` in ms as the bot sends
   it, so `/matches#match-1759300000000` scrolls to that match and outlines it. The bot's "Match over" posts in Discord
   link to it. When the match is no longer one of the last 10, the page says "That match is older than the last 10."
