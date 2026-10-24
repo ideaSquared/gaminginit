@@ -30,6 +30,9 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
   let last = null;
   // The row last dealt with, for its Undo.
   let justDealt = null;
+  // What staff picked in a row's "Found…" list and have not saved yet, by Steam ID: the Queue redraws on every refresh and
+  // filter, which would otherwise empty the list.
+  const picked = new Map();
 
   const drawDone = () => {
     $queue.done.replaceChildren(
@@ -40,6 +43,7 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
   };
   const dealRow = async (r, on, outcome = '') => {
     if (!(await deal(r, on, outcome))) return;
+    picked.delete(r.steamId);
     justDealt = on ? r : null;
     drawDone();
   };
@@ -99,9 +103,20 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
         // What they found goes with the headshots flag, which the bot's automatic marks are judged by.
         const outcome =
           !held && r.reasons.some((x) => x.kind === 'headshots')
-            ? el('select', { className: 'quick-outcome', ariaLabel: `What you found: ${r.name}` }, ...OUTCOMES.map(([value, text]) => el('option', { value, textContent: text })))
+            ? el(
+                'select',
+                {
+                  className: 'quick-outcome',
+                  ariaLabel: `What you found: ${r.name}`,
+                  onchange: (event) => picked.set(r.steamId, event.target.value),
+                },
+                ...OUTCOMES.map(([value, text]) => el('option', { value, textContent: text })),
+              )
             : null;
-        if (outcome) buttons.append(outcome);
+        if (outcome) {
+          outcome.value = picked.get(r.steamId) ?? '';
+          buttons.append(outcome);
+        }
         buttons.append(dealButton(r, !held, outcome));
       }
       return buttons.childElementCount > 0 ? buttons : null;
