@@ -97,7 +97,7 @@
               <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" tabindex="-1" data-tab="players" title="Any player’s kills, team kills and record">
                 <span class="tab-name">Players</span>
               </button>
-              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans and VIP, rotations, what the bot says in game and weapon rules">
+              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans, VIP, rotations, what the bot says in game and weapon rules">
                 <span class="tab-name">Server <span class="tab-dirty" id="dirty-server" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
               </button>
             </div>
@@ -460,8 +460,11 @@
             <div class="tab-panel" role="tabpanel" id="panel-server" aria-labelledby="tab-server" hidden>
               <!-- What each holds is in its title, shown on hover. -->
               <div class="admin-tabs server-tabs" role="tablist" aria-label="Server">
-                <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans" title="Bans, whitelist slots and staff spots">
-                  <span class="tab-name">Bans and VIP</span>
+                <button type="button" role="tab" id="tab-bans" aria-controls="panel-bans" aria-selected="true" data-tab="bans" title="Everyone banned on the server, with the reason">
+                  <span class="tab-name">Bans</span>
+                </button>
+                <button type="button" role="tab" id="tab-vip" aria-controls="panel-vip" aria-selected="false" tabindex="-1" data-tab="vip" title="Whitelist slots, why each player has one, and staff spots">
+                  <span class="tab-name">VIP</span>
                 </button>
                 <button type="button" role="tab" id="tab-playtime" aria-controls="panel-playtime" aria-selected="false" tabindex="-1" data-tab="playtime" title="How long players stay each day and when they leave">
                   <span class="tab-name">Play time</span>
@@ -489,6 +492,16 @@
                   </div>
                 </article>
 
+                <article class="card panel admin-panel" aria-labelledby="growth-title">
+                  <h2 class="panel-title" id="growth-title">Discord growth</h2>
+                  <p class="section-note" id="growth-note">Loading…</p>
+                  <div class="admin-scroll">
+                    <table class="admin-table" id="growth-clicks"></table>
+                  </div>
+                </article>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-vip" aria-labelledby="tab-vip" hidden>
                 <article class="card panel admin-panel" aria-labelledby="reserved-title">
                   <h2 class="panel-title" id="reserved-title">Whitelist slots</h2>
                   <p class="section-note" id="reserved-note"></p>
@@ -511,14 +524,6 @@
                   <p class="section-note" id="staff-steam-note"></p>
                   <div class="admin-scroll">
                     <table class="admin-table" id="staff-steam"></table>
-                  </div>
-                </article>
-
-                <article class="card panel admin-panel" aria-labelledby="growth-title">
-                  <h2 class="panel-title" id="growth-title">Discord growth</h2>
-                  <p class="section-note" id="growth-note">Loading…</p>
-                  <div class="admin-scroll">
-                    <table class="admin-table" id="growth-clicks"></table>
                   </div>
                 </article>
               </div>

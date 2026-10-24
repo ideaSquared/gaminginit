@@ -5,8 +5,8 @@ import { demo, showNotice } from './live.js';
 import { $, badge, call, cell, get, getText, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
 import { el } from './views.js';
 
-// The staff page's Server section, once the Server settings page, in four views. Bans and VIP: the bans on the server,
-// the whitelist slots and staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see
+// The staff page's Server section, once the Server settings page, in views. Bans: the bans on the server and Discord growth.
+// VIP: the whitelist slots, with why, and staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see
 // rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see
 // rules.js). The three editors load the first time they are opened, so staff who only moderate never load them.
 // `who(player)` draws a player's name, opening their panel, and `act(key, player)` opens their panel with a form, such
@@ -152,13 +152,14 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
         {},
         el('td', { className: 'player' }, who(r.player)),
         cell(r.staff ? badge('Staff spot', 'accent') : r.bot ? badge('From the bot', 'accent') : badge('Permanent')),
+        el('td', { className: 'reason', textContent: r.reason ?? '–' }),
         el('td', { className: 'when', textContent: (r.staff ?? r.bot) ? when.format((r.staff ?? r.bot).since) : '–' }),
         el('td', { className: 'when', textContent: r.staff ? 'While staff' : r.bot ? when.format(r.bot.until) : 'Never' }),
         // A staff spot goes when their Steam account is unlinked, below.
         el('td', { className: 'row-actions' }, r.staff ? null : actButton('Remove VIP', 'vip:remove', r.player)),
       ),
     );
-    table($('reserved'), ['Player', 'VIP', 'Since', 'Ends', ''], rows, 'Nobody is on the whitelist.');
+    table($('reserved'), ['Player', 'VIP', 'Why', 'Since', 'Ends', ''], rows, 'Nobody is on the whitelist.');
   };
 
   const ghostButton = (text, onclick) => el('button', { type: 'button', className: 'btn btn-ghost btn-small', textContent: text, onclick });
@@ -216,7 +217,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
 
   $('staff-steam-mine').addEventListener('click', () => openSteam());
 
-  // Discord growth: clicks on the invite by place, and how many players signed in and linked. Read when Bans and VIP is
+  // Discord growth: clicks on the invite by place, and how many players signed in and linked. Read when Bans is
   // shown, at most every few minutes: the bot counts every account for it.
   let growthAt = 0;
   const GROWTH_MS = 5 * 60_000;
