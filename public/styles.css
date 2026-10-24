@@ -8162,7 +8162,6 @@ body.rot-grabbing * {
   color: var(--text);
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
   cursor: pointer;
 }
 
@@ -8173,7 +8172,6 @@ body.rot-grabbing * {
 .admin .quick-acts .quick-outcome option {
   background: var(--surface);
   color: var(--text);
-  font-weight: 400;
 }
 
 /* A player's record from the bot, as facts: label on the left, what it says on the right. */
