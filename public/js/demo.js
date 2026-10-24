@@ -1498,8 +1498,8 @@ const DEMO_LISTS = [
     'A private message to each player a couple of minutes after they join, and not again for 6 hours. Say the basic rules: the Discord and the website go after it.',
     { values: { name: 'Ghost' }, longest: { name: 'x'.repeat(20) }, before: '', after: ` Discord: ${DEMO_SITE}/discord | Stats: ${DEMO_SITE}` },
     [
-      'Welcome, {name}! Play fair: no cheats, exploits, team kills, griefing, racism or abuse. Admins have the final say.',
-      'Welcome in, {name}! House rules: no cheats, exploits, TKs, griefing, racism or abuse. Listen to admins.',
+      'Welcome, {name}! Play fair: no cheats, exploits, team kills, dropping crates in HQ, griefing, racism or abuse. Admins decide.',
+      'Welcome in, {name}! House rules: no cheats, exploits, TKs, dropping crates in HQ, griefing, racism or abuse. Listen to admins.',
     ],
   ),
   demoList(
