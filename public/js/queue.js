@@ -183,6 +183,7 @@ export const createQueue = ({ who, quickActs, actMenu, lastAction, deal }) => {
         steam: overview.steam?.accounts ?? [],
         griefers: overview.players ?? [],
         inGame: new Set(online.keys()),
+        staff: new Set((overview.staffProfiles ?? []).map((s) => s.player?.steamId)),
         now,
       });
       last = { all, online, dealt: overview.dealt, staff: overview.staff ?? {}, now };

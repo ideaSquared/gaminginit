@@ -1529,6 +1529,23 @@ describe('the Queue', () => {
     assert.equal(rows[0].reasons[2].text, 'Team kills · 9 team kills (2 vehicle)');
   });
 
+  it('leaves linked staff out of the headshots, and keeps their other reasons', () => {
+    const rows = queueRows({
+      headshots: [hs('1', 'Chop', 2, 1e-6), hs('2', 'Pike', 2, 1e-6)],
+      steam: [account('1', 'Chop', 'high', 5)],
+      staff: new Set(['1']),
+      now,
+    });
+    assert.deepEqual(rows.map((r) => [r.name, r.reasons.map((x) => x.kind)]), [['Chop', ['steam']], ['Pike', ['headshots']]]);
+  });
+
+  it('says when the usual is their own, from their history', () => {
+    const [own] = queueRows({ headshots: [hs('1', 'Heavy', 1, 1e-4, { skill: 1.4 })], now });
+    assert.match(own.reasons[0].text, /usual \d+ \(\d+%\) \(their own: 1\.4× the server's\)/);
+    const [plain] = queueRows({ headshots: [hs('1', 'Plain', 1, 1e-4, { skill: 1 })], now });
+    assert.doesNotMatch(plain.reasons[0].text, /their own/);
+  });
+
   it('orders those in game first, then by how serious', () => {
     const rows = queueRows({
       headshots: [hs('1', 'Rook', 0, 0.02), hs('2', 'Ghost', 1, 1e-9)],

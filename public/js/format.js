@@ -1080,7 +1080,7 @@ export const teamOptions = (choices, team) =>
 // high-risk account, or griefing. Each row also has what "Dealt with" keeps (see dealtHolds): the latest day flagged for
 // headshots and for griefing ('2026-10-16', or null: none, or an older bot), and the Steam account's risk score (null
 // when it is not risky). In game first, then the most serious reasons, then the most reasons, then by name.
-export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = new Set(), now }) => {
+export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = new Set(), staff = new Set(), now }) => {
   const rows = new Map();
   const add = (player, reason, keep) => {
     const row = rows.get(player.steamId) ?? {
@@ -1100,11 +1100,13 @@ export const queueRows = ({ headshots = [], steam = [], griefers = [], inGame = 
     rows.set(player.steamId, row);
   };
   for (const p of headshots) {
+    // Staff who linked their Steam account are not flagged for headshots here: their kills stay on the Kills tab.
+    if (staff.has(p.steamId)) continue;
     const unlikely = p.chance !== null && p.chance !== undefined && p.chance < ODDS_SHOWN;
     if (p.flaggedDays === 0 && !unlikely) continue;
     const text = [
       headshotCount(p.kills, p.headshots),
-      `usual ${usualHeadshots(p.expected, p.kills)}`,
+      `usual ${usualHeadshots(p.expected, p.kills)}${p.skill > 1.05 ? ` (their own: ${p.skill.toFixed(1)}× the server's)` : ''}`,
       luckOdds(p.chance),
       ...(p.flaggedDays > 0 ? [flaggedDaysLabel(p.flaggedDays).toLowerCase()] : []),
     ];
