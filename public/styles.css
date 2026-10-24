@@ -8664,7 +8664,7 @@ button.vote-option:disabled {
 
 .rules-kicker {
   margin: 0 0 6px;
-  color: var(--critical);
+  color: #ff8d8d;
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.18em;
