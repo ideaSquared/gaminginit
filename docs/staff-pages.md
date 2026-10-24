@@ -52,7 +52,7 @@ show as a top seeder, and your player page shows no seed days. Your kills, match
 get a staff spot instead: the bot keeps you on the server's whitelist for as long as you're linked, in place of a
 slot added by hand.
 **Later** hides the banner until your next sign-in. Change it any time from "Steam: …" in the menu under your name, or on
-Server's Bans and VIP.
+Server's VIP.
 
 ## Now: the server, who is on and every kill now
 
@@ -258,9 +258,13 @@ Server's Bans and VIP.
 
 ## Server: Bans and VIP
 
+Two views: **Bans** and **VIP**.
+
 - **Bans.** Everyone banned on the server now, the reason, who banned them, and when a timed ban ends. "Unban" opens the
   Unban tool over the page with them picked: "Unban Nightjar", then Confirm.
-- **Whitelist slots.** Everyone on the whitelist in the server's settings, with VIP from the bot and when it ends,
+- **Whitelist slots** (VIP). Everyone on the whitelist in the server's settings, with **Why** they have it (the reason
+  staff gave with `/vip add`, earned by seeding, ended a long kill streak, a staff spot, or added by hand in
+  `ServerSettings.ini`), VIP from the bot and when it ends,
   or permanent (added by hand, or with `/vip add` `permanent`), and how many slots are held back for them. "Remove VIP" opens the tool with them picked, the same way.
   Staff who linked their Steam account show as **Staff spot**, since they linked, ending "While staff", with no Remove VIP:
   unlinking them takes it away.
@@ -270,12 +274,12 @@ Server's Bans and VIP.
   counts as seeding again. Needs the bot's staff Steam
   accounts (its README, "Staff Steam accounts").
 
-**Discord growth** is a card at the bottom of Bans and VIP: how many players have signed in on the website
+**Discord growth** is a card at the bottom of Bans: how many players have signed in on the website
 ([player accounts](site-pages.md#player-accounts)), linked a Steam account, are in the Discord and joined with the website's
 button, beside the Discord's own member count; and the clicks on the Discord invite over the last 30 days by where they were
 made (`home-hero`, `leaderboard-nav`, `vote`, …; "Short link (in game)" is `gaminginit.com/discord`, which the welcome message
 gives). A click is not a join, but it shows which buttons bring people in. The website counts them through the bot, with no
-analytics service. It loads when Bans and VIP is shown and at most every 5 minutes (the bot counts every account for it), and
+analytics service. It loads when Bans is shown and at most every 5 minutes (the bot counts every account for it), and
 says so if the bot is too old to have it (`GET /api/admin/growth`). `?demo` shows sample numbers.
 
 ## Server: Rotations, the maps for each day
@@ -410,7 +414,7 @@ More on the same view, for the same period:
   play are left blank.
 - Stays that ended in a staff kick or ban are left out of all of it, and the line at the top says how many.
 
-Server's **Bans and VIP** also has, in the Discord growth card, how many of the players who signed in and linked Steam
+Server's **Bans** also has, in the Discord growth card, how many of the players who signed in and linked Steam
 have played a match in the last 90 days, and how many 5 or more.
 
 ## Server: Lifetime
