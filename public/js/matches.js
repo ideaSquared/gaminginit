@@ -48,7 +48,12 @@ const render = (stats) => {
         'li',
         { className: 'card match', id: `match-${match.endedAt}` },
         matchHeadline(match),
-        matchMeta(`Ended ${ended.format(match.endedAt)}`, formatDuration(match.durationMs), `peak ${match.peakPlayers} players`),
+        matchMeta(
+          `Ended ${ended.format(match.endedAt)}`,
+          formatDuration(match.durationMs),
+          `peak ${match.peakPlayers} players`,
+          ...(match.zone ? [`Circles: ${match.zone}`] : []),
+        ),
         match.top.length > 0 ? playersTable(match.top) : el('p', { className: 'muted match-empty', textContent: 'No kills recorded.' }),
       ),
     ),
