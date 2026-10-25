@@ -1,0 +1,116 @@
+/* Illustrations and layout for the hall of shame (see js/art-shame.js). */
+
+/* Header banner */
+.shame-banner {
+  margin: 12px 0 18px;
+  height: 140px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+
+.shame-banner-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Tiles */
+.shame-tile {
+  position: relative;
+  overflow: hidden;
+}
+
+.tile-glyph {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  color: var(--critical);
+  opacity: 0.75;
+}
+
+.art-glyph {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  color: var(--critical);
+}
+
+.panel-title .art-glyph,
+.shame-heading .art-glyph {
+  margin-right: 0.5em;
+  vertical-align: -0.3em;
+}
+
+/* Panels */
+.shame-panel {
+  margin-top: 24px;
+}
+
+.shame-panel .section-note {
+  margin: 4px 0 12px;
+}
+
+.shame-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 0;
+  color: var(--text-2);
+}
+
+.shame-empty .art-glyph {
+  color: var(--text-2);
+}
+
+/* The team killers */
+.shame-rank {
+  width: 1%;
+  color: var(--text-2);
+  font-weight: 800;
+}
+
+.shame-rank .art-medal {
+  width: 1.9em;
+  height: 1.9em;
+}
+
+.shame-title {
+  display: block;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.shame-count {
+  min-width: 120px;
+}
+
+.shame-bar {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.shame-bar-fill {
+  display: block;
+  width: var(--w, 0%);
+  height: 100%;
+  background: var(--critical);
+}
+
+.shame-chip {
+  margin-right: 6px;
+  font-size: 0.75rem;
+}
+
+.directory-table.shame-table th,
+.directory-table.shame-table td {
+  text-align: left;
+}
