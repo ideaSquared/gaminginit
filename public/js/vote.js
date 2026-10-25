@@ -3,8 +3,10 @@
 import { apiUrl } from './live.js';
 import { canVote, choiceIn, errorText, voteOffer } from './accountmodel.js';
 import { askBot, configured, loadPlayerToken, signInHref, takeResult } from './accountsession.js';
+import { mapKey } from './format.js';
 import { el, setText } from './views.js';
-import { share, statusText, winnerOf } from './votemodel.js';
+import { countdown, scoreRows, share, statusText, winnerOf } from './votemodel.js';
+import { conditionIcon, mapArt } from './voteart.js';
 
 // The next-map vote page. Members vote with buttons in a Discord channel (see the bot's mapvote.ts); this page shows the
 // same counts from GET /api/vote, refreshes them, and sends people to the channel. A player signed in with Discord (see
@@ -18,6 +20,7 @@ const OPEN_MS = 5_000;
 const IDLE_MS = 30_000;
 
 const voteUrl = apiUrl('/api/vote');
+const statsUrl = apiUrl('/api/stats');
 
 // A sign-in that just came back to this page (the bot sends the browser back after Discord): keeps the session.
 const arrived = takeResult();
@@ -41,12 +44,15 @@ let announced = '';
 const buildRow = (row) => {
   const node = el(
     row.press ? 'button' : 'div',
-    { className: 'vote-option' },
+    { className: `vote-option vote-option-${row.kind}` },
+    row.kind === 'map' ? mapArt(row.id, row.name) : conditionIcon(row.id),
     el('span', { className: 'vote-name' }),
     el('span', { className: 'vote-count' }),
     el('span', { className: 'vote-bar' }, el('span', { className: 'vote-fill' })),
   );
   node.dataset.key = row.key;
+  const colour = row.kind === 'map' ? mapKey(row.name) : null;
+  if (colour !== null) node.dataset.map = colour;
   node.querySelector('.vote-bar').setAttribute('aria-hidden', 'true');
   if (row.press) {
     node.type = 'button';
@@ -62,6 +68,7 @@ const updateRow = (node, row) => {
   const fill = node.querySelector('.vote-fill');
   if (fill.style.width !== `${percent}%`) fill.style.width = `${percent}%`;
   node.toggleAttribute('data-winner', row.winner === true);
+  node.toggleAttribute('data-leading', row.leading === true);
   if (row.press) {
     node.toggleAttribute('data-mine', row.mine);
     node.setAttribute('aria-pressed', String(row.mine));
@@ -83,19 +90,24 @@ const syncRows = (list, rows) => {
 };
 
 // What a row needs: `voting` says whether this player can vote, and `kind` is the map, the time of day ('light') or the weather ('weather').
-const rowsFor = (items, kind, total, voting, winner = null) =>
-  items.map((item) => {
+const rowsFor = (items, kind, total, voting, winner = null) => {
+  const top = Math.max(0, ...items.map((item) => item.votes));
+  return items.map((item) => {
     const key = kind === 'map' ? item.map : item.key;
     return {
       key: `${kind}:${key}`,
+      kind: kind === 'map' ? 'map' : 'cond',
+      id: key,
       name: kind === 'map' ? item.name : item.label,
       votes: item.votes,
       total,
       winner: winner !== null && winner === key,
+      leading: top > 0 && item.votes === top,
       mine: choiceIn(account?.ballot, vote, kind) === key,
       press: voting ? () => cast({ kind, key }) : null,
     };
   });
+};
 
 // Under the options: how to vote here, for someone who cannot yet. Nothing once they can, or when there is nothing to vote on.
 // Drawn again only when what it offers changes, so the links keep the focus.
@@ -156,12 +168,61 @@ const loadAccount = async () => {
 // only changes its words.
 let wasOpen = null;
 
+// The live match's team scores (from /api/stats), for the bars towards the score that closes the vote.
+let scores = [];
+
+// One row per team: its score out of the close score, as a bar. Drawn again only when a score changes.
+let scoresShown = '';
+const renderScores = (open) => {
+  const box = $('vote-scores');
+  const rows = open ? scoreRows(scores, vote.closeScore) : [];
+  box.hidden = rows.length === 0;
+  const key = `${vote?.closeScore}:${rows.map((r) => `${r.name}=${r.score}`).join(',')}`;
+  if (key === scoresShown) return;
+  scoresShown = key;
+  box.replaceChildren(
+    el('p', { className: 'vote-scores-title', textContent: 'Match score, vote closes at the close score' }),
+    ...rows.map((r) =>
+      el(
+        'div',
+        { className: 'vote-score' },
+        el('span', { className: 'vote-score-name', textContent: r.name }),
+        el('span', { className: 'vote-score-num', textContent: `${r.score} / ${vote.closeScore}` }),
+        el('span', { className: 'vote-score-bar' }, Object.assign(el('span', { className: 'vote-score-fill' }), { style: `width: ${r.percent}%` })),
+      ),
+    ),
+  );
+};
+
+const loadScores = async () => {
+  if (statsUrl === '') return;
+  try {
+    const response = await fetch(statsUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) return;
+    const body = await response.json();
+    scores = Array.isArray(body?.server?.factionScores) ? body.server.factionScores : [];
+  } catch {
+    // The bars are left as they were.
+  }
+};
+
+// The clock under the status: the time left until the vote closes at the latest. Hidden once it is over.
+const updateTimer = (now) => {
+  const open = vote !== null && vote.open && now < vote.closesAt;
+  $('vote-timer').hidden = !open;
+  if (!open) return;
+  setText($('vote-timer-time'), countdown(vote.closesAt, now));
+  $('vote-timer').toggleAttribute('data-low', vote.closesAt - now < 60_000);
+};
+
 const render = () => {
   const now = Date.now();
   const open = vote !== null && vote.open && now < vote.closesAt;
   wasOpen = open;
   const status = loaded ? statusText(vote, now) : 'Loading the vote…';
   setText($('vote-status'), status);
+  updateTimer(now);
+  renderScores(open);
   if (loaded) {
     const phase = vote === null ? 'none' : open ? `open:${vote.id}` : `over:${vote.id}:${vote.winner?.map ?? ''}:${vote.pending}`;
     if (phase !== announced) {
@@ -209,6 +270,10 @@ const ACCOUNT_MS = 60_000;
 const tick = async () => {
   if (!document.hidden) {
     await load();
+    if (vote?.open) {
+      await loadScores();
+      render();
+    }
     // Also when the first ask failed (the bot was down for a moment) and there is no account yet.
     if (configured && loadPlayerToken() !== null && Date.now() - accountAt >= ACCOUNT_MS) {
       await loadAccount();
@@ -231,7 +296,10 @@ if (voteUrl === '') {
     if (document.hidden || !loaded) return;
     const now = Date.now();
     if ((vote !== null && vote.open && now < vote.closesAt) !== wasOpen) render();
-    else setText($('vote-status'), statusText(vote, now));
+    else {
+      setText($('vote-status'), statusText(vote, now));
+      updateTimer(now);
+    }
   }, 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) load();
