@@ -3492,7 +3492,7 @@ html.story-open {
 
 .chip-ban {
   border-color: var(--critical);
-  color: var(--critical);
+  color: color-mix(in srgb, var(--critical) 65%, white);
 }
 
 .chip-rank {

@@ -134,7 +134,7 @@ const renderHead = (now) => {
   $('player-ban').hidden = !ban;
   if (ban) {
     $('player-ban').replaceChildren(
-      el('strong', { textContent: ban.until === null ? 'Banned' : `Banned until ${dateLong.format(ban.until)}` }),
+      el('strong', { textContent: ban.until === null ? 'Banned' : `Banned until ${ended.format(ban.until)}` }),
       el('span', { className: 'muted', textContent: ban.reason ? `Reason: ${ban.reason}` : 'No reason given.' }),
     );
   }
