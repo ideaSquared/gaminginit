@@ -1,0 +1,179 @@
+/* Illustrations on the player and stats pages (see js/art-stats.js). All are decoration beside the existing text. */
+
+/* Leaderboard ranks: a medal for 1st to 3rd, a plain numbered chip for the rest. */
+.rank-badge {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 32px;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rank-chip {
+  width: 26px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--text-2);
+}
+
+.rank-top .medal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rank-top .rank-num {
+  position: relative;
+  margin-top: 8px;
+  color: #1a1206;
+  font-size: 0.78rem;
+  z-index: 1;
+}
+
+.rank-3 .rank-num {
+  color: #2a0f04;
+}
+
+.players-table td.rank {
+  width: 3em;
+}
+
+.fire-mark {
+  display: inline-flex;
+  vertical-align: -3px;
+  margin-left: 2px;
+}
+
+.flame {
+  width: 14px;
+  height: 18px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flame {
+    transform-origin: 50% 100%;
+    animation: art-flicker 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes art-flicker {
+  50% {
+    transform: scale(1.08, 0.94);
+  }
+}
+
+/* Teams: a crest above each team's bar, and map art on the per-map sections. */
+.team-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-head .crest {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+
+.map-art-frame {
+  display: block;
+  height: 64px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.map-art-frame .vote-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Player page: the rank emblem and team crest above the name. */
+.player-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.player-badges[hidden] {
+  display: none;
+}
+
+.player-badges .rank-emblem,
+.player-badges .crest {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+/* Weapon-type icons and the headshot target. */
+.weapon-icon {
+  flex: none;
+  align-self: center;
+  width: 24px;
+  height: 21px;
+  color: var(--accent);
+}
+
+.weapon-icon[data-kind='vehicle'] {
+  color: var(--text-2);
+}
+
+.weapon-icon[data-kind='barbed'] {
+  color: var(--muted);
+}
+
+.target-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  color: var(--text-2);
+}
+
+/* Headline tiles. */
+.tile-art {
+  position: relative;
+}
+
+.tile-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  color: var(--series);
+  opacity: 0.8;
+}
+
+.tile-art .tile-label {
+  padding-right: 34px;
+}
+
+/* An empty chart. */
+.chart-empty[data-art] {
+  grid-auto-flow: row;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+}
+
+.empty-art {
+  width: 110px;
+  height: auto;
+  opacity: 0.85;
+}
+
+.chart-short .empty-art {
+  width: 84px;
+}

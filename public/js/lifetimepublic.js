@@ -1,5 +1,6 @@
 import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, regularMeta, regularsText, shareOf } from './format.js';
 import { apiUrl, demo, showNotice, thisPage } from './live.js';
+import { watchArt } from './art-stats.js';
 import { demoPublicLifetime } from './demo.js';
 import { lineChart, peopleChart } from './trends.js';
 import { el, link, playerHref } from './views.js';
@@ -163,3 +164,5 @@ const load = async () => {
 };
 
 load();
+
+watchArt();

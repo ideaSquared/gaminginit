@@ -1,5 +1,6 @@
 import { busiestChart, dailyChart, hourRange, populationChart } from './charts.js';
 import { BUSY_PLAYERS, busyRuns, busyShares, clockHour, formatHours, hourlyAverages, isBusy, isOnline, peak, serverState, toLocalHours } from './format.js';
+import { watchArt } from './art-stats.js';
 import { startLive } from './live.js';
 import { el, setText } from './views.js';
 
@@ -134,3 +135,5 @@ startLive((latest) => {
   renderTiles(now);
   renderCharts(now);
 });
+
+watchArt();
