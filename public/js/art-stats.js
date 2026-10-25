@@ -130,8 +130,8 @@ export const weaponClass = (name, kind) => {
 // Weapons with a picture of the gun itself in img/weapons, named by the weapon's name in lower case with dashes.
 const WEAPON_PICTURES = new Set([
   '9k333-verba', 'a-91', 'ak74', 'amp-9', 'amr-50', 'bmr-308', 'bushmaster-m17s', 'compound-bow', 'deagle', 'fal', 'galil',
-  'ggx-17', 'ggx-18', 'judge', 'kh-2002', 'm1911', 'm249-saw', 'm4', 'm500', 'maaws', 'mgl-40', 'mk22', 'mosin-nagant', 'mp43',
-  'mp5', 'pkm', 'pp-19-vityaz', 'rpg-7', 'scout-rifle-td', 'sks', 'super-45', 'sv98', 'svd', 't-21',
+  'ggx-17', 'ggx-18', 'judge', 'kh-2002', 'm14', 'm1911', 'm249-saw', 'm4', 'm500', 'maaws', 'mgl-40', 'mk22', 'mosin-nagant', 'mp43',
+  'mp5', 'pkm', 'pp-19-bizon', 'pp-19-vityaz', 'rpg-7', 'scout-rifle-td', 'sks', 'super-45', 'sv98', 'svd', 't-21', 'tcx-spr',
 ]);
 
 // The gun's own picture, or the drawing for its type when there is none.
