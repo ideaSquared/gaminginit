@@ -16,6 +16,7 @@ import {
 import { demoLive } from './demo.js';
 import { apiUrl, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
+import { scoreRows } from './votemodel.js';
 
 // The live page: the match on now, pushed by the bot as it happens. The kill feed, players, weapons and highlights
 // come from the game's kill feed, and so does where the match is (about to start, being played, over) and, once it
@@ -71,6 +72,54 @@ const scoreLine = (scores, palette) => {
     return [sideName(a.name, palette), el('strong', { textContent: `${a.score} – ${b.score}` }), sideName(b.name, palette)];
   }
   return scores.flatMap((s, i) => [i > 0 ? el('span', { className: 'muted', textContent: '·' }) : null, sideName(s.name, palette), el('strong', { textContent: String(s.score) })]).filter(Boolean);
+};
+
+// The score that closes the open map vote, or 0: the bars on the scoreboard go towards it. Asked of the bot now and then.
+let closeScore = 0;
+const VOTE_MS = 15_000;
+const loadCloseScore = async () => {
+  const url = apiUrl('/api/vote');
+  if (url === '' || document.hidden) return;
+  try {
+    const response = await fetch(url, { headers: { accept: 'application/json' } });
+    const vote = response.ok ? (await response.json()).vote : null;
+    closeScore = vote?.open && Date.now() < vote.closesAt ? vote.closeScore : 0;
+  } catch {
+    // The bars keep to the leader.
+  }
+  if (snapshot) renderBoard(snapshot);
+};
+
+// A card per team: its score, and a bar. With a vote open the bar goes towards the score that closes it; otherwise it is
+// how far the team is from the leader.
+let boardShown = '';
+const renderBoard = (latest) => {
+  const box = $('live-board');
+  const state = liveState(latest, Date.now());
+  const scores = latest?.match?.result?.factionScores ?? (latest?.server && state !== 'offline' ? latest.server.factionScores : []);
+  const top = Math.max(1, ...scores.map((t) => t.score));
+  const rows = closeScore > 0 ? scoreRows(scores, closeScore) : [...scores].sort((a, b) => b.score - a.score).map((t) => ({ ...t, percent: Math.round((t.score / top) * 100) }));
+  box.hidden = rows.length === 0 || state === 'loading' || state === 'offline' || state === 'empty';
+  const key = `${closeScore}:${rows.map((r) => `${r.name}=${r.score}`).join(',')}`;
+  if (key === boardShown) return;
+  boardShown = key;
+  const palette = colours();
+  box.replaceChildren(
+    ...rows.map((r, i) => {
+      const fill = el('span', { className: 'live-board-fill' });
+      fill.style.width = `${r.percent}%`;
+      const colour = palette.get(sideKey(r.name));
+      if (colour) fill.style.background = colour;
+      return el(
+        'div',
+        { className: 'live-board-team' },
+        el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
+        el('p', { className: 'live-board-score', textContent: String(r.score) }),
+        el('span', { className: 'live-board-bar' }, fill),
+        closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `of ${closeScore} to close the map vote` }) : null,
+      );
+    }),
+  );
 };
 
 const tile = (label, value, ...sub) =>
@@ -263,6 +312,7 @@ const render = (latest) => {
   // Once the game says the match is over, its final score; until then, the score at the bot's last check.
   const scores = snapshot?.match?.result?.factionScores ?? (server && state !== 'offline' ? server.factionScores : []);
   $('live-score').replaceChildren(...(scores.length > 0 ? scoreLine(scores, palette) : []));
+  renderBoard(snapshot);
   document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | gaminginit WARDOGS server` : 'Live match | gaminginit WARDOGS server';
 
   const idle = IDLE[state];
@@ -324,3 +374,6 @@ startPush(render, { url: apiUrl('live'), socket: 'live/socket', sample: demoLive
 setInterval(() => {
   if (!document.hidden && snapshot) renderMeta(Date.now());
 }, 5_000);
+
+loadCloseScore();
+setInterval(loadCloseScore, VOTE_MS);
