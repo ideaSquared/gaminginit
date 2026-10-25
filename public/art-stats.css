@@ -140,6 +140,14 @@
   border-radius: 6px;
 }
 
+/* In the live kill feed's pill: smaller, so a row stays as tall as it was. */
+.kill-weapon .weapon-picture {
+  width: 52px;
+  height: 20px;
+  padding: 2px 4px;
+  align-self: center;
+}
+
 .weapon-icon[data-kind='vehicle'] {
   color: var(--text-2);
 }

@@ -15,6 +15,7 @@ import {
 } from './format.js';
 import { demoLive } from './demo.js';
 import { bannerArt, crest, sceneArt } from './art-live.js';
+import { weaponIcon } from './art-stats.js';
 import { apiUrl, demo, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
 import { scoreRows } from './votemodel.js';
@@ -133,10 +134,16 @@ const tile = (label, value, ...sub) =>
 
 const badge = (text, kind = '') => el('span', { className: `badge ${kind}`.trim(), textContent: text });
 
+// The gun's own picture for the kill feed, small. The drawings for other kinds of weapon would only add noise there.
+const gunPicture = (d) => {
+  const icon = weaponIcon(d.weapon, d.kind);
+  return icon.tagName === 'IMG' ? icon : null;
+};
+
 // One death in the kill feed: who killed whom with what, and what made it special.
 const feedRow = (d, palette, now, fresh) => {
   const what = d.weapon
-    ? el('span', { className: 'kill-weapon' }, d.weapon, WEAPON_KINDS[d.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[d.kind] }) : null)
+    ? el('span', { className: 'kill-weapon' }, gunPicture(d), d.weapon, WEAPON_KINDS[d.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[d.kind] }) : null)
     : el('span', { className: 'kill-weapon kill-weapon-none', textContent: d.tags.includes('Falling') ? 'fell' : d.tags.includes('Suicide') ? 'suicide' : 'died' });
   const badges = [
     d.headshot ? badge('Headshot', 'badge-accent') : null,
@@ -224,7 +231,7 @@ const renderWeapons = (match) => {
           return el(
             'tr',
             {},
-            el('td', {}, el('span', { className: 'weapon-name' }, w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null), bar),
+            el('td', {}, el('span', { className: 'weapon-name' }, weaponIcon(w.name, w.kind), w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null), bar),
             el('td', { textContent: String(w.kills) }),
           );
         }),
