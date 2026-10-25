@@ -58,6 +58,8 @@ const ofDay = (day) => dayLong.format(Date.parse(`${day}T00:00:00Z`));
 let profile = null;
 let period = 30;
 let shown = MATCHES_SHOWN;
+// The ban the notice shows now, so a refresh that changes nothing leaves it alone and does not announce it again.
+let shownBan = '';
 
 const calendar = activityCalendar($('calendar'));
 const form = formChart($('form-chart'));
@@ -132,7 +134,8 @@ const renderHead = (now) => {
 
   const ban = profile.ban;
   $('player-ban').hidden = !ban;
-  if (ban) {
+  const banKey = ban ? JSON.stringify([ban.until, ban.reason]) : '';
+  if (ban && banKey !== shownBan) {
     $('player-ban').replaceChildren(
       el('span', { className: 'ban-icon', textContent: '!', ariaHidden: 'true' }),
       el(
@@ -144,6 +147,7 @@ const renderHead = (now) => {
       ),
     );
   }
+  shownBan = banKey;
 
   const online = profile.online;
   $('player-online').hidden = !online;
