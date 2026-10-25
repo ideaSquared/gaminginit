@@ -84,6 +84,14 @@ What it shows:
   under a label saying they are for the last 30 days, whichever period is chosen. Tables too wide for a small screen
   scroll inside their card. A banned player's page has a notice with the ban's reason (or "No reason given") and, for a
   timed ban, when it ends; it never says who banned them.
+- A hall of shame (`/shame`, under Players in the menu), a bit of fun with the facts straight: the players warned at
+  least 3 times for team killing, most first, each with a silly title for how many ("Friendly fire apprentice" up to
+  "Honorary enemy combatant"), a bar and when they were last warned; and everyone who was kicked or banned, in lists
+  of "Kicked, then banned" (kicked first, then banned later), "Banned" and "Kicked", newest first, with a note when a ban
+  was lifted or they also had team kill warnings. Four totals sit at the top. The warnings are the bot's automatic team
+  kill warnings and staff warnings that mention team killing, from the moderation log, which keeps each player's latest
+  50 entries. It never shows reasons, who did it or Steam IDs, and leaves out staff and private profiles. Names link
+  to player pages for players seen in the last 90 days.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - Private profiles: a player staff made private (the bot's `/private add`, or Make a profile private on Moderation)

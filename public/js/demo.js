@@ -360,6 +360,28 @@ export const demoPlayers = (now) => {
   };
 };
 
+// The hall of shame with made-up names, in the shape of the bot's /api/shame.
+export const demoShame = (now) => {
+  const players = demoPlayers(now).players;
+  const who = (i) => ({ id: players[i].id, name: players[i].name });
+  const ago = (hours) => now - hours * HOUR;
+  const warned = [14, 9, 7, 5, 4, 3, 3];
+  const removed = [
+    { ...who(4), outcome: 'kicked-then-banned', kicks: 2, bans: 1, lastAt: ago(20), unbanned: false, teamKillWarnings: 6 },
+    { ...who(7), outcome: 'kicked-then-banned', kicks: 1, bans: 1, lastAt: ago(90), unbanned: true, teamKillWarnings: 0 },
+    { ...who(2), outcome: 'banned', kicks: 0, bans: 1, lastAt: ago(30), unbanned: false, teamKillWarnings: 0 },
+    { name: 'Wanderer', outcome: 'banned', kicks: 0, bans: 2, lastAt: ago(300), unbanned: false, teamKillWarnings: 0 },
+    { ...who(5), outcome: 'kicked', kicks: 3, bans: 0, lastAt: ago(10), unbanned: false, teamKillWarnings: 4 },
+    { ...who(9), outcome: 'kicked', kicks: 1, bans: 0, lastAt: ago(200), unbanned: false, teamKillWarnings: 0 },
+  ];
+  return {
+    generatedAt: now,
+    totals: { teamKillWarnings: 86, warned: 31, kicked: 14, banned: 9 },
+    teamKillers: warned.map((count, i) => ({ ...who(i + 1), warnings: count, lastAt: ago(5 + i * 17) })),
+    removed,
+  };
+};
+
 // One sample player's page, or null for an id that is not in the sample.
 export const demoProfile = (id, now) => {
   const index = demoPlayers(now).players.findIndex((p) => p.id === id);
