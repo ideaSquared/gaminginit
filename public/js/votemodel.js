@@ -43,3 +43,12 @@ export const peekState = (vote, now) => {
 
 // The landing card's heading.
 export const peekTitle = (vote, state) => (state === 'won' ? `Next map: ${vote.winner.name}` : 'Vote for the next map');
+
+// The teams' scores against the score that closes the vote, highest first: `percent` is how far each is from closing it (0-100).
+// Empty when the bot has no scores or the vote has no close score (then only the time closes it).
+export const scoreRows = (scores, closeScore) =>
+  closeScore > 0
+    ? [...(scores ?? [])]
+        .sort((a, b) => b.score - a.score)
+        .map((s) => ({ name: s.name, score: s.score, percent: Math.min(100, Math.round((s.score / closeScore) * 100)) }))
+    : [];

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { countdown, peekState, peekTitle, RESULT_SHOWN_MS, share, statusText, winnerOf } from '../public/js/votemodel.js';
+import { countdown, peekState, peekTitle, RESULT_SHOWN_MS, scoreRows, share, statusText, winnerOf } from '../public/js/votemodel.js';
 
 const open = { id: '1', open: true, fromName: 'Ozeti', closesAt: 100_000, closeScore: 0, closedAt: null, winner: null, note: null, pending: false };
 
@@ -70,5 +70,20 @@ describe('peekState and peekTitle', () => {
   it('titles the card by what it shows', () => {
     assert.equal(peekTitle(open, 'open'), 'Vote for the next map');
     assert.equal(peekTitle(won, 'won'), 'Next map: Alpha');
+  });
+});
+
+describe('scoreRows', () => {
+  const scores = [{ name: 'Valkyra', score: 40 }, { name: 'Kharr', score: 76 }];
+  it('puts the leader first, with how close each is to the close score', () => {
+    assert.deepEqual(scoreRows(scores, 95), [
+      { name: 'Kharr', score: 76, percent: 80 },
+      { name: 'Valkyra', score: 40, percent: 42 },
+    ]);
+  });
+  it('never goes past 100%', () => assert.equal(scoreRows([{ name: 'A', score: 120 }], 95)[0].percent, 100));
+  it('is empty with no close score or no scores', () => {
+    assert.deepEqual(scoreRows(scores, 0), []);
+    assert.deepEqual(scoreRows(undefined, 95), []);
   });
 });

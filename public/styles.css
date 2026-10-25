@@ -9054,3 +9054,53 @@ button.vote-option:hover:not(:disabled) {
   border-color: var(--warning);
   color: var(--warning);
 }
+
+/* Each team's score towards the score that closes the vote (see vote.js). */
+.vote-scores {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.vote-scores[hidden] {
+  display: none;
+}
+
+.vote-score {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  font-size: 0.9rem;
+}
+
+.vote-score-name {
+  font-weight: 700;
+}
+
+.vote-score-num {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.vote-score-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  background: var(--hairline);
+  border-radius: 3px;
+}
+
+.vote-score-fill {
+  display: block;
+  height: 100%;
+  background: var(--warning);
+  transition: width 0.4s ease;
+}
+
+.vote-scores-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

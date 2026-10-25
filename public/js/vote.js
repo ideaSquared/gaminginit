@@ -5,7 +5,7 @@ import { canVote, choiceIn, errorText, voteOffer } from './accountmodel.js';
 import { askBot, configured, loadPlayerToken, signInHref, takeResult } from './accountsession.js';
 import { mapKey } from './format.js';
 import { el, setText } from './views.js';
-import { countdown, share, statusText, winnerOf } from './votemodel.js';
+import { countdown, scoreRows, share, statusText, winnerOf } from './votemodel.js';
 import { conditionIcon, mapArt } from './voteart.js';
 
 // The next-map vote page. Members vote with buttons in a Discord channel (see the bot's mapvote.ts); this page shows the
@@ -20,6 +20,7 @@ const OPEN_MS = 5_000;
 const IDLE_MS = 30_000;
 
 const voteUrl = apiUrl('/api/vote');
+const statsUrl = apiUrl('/api/stats');
 
 // A sign-in that just came back to this page (the bot sends the browser back after Discord): keeps the session.
 const arrived = takeResult();
@@ -167,6 +168,44 @@ const loadAccount = async () => {
 // only changes its words.
 let wasOpen = null;
 
+// The live match's team scores (from /api/stats), for the bars towards the score that closes the vote.
+let scores = [];
+
+// One row per team: its score out of the close score, as a bar. Drawn again only when a score changes.
+let scoresShown = '';
+const renderScores = (open) => {
+  const box = $('vote-scores');
+  const rows = open ? scoreRows(scores, vote.closeScore) : [];
+  box.hidden = rows.length === 0;
+  const key = `${vote?.closeScore}:${rows.map((r) => `${r.name}=${r.score}`).join(',')}`;
+  if (key === scoresShown) return;
+  scoresShown = key;
+  box.replaceChildren(
+    el('p', { className: 'vote-scores-title', textContent: 'Match score, vote closes at the close score' }),
+    ...rows.map((r) =>
+      el(
+        'div',
+        { className: 'vote-score' },
+        el('span', { className: 'vote-score-name', textContent: r.name }),
+        el('span', { className: 'vote-score-num', textContent: `${r.score} / ${vote.closeScore}` }),
+        el('span', { className: 'vote-score-bar' }, Object.assign(el('span', { className: 'vote-score-fill' }), { style: `width: ${r.percent}%` })),
+      ),
+    ),
+  );
+};
+
+const loadScores = async () => {
+  if (statsUrl === '') return;
+  try {
+    const response = await fetch(statsUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) return;
+    const body = await response.json();
+    scores = Array.isArray(body?.server?.factionScores) ? body.server.factionScores : [];
+  } catch {
+    // The bars are left as they were.
+  }
+};
+
 // The clock under the status: the time left until the vote closes at the latest. Hidden once it is over.
 const updateTimer = (now) => {
   const open = vote !== null && vote.open && now < vote.closesAt;
@@ -183,6 +222,7 @@ const render = () => {
   const status = loaded ? statusText(vote, now) : 'Loading the vote…';
   setText($('vote-status'), status);
   updateTimer(now);
+  renderScores(open);
   if (loaded) {
     const phase = vote === null ? 'none' : open ? `open:${vote.id}` : `over:${vote.id}:${vote.winner?.map ?? ''}:${vote.pending}`;
     if (phase !== announced) {
@@ -230,6 +270,10 @@ const ACCOUNT_MS = 60_000;
 const tick = async () => {
   if (!document.hidden) {
     await load();
+    if (vote?.open) {
+      await loadScores();
+      render();
+    }
     // Also when the first ask failed (the bot was down for a moment) and there is no account yet.
     if (configured && loadPlayerToken() !== null && Date.now() - accountAt >= ACCOUNT_MS) {
       await loadAccount();
