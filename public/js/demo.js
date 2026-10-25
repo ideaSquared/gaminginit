@@ -450,6 +450,7 @@ export const demoProfile = (id, now) => {
     },
     online: online ? { map: 'Ozeti', faction: 'Valkyra', kills: 11 - index, deaths: 3 + index } : null,
     vip: index % 2 === 0 ? { until: today + 5 * DAY + 4 * HOUR } : null,
+    ban: index === 3 ? { reason: 'Repeated team killing', until: today + 3 * DAY } : null,
     seeding: { rule: VIP_RULE, seedDays: Math.min(3, (index + 1) % 4) },
     weapons: { since, used },
   };

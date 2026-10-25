@@ -3490,6 +3490,11 @@ html.story-open {
   color: var(--accent-ink);
 }
 
+.chip-ban {
+  border-color: var(--critical);
+  color: color-mix(in srgb, var(--critical) 65%, white);
+}
+
 .chip-rank {
   border-color: var(--series);
 }
@@ -3517,6 +3522,17 @@ html.story-open {
   border-left: 3px solid var(--good);
 }
 
+.player-ban {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--critical);
+}
+
+.player-ban[hidden],
 .online-now[hidden],
 .online-panel[hidden] {
   display: none;

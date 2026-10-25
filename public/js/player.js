@@ -74,6 +74,7 @@ const tableOf = (table, headings, rows) => {
 const showMissing = (title, text) => {
   $('player-body').hidden = true;
   $('player-online').hidden = true;
+  $('player-ban').hidden = true;
   $('player-missing').hidden = false;
   setText($('missing-title'), title);
   setText($('missing-text'), text);
@@ -120,6 +121,7 @@ const renderHead = (now) => {
   $('player-chips').replaceChildren(
     ...[
       profile.online ? el('li', { className: 'chip chip-online' }, el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now') : null,
+      profile.ban ? el('li', { className: 'chip chip-ban', textContent: 'Banned' }) : null,
       profile.vip ? el('li', { className: 'chip chip-vip', textContent: `VIP until ${dateLong.format(profile.vip.until)}` }) : null,
       ranks.length > 0 ? el('li', { className: 'chips-label', textContent: `Leaderboard, last ${profile.ranks.days} days` }) : null,
       ...ranks.map((rank) => el('li', { className: 'chip chip-rank', textContent: rank.text })),
@@ -127,6 +129,15 @@ const renderHead = (now) => {
   );
 
   renderBadges(ranks);
+
+  const ban = profile.ban;
+  $('player-ban').hidden = !ban;
+  if (ban) {
+    $('player-ban').replaceChildren(
+      el('strong', { textContent: ban.until === null ? 'Banned' : `Banned until ${ended.format(ban.until)}` }),
+      el('span', { className: 'muted', textContent: ban.reason ? `Reason: ${ban.reason}` : 'No reason given.' }),
+    );
+  }
 
   const online = profile.online;
   $('player-online').hidden = !online;
