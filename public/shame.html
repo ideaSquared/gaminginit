@@ -29,7 +29,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="art-stats.css" />
-    <link rel="stylesheet" href="shame.css" />
+    <link rel="stylesheet" href="art-shame.css" />
     <script type="module" src="js/shame.js"></script>
     <script type="module" src="js/nav.js"></script>
   </head>
@@ -107,9 +107,10 @@
       <div class="announcement wrap" id="announcement" role="status" hidden></div>
       <div class="notice wrap" id="notice" role="status" hidden></div>
 
-      <section class="section" aria-labelledby="shame-title">
+      <section class="section shame-head" aria-labelledby="shame-title">
         <div class="wrap">
           <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
+          <p class="eyebrow">Team kills, kicks and bans</p>
           <div class="section-head">
             <h1 class="page-title" id="shame-title">Hall of shame</h1>
             <p class="section-note">Who has been warned most for team killing, and who has been shown the door. It is all in good fun: we never show reasons, and staff and private profiles are left out. Read the <a href="rules" data-keep-query>rules</a> to stay off it.</p>
@@ -118,7 +119,7 @@
           <div class="tiles" id="shame-tiles"></div>
 
           <div class="card panel shame-panel">
-            <h2 class="panel-title">Team kill champions</h2>
+            <h2 class="panel-title" id="tk-title">Team kill champions</h2>
             <p class="section-note" id="tk-note">Warned for team killing at least 3 times, most first.</p>
             <div class="table-scroll-x">
               <table class="players-table directory-table shame-table" id="tk-list"></table>

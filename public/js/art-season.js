@@ -6,7 +6,7 @@ import { peekState } from './votemodel.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
-const svg = (viewBox, body, className, slice = false) => {
+export const svg = (viewBox, body, className, slice = false) => {
   const root = new DOMParser().parseFromString(
     `<svg xmlns="${NS}" viewBox="${viewBox}" aria-hidden="true" focusable="false"${slice ? ' preserveAspectRatio="xMidYMid slice"' : ''}>${body}</svg>`,
     'image/svg+xml',
@@ -15,10 +15,10 @@ const svg = (viewBox, body, className, slice = false) => {
   return document.importNode(root, true);
 };
 
-const METAL = ['#fab219', '#cbd5e1', '#d08a4e'];
+export const METAL = ['#fab219', '#cbd5e1', '#d08a4e'];
 
 // A trophy cup, in gold (or another metal).
-const cup = (fill = METAL[0]) =>
+export const cup = (fill = METAL[0]) =>
   `<path d="M10 4h12v9a6 6 0 0 1-12 0z" fill="${fill}"/><path d="M10 7H5c0 5 2 8 6 8M22 7h5c0 5-2 8-6 8" fill="none" stroke="${fill}" stroke-width="2"/><path d="M14 19h4v4h-4z" fill="${fill}"/><path d="M9 28h14l-2-5H11z" fill="#8a5a0b"/><path d="M13 6v6" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>`;
 
 export const trophy = (className = 'art-trophy') => svg('0 0 32 32', cup(), className);

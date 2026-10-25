@@ -1,3 +1,4 @@
+import { banner, OUTCOME_ICONS, shameIcon, shameMedal, TILE_ICONS } from './art-shame.js';
 import { demoShame } from './demo.js';
 import { apiUrl, startLive } from './live.js';
 import { barWidth, removedGroups, removedNotes, shameTiles, teamKillTitle, whenText } from './shamemodel.js';
@@ -7,8 +8,8 @@ import { el, playerName } from './views.js';
 
 const $ = (id) => document.getElementById(id);
 
-const tile = ({ label, value, sub }) =>
-  el('div', { className: 'tile' }, el('p', { className: 'tile-label', textContent: label }), el('p', { className: 'tile-value', textContent: value }), el('p', { className: 'tile-sub', textContent: sub }));
+const tile = ({ label, value, sub }, i) =>
+  el('div', { className: 'tile shame-tile' }, shameIcon(TILE_ICONS[i], 'art-glyph tile-glyph'), el('p', { className: 'tile-label', textContent: label }), el('p', { className: 'tile-value', textContent: value }), el('p', { className: 'tile-sub', textContent: sub }));
 
 const head = (...headings) => el('thead', {}, el('tr', {}, ...headings.map((h) => el('th', { scope: 'col', textContent: h }))));
 
@@ -32,7 +33,7 @@ const renderTeamKillers = (shame, now) => {
         return el(
           'tr',
           {},
-          el('td', { className: 'shame-rank', textContent: String(i + 1) }),
+          el('td', { className: 'shame-rank' }, i < 3 ? shameMedal(i + 1) : String(i + 1), i < 3 ? el('span', { className: 'visually-hidden', textContent: String(i + 1) }) : null),
           el('td', { className: 'player' }, playerName(p), el('span', { className: 'shame-title', textContent: teamKillTitle(p.warnings) })),
           el('td', { className: 'shame-count' }, el('strong', { textContent: String(p.warnings) }), bar),
           el('td', { textContent: whenText(p.lastAt, now) }),
@@ -49,10 +50,10 @@ const renderRemoved = (shame, now) => {
       el(
         'div',
         { className: 'card panel shame-panel' },
-        el('h2', { className: 'panel-title', textContent: `${group.heading} (${group.players.length})` }),
+        el('h2', { className: 'panel-title shame-heading' }, shameIcon(OUTCOME_ICONS[group.outcome]), `${group.heading} (${group.players.length})`),
         el('p', { className: 'section-note', textContent: group.note }),
         group.players.length === 0
-          ? el('p', { className: 'muted', textContent: 'Nobody. Keep it up.' })
+          ? el('p', { className: 'shame-empty' }, shameIcon('halo', 'art-glyph'), 'Nobody. Keep it up.')
           : el(
               'div',
               { className: 'table-scroll-x' },
@@ -80,6 +81,13 @@ const renderRemoved = (shame, now) => {
   );
 };
 
+// The banner goes in once, under the link back.
+const addBanner = () => {
+  const head = document.querySelector('.shame-head .wrap');
+  if (!head || head.querySelector('.shame-banner')) return;
+  head.querySelector('.back')?.after(el('div', { className: 'shame-banner', ariaHidden: 'true' }, banner()));
+};
+
 const render = (shame) => {
   if (!shame) {
     $('shame-tiles').replaceChildren();
@@ -88,6 +96,8 @@ const render = (shame) => {
     $('removed-groups').replaceChildren();
     return;
   }
+  addBanner();
+  if (!$('tk-title').querySelector('svg')) $('tk-title').prepend(shameIcon('bomb'));
   $('shame-tiles').replaceChildren(...shameTiles(shame.totals).map(tile));
   renderTeamKillers(shame, shame.generatedAt);
   renderRemoved(shame, shame.generatedAt);
