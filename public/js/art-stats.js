@@ -146,6 +146,15 @@ export const weaponIcon = (name, kind) => {
   return describe(node, WEAPON_NAMES[key]);
 };
 
+// A weapon picture beside each weapon's name in a weapons table, whose rows are `top` in order.
+export const weaponIcons = (table, top) => {
+  table.querySelectorAll('tbody tr').forEach((tr, i) => {
+    const name = tr.querySelector('.weapon-name');
+    if (name && top[i]) name.prepend(weaponIcon(top[i].name, top[i].kind));
+  });
+  return table;
+};
+
 // A target: rings and a bullseye, for headshots.
 export const target = () =>
   describe(svg(
