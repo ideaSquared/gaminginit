@@ -1,4 +1,5 @@
 import './votepeek.js';
+import { renderServerArt, setHeroKind } from './art-home.js';
 import { populationChart } from './charts.js';
 import {
   BOARDS,
@@ -58,6 +59,8 @@ const renderServer = (now) => {
   status.dataset.kind = state.kind;
   setText(status.querySelector('.status-label'), state.label);
   $('server').dataset.kind = state.kind;
+  setHeroKind($('top'), state.kind);
+  renderServerArt($('server-art'), state.kind, online ? server.map : null);
   setText($('server-detail'), state.detail);
   $('server-help').hidden = state.kind !== 'seeding' && state.kind !== 'empty';
   setText($('server-name'), server?.name ?? 'Game server');

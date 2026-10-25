@@ -1,4 +1,5 @@
 import { BOARDS, boardRows, compact, metres, percent, utcDay } from './format.js';
+import { decorateRanks, watchArt, weaponIcon } from './art-stats.js';
 import { startLive } from './live.js';
 import { boardTable, el, longestHolder, setText, weaponsTable } from './views.js';
 
@@ -10,6 +11,20 @@ const $ = (id) => document.getElementById(id);
 
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
+const ranked = (table, rows, fire) => {
+  decorateRanks(table, rows, fire);
+  return table;
+};
+
+// A weapon-type icon beside each weapon's name.
+const withIcons = (table, top) => {
+  table.querySelectorAll('tbody tr').forEach((tr, i) => {
+    const name = tr.querySelector('.weapon-name');
+    if (name && top[i]) name.prepend(weaponIcon(top[i].name, top[i].kind));
+  });
+  return table;
+};
+
 const renderLeaderboard = (stats) => {
   const root = $('boards');
   const leaderboard = stats?.leaderboard;
@@ -18,6 +33,8 @@ const renderLeaderboard = (stats) => {
     root.replaceChildren(el('p', { className: 'muted', textContent: message }));
     return;
   }
+  // Players on a kill streak right now, when the bot says so.
+  const fire = new Set((stats.match?.highlights?.onFire ?? []).map((f) => f.player?.id).filter(Boolean));
   setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
   root.replaceChildren(
     ...BOARDS.map((board) => {
@@ -30,7 +47,7 @@ const renderLeaderboard = (stats) => {
         { className: 'card board' },
         el('h3', { textContent: board.title }),
         sub ? el('p', { className: 'board-sub', textContent: sub }) : null,
-        rows.length > 0 ? boardTable(board, rows) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }),
+        rows.length > 0 ? ranked(boardTable(board, rows), rows, fire) : el('p', { className: 'muted board-empty', textContent: 'Nobody yet.' }),
       );
     }),
   );
@@ -59,10 +76,12 @@ const renderWeapons = (stats, now) => {
     root.replaceChildren(el('p', { className: 'muted board-empty', textContent: `No kills recorded in the last ${weapons.days} days.` }));
     return;
   }
-  root.replaceChildren(weaponsTable(weapons.top));
+  root.replaceChildren(withIcons(weaponsTable(weapons.top), weapons.top));
 };
 
 startLive((stats) => {
   renderLeaderboard(stats);
   renderWeapons(stats, Date.now());
 });
+
+watchArt();

@@ -1,5 +1,8 @@
 import { compact, formatDuration, percent, sideKey } from './format.js';
+import { watchArt } from './art-stats.js';
+import { crest } from './crests.js';
 import { startLive } from './live.js';
+import { mapArt } from './voteart.js';
 import { el, mapBar, mapTag, matchMeta, setText, sideName, teamColours } from './views.js';
 
 // The teams page: which team wins most over the last 30 days, overall and on each map, from the bot's match records.
@@ -64,7 +67,7 @@ const renderStandings = (board) => {
             'tr',
             {},
             el('td', { className: 'rank', textContent: String(i + 1) }),
-            el('td', { className: 'player' }, sideName(t.name, colours), bar),
+            el('td', { className: 'player team-cell' }, el('span', { className: 'team-head' }, crest(t.name), sideName(t.name, colours)), bar),
             el('td', { textContent: compact(t.wins) }),
             el('td', { textContent: percent(t.matches > 0 ? t.wins / t.matches : null) }),
             played ? el('td', { textContent: compact(t.matches) }) : null,
@@ -98,7 +101,8 @@ const renderMaps = (board) => {
       const leads = top && top.wins > 0 && (!next || top.wins > next.wins);
       return el(
         'li',
-        { className: 'map-wins-row' },
+        { className: 'map-wins-row map-wins-art' },
+        el('span', { className: 'map-art-frame' }, mapArt(undefined, m.map)),
         el(
           'p',
           { className: 'match-headline' },
@@ -173,3 +177,5 @@ startLive((stats) => {
   renderFinish($('closest'), board.closest);
   renderFinish($('biggest'), board.biggest);
 });
+
+watchArt();

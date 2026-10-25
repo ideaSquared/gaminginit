@@ -28,6 +28,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="art-home.css" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -127,7 +128,39 @@
       <div class="announcement wrap" id="announcement" role="status" hidden></div>
       <div class="notice wrap" id="notice" role="status" hidden></div>
 
-      <section class="hero" id="top">
+      <section class="hero" id="top" data-kind="waiting">
+        <svg class="hero-art" viewBox="0 0 1200 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="ha-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--ha-sky1)" /><stop offset="1" style="stop-color: var(--ha-sky2)" /></linearGradient>
+            <radialGradient id="ha-glow" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color: var(--ha-sun)" stop-opacity=".9" /><stop offset="1" style="stop-color: var(--ha-sun)" stop-opacity="0" /></radialGradient>
+          </defs>
+          <rect width="1200" height="320" fill="url(#ha-sky)" />
+          <g class="ha-stars" fill="#fff"><circle cx="90" cy="40" r="1.6" /><circle cx="240" cy="90" r="1.2" /><circle cx="420" cy="30" r="1.6" /><circle cx="610" cy="70" r="1.2" /><circle cx="830" cy="36" r="1.6" /><circle cx="1010" cy="84" r="1.2" /><circle cx="1130" cy="30" r="1.6" /></g>
+          <circle class="ha-halo" cx="820" cy="200" r="210" fill="url(#ha-glow)" />
+          <circle class="ha-sun" cx="820" cy="206" r="38" style="fill: var(--ha-sun)" />
+          <path d="M-20 230 120 150l90 60 130-90 150 100 120-60 140 70 130-90 160 100 110-70 130 80v70H-20z" style="fill: var(--ha-far)" />
+          <path d="M-20 262c120-40 220-20 340 0s220 30 340 0 260-40 380-10 160 10 160 10v78H-20z" style="fill: var(--ha-mid)" />
+          <g data-for="seeding live" style="fill: var(--ha-near)">
+            <path d="M120 270l30-40 30 40zM150 230v-22" /><rect x="146" y="262" width="8" height="8" />
+            <path d="M330 276l22-30 22 30z" />
+          </g>
+          <g data-for="empty waiting" style="fill: var(--ha-near)"><path d="M180 276l34-46 34 46z" /><path d="M214 230v-18" stroke="currentColor" /></g>
+          <g class="ha-trees" style="fill: var(--ha-near)">
+            <path d="M40 290l14-44 14 44zM70 290l11-34 11 34zM1040 290l14-44 14 44zM1074 290l12-38 12 38zM1130 290l14-48 14 48z" />
+          </g>
+          <g data-for="seeding live"><g class="ha-smoke" fill="#cbd5e1"><ellipse cx="150" cy="198" rx="9" ry="6" /><ellipse cx="158" cy="184" rx="11" ry="7" /></g>
+            <circle class="ha-fire" cx="340" cy="286" r="5" fill="#fbbf24" /></g>
+          <g data-for="live">
+            <path d="M0 296c180-20 340-6 520-12s300 14 480 4 200-6 200-6v38H0z" style="fill: var(--ha-near)" />
+            <g style="fill: var(--ha-near)"><path d="M470 280h60l8-12h40l6 12h30v10H470z" /><rect x="566" y="262" width="34" height="7" /><rect x="596" y="259" width="48" height="3" /></g>
+            <g style="fill: var(--ha-near)"><path d="M880 280h50l6-16h28l6 16h24v10H880z" /><rect x="944" y="256" width="38" height="3" /></g>
+            <g class="ha-tracers" stroke="#fde68a" stroke-width="2" stroke-linecap="round"><path d="M650 258 760 226M660 256 780 234" /><path d="M990 252 900 226" /></g>
+            <g class="ha-flash"><circle cx="240" cy="270" r="9" fill="#fb923c" /><circle cx="700" cy="268" r="7" fill="#fde68a" /></g>
+            <g class="ha-smoke" fill="#64748b"><ellipse cx="240" cy="252" rx="14" ry="8" /><ellipse cx="252" cy="232" rx="18" ry="9" /><ellipse cx="700" cy="248" rx="12" ry="7" /></g>
+          </g>
+          <g data-for="offline"><path d="M610 300 600 300 610 190 620 300z" fill="none" stroke="#6b7280" stroke-width="3" /><circle cx="610" cy="186" r="4" fill="#4b5563" /></g>
+          <rect y="300" width="1200" height="20" style="fill: var(--ha-near)" />
+        </svg>
         <div class="wrap hero-inner">
           <div class="hero-copy">
             <p class="eyebrow"><span class="eyebrow-more">Gaming community · </span>Now playing WARDOGS</p>
@@ -166,6 +199,7 @@
 
           <div class="hero-side">
             <article class="card server-card" id="server" aria-labelledby="server-name">
+              <div class="server-art" id="server-art" aria-hidden="true"></div>
               <div class="server-top">
                 <span class="status" id="server-status" data-kind="waiting" aria-live="polite">
                   <span class="status-icon" aria-hidden="true"></span>
@@ -266,6 +300,7 @@
           <ol class="steps">
             <li class="card step">
               <span class="step-n" aria-hidden="true">1</span>
+              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="6" y="14" width="52" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M24 48l-4 8h24l-4-8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><g fill="var(--accent)"><circle cx="24" cy="31" r="4"/><circle cx="40" cy="31" r="4"/></g><path d="M22 40c6 3 14 3 20 0" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M26 22c4-2 8-2 12 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".6"/></svg>
               <h3>Join the gaminginit Discord</h3>
               <p>Meet the regulars, find a squad and hear about events first.</p>
               <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="join" rel="noopener">
@@ -279,6 +314,7 @@
             </li>
             <li class="card step">
               <span class="step-n" aria-hidden="true">2</span>
+              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M32 8a16 16 0 0 0-16 16c0 10-5 12-5 16h42c0-4-5-6-5-16A16 16 0 0 0 32 8z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M26 46a6 6 0 0 0 12 0" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="48" cy="14" r="7" fill="var(--accent)"/><path d="M6 20c2-5 5-8 9-10M58 36c-1 4-3 7-7 9" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></svg>
               <h3>Watch for the alerts</h3>
               <p>
                 The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
@@ -287,11 +323,13 @@
             </li>
             <li class="card step">
               <span class="step-n" aria-hidden="true">3</span>
+              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="6" y="10" width="52" height="38" rx="6" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6 20h52" stroke="currentColor" stroke-width="2.5"/><g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".6"><path d="M12 28h20M12 35h14M12 42h18"/></g><circle cx="44" cy="35" r="8" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M50 41l7 7" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/><path d="M22 54h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
               <h3>Find the server</h3>
               <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
             </li>
             <li class="card step step-vip" id="vip" hidden>
               <span class="step-n" aria-hidden="true">4</span>
+              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M32 54V32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M32 36c-10 0-16-6-16-16 10 0 16 6 16 16z" fill="var(--accent)"/><path d="M32 30c0-9 6-15 16-15 0 9-6 15-16 15z" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 54h28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
               <h3>Seed and get VIP</h3>
               <p><strong id="vip-step-offer"></strong></p>
               <p id="vip-step-detail"></p>
