@@ -40,7 +40,8 @@ const loadFire = async () => {
       const response = await fetch(apiUrl('live'), { headers: { accept: 'application/json' } });
       live = response.ok ? await response.json() : null;
     } catch {
-      return;
+      // No live feed now: nobody is shown on fire, rather than keeping the last answer.
+      live = null;
     }
   }
   const next = new Set((live?.match?.highlights?.onFire ?? []).map((f) => f.player?.id).filter(Boolean));
