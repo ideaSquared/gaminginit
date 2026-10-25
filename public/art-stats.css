@@ -125,6 +125,15 @@
   color: var(--accent);
 }
 
+.weapon-picture {
+  flex: none;
+  align-self: center;
+  width: 54px;
+  height: 21px;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .weapon-icon[data-kind='vehicle'] {
   color: var(--text-2);
 }
