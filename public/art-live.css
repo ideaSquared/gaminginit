@@ -1,0 +1,144 @@
+/* Illustrations on the live and matches pages (see js/art-live.js). Decoration only: names are always written too. */
+
+/* Live: the map as a banner behind the title. */
+.live-head {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 20px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.live-banner {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.live-banner .vote-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+
+.live-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--page) 0%, color-mix(in srgb, var(--page) 70%, transparent) 55%, transparent 100%);
+}
+
+.live-head .live-id {
+  position: relative;
+}
+
+/* Crests beside team names. */
+.crest {
+  flex: none;
+}
+
+.side .crest,
+.score-side .crest {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  margin-right: 0.35em;
+}
+
+.live-board-team {
+  position: relative;
+  overflow: hidden;
+}
+
+.live-board-team > * {
+  position: relative;
+}
+
+.live-board-crest {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 56px;
+  height: 56px;
+  opacity: 0.9;
+}
+
+/* Illustrated empty and offline states. */
+.art-scene {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 2 / 1;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+}
+
+.art-scene-empty {
+  max-width: 360px;
+}
+
+.match-empty-state {
+  list-style: none;
+  grid-column: 1 / -1;
+}
+
+/* Matches: a thumbnail strip on each card, and the winner's crest by the score. */
+.match-thumb {
+  display: block;
+  height: 56px;
+  margin: -16px -18px 12px;
+  overflow: hidden;
+  border-radius: var(--radius) var(--radius) 0 0;
+  position: relative;
+}
+
+.match-thumb .vote-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.match-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, var(--surface) 100%);
+}
+
+.match-headline .score-won .crest {
+  width: 1.3em;
+  height: 1.3em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-board-crest,
+  .art-scene {
+    animation: art-live-in 0.4s ease-out both;
+  }
+}
+
+@keyframes art-live-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (max-width: 480px) {
+  .live-head {
+    padding: 16px 14px;
+  }
+
+  .live-banner::after {
+    background: color-mix(in srgb, var(--page) 55%, transparent);
+  }
+
+  .live-board-crest {
+    width: 44px;
+    height: 44px;
+  }
+}

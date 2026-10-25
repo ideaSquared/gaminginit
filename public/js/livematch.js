@@ -14,6 +14,7 @@ import {
   WEAPON_KINDS,
 } from './format.js';
 import { demoLive } from './demo.js';
+import { bannerArt, crest, sceneArt } from './art-live.js';
 import { apiUrl, demo, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
 import { scoreRows } from './votemodel.js';
@@ -58,8 +59,8 @@ const who = (ref, palette) => {
   return node;
 };
 
-const sideName = (name, palette) => {
-  const node = el('span', { className: 'side', textContent: name });
+const sideName = (name, palette, withCrest = true) => {
+  const node = el('span', { className: 'side' }, withCrest ? crest(name) : null, name);
   const colour = palette.get(sideKey(name));
   if (colour) node.style.color = colour;
   return node;
@@ -117,7 +118,8 @@ const renderBoard = (latest) => {
       return el(
         'div',
         { className: 'live-board-team' },
-        el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 && r.score > (rows[1]?.score ?? 0) ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
+        Object.assign(crest(r.name), { classList: 'crest live-board-crest' }),
+        el('p', { className: 'live-board-name' }, sideName(r.name, palette, false), i === 0 && r.score > 0 && r.score > (rows[1]?.score ?? 0) ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
         el('p', { className: 'live-board-score' }, String(r.score), el('span', { className: 'live-board-of', textContent: ` / ${SCORE_TO_WIN}` })),
         el('span', { className: 'live-board-bar' }, fill, tick),
         closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `Map vote closes at ${closeScore}` }) : null,
@@ -306,6 +308,26 @@ const IDLE = {
   empty: ['No match on right now', 'The server is empty. When players are on, the match shows here as it happens.'],
 };
 
+// The picture behind the title follows the map; the empty and offline states each get their own scene.
+let bannerMap = null;
+const setBanner = (map) => {
+  if (map === bannerMap) return;
+  bannerMap = map;
+  const head = document.querySelector('.live-head');
+  head.querySelector('.live-banner')?.remove();
+  head.prepend(bannerArt(map));
+};
+const setIdleArt = (key) => {
+  const card = $('live-idle');
+  const old = card.querySelector('.art-scene');
+  if (old?.dataset.scene === key) return;
+  old?.remove();
+  const art = sceneArt(key);
+  art.dataset.scene = key;
+  art.classList.add(`art-scene-${key}`);
+  card.prepend(art);
+};
+
 const render = (latest) => {
   snapshot = latest;
   const now = Date.now();
@@ -319,9 +341,11 @@ const render = (latest) => {
   renderBoard(snapshot);
   document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | gaminginit WARDOGS server` : 'Live match | gaminginit WARDOGS server';
 
+  setBanner(state === 'loading' ? null : server?.map || snapshot?.match?.map || null);
   const idle = IDLE[state];
   $('live-idle').hidden = !idle;
   if (idle) {
+    setIdleArt(state);
     setText($('idle-title'), idle[0]);
     setText($('idle-text'), idle[1]);
   }
@@ -359,6 +383,7 @@ const missing = () => {
   $('live-body').hidden = true;
   $('live-idle').hidden = false;
   setText($('live-title'), 'Live match');
+  setIdleArt('offline');
   setText($('idle-title'), 'The live match is not on yet');
   setText($('idle-text'), 'Our bot does not follow the live match yet. Until it does, the server card shows the score and players.');
 };

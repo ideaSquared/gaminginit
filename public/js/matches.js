@@ -1,5 +1,6 @@
 import { clockHour, formatDuration, latestMatches } from './format.js';
 import { startLive } from './live.js';
+import { crest, sceneArt, thumbArt } from './art-live.js';
 import { el, matchHeadline, matchMeta, playersTable } from './views.js';
 
 // The matches page: the latest finished matches, each with its top players. Each card has the id `match-<endedAt>`
@@ -32,32 +33,43 @@ const markLinked = () => {
   document.getElementById('match-missing').hidden = !(loaded && id !== null && !cards.some((card) => card.id === id));
 };
 
+// The side that won: strictly the highest score, else none.
+const winnerOf = (match) => {
+  const sorted = [...(match.factionScores ?? [])].sort((a, b) => b.score - a.score);
+  return sorted.length > 0 && (sorted.length === 1 || sorted[0].score > sorted[1].score) ? sorted[0].name : null;
+};
+
+const card = (match) => {
+  const headline = matchHeadline(match);
+  const winner = winnerOf(match);
+  const won = headline.querySelector('.score-won');
+  if (winner && won) won.prepend(crest(winner));
+  return el(
+    'li',
+    { className: 'card match', id: `match-${match.endedAt}` },
+    thumbArt(match.map),
+    headline,
+    matchMeta(
+      `Ended ${ended.format(match.endedAt)}`,
+      formatDuration(match.durationMs),
+      `peak ${match.peakPlayers} players`,
+      ...(match.zone ? [`Circles: ${match.zone}`] : []),
+    ),
+    match.top.length > 0 ? playersTable(match.top) : el('p', { className: 'muted match-empty', textContent: 'No kills recorded.' }),
+  );
+};
+
 const render = (stats) => {
   const list = document.getElementById('all-matches');
   const matches = latestMatches(stats?.matches, MATCHES);
   loaded = stats !== null;
   if (matches.length === 0) {
     const message = stats ? 'No finished matches yet. They appear here after the server has been live.' : 'Waiting for live stats.';
-    list.replaceChildren(el('li', { className: 'muted', textContent: message }));
+    list.replaceChildren(el('li', { className: 'card missing match-empty-state' }, stats ? sceneArt('matches') : null, el('p', { className: 'muted', textContent: message })));
     markLinked();
     return;
   }
-  list.replaceChildren(
-    ...matches.map((match) =>
-      el(
-        'li',
-        { className: 'card match', id: `match-${match.endedAt}` },
-        matchHeadline(match),
-        matchMeta(
-          `Ended ${ended.format(match.endedAt)}`,
-          formatDuration(match.durationMs),
-          `peak ${match.peakPlayers} players`,
-          ...(match.zone ? [`Circles: ${match.zone}`] : []),
-        ),
-        match.top.length > 0 ? playersTable(match.top) : el('p', { className: 'muted match-empty', textContent: 'No kills recorded.' }),
-      ),
-    ),
-  );
+  list.replaceChildren(...matches.map(card));
   markLinked();
 };
 
