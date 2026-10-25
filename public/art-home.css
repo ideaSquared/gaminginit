@@ -1,0 +1,70 @@
+/* Home page illustrations: hero banner, server card art, step icons. Colours come from the hero's data-kind. */
+
+.hero {
+  --ha-sky1: #1b2a3a; --ha-sky2: #e9a57c; --ha-sun: #fde7b0; --ha-far: #2c3a4a; --ha-mid: #1d2733; --ha-near: #121922;
+  --ha-op: 0.8;
+}
+.hero[data-kind='seeding'] { --ha-sky1: #1e3350; --ha-sky2: #f2b86b; --ha-sun: #fcd34d; --ha-far: #2f4458; --ha-mid: #1f2f3d; }
+.hero[data-kind='live'] { --ha-sky1: #3b0f3f; --ha-sky2: #fb7a3c; --ha-sun: #fb923c; --ha-far: #4a2540; --ha-mid: #2a1830; --ha-near: #130b17; --ha-op: 0.9; }
+.hero[data-kind='offline'] { --ha-sky1: #1a1d22; --ha-sky2: #3a3f47; --ha-sun: #6b7280; --ha-far: #262a30; --ha-mid: #1d2025; --ha-near: #14161a; --ha-op: 0.45; }
+.hero[data-kind='waiting'] { --ha-sky1: #1a222c; --ha-sky2: #3d4a59; --ha-sun: #94a3b8; --ha-op: 0.4; }
+
+.hero-art {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: min(100%, 420px);
+  opacity: var(--ha-op);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 45%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 45%);
+  transition: opacity 0.6s;
+}
+.hero::after { background: linear-gradient(180deg, transparent 75%, var(--page)); }
+.hero-art [data-for] { display: none; }
+.hero[data-kind='empty'] .hero-art [data-for~='empty'],
+.hero[data-kind='waiting'] .hero-art [data-for~='waiting'],
+.hero[data-kind='seeding'] .hero-art [data-for~='seeding'],
+.hero[data-kind='live'] .hero-art [data-for~='live'],
+.hero[data-kind='offline'] .hero-art [data-for~='offline'] { display: inline; }
+.hero[data-kind='live'] .ha-stars, .hero[data-kind='seeding'] .ha-stars { opacity: 0.25; }
+.hero[data-kind='offline'] .ha-halo, .hero[data-kind='waiting'] .ha-halo { opacity: 0.3; }
+.ha-tracers, .ha-flash, .ha-smoke, .ha-fire { transform-box: fill-box; }
+.ha-smoke { opacity: 0.35; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .ha-smoke { animation: ha-rise 5s ease-out infinite; }
+  .ha-flash { animation: ha-blink 1.6s steps(2, end) infinite; }
+  .ha-tracers { animation: ha-blink 0.9s steps(2, end) infinite; }
+  .ha-fire { animation: ha-blink 1.2s ease-in-out infinite; }
+  .ha-stars { animation: ha-blink 4s ease-in-out infinite alternate; }
+}
+@keyframes ha-rise { from { transform: translateY(6px); opacity: 0.4; } to { transform: translateY(-14px); opacity: 0; } }
+@keyframes ha-blink { 50% { opacity: 0.25; } }
+
+/* Server card art */
+.server-art {
+  margin: -24px -24px 16px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  height: 120px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--hairline);
+}
+.server-art:empty { display: none; }
+.server-art-svg { display: block; width: 100%; height: 100%; }
+.server-art[data-art='state'] .server-art-svg { opacity: 0.95; }
+@media (max-width: 899px) { .server-art { height: 96px; } }
+
+/* Play-with-us step icons */
+.step-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  color: var(--muted);
+}
+.step h3 { padding-right: 64px; }
