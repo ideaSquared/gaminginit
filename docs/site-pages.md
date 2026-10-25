@@ -95,6 +95,7 @@ What it shows:
 - A rules page (`/rules`, in the Community menu): the server rules (no cheats, exploits, team kills, dropping crates in HQ, grenade launchers,
   griefing, racism or abuse; admins have the final say). It is static. Keep it in step with the bot's welcome message
   (`WELCOME` in the bot's `lines.ts`).
+- The vote page is illustrated: each map is a card with its own scene, and each time of day and weather has an icon (`js/voteart.js`, drawn as fixed SVG, so nothing the bot sends goes into the markup). A map with no scene gets a plain one; a map named Bakurani, Ozeti or Zestafona gets its own. Cards show Leading, Winner and Your vote badges.
 - A vote page (`/vote`): the next map. People vote in Discord, with buttons on a message in one channel that the bot posts
   when a match goes live (random maps, never the one playing or one of the last few played; one vote per Discord account,
   changeable until it closes). The page shows each map's votes and share, and the time of day and weather votes under it (groups such as Morning, Day, Afternoon, Dusk, Clear, Fog, Rain and Random, when the bot has them; the circles are picked at random by the bot, not voted on), refreshed every 5 seconds, with a
