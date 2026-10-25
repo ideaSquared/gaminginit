@@ -20,15 +20,30 @@ const MEDALS = {
   3: ['#fdba74', '#c2410c', '#9a3412'],
 };
 
-// A medal for a place from 1 to 3: ribbon and disc. The number is written over it in HTML.
+// Gives a picture a name that shows on hover (a <title> child) and is read out, so an icon never has to be guessed at. Without one it stays
+// decoration (aria-hidden).
+export const describe = (node, text) => {
+  const title = node.ownerDocument.createElementNS(NS, 'title');
+  title.textContent = text;
+  node.prepend(title);
+  node.removeAttribute('aria-hidden');
+  node.setAttribute('role', 'img');
+  node.setAttribute('aria-label', text);
+  return node;
+};
+
+// A medal for a place from 1 to 3: ribbon and disc. The number is written next to it in HTML.
+const PLACES = { 1: '1st', 2: '2nd', 3: '3rd' };
+
 export const medal = (place) => {
   const [light, mid, dark] = MEDALS[place] ?? MEDALS[3];
-  return svg(
+  const node = svg(
     '0 0 24 28',
     `<path d="M6 0h5l3 10H8zM18 0h-5l-3 10h6z" fill="${dark}"/><path d="M8 0h3l2.5 8h-3z" fill="${mid}"/>
      <circle cx="12" cy="18" r="9" fill="${mid}" stroke="${dark}" stroke-width="1.5"/><circle cx="12" cy="18" r="6.5" fill="${light}" opacity=".35"/>`,
     'medal',
   );
+  return describe(node, `${PLACES[place] ?? 'Top 3'} place on the leaderboard`);
 };
 
 // The rank cell of a leaderboard row: a medal for 1st to 3rd, a plain chip for the rest. The number stays as text.
@@ -72,7 +87,9 @@ export const rankEmblem = (place) => {
     { length: chevrons },
     (_, i) => `<path d="M10 ${13 + i * 4.5}l6-3.5 6 3.5" fill="none" stroke="${light}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
   ).join('');
-  return svg('0 0 32 32', `<path d="M16 2 28 6v9c0 7.5-5 12.5-12 15C9 27.5 4 22.5 4 15V6z" fill="${dark}" stroke="${mid}" stroke-width="2"/>${marks}`, 'rank-emblem');
+  const node = svg('0 0 32 32', `<path d="M16 2 28 6v9c0 7.5-5 12.5-12 15C9 27.5 4 22.5 4 15V6z" fill="${dark}" stroke="${mid}" stroke-width="2"/>${marks}`, 'rank-emblem');
+  const named = ['Rank: not in the top 3 on the leaderboard yet', 'Gold rank: 1st on the leaderboard', 'Silver rank: 2nd on the leaderboard', 'Bronze rank: 3rd on the leaderboard'];
+  return describe(node, named[tier]);
 };
 
 const WEAPON_ICONS = {
@@ -84,6 +101,17 @@ const WEAPON_ICONS = {
   vehicle: '<path d="M4 20l2-7h14l4 3h4v4z" fill="currentColor"/><circle cx="10" cy="22" r="3" fill="currentColor" stroke="#13161b" stroke-width="1"/><circle cx="23" cy="22" r="3" fill="currentColor" stroke="#13161b" stroke-width="1"/>',
   machine: '<path d="M1 13h5l2-2h10l1 2h5v2H20l-1 6h-3l1-6H8l-2 2H1zM24 11h7v2h-7z" fill="currentColor"/>',
   barbed: '<path d="M2 16c4-8 8 8 14 0s10 8 14 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8l4 4M24 20l4 4M18 8l-3 4" stroke="currentColor" stroke-width="2"/>',
+};
+
+const WEAPON_NAMES = {
+  rifle: 'Rifle',
+  sniper: 'Sniper or marksman rifle',
+  pistol: 'Pistol',
+  explosive: 'Explosive or launcher',
+  melee: 'Melee weapon',
+  vehicle: 'Vehicle or emplaced weapon',
+  machine: 'Machine gun',
+  barbed: 'Barbed wire or buildable',
 };
 
 // Which picture a weapon gets: from the kind the bot sent first, then from its name.
@@ -103,16 +131,16 @@ export const weaponIcon = (name, kind) => {
   const key = weaponClass(name, kind);
   const node = svg('0 0 32 28', WEAPON_ICONS[key], 'weapon-icon');
   node.dataset.kind = key;
-  return node;
+  return describe(node, WEAPON_NAMES[key]);
 };
 
 // A target: rings and a bullseye, for headshots.
 export const target = () =>
-  svg(
+  describe(svg(
     '0 0 20 20',
     '<circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="1.6" fill="#ef4444"/><path d="M10 0v4M10 16v4M0 10h4M16 10h4" stroke="currentColor" stroke-width="1.5"/>',
     'target-icon',
-  );
+  ), 'Headshots: the share of this weapon\'s kills that were headshots');
 
 const TILE_ICONS = {
   players:

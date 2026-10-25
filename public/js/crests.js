@@ -31,5 +31,14 @@ export const crest = (name) => {
   const colour = Object.entries(FACTION_HEX).find(([faction]) => sideKey(faction) === key)?.[1] ?? '#8a94a3';
   const root = new DOMParser().parseFromString(crestSource(key, colour), 'image/svg+xml').documentElement;
   root.setAttribute('class', 'crest');
-  return document.importNode(root, true);
+  const node = document.importNode(root, true);
+  // The team's name on hover; the name is also written beside it, so this only repeats it for the picture.
+  const label = hasCrest(name) ? `${Object.keys(FACTION_HEX).find((f) => sideKey(f) === key)} crest` : 'Team crest';
+  const title = document.createElementNS(NS, 'title');
+  title.textContent = label;
+  node.prepend(title);
+  node.removeAttribute('aria-hidden');
+  node.setAttribute('role', 'img');
+  node.setAttribute('aria-label', label);
+  return node;
 };

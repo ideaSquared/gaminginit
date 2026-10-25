@@ -87,7 +87,7 @@ const showMissing = (title, text) => {
 const renderBadges = (ranks) => {
   let row = $('player-badges');
   if (!row) {
-    row = el('p', { className: 'player-badges', id: 'player-badges', ariaHidden: 'true' });
+    row = el('p', { className: 'player-badges', id: 'player-badges' });
     $('player-name').before(row);
   }
   const best = ranks.length > 0 ? Math.min(...ranks.map((r) => r.place)) : null;
