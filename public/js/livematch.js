@@ -14,7 +14,7 @@ import {
   WEAPON_KINDS,
 } from './format.js';
 import { demoLive } from './demo.js';
-import { apiUrl, startPush } from './live.js';
+import { apiUrl, demo, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
 import { scoreRows } from './votemodel.js';
 
@@ -79,13 +79,15 @@ let closeScore = 0;
 const VOTE_MS = 15_000;
 const loadCloseScore = async () => {
   const url = apiUrl('/api/vote');
-  if (url === '' || document.hidden) return;
+  // ?demo shows a sample match, so a real vote's target must not be put on it.
+  if (url === '' || document.hidden || demo) return;
   try {
     const response = await fetch(url, { headers: { accept: 'application/json' } });
     const vote = response.ok ? (await response.json()).vote : null;
     closeScore = vote?.open && Date.now() < vote.closesAt ? vote.closeScore : 0;
   } catch {
-    // The bars keep to the leader.
+    // With no word on the vote the bars go back to the leader, rather than keep a target that may be over.
+    closeScore = 0;
   }
   if (snapshot) renderBoard(snapshot);
 };
@@ -113,7 +115,7 @@ const renderBoard = (latest) => {
       return el(
         'div',
         { className: 'live-board-team' },
-        el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
+        el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 && r.score > (rows[1]?.score ?? 0) ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
         el('p', { className: 'live-board-score', textContent: String(r.score) }),
         el('span', { className: 'live-board-bar' }, fill),
         closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `of ${closeScore} to close the map vote` }) : null,
