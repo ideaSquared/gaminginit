@@ -3524,12 +3524,55 @@ html.story-open {
 
 .player-ban {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 12px;
+  align-items: flex-start;
+  gap: 14px;
   margin-top: 20px;
-  padding: 12px 16px;
-  border-left: 3px solid var(--critical);
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--critical) 18%, var(--surface));
+  border: 1px solid var(--critical);
+  border-left-width: 6px;
+}
+
+.ban-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--critical);
+  color: #fff;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ban-text p {
+  margin: 0;
+}
+
+.ban-title {
+  color: color-mix(in srgb, var(--critical) 55%, white);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ban-until {
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.ban-reason {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.ban-label {
+  margin-right: 8px;
+  color: color-mix(in srgb, var(--critical) 55%, white);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .player-ban[hidden],
