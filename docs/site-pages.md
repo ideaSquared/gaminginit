@@ -80,9 +80,10 @@ What it shows:
   and sides; a calendar of their days on the server with streaks; kills in each of their last 20 matches; and their
   recent matches with the result, every side's score and their place on the scoreboard. Sides are named in their
   colour in game, from the bot's match records, lightened where needed so they read on the dark cards. Under their
-  name, chips show whether they are in game or have seeder VIP, and the leaderboard places they hold in the top 10,
+  name, chips show whether they are in game, banned or have seeder VIP, and the leaderboard places they hold in the top 10,
   under a label saying they are for the last 30 days, whichever period is chosen. Tables too wide for a small screen
-  scroll inside their card.
+  scroll inside their card. A banned player's page has a notice with the ban's reason (or "No reason given") and, for a
+  timed ban, when it ends; it never says who banned them.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
 - Private profiles: a player staff made private (the bot's `/private add`, or Make a profile private on Moderation)
