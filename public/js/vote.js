@@ -5,7 +5,7 @@ import { canVote, choiceIn, errorText, voteOffer } from './accountmodel.js';
 import { askBot, configured, loadPlayerToken, signInHref, takeResult } from './accountsession.js';
 import { mapKey } from './format.js';
 import { el, setText } from './views.js';
-import { share, statusText, winnerOf } from './votemodel.js';
+import { countdown, share, statusText, winnerOf } from './votemodel.js';
 import { conditionIcon, mapArt } from './voteart.js';
 
 // The next-map vote page. Members vote with buttons in a Discord channel (see the bot's mapvote.ts); this page shows the
@@ -167,12 +167,22 @@ const loadAccount = async () => {
 // only changes its words.
 let wasOpen = null;
 
+// The clock under the status: the time left until the vote closes at the latest. Hidden once it is over.
+const updateTimer = (now) => {
+  const open = vote !== null && vote.open && now < vote.closesAt;
+  $('vote-timer').hidden = !open;
+  if (!open) return;
+  setText($('vote-timer-time'), countdown(vote.closesAt, now));
+  $('vote-timer').toggleAttribute('data-low', vote.closesAt - now < 60_000);
+};
+
 const render = () => {
   const now = Date.now();
   const open = vote !== null && vote.open && now < vote.closesAt;
   wasOpen = open;
   const status = loaded ? statusText(vote, now) : 'Loading the vote…';
   setText($('vote-status'), status);
+  updateTimer(now);
   if (loaded) {
     const phase = vote === null ? 'none' : open ? `open:${vote.id}` : `over:${vote.id}:${vote.winner?.map ?? ''}:${vote.pending}`;
     if (phase !== announced) {
@@ -242,7 +252,10 @@ if (voteUrl === '') {
     if (document.hidden || !loaded) return;
     const now = Date.now();
     if ((vote !== null && vote.open && now < vote.closesAt) !== wasOpen) render();
-    else setText($('vote-status'), statusText(vote, now));
+    else {
+      setText($('vote-status'), statusText(vote, now));
+      updateTimer(now);
+    }
   }, 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) load();

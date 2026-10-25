@@ -123,6 +123,13 @@
           <div class="card vote-card" id="vote">
             <p class="visually-hidden" id="vote-announce" role="status"></p>
             <p class="vote-status" id="vote-status">Loading the vote…</p>
+            <!-- Time left until the vote closes at the latest; the score can close it sooner. Not read out: it changes every second. -->
+            <p class="vote-timer" id="vote-timer" aria-hidden="true" hidden>
+              <svg class="vote-timer-icon" viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2" /><path d="M12 9v4l3 2M9 2h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              <span class="vote-timer-label">Closes in</span>
+              <span class="vote-timer-time" id="vote-timer-time">0:00</span>
+              <span class="vote-timer-note">at the latest, sooner if a team reaches the close score</span>
+            </p>
             <div class="vote-options" id="vote-options"></div>
             <!-- The time of day and weather votes, when the bot has them. See vote.js. -->
             <div class="vote-conditions" id="vote-conditions" hidden>
