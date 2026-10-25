@@ -128,13 +128,15 @@
 .weapon-picture {
   flex: none;
   align-self: center;
-  box-sizing: content-box;
-  width: 64px;
-  height: 24px;
-  padding: 3px 5px;
+  box-sizing: border-box;
+  width: 76px;
+  height: 30px;
+  padding: 3px 6px;
   object-fit: contain;
-  /* The pictures are dark grey guns on transparent, so they sit on a light tile, like a loadout card. */
-  background: linear-gradient(180deg, #dfe4ea, #b4bcc6);
+  /* A dark slot, like a loadout screen, so the pictures belong to the page. The guns are dark grey, so the files are
+     lifted, and a teal glow behind each gives their edges something to stand against. */
+  background: radial-gradient(ellipse at 50% 60%, rgba(79, 214, 204, 0.22), rgba(79, 214, 204, 0) 70%), var(--surface-2);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
 }
 
