@@ -92,15 +92,15 @@ const loadCloseScore = async () => {
   if (snapshot) renderBoard(snapshot);
 };
 
-// A card per team: its score, and a bar. With a vote open the bar goes towards the score that closes it; otherwise it is
-// how far the team is from the leader.
+// A card per team: its score out of the winning score, as a bar. While a map vote is open a tick on the bar marks the score
+// that closes it.
+const SCORE_TO_WIN = 100;
 let boardShown = '';
 const renderBoard = (latest) => {
   const box = $('live-board');
   const state = liveState(latest, Date.now());
   const scores = latest?.match?.result?.factionScores ?? (latest?.server && state !== 'offline' ? latest.server.factionScores : []);
-  const top = Math.max(1, ...scores.map((t) => t.score));
-  const rows = closeScore > 0 ? scoreRows(scores, closeScore) : [...scores].sort((a, b) => b.score - a.score).map((t) => ({ ...t, percent: Math.round((t.score / top) * 100) }));
+  const rows = [...scores].sort((a, b) => b.score - a.score);
   box.hidden = rows.length === 0 || state === 'loading' || state === 'offline' || state === 'empty';
   const key = `${closeScore}:${rows.map((r) => `${r.name}=${r.score}`).join(',')}`;
   if (key === boardShown) return;
@@ -109,16 +109,18 @@ const renderBoard = (latest) => {
   box.replaceChildren(
     ...rows.map((r, i) => {
       const fill = el('span', { className: 'live-board-fill' });
-      fill.style.width = `${r.percent}%`;
+      fill.style.width = `${Math.min(100, Math.round((r.score / SCORE_TO_WIN) * 100))}%`;
       const colour = palette.get(sideKey(r.name));
       if (colour) fill.style.background = colour;
+      const tick = closeScore > 0 ? el('span', { className: 'live-board-tick' }) : null;
+      if (tick) tick.style.left = `${Math.min(100, (closeScore / SCORE_TO_WIN) * 100)}%`;
       return el(
         'div',
         { className: 'live-board-team' },
         el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 && r.score > (rows[1]?.score ?? 0) ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
-        el('p', { className: 'live-board-score', textContent: String(r.score) }),
-        el('span', { className: 'live-board-bar' }, fill),
-        closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `of ${closeScore} to close the map vote` }) : null,
+        el('p', { className: 'live-board-score' }, String(r.score), el('span', { className: 'live-board-of', textContent: ` / ${SCORE_TO_WIN}` })),
+        el('span', { className: 'live-board-bar' }, fill, tick),
+        closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `Map vote closes at ${closeScore}` }) : null,
       );
     }),
   );
