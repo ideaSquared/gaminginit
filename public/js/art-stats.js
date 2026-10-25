@@ -127,11 +127,32 @@ export const weaponClass = (name, kind) => {
   return 'rifle';
 };
 
+// Weapons with a picture of the gun itself in img/weapons, named by the weapon's name in lower case with dashes.
+const WEAPON_PICTURES = new Set([
+  '9k333-verba', 'a-91', 'ak74', 'amp-9', 'amr-50', 'bmr-308', 'bushmaster-m17s', 'compound-bow', 'deagle', 'fal', 'galil',
+  'ggx-17', 'ggx-18', 'judge', 'kh-2002', 'm14', 'm1911', 'm249-saw', 'm4', 'm500', 'maaws', 'mgl-40', 'mk22', 'mosin-nagant', 'mp43',
+  'mp5', 'pkm', 'pp-19-bizon', 'pp-19-vityaz', 'rpg-7', 'scout-rifle-td', 'sks', 'super-45', 'sv98', 'svd', 't-21', 'tcx-spr',
+]);
+
+// The gun's own picture, or the drawing for its type when there is none.
 export const weaponIcon = (name, kind) => {
+  const slug = String(name ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+  if (kind === 'weapon' && WEAPON_PICTURES.has(slug)) {
+    return el('img', { className: 'weapon-picture', src: `img/weapons/${slug}.webp`, alt: '', title: name, loading: 'lazy', decoding: 'async' });
+  }
   const key = weaponClass(name, kind);
   const node = svg('0 0 32 28', WEAPON_ICONS[key], 'weapon-icon');
   node.dataset.kind = key;
   return describe(node, WEAPON_NAMES[key]);
+};
+
+// A weapon picture beside each weapon's name in a weapons table, whose rows are `top` in order.
+export const weaponIcons = (table, top) => {
+  table.querySelectorAll('tbody tr').forEach((tr, i) => {
+    const name = tr.querySelector('.weapon-name');
+    if (name && top[i]) name.prepend(weaponIcon(top[i].name, top[i].kind));
+  });
+  return table;
 };
 
 // A target: rings and a bullseye, for headshots.

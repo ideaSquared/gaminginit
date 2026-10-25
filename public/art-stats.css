@@ -125,6 +125,29 @@
   color: var(--accent);
 }
 
+.weapon-picture {
+  flex: none;
+  align-self: center;
+  box-sizing: border-box;
+  width: 76px;
+  height: 30px;
+  padding: 3px 6px;
+  object-fit: contain;
+  /* A dark slot, like a loadout screen, so the pictures belong to the page. The guns are dark grey, so the files are
+     lifted, and a teal glow behind each gives their edges something to stand against. */
+  background: radial-gradient(ellipse at 50% 60%, rgba(79, 214, 204, 0.22), rgba(79, 214, 204, 0) 70%), var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+/* In the live kill feed's pill: smaller, so a row stays as tall as it was. */
+.kill-weapon .weapon-picture {
+  width: 52px;
+  height: 20px;
+  padding: 2px 4px;
+  align-self: center;
+}
+
 .weapon-icon[data-kind='vehicle'] {
   color: var(--text-2);
 }

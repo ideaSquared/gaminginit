@@ -39,6 +39,7 @@ import {
 } from './views.js';
 import { playerSeason, playerStory, seasonStory } from './wrapped.js';
 import { decorateSeason } from './art-season.js';
+import { weaponIcons } from './art-stats.js';
 
 // The season page: the roundup of a whole game season, from the bot's /api/season. The bot only sends it once the season
 // is over; until then it sends when the season ends, and the page counts down to it. Staff signed in on the staff pages
@@ -358,7 +359,7 @@ const renderWeapons = (r) => {
   $('weapons-longest-sub').replaceChildren(...(longest ? [longestHolder(longest), ` with the ${longest.weapon}`] : []));
   const root = $('weapons-list');
   if (weapons.top.length === 0) message(root, 'No kills recorded this season.');
-  else root.replaceChildren(weaponsTable(weapons.top));
+  else root.replaceChildren(weaponIcons(weaponsTable(weapons.top), weapons.top));
 };
 
 // The matches and days to remember: the biggest win, the closest finish, the quickest win, the longest match, the map
