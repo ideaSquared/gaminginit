@@ -1,0 +1,261 @@
+/* Illustrations for the season roundup and the vote page (see js/art-season.js). */
+
+/* Header banner */
+.season-banner {
+  margin: 12px 0 18px;
+  height: 120px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+
+.season-banner-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Crests */
+.crest {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+  margin-right: 0.45em;
+  vertical-align: -0.28em;
+}
+
+.crest-big {
+  width: 72px;
+  height: 72px;
+  margin: 0;
+}
+
+.crest-lg {
+  width: 1.8em;
+  height: 1.8em;
+  margin: 0 0 0 0.5em;
+  vertical-align: -0.4em;
+}
+
+.art-medal {
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+}
+
+h3 > .art-medal {
+  margin-right: 0.4em;
+  vertical-align: -0.3em;
+}
+
+/* Team of the season */
+.team-of-season {
+  position: relative;
+}
+
+.tos-art {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tos-trophy {
+  width: 84px;
+  height: 84px;
+}
+
+@media (max-width: 640px) {
+  .tos-art {
+    top: 14px;
+    right: 14px;
+    transform: none;
+    opacity: 0.55;
+  }
+
+  .tos-art .crest-big,
+  .tos-trophy {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Podium */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.podium-step {
+  display: flex;
+  flex: 0 1 96px;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.podium-crest {
+  width: 40px;
+  height: 40px;
+  margin: 0 0 6px;
+}
+
+.podium-block {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding-top: 6px;
+  background: linear-gradient(var(--surface-2), var(--surface));
+  border: 1px solid var(--axis);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+}
+
+.podium-1 .podium-block {
+  height: 76px;
+  border-top: 3px solid #fab219;
+}
+
+.podium-2 .podium-block {
+  height: 54px;
+  border-top: 3px solid #cbd5e1;
+}
+
+.podium-3 .podium-block {
+  height: 40px;
+  border-top: 3px solid #d08a4e;
+}
+
+.podium .art-medal {
+  width: 30px;
+  height: 30px;
+}
+
+/* Awards, shout-outs and moments */
+.award.has-art,
+.shout.has-art,
+.moment.has-art {
+  position: relative;
+  padding-left: 66px;
+}
+
+.has-art > .art-glyph {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  padding: 5px;
+  color: var(--accent);
+  background: var(--surface-2);
+  border-radius: 50%;
+}
+
+.award-trophy {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 30px;
+  height: 30px;
+  opacity: 0.85;
+}
+
+.award.has-art {
+  padding-bottom: 20px;
+}
+
+.season-next.has-art {
+  position: relative;
+  padding-left: 24px;
+}
+
+.season-next.has-art > .next-trophy {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 8px;
+}
+
+/* Vote page: the hero panel's tint follows the time of day with the most votes. */
+.vote-hero {
+  transition: background 0.8s ease;
+}
+
+.vote-hero[data-time='morning'] {
+  background: radial-gradient(120% 140% at 0% 100%, rgba(251, 146, 60, 0.22), transparent 62%), var(--surface);
+}
+
+.vote-hero[data-time='day'] {
+  background: radial-gradient(120% 140% at 100% 0%, rgba(250, 204, 21, 0.16), transparent 62%), var(--surface);
+}
+
+.vote-hero[data-time='afternoon'] {
+  background: radial-gradient(120% 140% at 100% 0%, rgba(245, 158, 11, 0.2), transparent 62%), var(--surface);
+}
+
+.vote-hero[data-time='dusk'] {
+  background: radial-gradient(120% 140% at 50% 100%, rgba(232, 121, 249, 0.2), transparent 62%), var(--surface);
+}
+
+.vote-hero[data-time='night'] {
+  background: radial-gradient(120% 140% at 100% 0%, rgba(99, 102, 241, 0.24), transparent 62%), var(--surface);
+}
+
+/* Vote page: a confetti burst over the winning card. */
+.vote-option[data-winner] {
+  position: relative;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 7px;
+  height: 11px;
+  background: var(--c);
+  border-radius: 1px;
+  opacity: 0;
+  animation: confetti-pop 1.9s cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay) forwards;
+}
+
+@keyframes confetti-pop {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 90px)) rotate(var(--r));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vote-hero {
+    transition: none;
+  }
+
+  .confetti {
+    display: none;
+  }
+}

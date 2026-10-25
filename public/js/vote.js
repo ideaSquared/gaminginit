@@ -7,6 +7,7 @@ import { mapKey } from './format.js';
 import { el, setText } from './views.js';
 import { countdown, scoreRows, share, statusText, winnerOf } from './votemodel.js';
 import { conditionIcon, mapArt } from './voteart.js';
+import { celebrate, heroTint } from './art-season.js';
 
 // The next-map vote page. Members vote with buttons in a Discord channel (see the bot's mapvote.ts); this page shows the
 // same counts from GET /api/vote, refreshes them, and sends people to the channel. A player signed in with Discord (see
@@ -242,6 +243,8 @@ const render = () => {
     syncRows($(`${section}-list`), rowsFor(items, kind, items.reduce((sum, c) => sum + c.votes, 0), voting));
   }
   renderSignIn(open);
+  heroTint(vote);
+  celebrate(vote, now);
   setText($('vote-reply'), reply);
   // The way in: the channel when the bot knows it, else the community's Discord invite already on every page.
   const link = $('vote-discord');
