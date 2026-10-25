@@ -8867,8 +8867,11 @@ button.vote-option:disabled {
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.vote-option-map {
+.vote-option-map:not([data-map]) {
   --map: var(--series);
+}
+
+.vote-option-map {
   padding: 0;
   gap: 0 12px;
   border-radius: 12px;
@@ -8969,7 +8972,7 @@ button.vote-option:hover:not(:disabled) {
   content: 'Winner';
   right: 8px;
   background: var(--good);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 .vote-option[data-mine]::before {
