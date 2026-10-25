@@ -128,10 +128,14 @@
 .weapon-picture {
   flex: none;
   align-self: center;
-  width: 54px;
-  height: 21px;
+  box-sizing: content-box;
+  width: 64px;
+  height: 24px;
+  padding: 3px 5px;
   object-fit: contain;
-  object-position: left center;
+  /* The pictures are dark grey guns on transparent, so they sit on a light tile, like a loadout card. */
+  background: linear-gradient(180deg, #dfe4ea, #b4bcc6);
+  border-radius: 6px;
 }
 
 .weapon-icon[data-kind='vehicle'] {
