@@ -44,3 +44,10 @@ export const whenText = (at, now) => daysAgo(utcDay(at), utcDay(now));
 
 // How wide a warnings bar is, as a percentage of the most warned player's.
 export const barWidth = (warnings, most) => (most <= 0 ? 0 : Math.max(4, Math.round((warnings / most) * 100)));
+
+// The bot sends this many of the latest kicked and banned at most.
+export const REMOVED_SHOWN = 60;
+
+// What an empty list says. When the bot sent as many as it ever does, older ones may have been left off, so it only says
+// there are none among these.
+export const emptyGroupText = (sent) => (sent >= REMOVED_SHOWN ? `Nobody in the latest ${REMOVED_SHOWN}.` : 'Nobody. Keep it up.');

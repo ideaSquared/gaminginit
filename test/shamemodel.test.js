@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { barWidth, removedGroups, removedNotes, shameTiles, teamKillTitle, whenText } from '../public/js/shamemodel.js';
+import { barWidth, emptyGroupText, REMOVED_SHOWN, removedGroups, removedNotes, shameTiles, teamKillTitle, whenText } from '../public/js/shamemodel.js';
 
 const NOW = Date.UTC(2026, 9, 25, 12);
 const HOUR = 3_600_000;
@@ -70,5 +70,12 @@ describe('barWidth', () => {
     assert.equal(barWidth(7, 14), 50);
     assert.equal(barWidth(1, 100), 4);
     assert.equal(barWidth(3, 0), 0);
+  });
+});
+
+describe('emptyGroupText', () => {
+  it('only claims nobody when the bot sent everything', () => {
+    assert.equal(emptyGroupText(5), 'Nobody. Keep it up.');
+    assert.equal(emptyGroupText(REMOVED_SHOWN), 'Nobody in the latest 60.');
   });
 });

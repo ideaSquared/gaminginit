@@ -1,7 +1,7 @@
 import { banner, OUTCOME_ICONS, shameIcon, shameMedal, TILE_ICONS } from './art-shame.js';
 import { demoShame } from './demo.js';
 import { apiUrl, startLive } from './live.js';
-import { barWidth, removedGroups, removedNotes, shameTiles, teamKillTitle, whenText } from './shamemodel.js';
+import { barWidth, emptyGroupText, removedGroups, removedNotes, shameTiles, teamKillTitle, whenText } from './shamemodel.js';
 import { el, playerName } from './views.js';
 
 // The hall of shame: who has been warned most for team killing, and who was kicked or banned.
@@ -53,10 +53,10 @@ const renderRemoved = (shame, now) => {
         el('h2', { className: 'panel-title shame-heading' }, shameIcon(OUTCOME_ICONS[group.outcome]), `${group.heading} (${group.players.length})`),
         el('p', { className: 'section-note', textContent: group.note }),
         group.players.length === 0
-          ? el('p', { className: 'shame-empty' }, shameIcon('halo', 'art-glyph'), 'Nobody. Keep it up.')
+          ? el('p', { className: 'shame-empty' }, shameIcon('halo', 'art-glyph'), emptyGroupText(shame.removed.length))
           : el(
               'div',
-              { className: 'table-scroll-x' },
+              { className: 'table-wrap' },
               el(
                 'table',
                 { className: 'players-table directory-table shame-table' },
