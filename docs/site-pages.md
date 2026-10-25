@@ -90,7 +90,7 @@ What it shows:
   of "Kicked, then banned" (kicked first, then banned later), "Banned" and "Kicked", newest first, with a note when a ban
   was lifted or they also had team kill warnings. Four totals sit at the top. The warnings are the bot's automatic team
   kill warnings and staff warnings that mention team killing, from the moderation log, which keeps each player's latest
-  50 entries. It never shows reasons, who did it or Steam IDs, and leaves out staff and private profiles. Names link
+  50 entries. It never shows reasons, who did it or Steam IDs, and leaves out private profiles. Staff are on it like anyone else. Names link
   to player pages for players seen in the last 90 days.
 - A players page (`/players`): who is in game now, and everyone seen in the last 90 days, with a search box to find a
   player's page. Players are known by an id the bot makes, never their Steam ID.
