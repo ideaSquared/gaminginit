@@ -84,7 +84,7 @@ What it shows:
   under a label saying they are for the last 30 days, whichever period is chosen. Tables too wide for a small screen
   scroll inside their card. A banned player's page has a notice with the ban's reason (or "No reason given") and, for a
   timed ban, when it ends; it never says who banned them.
-- A hall of shame (`/shame`, under Players in the menu), a bit of fun with the facts straight: the players warned at
+- A hall of shame (`/shame`, in the top menu), a bit of fun with the facts straight: the players warned at
   least 3 times for team killing, most first, each with a silly title for how many ("Friendly fire apprentice" up to
   "Honorary enemy combatant"), a bar and when they were last warned; and everyone who was kicked or banned, in lists
   of "Kicked, then banned" (kicked first, then banned later), "Banned" and "Kicked", newest first, with a note when a ban
