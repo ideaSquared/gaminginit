@@ -1,6 +1,7 @@
 import { BOARDS, boardRows, compact, metres, percent, utcDay } from './format.js';
 import { decorateRanks, watchArt, weaponIcon } from './art-stats.js';
-import { startLive } from './live.js';
+import { demoLive } from './demo.js';
+import { apiUrl, demo, startLive } from './live.js';
 import { boardTable, el, longestHolder, setText, weaponsTable } from './views.js';
 
 // The leaderboard page: the top players over the last 30 days, and the weapons with the most kills.
@@ -25,7 +26,32 @@ const withIcons = (table, top) => {
   return table;
 };
 
+// Players on a kill streak right now: the match highlights come from the live match (/api/live), not from the stats the rest of the page
+// reads, so they are asked for separately. The boards are drawn again when who is on fire changes.
+let fire = new Set();
+let latestStats = null;
+const FIRE_MS = 15_000;
+
+const loadFire = async () => {
+  let live = null;
+  if (demo) live = demoLive(Date.now());
+  else if (apiUrl('live') !== '') {
+    try {
+      const response = await fetch(apiUrl('live'), { headers: { accept: 'application/json' } });
+      live = response.ok ? await response.json() : null;
+    } catch {
+      // No live feed now: nobody is shown on fire, rather than keeping the last answer.
+      live = null;
+    }
+  }
+  const next = new Set((live?.match?.highlights?.onFire ?? []).map((f) => f.player?.id).filter(Boolean));
+  if (next.size === fire.size && [...next].every((id) => fire.has(id))) return;
+  fire = next;
+  if (latestStats) renderLeaderboard(latestStats);
+};
+
 const renderLeaderboard = (stats) => {
+  latestStats = stats;
   const root = $('boards');
   const leaderboard = stats?.leaderboard;
   if (!leaderboard) {
@@ -33,8 +59,6 @@ const renderLeaderboard = (stats) => {
     root.replaceChildren(el('p', { className: 'muted', textContent: message }));
     return;
   }
-  // Players on a kill streak right now, when the bot says so.
-  const fire = new Set((stats.match?.highlights?.onFire ?? []).map((f) => f.player?.id).filter(Boolean));
   setText($('leaderboard-note'), `The last ${leaderboard.days} days on our server (UTC days).`);
   root.replaceChildren(
     ...BOARDS.map((board) => {
@@ -85,3 +109,7 @@ startLive((stats) => {
 });
 
 watchArt();
+loadFire();
+setInterval(() => {
+  if (!document.hidden) loadFire();
+}, FIRE_MS);
