@@ -14,8 +14,9 @@ import {
   WEAPON_KINDS,
 } from './format.js';
 import { demoLive } from './demo.js';
-import { apiUrl, startPush } from './live.js';
+import { apiUrl, demo, startPush } from './live.js';
 import { el, playerHref, playersTable, setText } from './views.js';
+import { scoreRows } from './votemodel.js';
 
 // The live page: the match on now, pushed by the bot as it happens. The kill feed, players, weapons and highlights
 // come from the game's kill feed, and so does where the match is (about to start, being played, over) and, once it
@@ -71,6 +72,58 @@ const scoreLine = (scores, palette) => {
     return [sideName(a.name, palette), el('strong', { textContent: `${a.score} – ${b.score}` }), sideName(b.name, palette)];
   }
   return scores.flatMap((s, i) => [i > 0 ? el('span', { className: 'muted', textContent: '·' }) : null, sideName(s.name, palette), el('strong', { textContent: String(s.score) })]).filter(Boolean);
+};
+
+// The score that closes the open map vote, or 0: the bars on the scoreboard go towards it. Asked of the bot now and then.
+let closeScore = 0;
+const VOTE_MS = 15_000;
+const loadCloseScore = async () => {
+  const url = apiUrl('/api/vote');
+  // ?demo shows a sample match, so a real vote's target must not be put on it.
+  if (url === '' || document.hidden || demo) return;
+  try {
+    const response = await fetch(url, { headers: { accept: 'application/json' } });
+    const vote = response.ok ? (await response.json()).vote : null;
+    closeScore = vote?.open && Date.now() < vote.closesAt ? vote.closeScore : 0;
+  } catch {
+    // With no word on the vote the bars go back to the leader, rather than keep a target that may be over.
+    closeScore = 0;
+  }
+  if (snapshot) renderBoard(snapshot);
+};
+
+// A card per team: its score out of the winning score, as a bar. While a map vote is open a tick on the bar marks the score
+// that closes it.
+const SCORE_TO_WIN = 100;
+let boardShown = '';
+const renderBoard = (latest) => {
+  const box = $('live-board');
+  const state = liveState(latest, Date.now());
+  const scores = latest?.match?.result?.factionScores ?? (latest?.server && state !== 'offline' ? latest.server.factionScores : []);
+  const rows = [...scores].sort((a, b) => b.score - a.score);
+  box.hidden = rows.length === 0 || state === 'loading' || state === 'offline' || state === 'empty';
+  const key = `${closeScore}:${rows.map((r) => `${r.name}=${r.score}`).join(',')}`;
+  if (key === boardShown) return;
+  boardShown = key;
+  const palette = colours();
+  box.replaceChildren(
+    ...rows.map((r, i) => {
+      const fill = el('span', { className: 'live-board-fill' });
+      fill.style.width = `${Math.min(100, Math.round((r.score / SCORE_TO_WIN) * 100))}%`;
+      const colour = palette.get(sideKey(r.name));
+      if (colour) fill.style.background = colour;
+      const tick = closeScore > 0 ? el('span', { className: 'live-board-tick' }) : null;
+      if (tick) tick.style.left = `${Math.min(100, (closeScore / SCORE_TO_WIN) * 100)}%`;
+      return el(
+        'div',
+        { className: 'live-board-team' },
+        el('p', { className: 'live-board-name' }, sideName(r.name, palette), i === 0 && r.score > 0 && r.score > (rows[1]?.score ?? 0) ? el('span', { className: 'badge', textContent: 'Leading' }) : null),
+        el('p', { className: 'live-board-score' }, String(r.score), el('span', { className: 'live-board-of', textContent: ` / ${SCORE_TO_WIN}` })),
+        el('span', { className: 'live-board-bar' }, fill, tick),
+        closeScore > 0 ? el('p', { className: 'live-board-note', textContent: `Map vote closes at ${closeScore}` }) : null,
+      );
+    }),
+  );
 };
 
 const tile = (label, value, ...sub) =>
@@ -263,6 +316,7 @@ const render = (latest) => {
   // Once the game says the match is over, its final score; until then, the score at the bot's last check.
   const scores = snapshot?.match?.result?.factionScores ?? (server && state !== 'offline' ? server.factionScores : []);
   $('live-score').replaceChildren(...(scores.length > 0 ? scoreLine(scores, palette) : []));
+  renderBoard(snapshot);
   document.title = server?.map && state !== 'offline' ? `Live: ${server.map} | gaminginit WARDOGS server` : 'Live match | gaminginit WARDOGS server';
 
   const idle = IDLE[state];
@@ -324,3 +378,6 @@ startPush(render, { url: apiUrl('live'), socket: 'live/socket', sample: demoLive
 setInterval(() => {
   if (!document.hidden && snapshot) renderMeta(Date.now());
 }, 5_000);
+
+loadCloseScore();
+setInterval(loadCloseScore, VOTE_MS);

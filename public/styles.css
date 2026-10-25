@@ -9104,3 +9104,81 @@ button.vote-option:hover:not(:disabled) {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* The live page's scoreboard (see livematch.js): a card per team, with a bar. */
+.live-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.live-board[hidden] {
+  display: none;
+}
+
+.live-board-team {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+
+.live-board-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.live-board-score {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-board-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  margin-top: 4px;
+  overflow: hidden;
+  background: var(--hairline);
+  border-radius: 4px;
+}
+
+.live-board-of {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.live-board-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--text);
+}
+
+.live-board-fill {
+  display: block;
+  height: 100%;
+  background: var(--series);
+  transition: width 0.4s ease;
+}
+
+.live-board-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-board-fill {
+    transition: none;
+  }
+}

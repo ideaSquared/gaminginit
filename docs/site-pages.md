@@ -54,7 +54,7 @@ What it shows:
   table); and the closest finish and the biggest win. Teams are in their colour in game; teams without one get colours
   checked to tell apart for colour-blind readers. On the map bars each part also has its team's name (or its initial
   when it is narrow) and its count, so the colour is not the only way to tell the teams apart.
-- A live page (`/live`) for the match on now, updated as it happens: the score, the kill feed (who killed whom, with
+- A live page (`/live`) for the match on now, updated as it happens: the score (also a scoreboard of one card per team in its colour, each out of 100 with a bar, and a tick marking the score that closes the map vote while one is open), the kill feed (who killed whom, with
   what, from how far, headshots, team kills, double and triple kills, kill streaks), each player's kills, deaths and
   streak, the weapons used most, and the highlights (first blood, longest kill, best streak, who is on fire, the best
   multi-kill, most headshots and a rivalry). The longest kill counts hand-held weapons only, not lock-on anti-air
