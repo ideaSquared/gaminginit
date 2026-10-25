@@ -28,6 +28,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="art-info.css" />
     <meta name="robots" content="noindex" />
     <script type="module" src="js/account.js"></script>
     <script type="module" src="js/nav.js"></script>
@@ -117,6 +118,7 @@
 
           <!-- Not signed in. -->
           <div class="card account-card" id="signed-out" hidden>
+            <div class="account-art" id="sign-in-art"></div>
             <h2 class="account-sub">Sign in with Discord</h2>
             <p>Link the Steam account you play on, and we can tell who you are in game. It takes one click, and we never see your Discord password.</p>
             <ul class="account-perks" id="signed-out-perks"></ul>
@@ -153,6 +155,7 @@
               <div class="account-row" id="row-steam">
                 <dt>Steam account</dt>
                 <dd>
+                  <div class="steam-art" id="steam-art"></div>
                   <p id="steam-text"></p>
                   <p class="account-actions" id="steam-actions">
                     <a class="btn btn-ghost btn-small" id="link-steam" href="#">Link with Steam</a>

@@ -1,3 +1,4 @@
+import { chainArt, signInArt } from './art-info.js';
 import { demoAccount } from './demo.js';
 import { demo, keepQuery } from './live.js';
 import { errorText, joinText, perkLines, steamText, vipText } from './accountmodel.js';
@@ -35,12 +36,16 @@ const SIGNED_OUT_PERKS = [
   'Vote for the next map right on the website.',
 ];
 
+const SIGN_IN_ART = signInArt();
+const STEAM_ART = { true: chainArt(true), false: chainArt(false) };
+
 const render = () => {
   const signedIn = account !== null;
   $('signed-out').hidden = signedIn;
   $('signed-in').hidden = !signedIn;
   setText($('account-note'), signedIn ? 'What the bot knows about you, and what you can change.' : 'Sign in with Discord to link your Steam account.');
   if (!signedIn) {
+    $('sign-in-art').replaceChildren(SIGN_IN_ART);
     $('signed-out-perks').replaceChildren(...perks(SIGNED_OUT_PERKS));
     $('sign-in').href = signInHref();
     $('sign-in-join').href = signInHref({ join: true });
@@ -67,6 +72,7 @@ const render = () => {
       : 'No Steam account linked yet.',
   );
   // ?demo is a sample: it never starts a real sign-in, which would come back to a real account.
+  $('steam-art').replaceChildren(STEAM_ART[linked]);
   $('link-steam').hidden = demo;
   setText($('link-steam'), linked ? 'Link another with Steam' : 'Link with Steam');
   $('link-steam').href = steamHref();

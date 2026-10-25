@@ -1,4 +1,5 @@
 import { BOARDS, boardRows, emptyNote, phaseRanges, vipOffer } from './format.js';
+import { serverArt, vipTicketArt } from './art-info.js';
 import { startLive } from './live.js';
 import { boardTable, el, playerName, setText } from './views.js';
 
@@ -59,6 +60,15 @@ const renderVipHolders = (stats) => {
         ),
   );
 };
+
+// The server picture in each state's card, and the VIP ticket by the VIP note.
+for (const kind of ['empty', 'seeding', 'live']) {
+  const card = document.querySelector(`.phase[data-kind="${kind}"]`);
+  const art = serverArt(kind);
+  art.classList.add('phase-art');
+  card?.prepend(art);
+}
+$('seed-vip').prepend(vipTicketArt());
 
 startLive((stats) => {
   renderSeeding(stats);
