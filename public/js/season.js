@@ -38,6 +38,7 @@ import {
   weaponsTable,
 } from './views.js';
 import { playerSeason, playerStory, seasonStory } from './wrapped.js';
+import { decorateSeason } from './art-season.js';
 
 // The season page: the roundup of a whole game season, from the bot's /api/season. The bot only sends it once the season
 // is over; until then it sends when the season ends, and the page counts down to it. Staff signed in on the staff pages
@@ -534,6 +535,7 @@ const showRoundup = (page) => {
   renderAwards(r);
   renderWeapons(r);
   renderMoments(r);
+  decorateSeason(r);
   setText(
     $('review-text'),
     r.partial
