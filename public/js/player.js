@@ -28,6 +28,8 @@ import {
   WEAPON_KINDS,
   weaponTotals,
 } from './format.js';
+import { rankEmblem, target, watchArt, weaponIcon } from './art-stats.js';
+import { crest, hasCrest } from './crests.js';
 import { demoProfile } from './demo.js';
 import { apiUrl, startLive } from './live.js';
 import { el, mapTag, setText, sideName } from './views.js';
@@ -78,6 +80,20 @@ const showMissing = (title, text) => {
   setText($('player-name'), 'Player');
   $('player-chips').replaceChildren();
   setText($('player-sub'), '');
+  if ($('player-badges')) $('player-badges').hidden = true;
+};
+
+// A rank emblem for their best leaderboard place, and the crest of their team when we know it.
+const renderBadges = (ranks) => {
+  let row = $('player-badges');
+  if (!row) {
+    row = el('p', { className: 'player-badges', id: 'player-badges', ariaHidden: 'true' });
+    $('player-name').before(row);
+  }
+  const best = ranks.length > 0 ? Math.min(...ranks.map((r) => r.place)) : null;
+  const team = profile.online?.faction ?? profile.matches.find((m) => m.faction)?.faction ?? null;
+  row.replaceChildren(rankEmblem(best), ...(team && hasCrest(team) ? [crest(team)] : []));
+  row.hidden = false;
 };
 
 const renderHead = (now) => {
@@ -109,6 +125,8 @@ const renderHead = (now) => {
       ...ranks.map((rank) => el('li', { className: 'chip chip-rank', textContent: rank.text })),
     ].filter(Boolean),
   );
+
+  renderBadges(ranks);
 
   const online = profile.online;
   $('player-online').hidden = !online;
@@ -264,11 +282,11 @@ const renderWeapons = (weapons, first) => {
             el(
               'td',
               {},
-              el('span', { className: 'weapon-name' }, w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null),
+              el('span', { className: 'weapon-name' }, weaponIcon(w.name, w.kind), w.name, WEAPON_KINDS[w.kind] ? el('span', { className: 'kind-tag', textContent: WEAPON_KINDS[w.kind] }) : null),
               bar,
             ),
             el('td', { textContent: String(w.kills) }),
-            el('td', { textContent: percent(w.headshots / w.kills) }),
+            el('td', { className: 'headshot-cell' }, target(), percent(w.headshots / w.kills)),
             el('td', { textContent: w.longest === null ? '–' : metres(w.longest) }),
           );
         }),
@@ -434,3 +452,5 @@ if (/^[0-9a-f]{12}$/.test(id)) {
 } else {
   showMissing('Pick a player', 'This page shows one player’s stats. Find a player in the list of everyone who has played on our server.');
 }
+
+watchArt();
