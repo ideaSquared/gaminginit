@@ -109,7 +109,7 @@ Server's VIP.
   length, the reason) with **Confirm** (red for a kick or ban) and **Back**, so a ban is Ban, a length, Ban Vex for 3
   days and Confirm. Changing anything goes back to the button. The bot's reply shows under the form, and after the
   page loads again, the player's row says what was done ("Banned just now by Sarge").
-- **Act** on a player opens a menu: their history, only them in the kill feed, warn, kick, move to another team, ban,
+- **Act** on a player opens a menu: their history, only them in the kill feed, warn, kick, move to another team, move a clan to a team, ban,
   make their profile private, and "Checked, they're fine" or taking it back. History opens them on Players; the rest
   open their panel with that form ready. Every other command is in the command search.
 - **Reasons to pick.** Warn, Kick and Ban have buttons for the usual reasons (team killing, team vehicles, toxic chat,
@@ -242,7 +242,7 @@ Server's VIP.
   Steam ID, from the same suggestions as the commands' player lists. Every word typed must match, in any case. ↑ and ↓
   move, Enter or a click opens, Escape closes.
 - **Server**, in the staff bar: the commands for the whole server (message everyone in game, set the next map, change
-  map now, call for seeders) and the map rotations.
+  map now, call for seeders, move a clan to a team) and the map rotations.
 - A command opens its form over the page. Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
   make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
