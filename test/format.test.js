@@ -975,6 +975,22 @@ describe('admin tools', () => {
     { name: 'player', description: 'Look someone up', options: [] },
   ];
 
+  it('lists /moveclan with the player tools, after the team move', () => {
+    const tools = toolsFrom([
+      { name: 'ban', description: 'Ban (staff only)', options: [] },
+      { name: 'moveclan', description: 'Move a clan (staff only)', options: [{ type: 3, name: 'clan', required: true }, { type: 3, name: 'team', required: true }] },
+      { name: 'switchteam', description: 'Move a player (staff only)', options: [] },
+    ]);
+
+    assert.deepEqual(tools.map((t) => [t.key, t.label, t.group]), [
+      ['switchteam', 'Move to another team', 'Players'],
+      ['moveclan', 'Move a clan to a team', 'Players'],
+      ['ban', 'Ban', 'Players'],
+    ]);
+    assert.ok(!READ_ONLY_TOOLS.has('moveclan'));
+    assert.equal(asksFirst('moveclan'), true);
+  });
+
   it('makes a tool per command and per subcommand, in the page’s order, with anything new last', () => {
     const tools = toolsFrom(definitions);
 

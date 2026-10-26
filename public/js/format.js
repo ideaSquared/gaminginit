@@ -1279,6 +1279,7 @@ export const TOOL_GROUPS = [
       ['warn', 'Warn in game'],
       ['kick', 'Kick'],
       ['switchteam', 'Move to another team'],
+      ['moveclan', 'Move a clan to a team'],
       ['ban', 'Ban'],
       ['unban', 'Unban'],
       ['private:add', 'Make a profile private'],
