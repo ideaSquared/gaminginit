@@ -66,9 +66,16 @@ const dateFormat = (locale) => new Intl.DateTimeFormat(locale, { weekday: 'short
 export const when = (ms, locale) => dateFormat(locale).format(new Date(ms));
 
 // The VIP line on the account page.
-export const vipText = (vip, now, locale) => {
-  if (vip === null) return 'You have no VIP right now. Seed to earn it.';
-  const source = vip.source === 'staff' ? 'given by staff' : vip.source === 'bounty' ? 'earned by ending a kill streak' : 'earned by seeding';
+export const vipText = (vip, now, locale, coins = false) => {
+  if (vip === null) return coins ? 'You have no VIP right now. Buy some with INITcoins.' : 'You have no VIP right now. Seed to earn it.';
+  const source =
+    vip.source === 'staff'
+      ? 'given by staff'
+      : vip.source === 'bounty'
+        ? 'earned by ending a kill streak'
+        : vip.source === 'coins'
+          ? 'bought with INITcoins'
+          : 'earned by seeding';
   const days = Math.ceil((vip.until - now) / 86_400_000);
   const left = days <= 1 ? 'less than a day left' : `${days} days left`;
   return `You have VIP until ${when(vip.until, locale)} (${left}), ${source}.`;

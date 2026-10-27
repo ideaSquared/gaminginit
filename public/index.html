@@ -29,6 +29,7 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="art-home.css" />
+    <link rel="stylesheet" href="art-coins.css" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -99,6 +100,7 @@
               <ul class="nav-sub" id="nav-sub-community">
                 <li><a href="vote" data-keep-query data-vote-link><span class="nav-link-title">Map vote</span><span class="nav-link-note">Pick the next map</span><span class="nav-badge">Open</span></a></li>
                 <li><a href="seeding" data-keep-query><span class="nav-link-title">Seeding &amp; VIP</span><span class="nav-link-note">Help fill the server and earn VIP</span></a></li>
+                <li><a href="coins" data-keep-query><span class="nav-link-title">INITcoins</span><span class="nav-link-note">Earn coins, spend them on VIP</span></a></li>
                 <li><a href="rules" data-keep-query><span class="nav-link-title">Rules</span><span class="nav-link-note">How to play fair on the server</span></a></li>
                 <li><a href="season" data-keep-query><span class="nav-link-title">Season roundup</span><span class="nav-link-note">Awards, records and team of the season</span></a></li>
               </ul>
@@ -173,11 +175,11 @@
               <span class="lede-more">Everything is organised on our Discord, and the bot there tells you when the server is filling up.</span>
             </p>
             <div class="hero-notes">
-              <!-- Shown when the bot gives seeders VIP. -->
+              <!-- Shown when the bot gives seeders VIP, or pays them INITcoins. -->
               <p class="vip-cta" id="vip-cta" hidden>
-                <span class="vip-tag">Seeder VIP</span>
+                <span class="vip-tag" id="vip-cta-tag">Seeder VIP</span>
                 <span class="vip-offer" id="vip-cta-text"></span>
-                <a href="#vip">How it works</a>
+                <a href="#vip" id="vip-cta-link">How it works</a>
               </p>
               <!-- The Season 1 roundup, open since the wipe. Styled like the Seeder VIP box above. -->
               <p class="vip-cta">
@@ -251,6 +253,29 @@
                 <a href="vote" data-keep-query>How it works</a>
               </p>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- INITcoins: shown when the bot has them on. What a seed pays comes from the bot's own numbers. -->
+      <section class="section coins-cta" id="coins-cta" aria-labelledby="coins-cta-title" hidden>
+        <div class="wrap">
+          <div class="coins-cta-card">
+            <div class="coins-cta-copy">
+              <p class="coins-eyebrow"><span class="coins-eyebrow-dot" aria-hidden="true"></span>INITcoins</p>
+              <h2 id="coins-cta-title">Get paid to fill the server.</h2>
+              <p class="coins-cta-lede" id="coins-cta-lede"></p>
+              <ul class="coins-cta-points">
+                <li><strong id="cta-seed">150</strong><span>for every seed</span></li>
+                <li><strong id="cta-week">600</strong><span id="cta-week-note">buys a week of whitelist</span></li>
+                <li><strong>6</strong><span>missions a week, on top</span></li>
+              </ul>
+              <p class="coins-cta-actions">
+                <a class="btn btn-coin btn-big" id="coins-cta-shop" href="coins" data-keep-query>See the shop</a>
+                <a class="btn btn-ghost btn-big" href="coins#earn" data-keep-query>How you earn</a>
+              </p>
+            </div>
+            <div class="coins-cta-art" id="coins-cta-art" aria-hidden="true"></div>
           </div>
         </div>
       </section>
@@ -331,7 +356,7 @@
             <li class="card step step-vip" id="vip" hidden>
               <span class="step-n" aria-hidden="true">4</span>
               <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M32 54V32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M32 36c-10 0-16-6-16-16 10 0 16 6 16 16z" fill="var(--accent)"/><path d="M32 30c0-9 6-15 16-15 0 9-6 15-16 15z" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 54h28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-              <h3>Seed and get VIP</h3>
+              <h3 id="vip-step-title">Seed and get VIP</h3>
               <p><strong id="vip-step-offer"></strong></p>
               <p id="vip-step-detail"></p>
             </li>

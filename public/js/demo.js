@@ -119,8 +119,10 @@ export const demoStats = (now) => {
     leaderboard: leaderboard(),
     recentSeeders: recentSeeders(),
     weapons: weapons(now),
-    vip: { seedDays: 3, seedMinutes: 10, windowDays: 7, lengthDays: 7 },
-    seederVip: seederVip(now),
+    // INITcoins are on, so there is no seeder VIP rule (the bot sends vip: null then) and the page says what a seed pays.
+    vip: null,
+    seederVip: null,
+    coins: { seed: 150, vipWeek: 600 },
     teams: teamBoard(now),
     // Average players in each UTC hour over the last 14 days, and the share of readings with BUSY players or more.
     hourly: {
@@ -165,10 +167,6 @@ const recentSeeders = () => {
     .sort((a, b) => b.seedDays - a.seedDays || b.seedingMinutes - a.seedingMinutes);
   return { days: 7, rows };
 };
-
-// Who has VIP from seeding: the regulars with 3 seed days or more, each with some of their week left.
-const seederVip = (now) =>
-  [6, 0, 2, 4, 8].map((i, k) => ({ id: demoId(i), name: NAMES[i], until: now + (6 - k) * DAY + 3 * HOUR }));
 
 // Thirty days of made-up results: each map's wins by team (in SIDES order) and average minutes.
 const TEAM_MAPS = [
@@ -1980,6 +1978,88 @@ export const demoPublicLifetime = () => {
           const founder = [0, 1, 3, 7].includes(i);
           return { name: p.name, id: p.id, days, hours: [96.5, 88, 71.5, 64, 58, 49.5, 41, 38.5, 22, 16.5, 11, 7.5][i], matches: days * 2, since: founder ? `2026-06-${String(22 + (i % 6)).padStart(2, '0')}` : `2026-0${7 + (i % 3)}-1${i % 9}`, founder };
         }),
+    },
+  };
+};
+
+// ---- INITcoins ----
+
+const COIN_SHOP = [
+  { id: 'vip-1', kind: 'vip', name: 'Whitelist, 1 day', price: 100 },
+  { id: 'vip-7', kind: 'vip', name: 'Whitelist, 7 days', price: 600 },
+  { id: 'title-sprout', kind: 'title', name: 'Title: Sprout', price: 300 },
+  { id: 'title-seeder', kind: 'title', name: 'Title: Seeder', price: 500 },
+  { id: 'title-grunt', kind: 'title', name: 'Title: Grunt', price: 800 },
+  { id: 'title-hound', kind: 'title', name: 'Title: Hound', price: 1500 },
+  { id: 'title-wardog', kind: 'title', name: 'Title: Wardog', price: 3000 },
+  { id: 'title-alpha', kind: 'title', name: 'Title: Alpha', price: 6000 },
+  { id: 'role-100000000000000077', kind: 'role', name: 'Discord role: Night Owl', price: 1500 },
+];
+
+const COIN_DAILY = [
+  { id: 'd-play-2', text: 'Play 2 matches', tier: 0, reward: 10, target: 2 },
+  { id: 'd-win-1', text: 'Win a match', tier: 1, reward: 15, target: 1 },
+  { id: 'd-best-12', text: 'Get 12 kills in one match', tier: 2, reward: 25, target: 12 },
+];
+const COIN_WEEKLY = [
+  { id: 'w-days-3', text: 'Play on 3 different days', tier: 0, reward: 30, target: 3 },
+  { id: 'w-win-5', text: 'Win 5 matches', tier: 1, reward: 50, target: 5 },
+  { id: 'w-seed-4', text: 'Seed the server on 4 days', tier: 2, reward: 80, target: 4 },
+];
+
+// The bot's GET /api/coins: how they work, today's missions and who has earned most.
+export const demoCoins = () => ({
+  info: {
+    rates: { seed: 150, seedMinutes: { per: 2, cap: 30 }, playMinutes: 10, match: 6, win: 6, matchesPaid: 6, activityCap: 100 },
+    prices: { vipDay: 100, vipWeek: 600, vipAheadDays: 14, reroll: 40 },
+    shop: COIN_SHOP,
+    missions: {
+      daily: COIN_DAILY.map(({ target: _target, ...m }) => m),
+      weekly: COIN_WEEKLY.map(({ target: _target, ...m }) => m),
+    },
+  },
+  leaders: [6, 0, 2, 4, 8, 1, 3].map((i, k) => ({
+    id: demoId(i),
+    name: NAMES[i],
+    earned: 9400 - k * 1150,
+    title: k === 0 ? 'Alpha' : k === 1 ? 'Wardog' : k < 4 ? 'Grunt' : null,
+  })),
+  players: 214,
+  held: 61_870,
+  earned: 188_420,
+});
+
+// A signed-in player's GET /api/account/coins for ?demo: some done, some in progress, enough for a week of whitelist.
+export const demoMyCoins = (now) => {
+  const view = (m, progress, slot, scope) => ({ ...m, progress: Math.min(progress, m.target), done: progress >= m.target, scope, slot });
+  return {
+    enabled: true,
+    linked: true,
+    coins: {
+      balance: 720,
+      earned: 1500,
+      spent: 780,
+      title: 'Grunt',
+      today: { earned: 42, cap: 100 },
+      daily: [view(COIN_DAILY[0], 2, 0, 'day'), view(COIN_DAILY[1], 0, 1, 'day'), view(COIN_DAILY[2], 7, 2, 'day')],
+      weekly: [view(COIN_WEEKLY[0], 2, 0, 'week'), view(COIN_WEEKLY[1], 3, 1, 'week'), view(COIN_WEEKLY[2], 1, 2, 'week')],
+      rerolls: { left: 3, price: 40 },
+      shop: COIN_SHOP.map((item) => ({
+        ...item,
+        owned: ['title-sprout', 'title-seeder', 'title-grunt'].includes(item.id),
+        afford: item.price <= 720 && !['title-sprout', 'title-seeder', 'title-grunt'].includes(item.id),
+        reason: item.price <= 720 ? null : `That costs ${item.price} INITcoins and you have 720.`,
+      })),
+      log: [
+        { at: now - 3_600_000, delta: 10, why: 'mission', note: 'Play 2 matches' },
+        { at: now - 4_000_000, delta: 12, why: 'win' },
+        { at: now - 4_100_000, delta: 6, why: 'match' },
+        { at: now - 30 * 3_600_000, delta: 150, why: 'seed' },
+        { at: now - 31 * 3_600_000, delta: 14, why: 'seed-time' },
+        { at: now - 3 * 86_400_000, delta: -800, why: 'buy', note: 'Title: Grunt' },
+      ],
+      vipUntil: now + 4 * 86_400_000,
+      linked: true,
     },
   };
 };

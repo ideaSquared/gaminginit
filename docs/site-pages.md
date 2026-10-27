@@ -170,6 +170,37 @@ What it shows:
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
 
+## INITcoins
+
+`/coins` (`coins.html`, `js/coins.js`, `js/coinsmodel.js`, `art-coins.css`) is the page for the bot's INITcoins: a currency
+players earn by seeding, playing and doing missions, and spend on whitelist days, titles and Discord roles. The bot does all
+the sums (its `coins.ts`, see its README, "INITcoins"); the page shows them. While the bot has them off, `/api/coins` is a 404
+and the page says they aren't on yet.
+
+- **Layout**: an opening with the page's headline, the bot's own numbers (what a seed pays, what a week of whitelist costs and
+  how many seeds that is) and the player's purse; four steps (seed, play, missions, spend); missions as cards coloured by how hard
+  they are, with a countdown to when they change; the shop as cards (whitelist with a "best value" flag for the week, titles shown
+  as they will look, roles), each with a bar for how far off it is; the ways to earn as cards; the player's last changes as a
+  timeline; and the top earners with a podium. The purse counts the balance up when it changes and has a ring for how much of
+  today's playing limit is used. Messages are toasts at the foot of the screen. Motion is off with "reduce motion".
+- **Home page**: while the bot sends `coins` in `/api/stats`, a call to action under the hero ("Get paid to fill the server") with
+  the seed pay, the week's price in seeds and buttons to the shop and to how coins are earned, and the hero's note and the "Play with
+  us" step both say what a seed pays.
+- **Public** (from `/api/coins`): how coins are earned (the bot's own rates, so the table stays right when they change), today's
+  and this week's missions, the shop with prices, and the top earners (never a private profile).
+- **Signed in with a linked Steam account** (from `/api/account/coins`): the balance, what they've earned and spent, how much
+  of today's playing limit is used, how long their whitelist has to run, each mission with a progress bar, the shop with what
+  they can afford, a picker for the title they show, and their last changes. A mission that isn't done can be swapped for
+  another of its kind for a few coins. Buying and swapping take two presses, then ask the bot (`POST /api/account/coins`), which
+  checks everything again: the page only shows what it said.
+- **Signed out, or no Steam account yet**: the public parts, and a button to sign in or to link Steam on `/account`. Coins go
+  to a player's Steam account as they earn them, linked or not.
+- A title a player buys shows on their player page and in the top earners.
+- `/account` has an INITcoins row with the balance and a link here, and says VIP "bought with INITcoins".
+- While INITcoins are on, the bot sends `vip: null` and `coins: { seed, vipWeek }` in `/api/stats`, so the home page's and the
+  seeding page's VIP boxes say what a seed pays instead, and link here.
+- `?demo` shows a signed-in sample; its buttons only change the sample.
+
 ## Player accounts
 
 A player signs in with Discord (`/account`), and the bot, not the website, does the rest: it keeps the account, links the Steam

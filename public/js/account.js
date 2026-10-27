@@ -1,7 +1,8 @@
 import { chainArt, signInArt } from './art-info.js';
-import { demoAccount } from './demo.js';
+import { demoAccount, demoMyCoins } from './demo.js';
 import { demo, keepQuery } from './live.js';
 import { errorText, joinText, perkLines, steamText, vipText } from './accountmodel.js';
+import { coinText } from './coinsmodel.js';
 import { askBot, configured, forgetPlayerToken, loadPlayerToken, signInHref, steamHref, takeResult } from './accountsession.js';
 import { el, setText } from './views.js';
 
@@ -15,6 +16,8 @@ const $ = (id) => document.getElementById(id);
 const arrived = takeResult();
 
 let account = null;
+// The player's INITcoins as the bot sent them (see coins.js), or null when they are off or not linked.
+let coins = null;
 // Two-step buttons: the first press arms it, the second does it.
 let armed = null;
 
@@ -82,7 +85,9 @@ const render = () => {
 
   // VIP, and the pages that need a Steam account.
   $('row-vip').hidden = !linked;
-  setText($('vip-text'), vipText(account.vip, Date.now()));
+  setText($('vip-text'), vipText(account.vip, Date.now(), undefined, coins !== null));
+  $('row-coins').hidden = coins === null;
+  if (coins !== null) setText($('coins-text'), `You have ${coinText(coins.balance)}. Earn them by seeding, playing and doing missions, and spend them on whitelist days.`);
   $('row-pages').hidden = !(linked && account.playerId);
   if (account.playerId) {
     $('my-player').href = keepQuery(`player?id=${account.playerId}`);
@@ -104,8 +109,10 @@ const render = () => {
 };
 
 const load = async () => {
+  coins = null;
   if (demo) {
     account = demoAccount(Date.now());
+    coins = demoMyCoins(Date.now()).coins;
     return;
   }
   if (loadPlayerToken() === null) {
@@ -115,8 +122,12 @@ const load = async () => {
   status('Loading your account…');
   const { status: code, data } = await askBot('/api/account');
   status('');
-  if (code === 200 && data !== null) account = data;
-  else {
+  if (code === 200 && data !== null) {
+    account = data;
+    // Their coins, for the line about them. Not worth a message if they can't be had: the coins page says.
+    const reply = await askBot('/api/account/coins');
+    if (reply.status === 200 && reply.data?.enabled === true && reply.data.coins) coins = reply.data.coins;
+  } else {
     account = null;
     if (code !== 401) status('Could not load your account just now. Try again in a minute.');
   }

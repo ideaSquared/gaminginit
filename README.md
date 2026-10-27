@@ -16,7 +16,8 @@ once a minute and serves them at `GET /api/stats`.
 | `/lifetime` | Lifetime stats: players so far, hours played, records, favourite maps and when we are busiest |
 | `/live` | The match on now: score, kill feed, highlights |
 | `/leaderboard`, `/players`, `/player?id=…` | Leaderboards, weapons, and every player's page |
-| `/seeding` | What seeding is, top seeders, who has seeder VIP |
+| `/seeding` | What seeding is, top seeders, who has seeder VIP (or, with INITcoins on, what a seed pays) |
+| `/coins` | INITcoins: how to earn them, today's and this week's missions, the shop (whitelist days, titles, Discord roles), the top earners, and for signed-in players their own coins and buttons to buy |
 | `/rules` | The server rules |
 | `/vote` | The next-map vote: live counts, and buttons to vote for signed-in members of the Discord (or vote in Discord itself). The winner plays next, infantry only |
 | `/account` | Players sign in with Discord, link their Steam account, join the Discord, and see their VIP. Vote for the next map from `/vote` once signed in |
@@ -44,7 +45,7 @@ named in the bot's README.
 
 ### 2. Point the site at the bot
 
-Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `lifetime.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `rules.html`, `vote.html`, `season.html` and `admin.html`) where it says so:
+Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `lifetime.html`, `matches.html`, `teams.html`, `live.html`, `leaderboard.html`, `players.html`, `player.html`, `seeding.html`, `coins.html`, `rules.html`, `vote.html`, `season.html` and `admin.html`) where it says so:
 
 | What            | Where                                                                                        |
 | --------------- | -------------------------------------------------------------------------------------------- |
