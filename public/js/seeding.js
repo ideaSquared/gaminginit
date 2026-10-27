@@ -21,6 +21,11 @@ const renderSeeding = (stats) => {
     setText($('seed-vip-text'), `${coinsOffer(stats.coins)} A week of whitelist is ${stats.coins.vipWeek}.`);
     setText($('seed-vip-link'), 'How INITcoins work');
     $('seed-vip-link').href = keepQuery('coins');
+  } else {
+    // A refresh can change which one the bot gives: put the seeder VIP wording back.
+    setText($('seed-vip-text'), 'Seeding also earns a whitelist slot.');
+    setText($('seed-vip-link'), 'How seeder VIP works');
+    $('seed-vip-link').href = keepQuery('./#vip');
   }
   if (!stats?.thresholds) return;
   const ranges = phaseRanges(stats.thresholds);

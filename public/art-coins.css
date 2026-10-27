@@ -89,6 +89,10 @@
   margin-top: 14px;
 }
 
+.coins-title-pick[hidden] {
+  display: none;
+}
+
 .coins-title-pick select {
   min-height: 40px;
   padding: 0 10px;

@@ -11,6 +11,7 @@ import {
   itemName,
   logLine,
   percent,
+  seedsForWeek,
   shopGroups,
   tierLabel,
   todayText,
@@ -32,6 +33,12 @@ let mine = null;
 // The thing whose button was pressed once: a second press does it.
 let armed = null;
 let demoView = null;
+// A buy, swap or title change is on its way to the bot: no other goes out until it answers, so a press can't be paid twice.
+let busy = false;
+// Which button's request is on its way.
+let pending = null;
+// Set when the player's coins couldn't be had and there is nothing older to show.
+let loadFailed = false;
 
 const flash = (kind, text) => {
   const box = $('coins-flash');
@@ -58,7 +65,24 @@ const loadMine = async () => {
     return;
   }
   const { status, data } = await askBot('/api/account/coins');
-  mine = status === 200 && data !== null ? data : null;
+  if (status === 200 && data !== null) {
+    mine = data;
+    loadFailed = false;
+  } else if (status === 401) {
+    // Signed out: nothing of theirs is shown.
+    mine = null;
+    loadFailed = false;
+  } else {
+    // A network error or the bot having a bad moment: keep what was last shown, and say it may be old.
+    loadFailed = mine === null;
+    if (mine !== null) flash('bad', 'We couldn’t refresh your coins just now. This is what we had a minute ago.');
+  }
+};
+
+// Keeps the keyboard where it was across a render, which replaces the buttons.
+const keyed = (node, key) => {
+  node.setAttribute('data-focus-key', key);
+  return node;
 };
 
 const meter = (value) => {
@@ -87,12 +111,16 @@ const missionItem = (m, personal) =>
             el('span', { className: 'muted', textContent: m.done ? 'Done' : `${m.progress} of ${m.target}` }),
             ...(m.scope === 'day' && !m.done && mine.coins.rerolls.left > 0
               ? [
-                  el('button', {
-                    type: 'button',
-                    className: 'btn btn-ghost btn-small',
-                    textContent: armed === `reroll:${m.slot}` ? `Press again to pay ${mine.coins.rerolls.price}` : `Swap · ${mine.coins.rerolls.price}`,
-                    onclick: () => press(`reroll:${m.slot}`, { action: 'reroll', slot: m.slot }),
-                  }),
+                  keyed(
+                    el('button', {
+                      type: 'button',
+                      className: 'btn btn-ghost btn-small',
+                      textContent: armed === `reroll:${m.slot}` ? `Press again to pay ${mine.coins.rerolls.price}` : `Swap · ${mine.coins.rerolls.price}`,
+                      disabled: busy,
+                      onclick: () => press(`reroll:${m.slot}`, { action: 'reroll', slot: m.slot }),
+                    }),
+                    `reroll:${m.slot}`,
+                  ),
                 ]
               : []),
           ),
@@ -118,6 +146,7 @@ const renderMe = () => {
   const c = mine?.coins ?? null;
   const out = !signedIn();
   $('me-out').hidden = !out;
+  $('me-error').hidden = out || mine !== null || !loadFailed;
   $('me-unlinked').hidden = out || mine === null || mine.linked;
   $('me-ready').hidden = c === null;
   $('me-sign-in').href = signInHref();
@@ -133,6 +162,7 @@ const renderMe = () => {
   const owned = c.shop.filter((item) => item.kind === 'title' && item.owned);
   $('me-title-pick').hidden = owned.length === 0;
   const select = $('me-title-select');
+  select.disabled = busy;
   select.replaceChildren(
     el('option', { value: '', textContent: 'No title' }),
     ...owned.map((item) => el('option', { value: item.id, textContent: itemName(item), selected: c.title === itemName(item) })),
@@ -164,14 +194,17 @@ const shopItem = (item, personal) => {
     el('span', { className: 'shop-price', textContent: item.price.toLocaleString('en-GB') }),
     ...(personal
       ? [
-          el('button', {
-            type: 'button',
-            className: 'btn btn-small ' + (pressable ? 'btn-coin' : 'btn-ghost'),
-            textContent: buyLabel(item, armed === `buy:${item.id}`),
-            disabled: !pressable,
-            title: pressable ? '' : (item.reason ?? ''),
-            onclick: () => press(`buy:${item.id}`, { action: 'buy', item: item.id }),
-          }),
+          keyed(
+            el('button', {
+              type: 'button',
+              className: 'btn btn-small ' + (pressable ? 'btn-coin' : 'btn-ghost'),
+              textContent: busy && armed === null && pending === `buy:${item.id}` ? 'Working…' : buyLabel(item, armed === `buy:${item.id}`),
+              disabled: !pressable || busy,
+              title: pressable ? '' : (item.reason ?? ''),
+              onclick: () => press(`buy:${item.id}`, { action: 'buy', item: item.id }),
+            }),
+            `buy:${item.id}`,
+          ),
         ]
       : []),
   );
@@ -204,7 +237,7 @@ const renderEarn = () => {
   );
   setText(
     $('earn-fine'),
-    `Playing, seeding minutes and matches pay up to ${rates.activityCap} a day between them. A week of whitelist is ${prices.vipWeek}: about 4 seeds, or 3 seeds and a few evenings of play.`,
+    `Playing, matches and seeding minutes pay up to ${rates.activityCap} a day between them; the seed itself and missions are on top. A week of whitelist is ${prices.vipWeek}${seedsForWeek(rates.seed, prices.vipWeek) === null ? '' : `, about ${seedsForWeek(rates.seed, prices.vipWeek)} seeds`}.`,
   );
   setText($('faq-ahead'), String(prices.vipAheadDays));
 };
@@ -237,6 +270,7 @@ const renderLeaders = () => {
 
 const render = () => {
   if (info === null) return;
+  const focused = document.activeElement?.getAttribute?.('data-focus-key') ?? null;
   $('coins-off').hidden = true;
   $('coins-body').hidden = false;
   renderMe();
@@ -244,10 +278,12 @@ const render = () => {
   renderShop();
   renderEarn();
   renderLeaders();
+  if (focused !== null) document.querySelector(`[data-focus-key="${CSS.escape(focused)}"]`)?.focus();
 };
 
 // A button pressed once arms itself; pressed again, it asks the bot.
 const press = async (key, body) => {
+  if (busy) return;
   if (armed !== key) {
     armed = key;
     render();
@@ -260,18 +296,26 @@ const press = async (key, body) => {
     render();
     return;
   }
-  const { status, data } = await askBot('/api/account/coins', { method: 'POST', body });
-  if (status === 200 && data?.ok) {
-    mine = { enabled: true, linked: true, coins: data.coins };
-    flash('good', data.message);
-  } else if (status === 401) {
-    mine = null;
-    flash('bad', 'You were signed out. Sign in again.');
-  } else {
-    flash('bad', data?.error ?? 'Could not do that just now. Try again in a minute.');
-    await loadMine();
-  }
+  busy = true;
+  pending = key;
   render();
+  try {
+    const { status, data } = await askBot('/api/account/coins', { method: 'POST', body });
+    if (status === 200 && data?.ok) {
+      mine = { enabled: true, linked: true, coins: data.coins };
+      flash('good', data.message);
+    } else if (status === 401) {
+      mine = null;
+      flash('bad', 'You were signed out. Sign in again.');
+    } else {
+      flash('bad', data?.error ?? 'Could not do that just now. Try again in a minute.');
+      await loadMine();
+    }
+  } finally {
+    busy = false;
+    pending = null;
+    render();
+  }
 };
 
 // ?demo: the buttons change the sample only.
@@ -295,19 +339,27 @@ const demoAct = (body) => {
   return 'Sample: title changed.';
 };
 
+$('me-title-select').setAttribute('data-focus-key', 'title');
 $('me-title-select').addEventListener('change', async (event) => {
+  if (busy) return;
   clearFlash();
   const id = event.target.value === '' ? null : event.target.value;
   if (demo) {
     flash('good', 'Sample: title changed.');
     return;
   }
-  const { status, data } = await askBot('/api/account/coins', { method: 'POST', body: { action: 'title', id } });
-  if (status === 200 && data?.ok) {
-    mine = { enabled: true, linked: true, coins: data.coins };
-    flash('good', data.message);
-  } else flash('bad', data?.error ?? 'Could not do that just now.');
+  busy = true;
   render();
+  try {
+    const { status, data } = await askBot('/api/account/coins', { method: 'POST', body: { action: 'title', id } });
+    if (status === 200 && data?.ok) {
+      mine = { enabled: true, linked: true, coins: data.coins };
+      flash('good', data.message);
+    } else flash('bad', data?.error ?? 'Could not do that just now.');
+  } finally {
+    busy = false;
+    render();
+  }
 });
 
 // Pressing anything else disarms a button.

@@ -95,5 +95,8 @@ export const whitelistText = (until, now, locale) => {
 // How much of today’s limit playing and matches have used.
 export const todayText = (today) =>
   today.earned >= today.cap
-    ? `You’ve reached today’s limit for playing (${today.cap}). Seeding and missions still pay.`
-    : `${today.earned} of ${today.cap} from playing today. Seeding and missions are on top.`;
+    ? `You’ve reached today’s limit for playing, matches and seeding time (${today.cap}). A successful seed and missions still pay.`
+    : `${today.earned} of ${today.cap} from playing, matches and seeding time today. A successful seed and missions are on top.`;
+
+// How many seeds a week of whitelist is worth, from the bot's own reward and price.
+export const seedsForWeek = (seed, vipWeek) => (seed > 0 ? Math.ceil(vipWeek / seed) : null);

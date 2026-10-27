@@ -8,6 +8,7 @@ import {
   itemName,
   logLine,
   percent,
+  seedsForWeek,
   shopGroups,
   tierLabel,
   todayText,
@@ -100,6 +101,15 @@ describe('the shop', () => {
   });
 });
 
+describe('seedsForWeek', () => {
+  it('works out the seeds from the bot’s own numbers, rounding up', () => {
+    assert.equal(seedsForWeek(150, 600), 4);
+    assert.equal(seedsForWeek(100, 600), 6);
+    assert.equal(seedsForWeek(130, 600), 5);
+    assert.equal(seedsForWeek(0, 600), null);
+  });
+});
+
 describe('whitelistText and todayText', () => {
   const now = Date.UTC(2026, 9, 27, 12);
 
@@ -111,7 +121,7 @@ describe('whitelistText and todayText', () => {
   });
 
   it('says how much of the daily limit is used', () => {
-    assert.match(todayText({ earned: 40, cap: 100 }), /40 of 100/);
+    assert.match(todayText({ earned: 40, cap: 100 }), /40 of 100 from playing, matches and seeding time/);
     assert.match(todayText({ earned: 100, cap: 100 }), /reached today’s limit/);
   });
 });
