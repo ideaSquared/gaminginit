@@ -177,6 +177,15 @@ players earn by seeding, playing and doing missions, and spend on whitelist days
 the sums (its `coins.ts`, see its README, "INITcoins"); the page shows them. While the bot has them off, `/api/coins` is a 404
 and the page says they aren't on yet.
 
+- **Layout**: an opening with the page's headline, the bot's own numbers (what a seed pays, what a week of whitelist costs and
+  how many seeds that is) and the player's purse; four steps (seed, play, missions, spend); missions as cards coloured by how hard
+  they are, with a countdown to when they change; the shop as cards (whitelist with a "best value" flag for the week, titles shown
+  as they will look, roles), each with a bar for how far off it is; the ways to earn as cards; the player's last changes as a
+  timeline; and the top earners with a podium. The purse counts the balance up when it changes and has a ring for how much of
+  today's playing limit is used. Messages are toasts at the foot of the screen. Motion is off with "reduce motion".
+- **Home page**: while the bot sends `coins` in `/api/stats`, a call to action under the hero ("Get paid to fill the server") with
+  the seed pay, the week's price in seeds and buttons to the shop and to how coins are earned, and the hero's note and the "Play with
+  us" step both say what a seed pays.
 - **Public** (from `/api/coins`): how coins are earned (the bot's own rates, so the table stays right when they change), today's
   and this week's missions, the shop with prices, and the top earners (never a private profile).
 - **Signed in with a linked Steam account** (from `/api/account/coins`): the balance, what they've earned and spent, how much

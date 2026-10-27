@@ -1,5 +1,6 @@
 import './votepeek.js';
 import { renderServerArt, setHeroKind } from './art-home.js';
+import { coinHeap } from './art-coins.js';
 import { populationChart } from './charts.js';
 import {
   BOARDS,
@@ -102,12 +103,31 @@ const renderDiscord = () => {
   );
 };
 
-// What seeding earns, when the bot gives seeders VIP.
+// The call to action under the hero, while INITcoins are on: what a seed pays and what a week of whitelist costs, from the bot.
+const renderCoinsCta = (coins) => {
+  $('coins-cta').hidden = !coins;
+  if (!coins) return;
+  const seeds = coins.seed > 0 ? Math.ceil(coins.vipWeek / coins.seed) : null;
+  setText($('cta-seed'), String(coins.seed));
+  setText($('cta-week'), String(coins.vipWeek));
+  setText(
+    $('cta-week-note'),
+    seeds === null ? 'buys a week of whitelist' : `buys a week of whitelist: about ${seeds} seeds`,
+  );
+  setText(
+    $('coins-cta-lede'),
+    'Seed an empty server, play a match, finish a mission: it all pays INITcoins. Spend them on whitelist days to skip the queue, on titles for your player page, and on Discord roles.',
+  );
+  if ($('coins-cta-art').childElementCount === 0) $('coins-cta-art').append(coinHeap());
+};
+
+// What seeding earns, when the bot gives seeders VIP or pays INITcoins.
 const renderVip = () => {
   const vip = stats?.vip ?? null;
   const coins = stats?.coins ?? null;
   $('vip-cta').hidden = !vip && !coins;
   $('vip').hidden = !vip && !coins;
+  renderCoinsCta(coins);
   if (!vip && !coins) return;
   // INITcoins replace seeder VIP: the same boxes, saying what a seed pays instead.
   setText($('vip-cta-tag'), coins ? 'INITcoins' : 'Seeder VIP');

@@ -36,25 +36,28 @@ export const dayText = (ms, locale) =>
 // The rows of "How you earn", from the bot's rates.
 export const earnRows = (rates) => {
   const rows = [
-    { what: 'A successful seed', pays: `${rates.seed}`, note: 'Once a day: you were on while the server seeded, and it went live.' },
+    { icon: 'seed', what: 'A successful seed', pays: `${rates.seed}`, note: 'Once a day: you were on while the server seeded, and it went live.' },
   ];
   if (rates.seedMinutes.per > 0) {
     rows.push({
+      icon: 'time',
       what: 'Time spent seeding',
       pays: `1 per ${rates.seedMinutes.per} min`,
       note: `On top of the seed, up to ${rates.seedMinutes.cap} a day.`,
     });
   }
   if (rates.playMinutes > 0) {
-    rows.push({ what: 'Playing', pays: `1 per ${rates.playMinutes} min`, note: 'While the server is live.' });
+    rows.push({ icon: 'play', what: 'Playing', pays: `1 per ${rates.playMinutes} min`, note: 'While the server is live.' });
   }
   rows.push({
+    icon: 'match',
     what: 'A match played',
     pays: `${rates.match}`,
     note: `For your first ${rates.matchesPaid} matches of the day. Sitting in a match without playing doesn’t count.`,
   });
-  rows.push({ what: 'A match won', pays: `+${rates.win}`, note: 'On top of the match, for the same matches.' });
+  rows.push({ icon: 'win', what: 'A match won', pays: `+${rates.win}`, note: 'On top of the match, for the same matches.' });
   rows.push({
+    icon: 'mission',
     what: 'Missions',
     pays: '10 to 80',
     note: 'Three a day and three a week. They pay on top of the limit below.',
@@ -100,3 +103,67 @@ export const todayText = (today) =>
 
 // How many seeds a week of whitelist is worth, from the bot's own reward and price.
 export const seedsForWeek = (seed, vipWeek) => (seed > 0 ? Math.ceil(vipWeek / seed) : null);
+
+// How long until a day's missions change (midnight UTC) or a week's (Monday, UTC): "5h 12m", "2d 4h".
+export const untilReset = (scope, now) => {
+  const d = new Date(now);
+  const next =
+    scope === 'week'
+      ? Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + (((8 - d.getUTCDay()) % 7) || 7))
+      : Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+  const minutes = Math.max(1, Math.round((next - now) / 60_000));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const mins = minutes % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+};
+
+// What buying by the week saves over buying by the day, as "Save 100", or null when it doesn't.
+export const weekSaving = (shop) => {
+  const day = shop.find((i) => i.id === 'vip-1');
+  const week = shop.find((i) => i.id === 'vip-7');
+  if (!day || !week) return null;
+  const saved = day.price * 7 - week.price;
+  return saved > 0 ? `Save ${saved.toLocaleString('en-GB')}` : null;
+};
+
+// How far a player is from affording something: a bar 0 to 100, and the words for what is left.
+export const toGo = (balance, price) => ({
+  percent: price <= 0 ? 100 : Math.max(0, Math.min(100, Math.round((balance / price) * 100))),
+  left: Math.max(0, price - balance),
+});
+
+// The top three earners for the podium, in the order it shows them (second, first, third), and the rest.
+export const podium = (rows) => ({
+  top: [rows[1] ?? null, rows[0] ?? null, rows[2] ?? null].map((row, i) => (row === null ? null : { ...row, place: [2, 1, 3][i] })),
+  rest: rows.slice(3),
+});
+
+// The numbers for the page's opening line, from the bot's own rates and prices.
+export const heroFacts = (info) => {
+  const seeds = seedsForWeek(info.rates.seed, info.prices.vipWeek);
+  return [
+    { value: `${info.rates.seed}`, label: 'for every seed' },
+    { value: `${info.prices.vipWeek}`, label: seeds === null ? 'a week of whitelist' : `a week of whitelist, about ${seeds} seeds` },
+    { value: `${info.missions.daily.length + info.missions.weekly.length}`, label: 'missions to do each week' },
+  ];
+};
+
+// A whole number counted up to, in steps, for the balance on arrival: the values to show, ending on `value`.
+export const countSteps = (from, value, steps = 18) =>
+  Array.from({ length: steps }, (_, i) => Math.round(from + ((value - from) * (1 - (1 - (i + 1) / steps) ** 3)))).map((n, i, all) => (i === all.length - 1 ? value : n));
+
+// One line on what an item is, for its card.
+export const itemBlurb = (item) => {
+  if (item.kind === 'vip') {
+    const days = item.id === 'vip-7' ? 7 : 1;
+    return days === 1 ? 'Skip the queue for a day' : `Skip the queue for ${days} days`;
+  }
+  if (item.kind === 'title') return 'Shows beside your name';
+  return 'A role in our Discord';
+};
+
+// How grand a title looks, from its price.
+export const titleTone = (price) => (price >= 3000 ? 'gold' : price >= 1000 ? 'silver' : 'bronze');

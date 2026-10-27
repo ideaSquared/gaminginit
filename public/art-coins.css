@@ -1,297 +1,343 @@
-/* The INITcoins page (see coins.js). */
+/* INITcoins: the /coins page (see coins.js) and the call to action on the home page (see app.js). Gold on the site's dark. */
 
-.coins-card {
-  padding: 20px;
-  margin-bottom: 20px;
+:root {
+  --gold: var(--warning);
+  --gold-deep: color-mix(in srgb, var(--warning) 58%, #1a1203);
+  --gold-soft: color-mix(in srgb, var(--warning) 16%, var(--surface));
+  --coin-ink: #3a2a06;
+  --tier-0: var(--accent);
+  --tier-1: var(--warning);
+  --tier-2: #ff8f66;
 }
 
-.coins-card[hidden],
-#coins-body[hidden] {
-  display: none;
-}
+/* The coin */
+:is(.coin, .coin-heap) .c-edge { fill: var(--gold-deep); }
+:is(.coin, .coin-heap) .c-face { fill: var(--gold); }
+:is(.coin, .coin-heap) .c-rim { fill: none; stroke: color-mix(in srgb, var(--gold) 55%, white); stroke-width: 3; opacity: 0.85; }
+:is(.coin, .coin-heap) .c-glyph { fill: var(--coin-ink); }
+:is(.coin, .coin-heap) .c-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: 0.55; }
 
-.coins-sub {
-  margin: 0 0 12px;
-  max-width: 62ch;
-  font-size: 0.9rem;
-}
-
-.coins-fine {
-  margin-top: 12px;
-  max-width: 70ch;
-  font-size: 0.9rem;
-}
-
-.coins-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-  gap: 20px;
-}
-
-.coins-columns > .coins-card {
-  margin-bottom: 0;
-}
-
-.coins-columns + .coins-card {
-  margin-top: 20px;
-}
-
-/* Your coins */
-.coins-me {
-  border-top: 3px solid var(--warning);
-}
-
-.coins-balance {
-  margin: 4px 0 12px;
-}
-
-.coins-amount {
-  margin: 0;
-  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  color: var(--warning);
-}
-
-.coins-unit {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-2);
-}
-
-.coins-today {
-  margin: 0 0 6px;
-  color: var(--text-2);
-}
-
-.coins-meter {
-  height: 6px;
-  margin-bottom: 14px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  overflow: hidden;
-  max-width: 420px;
-}
-
-.coins-meter > span {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--warning);
-}
-
-.coins-title-pick {
-  display: flex;
-  flex-wrap: wrap;
+.coin-chip-art { width: 18px; height: 18px; flex: none; }
+.coin-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.coins-title-pick[hidden] {
-  display: none;
-}
-
-.coins-title-pick select {
-  min-height: 40px;
-  padding: 0 10px;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--axis);
-  border-radius: 8px;
-  font: inherit;
-}
-
-/* Missions */
-.missions {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 14px;
-}
-
-.mission {
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-}
-
-.mission.is-done {
-  border-color: color-mix(in srgb, var(--good) 60%, var(--hairline));
-}
-
-.mission-top {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.mission-text {
-  flex: 1;
-  font-weight: 600;
-}
-
-.mission.is-done .mission-text {
-  text-decoration: line-through;
-  color: var(--text-2);
-}
-
-.mission-reward {
+  gap: 6px;
   font-weight: 800;
-  color: var(--warning);
   font-variant-numeric: tabular-nums;
-}
-
-.tier {
-  flex: none;
-  padding: 1px 8px;
-  border: 1px solid var(--axis);
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-2);
-}
-
-.tier-1 {
-  border-color: var(--series);
-}
-
-.tier-2 {
-  border-color: var(--warning);
-  color: var(--warning);
-}
-
-.mission-bar {
-  display: block;
-  height: 6px;
-  margin-top: 10px;
-  background: var(--page);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.mission-fill {
-  display: block;
-  height: 100%;
-  background: var(--series);
-}
-
-.mission.is-done .mission-fill {
-  background: var(--good);
-}
-
-.mission-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 6px;
-  font-size: 0.9rem;
-  min-height: 24px;
-}
-
-/* The shop */
-.shop-group + .shop-group {
-  margin-top: 22px;
-}
-
-.shop-group h3 {
-  margin-bottom: 2px;
-}
-
-.shop-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
-  gap: 12px;
-}
-
-.shop-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 8px 12px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-}
-
-.shop-item.is-owned {
-  border-color: color-mix(in srgb, var(--good) 50%, var(--hairline));
-}
-
-.shop-name {
-  font-weight: 700;
-}
-
-.shop-price {
-  font-weight: 800;
-  color: var(--warning);
-  font-variant-numeric: tabular-nums;
-}
-
-.shop-item .btn {
-  grid-column: 1 / -1;
-  justify-content: center;
-}
-
-.btn-coin {
-  background: var(--warning);
-  color: #1a1203;
-  cursor: pointer;
-}
-
-.btn-coin:hover {
-  background: color-mix(in srgb, var(--warning) 85%, white);
-}
-
-button.btn-ghost,
-button.btn-coin {
-  font: inherit;
-  font-weight: 700;
-}
-
-button.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* Tables */
-.coins-table th:nth-child(2),
-.coins-table td:nth-child(2) {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.coins-table th:nth-child(3),
-.coins-table td:nth-child(3) {
-  text-align: left;
-  white-space: normal;
-}
-
-.coins-pays {
-  font-weight: 700;
+  color: var(--gold);
   white-space: nowrap;
 }
 
-.coins-gain {
-  color: var(--good);
+.btn-coin {
+  background: var(--gold);
+  color: #1a1203;
+  cursor: pointer;
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--gold) 70%, transparent);
 }
+.btn-coin:hover { background: color-mix(in srgb, var(--gold) 86%, white); }
+.btn-big { min-height: 52px; padding: 0 26px; font-size: 1.02rem; }
+button.btn { font: inherit; font-weight: 700; cursor: pointer; }
+button.btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.btn-icon { width: 18px; height: 18px; }
+.btn:focus-visible, .coins-title-pick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.coins-loss {
-  color: var(--text-2);
+/* The opening */
+.coins-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(32px, 6vw, 72px) 0 clamp(36px, 6vw, 64px);
+  border-bottom: 1px solid var(--hairline);
+  background:
+    radial-gradient(60% 90% at 82% 0%, color-mix(in srgb, var(--gold) 20%, transparent), transparent 70%),
+    radial-gradient(40% 60% at 5% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    var(--page);
 }
+.coins-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: center;
+}
+.coins-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 4px 12px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--hairline));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.coins-eyebrow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 25%, transparent); }
+.coins-title {
+  margin: 0 0 16px;
+  font-size: clamp(2.5rem, 1.5rem + 4.6vw, 4.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  font-weight: 900;
+}
+.coins-title-accent {
+  background: linear-gradient(100deg, var(--gold), #ffe08a 60%, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--gold);
+  -webkit-text-fill-color: transparent;
+}
+.coins-lede { max-width: 56ch; margin: 0 0 22px; color: var(--text-2); font-size: clamp(1.02rem, 0.95rem + 0.35vw, 1.2rem); }
+.coins-facts { list-style: none; display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 0 0 26px; padding: 0; }
+.fact { display: grid; gap: 2px; min-width: 7.5rem; max-width: 14rem; padding-left: 14px; border-left: 3px solid var(--gold); }
+.fact strong { font-size: 1.9rem; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; }
+.fact span { color: var(--muted); font-size: 0.88rem; }
+.coins-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; }
 
-.coins-faq code {
-  padding: 1px 5px;
+/* The purse */
+.coins-purse {
+  position: relative;
+  padding: 26px 24px 24px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 9%, var(--surface)), var(--surface) 55%);
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--hairline));
+  border-radius: 16px;
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.02) inset;
+  overflow: hidden;
+}
+.purse-art { display: flex; justify-content: center; margin: -6px 0 6px; }
+.coin-heap { width: min(100%, 250px); height: auto; filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.5)); }
+.coin-heap .heap-spark { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; }
+.purse-coin { width: 76px; height: 76px; filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.5)); }
+.coins-purse.is-ready .purse-art { position: absolute; top: 18px; right: 18px; margin: 0; }
+.purse-title { margin: 0 0 6px; font-size: 1.25rem; text-transform: none; letter-spacing: 0; }
+.purse-state p { color: var(--text-2); }
+.purse-actions { margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.purse-state[hidden], .purse-ready[hidden] { display: none; }
+.purse-label { margin: 0; color: var(--muted); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.purse-balance { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 2px 0 0; }
+.purse-balance #me-balance { font-size: clamp(2.6rem, 2rem + 3vw, 3.8rem); line-height: 1; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; text-shadow: 0 0 40px color-mix(in srgb, var(--gold) 40%, transparent); }
+.purse-balance #me-balance.bump { animation: coin-bump 0.5s ease; }
+.purse-unit { color: var(--text-2); font-weight: 700; }
+.purse-sub { margin: 4px 0 18px; color: var(--muted); font-size: 0.9rem; }
+.purse-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.purse-ring { position: relative; flex: none; width: 84px; height: 84px; }
+.purse-ring .ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ring .ring-track { fill: none; stroke: var(--surface-2); stroke-width: 9; }
+.ring .ring-fill { fill: none; stroke: var(--gold); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
+.purse-ring.is-full .ring-fill { stroke: var(--good); }
+.purse-ring-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; line-height: 1.1; }
+.purse-ring-text strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.purse-ring-text span { color: var(--muted); font-size: 0.7rem; }
+.purse-ring-note { margin: 0; color: var(--text-2); font-size: 0.9rem; }
+.purse-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
   background: var(--surface-2);
-  border-radius: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 0.92rem;
+}
+.purse-pill.is-on { border-color: color-mix(in srgb, var(--good) 55%, var(--hairline)); color: var(--text); background: color-mix(in srgb, var(--good) 10%, var(--surface-2)); }
+.pill-icon { width: 22px; height: 22px; flex: none; color: var(--gold); }
+.coins-title-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; color: var(--text-2); font-size: 0.92rem; }
+.coins-title-pick[hidden] { display: none; }
+.coins-title-pick select { min-height: 40px; padding: 0 12px; background: var(--surface-2); color: var(--text); border: 1px solid var(--axis); border-radius: 8px; font: inherit; }
+
+/* The page below */
+.coins-section { padding-top: clamp(28px, 4vw, 48px); }
+.coins-card { padding: 20px; margin-bottom: 20px; }
+.coins-card[hidden], #coins-body[hidden] { display: none; }
+.coins-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; margin: clamp(36px, 5vw, 60px) 0 16px; scroll-margin-top: 80px; }
+.coins-h2 { margin: 0; font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem); text-transform: none; letter-spacing: -0.01em; font-weight: 900; }
+.coins-h2-note { margin: 0; max-width: 62ch; color: var(--muted); font-size: 0.95rem; }
+.coins-fine { margin: 14px 0 0; max-width: 72ch; color: var(--muted); font-size: 0.9rem; }
+
+.coins-steps { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; margin: 0; padding: 0; counter-reset: none; }
+.coins-step { position: relative; padding: 18px 18px 20px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden; }
+.coins-step-n { position: absolute; top: 10px; right: 14px; font-size: 2.6rem; font-weight: 900; line-height: 1; color: color-mix(in srgb, var(--gold) 20%, transparent); }
+.coins-step-icon { width: 44px; height: 44px; margin-bottom: 10px; color: var(--gold); }
+.coins-step h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.coins-step p { margin: 0; color: var(--text-2); font-size: 0.92rem; }
+
+.coins-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 20px; }
+.coins-columns-top { margin-top: clamp(36px, 5vw, 60px); }
+.coins-panel { background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; padding: 18px; }
+.coins-panel[hidden] { display: none; }
+.coins-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.coins-panel-head h3 { margin: 0; font-size: 1.15rem; }
+.coins-reset { color: var(--muted); font-size: 0.82rem; }
+.coins-faq { margin-top: 20px; }
+
+/* Missions */
+.missions { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.mission { padding: 14px 14px 12px; background: var(--surface-2); border: 1px solid var(--hairline); border-left: 4px solid var(--tier-0); border-radius: 10px; transition: border-color 0.2s, background-color 0.2s; }
+.mission.tier-1 { border-left-color: var(--tier-1); }
+.mission.tier-2 { border-left-color: var(--tier-2); }
+.mission.is-done { border-color: color-mix(in srgb, var(--good) 45%, var(--hairline)); border-left-color: var(--good); background: color-mix(in srgb, var(--good) 8%, var(--surface-2)); }
+.mission-top { display: flex; align-items: center; gap: 12px; }
+.mission-badge { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: color-mix(in srgb, var(--tier-0) 16%, var(--surface)); color: var(--tier-0); }
+.mission.tier-1 .mission-badge { background: color-mix(in srgb, var(--tier-1) 16%, var(--surface)); color: var(--tier-1); }
+.mission.tier-2 .mission-badge { background: color-mix(in srgb, var(--tier-2) 16%, var(--surface)); color: var(--tier-2); }
+.mission.is-done .mission-badge { background: var(--good); color: #fff; animation: pop 0.4s ease; }
+.mission-icon { width: 24px; height: 24px; }
+.tick { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.mission-body { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.mission-tier { color: var(--muted); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.mission-text { font-weight: 700; }
+.mission.is-done .mission-text { color: var(--text-2); }
+.mission-bar { display: block; height: 6px; margin: 12px 0 6px; background: var(--page); border-radius: 999px; overflow: hidden; }
+.mission-fill { display: block; height: 100%; background: var(--tier-0); border-radius: inherit; transition: width 0.6s ease; }
+.mission.tier-1 .mission-fill { background: var(--tier-1); }
+.mission.tier-2 .mission-fill { background: var(--tier-2); }
+.mission.is-done .mission-fill { background: var(--good); }
+.mission-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; font-size: 0.88rem; color: var(--text-2); }
+.btn-swap { min-height: 34px; padding: 0 10px; gap: 6px; font-size: 0.82rem; }
+
+/* The shop */
+.shop-group + .shop-group { margin-top: 30px; }
+.shop-group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 12px; }
+.shop-group-head h3 { margin: 0; font-size: 1.15rem; }
+.shop-group-head p { margin: 0; font-size: 0.9rem; }
+.shop-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+.shop-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+@media (hover: hover) {
+  .shop-card:hover { transform: translateY(-3px); border-color: var(--axis); box-shadow: 0 18px 30px -20px rgb(0 0 0 / 0.9); }
+}
+.shop-card.is-best { border-color: color-mix(in srgb, var(--gold) 70%, var(--hairline)); background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 12%, var(--surface)), var(--surface) 60%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 25%, transparent), 0 20px 40px -24px color-mix(in srgb, var(--gold) 55%, transparent); }
+.shop-card.is-owned { border-color: color-mix(in srgb, var(--good) 45%, var(--hairline)); }
+.shop-flag { position: absolute; top: -10px; left: 14px; padding: 2px 10px; background: var(--gold); color: #1a1203; border-radius: 999px; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
+.shop-flag-owned { display: inline-flex; align-items: center; gap: 4px; left: auto; right: 12px; background: var(--good); color: #fff; }
+.shop-flag-owned .tick { width: 12px; height: 12px; stroke-width: 4; }
+.shop-art { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 4px; border-radius: 14px; background: var(--gold-soft); color: var(--gold); }
+.kind-title .shop-art { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); }
+.kind-role .shop-art { background: color-mix(in srgb, var(--discord) 30%, var(--surface)); color: #aab3ff; }
+.shop-icon { width: 32px; height: 32px; }
+.shop-name { margin: 0; font-size: 1.05rem; }
+.shop-blurb { margin: 0; color: var(--muted); font-size: 0.86rem; flex: 1; }
+.shop-price { margin: 6px 0 0; font-size: 1.2rem; }
+.shop-price .coin-chip-art { width: 22px; height: 22px; }
+.shop-gap { display: grid; gap: 4px; margin-top: 4px; }
+.shop-gap-bar { display: block; height: 5px; background: var(--page); border-radius: 999px; overflow: hidden; }
+.shop-gap-bar > span { display: block; height: 100%; background: color-mix(in srgb, var(--gold) 70%, var(--page)); border-radius: inherit; }
+.shop-gap-text { color: var(--muted); font-size: 0.78rem; }
+.shop-buy { justify-content: center; margin-top: 8px; width: 100%; }
+.title-preview { align-self: flex-start; padding: 3px 12px; border-radius: 999px; border: 1px solid; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.02em; }
+.title-preview.tone-bronze { color: #e0a370; border-color: #b46b32; background: color-mix(in srgb, #b46b32 14%, transparent); }
+.title-preview.tone-silver { color: #d8dee8; border-color: #8e99a8; background: color-mix(in srgb, #8e99a8 14%, transparent); }
+.title-preview.tone-gold { color: var(--gold); border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent); }
+
+/* Ways to earn */
+.earn-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+.earn-card { padding: 16px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; }
+.earn-art { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 10px; border-radius: 12px; background: var(--gold-soft); color: var(--gold); }
+.earn-icon { width: 28px; height: 28px; }
+.earn-pays { margin: 0; font-size: 1.7rem; line-height: 1.1; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.earn-card h4 { margin: 2px 0 4px; font-size: 1rem; }
+.earn-card p.muted { margin: 0; font-size: 0.86rem; }
+
+/* History */
+.timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--hairline); display: grid; gap: 12px; }
+.timeline-item { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 0 12px; padding-left: 14px; font-size: 0.92rem; }
+.timeline-dot { position: absolute; left: -22px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--surface); }
+.timeline-item.is-spend .timeline-dot { background: var(--muted); }
+.timeline-delta { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--good); }
+.timeline-item.is-spend .timeline-delta { color: var(--text-2); }
+.timeline-when { grid-column: 1 / -1; font-size: 0.78rem; }
+.timeline-empty { padding-left: 14px; }
+
+/* Top earners */
+.podium { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.podium-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; text-align: center; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; min-width: 0; }
+.podium-slot.is-empty { visibility: hidden; }
+.podium-slot.place-1 { padding-top: 26px; padding-bottom: 20px; border-color: color-mix(in srgb, var(--gold) 55%, var(--hairline)); background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--surface-2)), var(--surface-2)); }
+.podium-medal { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-weight: 900; color: #1a1203; background: #b46b32; }
+.place-1 .podium-medal { background: var(--gold); width: 42px; height: 42px; font-size: 1.15rem; }
+.place-2 .podium-medal { background: #c0c8d4; }
+.podium-name { max-width: 100%; overflow-wrap: anywhere; font-weight: 800; }
+.podium-earned { font-size: 1.05rem; }
+.leader-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.leader-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 4px; border-top: 1px solid var(--hairline); counter-increment: rank; }
+.leader-list { counter-reset: rank 3; }
+.leader-row::before { content: counter(rank); flex: none; width: 1.6em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.leader-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.chip-title { margin-left: 8px; }
+.podium .chip-title { margin-left: 0; }
+
+/* Messages */
+.coins-toasts { position: fixed; left: 50%; bottom: 20px; z-index: 50; display: grid; gap: 8px; width: min(92vw, 460px); transform: translateX(-50%); pointer-events: none; }
+.toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--axis); border-radius: 12px; box-shadow: 0 20px 40px -16px rgb(0 0 0 / 0.9); pointer-events: auto; cursor: pointer; animation: toast-in 0.25s ease; }
+.toast-good { border-color: var(--good); }
+.toast-bad { border-color: var(--critical); }
+.toast-dot { flex: none; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: var(--good); }
+.toast-bad .toast-dot { background: var(--critical); }
+
+/* The call to action on the home page */
+.coins-cta[hidden] { display: none; }
+.coins-cta { padding: clamp(20px, 4vw, 40px) 0; }
+.coins-cta-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(16px, 4vw, 48px);
+  align-items: center;
+  padding: clamp(22px, 4vw, 40px);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--hairline));
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--gold) 24%, transparent), transparent 65%),
+    linear-gradient(180deg, color-mix(in srgb, var(--gold) 7%, var(--surface)), var(--surface));
+  box-shadow: 0 30px 60px -36px color-mix(in srgb, var(--gold) 45%, #000);
+}
+.coins-cta-copy h2 { margin: 0 0 10px; font-size: clamp(1.7rem, 1.2rem + 2vw, 2.7rem); line-height: 1.05; text-transform: none; letter-spacing: -0.015em; font-weight: 900; }
+.coins-cta-lede { margin: 0 0 18px; max-width: 54ch; color: var(--text-2); }
+.coins-cta-points { list-style: none; display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 0 0 22px; padding: 0; }
+.coins-cta-points li { display: grid; gap: 1px; padding-left: 12px; border-left: 3px solid var(--gold); color: var(--muted); font-size: 0.88rem; }
+.coins-cta-points strong { font-size: 1.7rem; line-height: 1; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+.coins-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; }
+.coins-cta-art { width: clamp(150px, 24vw, 280px); }
+.coins-cta-art .coin-heap { width: 100%; }
+
+/* Motion, unless it is turned down */
+@media (prefers-reduced-motion: no-preference) {
+  .coin-heap .heap-back { animation: coin-float 5s ease-in-out infinite; }
+  .coin-heap .heap-left { animation: coin-float 6s ease-in-out -2s infinite; }
+  .coin-heap .heap-front { animation: coin-float 5.5s ease-in-out -1s infinite; }
+  .coin-heap .heap-spark { animation: coin-twinkle 3s ease-in-out infinite; }
+  .purse-coin { animation: coin-float 4s ease-in-out infinite; }
+}
+@keyframes coin-float { 50% { transform: translateY(-5px); } }
+@keyframes coin-twinkle { 50% { opacity: 0.25; } }
+@keyframes coin-bump { 0% { transform: scale(1); } 35% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes pop { 0% { transform: scale(0.6); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+
+@media (max-width: 859px) {
+  .coins-hero-grid { grid-template-columns: 1fr; }
+  .coins-cta-card { grid-template-columns: 1fr; }
+  .coins-cta-art { order: -1; width: 150px; }
+}
+@media (max-width: 479px) {
+  .podium { grid-template-columns: 1fr; }
+  .podium-slot.is-empty { display: none; }
+  .podium-slot { flex-direction: row; justify-content: flex-start; text-align: left; }
+  .place-1 { order: 1; }
+  .place-2 { order: 2; }
+  .place-3 { order: 3; }
 }

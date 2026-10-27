@@ -4,14 +4,22 @@ import {
   buyLabel,
   canPress,
   coinText,
+  countSteps,
   earnRows,
+  heroFacts,
+  itemBlurb,
   itemName,
   logLine,
   percent,
+  podium,
   seedsForWeek,
   shopGroups,
   tierLabel,
+  titleTone,
+  toGo,
   todayText,
+  untilReset,
+  weekSaving,
   whitelistText,
 } from '../public/js/coinsmodel.js';
 
@@ -123,5 +131,76 @@ describe('whitelistText and todayText', () => {
   it('says how much of the daily limit is used', () => {
     assert.match(todayText({ earned: 40, cap: 100 }), /40 of 100 from playing, matches and seeding time/);
     assert.match(todayText({ earned: 100, cap: 100 }), /reached today’s limit/);
+  });
+});
+
+describe('untilReset', () => {
+  it('counts to midnight UTC for the day, and to Monday for the week', () => {
+    // Tuesday 27 October 2026, 12:00 UTC.
+    const now = Date.UTC(2026, 9, 27, 12);
+    assert.equal(untilReset('day', now), '12h 0m');
+    assert.equal(untilReset('week', now), '5d 12h');
+    assert.equal(untilReset('day', Date.UTC(2026, 9, 27, 23, 41)), '19m');
+    // On a Monday the week has a whole week to go.
+    assert.equal(untilReset('week', Date.UTC(2026, 9, 26, 0, 0)), '7d 0h');
+    assert.equal(untilReset('week', Date.UTC(2026, 10, 1, 12)), '12h 0m');
+  });
+});
+
+describe('weekSaving and toGo', () => {
+  it('says what a week saves over seven days, and nothing when it saves nothing', () => {
+    const shop = [{ id: 'vip-1', price: 100 }, { id: 'vip-7', price: 600 }];
+    assert.equal(weekSaving(shop), 'Save 100');
+    assert.equal(weekSaving([{ id: 'vip-1', price: 100 }, { id: 'vip-7', price: 700 }]), null);
+    assert.equal(weekSaving([]), null);
+  });
+
+  it('works out how far off something is', () => {
+    assert.deepEqual(toGo(150, 600), { percent: 25, left: 450 });
+    assert.deepEqual(toGo(900, 600), { percent: 100, left: 0 });
+    assert.deepEqual(toGo(0, 0), { percent: 100, left: 0 });
+  });
+});
+
+describe('podium', () => {
+  const rows = ['a', 'b', 'c', 'd', 'e'].map((name, i) => ({ name, earned: 100 - i }));
+
+  it('puts first in the middle, with the places, and the rest below', () => {
+    const { top, rest } = podium(rows);
+    assert.deepEqual(top.map((r) => [r.name, r.place]), [['b', 2], ['a', 1], ['c', 3]]);
+    assert.deepEqual(rest.map((r) => r.name), ['d', 'e']);
+  });
+
+  it('leaves a gap where nobody is', () => {
+    assert.deepEqual(podium(rows.slice(0, 1)).top.map((r) => r?.name ?? null), [null, 'a', null]);
+    assert.deepEqual(podium([]).top, [null, null, null]);
+  });
+});
+
+describe('heroFacts and countSteps', () => {
+  it('states the seed pay, the week of whitelist in seeds and the missions', () => {
+    const facts = heroFacts({ rates, prices: { vipWeek: 600 }, missions: { daily: [1, 2, 3], weekly: [1, 2, 3] } });
+    assert.deepEqual(facts.map((f) => f.value), ['150', '600', '6']);
+    assert.match(facts[1].label, /about 4 seeds/);
+  });
+
+  it('counts up to a number in steps, ending on it', () => {
+    const steps = countSteps(0, 720);
+    assert.equal(steps.at(-1), 720);
+    assert.ok(steps.every((n, i) => i === 0 || n >= steps[i - 1]));
+    assert.deepEqual(countSteps(500, 500, 3), [500, 500, 500]);
+  });
+});
+
+describe('itemBlurb and titleTone', () => {
+  it('says what an item is', () => {
+    assert.equal(itemBlurb({ id: 'vip-1', kind: 'vip' }), 'Skip the queue for a day');
+    assert.equal(itemBlurb({ id: 'vip-7', kind: 'vip' }), 'Skip the queue for 7 days');
+    assert.equal(itemBlurb({ id: 'title-x', kind: 'title' }), 'Shows beside your name');
+    assert.equal(itemBlurb({ id: 'role-1', kind: 'role' }), 'A role in our Discord');
+  });
+
+  it('makes dearer titles grander', () => {
+    assert.deepEqual([300, 1500, 6000].map(titleTone), ['bronze', 'silver', 'gold']);
   });
 });

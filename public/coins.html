@@ -107,16 +107,67 @@
       <div class="announcement wrap" id="announcement" role="status" hidden></div>
       <div class="notice wrap" id="notice" role="status" hidden></div>
 
-      <section class="section" aria-labelledby="coins-title">
-        <div class="wrap">
-          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
-          <div class="section-head">
-            <h1 class="page-title" id="coins-title">INITcoins</h1>
-            <p class="section-note">Earn them by seeding, playing and doing missions. Spend them on whitelist days, titles and Discord roles.</p>
+      <!-- The opening: what INITcoins are, the bot's own numbers, and (signed in) your purse. -->
+      <section class="coins-hero" aria-labelledby="coins-title">
+        <div class="wrap coins-hero-grid">
+          <div class="coins-hero-copy">
+            <p class="coins-eyebrow"><span class="coins-eyebrow-dot" aria-hidden="true"></span>INITcoins</p>
+            <h1 class="coins-title" id="coins-title">Seed. Play. Earn. <span class="coins-title-accent">Spend.</span></h1>
+            <p class="coins-lede">Every seed, every match and every mission pays INITcoins. Spend them on whitelist days to skip the queue, on titles for your player page, and on Discord roles.</p>
+            <ul class="coins-facts" id="hero-facts" aria-label="The numbers"></ul>
+            <p class="coins-hero-actions">
+              <a class="btn btn-coin btn-big" href="#shop" id="hero-shop">Open the shop</a>
+              <a class="btn btn-ghost btn-big" href="#earn">How you earn</a>
+            </p>
           </div>
 
-          <!-- What happened on the way back from Discord, or what a purchase did, said once. -->
-          <div class="account-flash" id="coins-flash" role="status" hidden></div>
+          <aside class="coins-purse" id="coins-purse" aria-label="Your coins">
+            <div class="purse-art" id="purse-art" aria-hidden="true"></div>
+            <!-- Signed out. -->
+            <div class="purse-state" id="me-out" hidden>
+              <h2 class="purse-title">Your purse is empty</h2>
+              <p>Sign in to see what you’ve earned, do the missions and spend your coins. You earn from your first game, signed in or not.</p>
+              <p class="purse-actions">
+                <a class="btn btn-discord" id="me-sign-in" href="#">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                  <span>Sign in with Discord</span>
+                </a>
+              </p>
+            </div>
+            <!-- Signed in, no Steam account yet. -->
+            <div class="purse-state" id="me-unlinked" hidden>
+              <h2 class="purse-title">One step left</h2>
+              <p>Link your Steam account to see your coins and spend them. Whatever you’ve earned in game is already waiting for you.</p>
+              <p class="purse-actions"><a class="btn btn-coin" href="account" data-keep-query>Link your Steam account</a></p>
+            </div>
+            <div class="purse-state" id="me-error" hidden>
+              <h2 class="purse-title">Couldn’t load your coins</h2>
+              <p>We couldn’t reach the bot just now. Refresh the page in a minute.</p>
+            </div>
+            <!-- Signed in with Steam linked. -->
+            <div class="purse-ready" id="me-ready" hidden>
+              <p class="purse-label">Your balance</p>
+              <p class="purse-balance"><span id="me-balance">0</span><span class="purse-unit">INITcoins</span></p>
+              <p class="purse-sub" id="me-sub"></p>
+              <div class="purse-row">
+                <div class="purse-ring" id="me-ring">
+                  <span class="purse-ring-text"><strong id="me-ring-value">0</strong><span id="me-ring-of"></span></span>
+                </div>
+                <p class="purse-ring-note" id="me-today"></p>
+              </div>
+              <p class="purse-pill" id="me-vip"></p>
+              <label class="coins-title-pick" id="me-title-pick" hidden>
+                <span>Title on your player page</span>
+                <select id="me-title-select"></select>
+              </label>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section coins-section" aria-label="INITcoins">
+        <div class="wrap">
+          <div class="coins-toasts" id="coins-toasts" role="status" aria-live="polite"></div>
 
           <!-- The bot has INITcoins switched off (or is not connected). -->
           <div class="card coins-card" id="coins-off" hidden>
@@ -125,86 +176,61 @@
           </div>
 
           <div id="coins-body" hidden>
-            <!-- Your coins: signed out, signed in without a Steam account, or the lot. -->
-            <article class="card coins-card coins-me" id="coins-me" aria-labelledby="me-title">
-              <h2 class="account-sub" id="me-title">Your coins</h2>
-              <div id="me-out" hidden>
-                <p>Sign in with Discord to see your coins, do the missions and spend them. You earn from the first game you play, signed in or not: your Steam account collects what you’ve earned once it’s linked.</p>
-                <p class="account-actions">
-                  <a class="btn btn-discord" id="me-sign-in" href="#">
-                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                    <span>Sign in with Discord</span>
-                  </a>
-                </p>
-              </div>
-              <div id="me-error" hidden>
-                <p>We couldn’t load your coins just now. Refresh the page in a minute.</p>
-              </div>
-              <div id="me-unlinked" hidden>
-                <p>Link your Steam account to see your coins and spend them. Whatever you’ve earned in game is waiting.</p>
-                <p class="account-actions"><a class="btn btn-ghost" href="account" data-keep-query>Link your Steam account</a></p>
-              </div>
-              <div id="me-ready" hidden>
-                <div class="coins-balance">
-                  <p class="coins-amount"><span id="me-balance">0</span> <span class="coins-unit">INITcoins</span></p>
-                  <p class="muted" id="me-sub"></p>
-                </div>
-                <p class="coins-today" id="me-today"></p>
-                <div class="coins-meter" aria-hidden="true"><span id="me-meter"></span></div>
-                <p id="me-vip"></p>
-                <label class="coins-title-pick" id="me-title-pick" hidden>
-                  <span>Title on your player page</span>
-                  <select id="me-title-select"></select>
-                </label>
-              </div>
-            </article>
+            <!-- How it fits together. -->
+            <ol class="coins-steps" id="coins-steps" aria-label="How it works"></ol>
 
+            <div class="coins-head" id="missions-head">
+              <h2 class="coins-h2">Missions</h2>
+              <p class="coins-h2-note" id="missions-note"></p>
+            </div>
             <div class="coins-columns">
-              <article class="card coins-card" aria-labelledby="missions-day-title">
-                <h2 class="account-sub" id="missions-day-title">Today’s missions</h2>
-                <p class="muted coins-sub" id="missions-day-sub">The same for everyone. They change at midnight, UTC.</p>
+              <article class="coins-panel" aria-labelledby="missions-day-title">
+                <header class="coins-panel-head">
+                  <h3 id="missions-day-title">Today</h3>
+                  <span class="coins-reset" id="reset-day"></span>
+                </header>
                 <ul class="missions" id="missions-day"></ul>
               </article>
-              <article class="card coins-card" aria-labelledby="missions-week-title">
-                <h2 class="account-sub" id="missions-week-title">This week’s missions</h2>
-                <p class="muted coins-sub">They change on Monday, UTC.</p>
+              <article class="coins-panel" aria-labelledby="missions-week-title">
+                <header class="coins-panel-head">
+                  <h3 id="missions-week-title">This week</h3>
+                  <span class="coins-reset" id="reset-week"></span>
+                </header>
                 <ul class="missions" id="missions-week"></ul>
               </article>
             </div>
 
-            <article class="card coins-card" aria-labelledby="shop-title">
-              <h2 class="account-sub" id="shop-title">The shop</h2>
-              <p class="muted coins-sub" id="shop-sub"></p>
-              <div id="shop"></div>
-            </article>
+            <div class="coins-head" id="shop">
+              <h2 class="coins-h2">The shop</h2>
+              <p class="coins-h2-note" id="shop-sub"></p>
+            </div>
+            <div id="shop-groups"></div>
 
-            <article class="card coins-card" aria-labelledby="earn-title">
-              <h2 class="account-sub" id="earn-title">How you earn them</h2>
-              <p class="muted coins-sub" id="earn-sub"></p>
-              <table class="players-table coins-table">
-                <thead><tr><th scope="col">What</th><th scope="col">Pays</th><th scope="col">Notes</th></tr></thead>
-                <tbody id="earn-rows"></tbody>
-              </table>
-              <p class="muted coins-fine" id="earn-fine"></p>
-            </article>
+            <div class="coins-head" id="earn">
+              <h2 class="coins-h2">How you earn them</h2>
+              <p class="coins-h2-note" id="earn-sub"></p>
+            </div>
+            <ul class="earn-grid" id="earn-grid"></ul>
+            <p class="coins-fine" id="earn-fine"></p>
 
-            <article class="card coins-card" id="coins-history" aria-labelledby="log-title" hidden>
-              <h2 class="account-sub" id="log-title">Your last changes</h2>
-              <table class="players-table coins-table">
-                <thead><tr><th scope="col">What</th><th scope="col">Coins</th><th scope="col">When</th></tr></thead>
-                <tbody id="log-rows"></tbody>
-              </table>
-            </article>
+            <div class="coins-columns coins-columns-top">
+              <article class="coins-panel" id="coins-history" aria-labelledby="log-title" hidden>
+                <header class="coins-panel-head"><h3 id="log-title">Your last changes</h3></header>
+                <ol class="timeline" id="log-list"></ol>
+              </article>
+              <article class="coins-panel coins-panel-wide" aria-labelledby="leaders-title">
+                <header class="coins-panel-head">
+                  <h3 id="leaders-title">Top earners</h3>
+                  <span class="coins-reset" id="leaders-sub">Most earned, ever</span>
+                </header>
+                <div id="leaders"></div>
+                <p class="coins-fine" id="leaders-note"></p>
+              </article>
+            </div>
 
-            <article class="card coins-card board" aria-labelledby="leaders-title">
-              <h2 class="account-sub" id="leaders-title">Top earners</h2>
-              <p class="board-sub" id="leaders-sub">Most INITcoins earned, ever. Spending them doesn’t cost you your place.</p>
-              <div id="leaders"></div>
-            </article>
-
-            <article class="card coins-card" aria-labelledby="faq-title">
-              <h2 class="account-sub" id="faq-title">Good to know</h2>
-              <ul class="account-perks coins-faq">
+            <article class="coins-panel coins-faq" aria-labelledby="faq-title">
+              <header class="coins-panel-head"><h3 id="faq-title">Good to know</h3></header>
+              <ul class="account-perks coins-faq-list">
                 <li>Coins go to your Steam account as you earn them, linked or not. Link it on <a href="account" data-keep-query>your account</a> to spend them.</li>
                 <li>Whitelist is added to the days you have left. You can hold up to <span id="faq-ahead">14</span> days at once, so it can’t be stockpiled.</li>
                 <li>The server only reads the whitelist when it restarts, so it starts at the next restart, usually the daily one.</li>

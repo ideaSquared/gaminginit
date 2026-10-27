@@ -1,3 +1,4 @@
+import { coinArt, coinHeap, icon, ring, tick } from './art-coins.js';
 import { demoCoins, demoMyCoins } from './demo.js';
 import { apiUrl, demo, keepQuery, startLive } from './live.js';
 import { errorText } from './accountmodel.js';
@@ -6,15 +7,23 @@ import {
   buyLabel,
   canPress,
   coinText,
+  countSteps,
   dayText,
   earnRows,
+  heroFacts,
+  itemBlurb,
   itemName,
   logLine,
   percent,
+  podium,
   seedsForWeek,
   shopGroups,
   tierLabel,
+  titleTone,
+  toGo,
   todayText,
+  untilReset,
+  weekSaving,
   whitelistText,
 } from './coinsmodel.js';
 import { el, playerName, setText } from './views.js';
@@ -24,6 +33,8 @@ import { el, playerName, setText } from './views.js';
 // buy, swap a mission or pick a title). ?demo shows sample numbers, and its buttons only change the sample.
 
 const $ = (id) => document.getElementById(id);
+
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // A sign-in that came back to this page: keep its session, and say if it did not work.
 const arrived = takeResult();
@@ -39,16 +50,19 @@ let busy = false;
 let pending = null;
 // Set when the player's coins couldn't be had and there is nothing older to show.
 let loadFailed = false;
+// The balance last shown, so a change counts up to the new one.
+let shownBalance = null;
 
-const flash = (kind, text) => {
-  const box = $('coins-flash');
-  box.className = `account-flash account-flash-${kind}`;
-  box.replaceChildren(text);
-  box.hidden = false;
-};
+// ---- Messages ----
 
-const clearFlash = () => {
-  $('coins-flash').hidden = true;
+// A message at the foot of the screen: good ones go by themselves, bad ones stay a little longer.
+const toast = (kind, text) => {
+  const box = $('coins-toasts');
+  const note = el('div', { className: `toast toast-${kind}`, role: kind === 'bad' ? 'alert' : 'status' }, el('span', { className: 'toast-dot', ariaHidden: 'true' }), el('span', { textContent: text }));
+  note.addEventListener('click', () => note.remove());
+  box.append(note);
+  while (box.children.length > 3) box.firstElementChild.remove();
+  setTimeout(() => note.remove(), kind === 'bad' ? 8000 : 5000);
 };
 
 const signedIn = () => demo || loadPlayerToken() !== null;
@@ -75,7 +89,7 @@ const loadMine = async () => {
   } else {
     // A network error or the bot having a bad moment: keep what was last shown, and say it may be old.
     loadFailed = mine === null;
-    if (mine !== null) flash('bad', 'We couldn’t refresh your coins just now. This is what we had a minute ago.');
+    if (mine !== null) toast('bad', 'We couldn’t refresh your coins just now. This is what we had a minute ago.');
   }
 };
 
@@ -85,80 +99,74 @@ const keyed = (node, key) => {
   return node;
 };
 
-const meter = (value) => {
-  const bar = el('span', { className: 'mission-fill' });
-  bar.style.width = `${value}%`;
-  return el('span', { className: 'mission-bar', ariaHidden: 'true' }, bar);
-};
+const coinChip = (amount, className = '') =>
+  el('span', { className: `coin-chip ${className}`.trim() }, coinArt('coin-chip-art'), el('span', { textContent: typeof amount === 'number' ? amount.toLocaleString('en-GB') : amount }));
 
-const missionItem = (m, personal) =>
-  el(
-    'li',
-    { className: `mission${personal && m.done ? ' is-done' : ''}` },
-    el(
-      'div',
-      { className: 'mission-top' },
-      el('span', { className: `tier tier-${m.tier}`, textContent: tierLabel(m.tier) }),
-      el('span', { className: 'mission-text', textContent: m.text }),
-      el('span', { className: 'mission-reward', textContent: `+${m.reward}` }),
+// ---- The top: facts and the purse ----
+
+const renderFacts = () => {
+  $('hero-facts').replaceChildren(
+    ...heroFacts(info.info).map((fact) =>
+      el('li', { className: 'fact' }, el('strong', { textContent: fact.value }), el('span', { textContent: fact.label })),
     ),
-    ...(personal
-      ? [
-          meter(percent(m.progress, m.target)),
-          el(
-            'div',
-            { className: 'mission-foot' },
-            el('span', { className: 'muted', textContent: m.done ? 'Done' : `${m.progress} of ${m.target}` }),
-            ...(m.scope === 'day' && !m.done && mine.coins.rerolls.left > 0
-              ? [
-                  keyed(
-                    el('button', {
-                      type: 'button',
-                      className: 'btn btn-ghost btn-small',
-                      textContent: armed === `reroll:${m.slot}` ? `Press again to pay ${mine.coins.rerolls.price}` : `Swap · ${mine.coins.rerolls.price}`,
-                      disabled: busy,
-                      onclick: () => press(`reroll:${m.slot}`, { action: 'reroll', slot: m.slot }),
-                    }),
-                    `reroll:${m.slot}`,
-                  ),
-                ]
-              : []),
-          ),
-        ]
-      : []),
-  );
-
-const renderMissions = () => {
-  const personal = mine?.coins ?? null;
-  const day = personal ? personal.daily : (info?.info.missions.daily ?? []);
-  const week = personal ? personal.weekly : (info?.info.missions.weekly ?? []);
-  $('missions-day').replaceChildren(...day.map((m) => missionItem(m, personal !== null)));
-  $('missions-week').replaceChildren(...week.map((m) => missionItem(m, personal !== null)));
-  setText(
-    $('missions-day-sub'),
-    personal
-      ? `You can swap one that isn’t done for another of its kind (${personal.rerolls.left} left today). They change at midnight, UTC.`
-      : 'The same for everyone. They change at midnight, UTC.',
   );
 };
 
-const renderMe = () => {
+// Counts the balance up (or down) to its new value, a little at a time, unless motion is turned down.
+const showBalance = (value) => {
+  const node = $('me-balance');
+  const from = shownBalance;
+  shownBalance = value;
+  if (from === null || from === value || reducedMotion) {
+    setText(node, value.toLocaleString('en-GB'));
+    return;
+  }
+  const steps = countSteps(from, value);
+  let i = 0;
+  const tickOver = () => {
+    if (shownBalance !== value) return;
+    setText(node, steps[i].toLocaleString('en-GB'));
+    i += 1;
+    if (i < steps.length) setTimeout(tickOver, 34);
+  };
+  tickOver();
+  node.classList.remove('bump');
+  void node.offsetWidth;
+  node.classList.add('bump');
+};
+
+const renderPurse = () => {
   const c = mine?.coins ?? null;
   const out = !signedIn();
   $('me-out').hidden = !out;
   $('me-error').hidden = out || mine !== null || !loadFailed;
   $('me-unlinked').hidden = out || mine === null || mine.linked;
   $('me-ready').hidden = c === null;
+  $('coins-purse').classList.toggle('is-ready', c !== null);
   $('me-sign-in').href = signInHref();
+  $('purse-art').replaceChildren(c === null ? coinHeap() : coinArt('purse-coin'));
   $('coins-history').hidden = c === null;
-  if (c === null) return;
-  setText($('me-balance'), c.balance.toLocaleString('en-GB'));
-  setText($('me-sub'), `You’ve earned ${coinText(c.earned)} in all, and spent ${c.spent.toLocaleString('en-GB')}.`);
-  setText($('me-today'), todayText(c.today));
-  $('me-meter').style.width = `${percent(c.today.earned, c.today.cap)}%`;
-  setText($('me-vip'), whitelistText(c.vipUntil, Date.now()));
+  if (c === null) {
+    shownBalance = null;
+    return;
+  }
+  showBalance(c.balance);
+  setText($('me-sub'), `${c.earned.toLocaleString('en-GB')} earned in all · ${c.spent.toLocaleString('en-GB')} spent`);
 
-  // Titles they own.
+  const used = percent(c.today.earned, c.today.cap);
+  $('me-ring').querySelector('.ring')?.remove();
+  $('me-ring').prepend(ring(used));
+  setText($('me-ring-value'), String(c.today.earned));
+  setText($('me-ring-of'), `of ${c.today.cap}`);
+  setText($('me-today'), todayText(c.today));
+  $('me-ring').classList.toggle('is-full', used >= 100);
+
+  const now = Date.now();
+  const has = c.vipUntil !== null && c.vipUntil > now;
+  const pill = $('me-vip');
+  pill.className = `purse-pill ${has ? 'is-on' : ''}`;
+  pill.replaceChildren(icon('vip', 'pill-icon'), el('span', { textContent: whitelistText(c.vipUntil, now) }));
+
   const owned = c.shop.filter((item) => item.kind === 'title' && item.owned);
   $('me-title-pick').hidden = owned.length === 0;
   const select = $('me-title-select');
@@ -169,41 +177,147 @@ const renderMe = () => {
   );
   if (c.title === null) select.value = '';
 
-  $('log-rows').replaceChildren(
+  $('log-list').replaceChildren(
     ...(c.log.length === 0
-      ? [el('tr', {}, el('td', { colSpan: 3, className: 'muted', textContent: 'Nothing yet.' }))]
+      ? [el('li', { className: 'timeline-empty muted', textContent: 'Nothing yet. Go and seed.' })]
       : c.log.map((tx) => {
           const line = logLine(tx);
           return el(
-            'tr',
-            {},
-            el('td', { textContent: line.what }),
-            el('td', { className: line.gain ? 'coins-gain' : 'coins-loss', textContent: line.delta }),
-            el('td', { textContent: dayText(tx.at) }),
+            'li',
+            { className: `timeline-item ${line.gain ? 'is-gain' : 'is-spend'}` },
+            el('span', { className: 'timeline-dot', ariaHidden: 'true' }),
+            el('span', { className: 'timeline-what', textContent: line.what }),
+            el('span', { className: 'timeline-delta', textContent: line.delta }),
+            el('span', { className: 'timeline-when muted', textContent: dayText(tx.at) }),
           );
         })),
   );
 };
 
-const shopItem = (item, personal) => {
-  const pressable = personal && canPress(item);
+// ---- How it fits together ----
+
+const renderSteps = () => {
+  const { rates, prices } = info.info;
+  const seeds = seedsForWeek(rates.seed, prices.vipWeek);
+  const steps = [
+    ['seed', 'Seed', `${rates.seed} for every seed. The server needs you most when it’s empty.`],
+    ['play', 'Play', `Matches, wins and time on the server all pay a little, up to ${rates.activityCap} a day.`],
+    ['mission', 'Do missions', 'Three a day and three a week. Finish one and it pays at once.'],
+    ['vip', 'Spend', seeds === null ? `A week of whitelist is ${prices.vipWeek}.` : `A week of whitelist is ${prices.vipWeek}: about ${seeds} seeds.`],
+  ];
+  $('coins-steps').replaceChildren(
+    ...steps.map(([name, title, text], i) =>
+      el(
+        'li',
+        { className: 'coins-step' },
+        el('span', { className: 'coins-step-n', textContent: String(i + 1) }),
+        icon(name, 'coins-step-icon'),
+        el('h3', { textContent: title }),
+        el('p', { textContent: text }),
+      ),
+    ),
+  );
+};
+
+// ---- Missions ----
+
+const missionItem = (m, personal) => {
+  const done = personal && m.done;
   return el(
     'li',
-    { className: `shop-item${personal && item.owned ? ' is-owned' : ''}` },
-    el('span', { className: 'shop-name', textContent: itemName(item) }),
-    el('span', { className: 'shop-price', textContent: item.price.toLocaleString('en-GB') }),
+    { className: `mission tier-${m.tier}${done ? ' is-done' : ''}` },
+    el(
+      'div',
+      { className: 'mission-top' },
+      el('span', { className: 'mission-badge' }, done ? tick() : icon('mission', 'mission-icon')),
+      el('div', { className: 'mission-body' }, el('span', { className: 'mission-tier', textContent: tierLabel(m.tier) }), el('span', { className: 'mission-text', textContent: m.text })),
+      coinChip(`+${m.reward}`, 'mission-reward'),
+    ),
+    ...(personal
+      ? [
+          el('div', { className: 'mission-bar', ariaHidden: 'true' }, el('span', { className: 'mission-fill', style: `width: ${percent(m.progress, m.target)}%` })),
+          el(
+            'div',
+            { className: 'mission-foot' },
+            el('span', { className: 'mission-count', textContent: done ? 'Done, paid' : `${m.progress} of ${m.target}` }),
+            ...(m.scope === 'day' && !done && mine.coins.rerolls.left > 0
+              ? [
+                  keyed(
+                    el(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'btn btn-ghost btn-small btn-swap',
+                        disabled: busy,
+                        onclick: () => press(`reroll:${m.slot}`, { action: 'reroll', slot: m.slot }),
+                      },
+                      icon('swap', 'btn-icon'),
+                      el('span', { textContent: armed === `reroll:${m.slot}` ? `Press again · ${mine.coins.rerolls.price}` : `Swap · ${mine.coins.rerolls.price}` }),
+                    ),
+                    `reroll:${m.slot}`,
+                  ),
+                ]
+              : []),
+          ),
+        ]
+      : []),
+  );
+};
+
+const renderMissions = () => {
+  const personal = mine?.coins ?? null;
+  const day = personal ? personal.daily : (info?.info.missions.daily ?? []);
+  const week = personal ? personal.weekly : (info?.info.missions.weekly ?? []);
+  $('missions-day').replaceChildren(...day.map((m) => missionItem(m, personal !== null)));
+  $('missions-week').replaceChildren(...week.map((m) => missionItem(m, personal !== null)));
+  const now = Date.now();
+  setText($('reset-day'), `Changes in ${untilReset('day', now)}`);
+  setText($('reset-week'), `Changes in ${untilReset('week', now)}`);
+  setText(
+    $('missions-note'),
+    personal
+      ? `Finish one and it pays at once. You can swap a daily one that isn’t done for another of its kind (${personal.rerolls.left} swaps left today).`
+      : 'The same for everyone. Sign in to track yours, and see what you’ve done.',
+  );
+};
+
+// ---- The shop ----
+
+const SHOP_ICON = { vip: 'vip', title: 'title', role: 'role' };
+
+const shopCard = (item, personal, ctx) => {
+  const pressable = personal && canPress(item);
+  const key = `buy:${item.id}`;
+  const best = item.id === 'vip-7' ? ctx.saving : null;
+  const far = personal && !item.owned && !item.afford ? toGo(ctx.balance, item.price) : null;
+  return el(
+    'li',
+    { className: `shop-card kind-${item.kind}${personal && item.owned ? ' is-owned' : ''}${best ? ' is-best' : ''}` },
+    ...(best ? [el('span', { className: 'shop-flag', textContent: `Best value · ${best}` })] : []),
+    ...(personal && item.owned && item.kind !== 'vip' ? [el('span', { className: 'shop-flag shop-flag-owned' }, tick(), el('span', { textContent: 'Yours' }))] : []),
+    el('span', { className: 'shop-art' }, icon(SHOP_ICON[item.kind], 'shop-icon')),
+    item.kind === 'title'
+      ? el('span', { className: `title-preview tone-${titleTone(item.price)}`, textContent: itemName(item) })
+      : el('h4', { className: 'shop-name', textContent: itemName(item) }),
+    el('p', { className: 'shop-blurb', textContent: itemBlurb(item) }),
+    el('p', { className: 'shop-price' }, coinChip(item.price)),
+    ...(far
+      ? [
+          el('div', { className: 'shop-gap' }, el('span', { className: 'shop-gap-bar', ariaHidden: 'true' }, el('span', { style: `width: ${far.percent}%` })), el('span', { className: 'shop-gap-text', textContent: `${far.left.toLocaleString('en-GB')} to go` })),
+        ]
+      : []),
     ...(personal
       ? [
           keyed(
             el('button', {
               type: 'button',
-              className: 'btn btn-small ' + (pressable ? 'btn-coin' : 'btn-ghost'),
-              textContent: busy && armed === null && pending === `buy:${item.id}` ? 'Working…' : buyLabel(item, armed === `buy:${item.id}`),
+              className: `btn btn-small shop-buy ${pressable ? 'btn-coin' : 'btn-ghost'}`,
+              textContent: busy && armed === null && pending === key ? 'Working…' : buyLabel(item, armed === key),
               disabled: !pressable || busy,
               title: pressable ? '' : (item.reason ?? ''),
-              onclick: () => press(`buy:${item.id}`, { action: 'buy', item: item.id }),
+              onclick: () => press(key, { action: 'buy', item: item.id }),
             }),
-            `buy:${item.id}`,
+            key,
           ),
         ]
       : []),
@@ -213,67 +327,103 @@ const shopItem = (item, personal) => {
 const renderShop = () => {
   const personal = mine?.coins ?? null;
   const items = personal ? personal.shop : (info?.info.shop ?? []);
-  setText($('shop-sub'), personal ? 'Press a button twice to buy it. What you buy is paid for first and given back if it can’t be delivered.' : 'Sign in and link your Steam account to buy.');
-  $('shop').replaceChildren(
+  const ctx = { saving: weekSaving(items), balance: personal?.balance ?? 0 };
+  setText(
+    $('shop-sub'),
+    personal ? 'Press a button twice to buy. What you buy is paid for first, and given back if it can’t be delivered.' : 'Sign in and link your Steam account to buy.',
+  );
+  $('shop-groups').replaceChildren(
     ...shopGroups(items).map((group) =>
       el(
         'section',
-        { className: 'shop-group' },
-        el('h3', { textContent: group.title }),
-        el('p', { className: 'muted coins-sub', textContent: group.note }),
-        el('ul', { className: 'shop-list' }, ...group.items.map((item) => shopItem(item, personal !== null))),
+        { className: `shop-group group-${group.kind}` },
+        el('header', { className: 'shop-group-head' }, el('h3', { textContent: group.title }), el('p', { className: 'muted', textContent: group.note })),
+        el('ul', { className: 'shop-grid' }, ...group.items.map((item) => shopCard(item, personal !== null, ctx))),
       ),
     ),
   );
 };
 
+// ---- Earning ----
+
 const renderEarn = () => {
   const { rates, prices } = info.info;
   setText($('earn-sub'), 'Seeding pays the most, because it is what the server needs. Playing and missions pay a little.');
-  $('earn-rows').replaceChildren(
+  $('earn-grid').replaceChildren(
     ...earnRows(rates).map((row) =>
-      el('tr', {}, el('td', { textContent: row.what }), el('td', { className: 'coins-pays', textContent: row.pays }), el('td', { className: 'muted', textContent: row.note })),
+      el(
+        'li',
+        { className: 'earn-card' },
+        el('span', { className: 'earn-art' }, icon(row.icon, 'earn-icon')),
+        el('p', { className: 'earn-pays', textContent: row.pays }),
+        el('h4', { textContent: row.what }),
+        el('p', { className: 'muted', textContent: row.note }),
+      ),
     ),
   );
+  const seeds = seedsForWeek(rates.seed, prices.vipWeek);
   setText(
     $('earn-fine'),
-    `Playing, matches and seeding minutes pay up to ${rates.activityCap} a day between them; the seed itself and missions are on top. A week of whitelist is ${prices.vipWeek}${seedsForWeek(rates.seed, prices.vipWeek) === null ? '' : `, about ${seedsForWeek(rates.seed, prices.vipWeek)} seeds`}.`,
+    `Playing, matches and seeding minutes pay up to ${rates.activityCap} a day between them; the seed itself and missions are on top. A week of whitelist is ${prices.vipWeek}${seeds === null ? '' : `, about ${seeds} seeds`}.`,
   );
   setText($('faq-ahead'), String(prices.vipAheadDays));
 };
 
+// ---- Top earners ----
+
+const MEDAL = { 1: 'First', 2: 'Second', 3: 'Third' };
+
+const podiumPlace = (row) =>
+  row === null
+    ? el('li', { className: 'podium-slot is-empty', ariaHidden: 'true' })
+    : el(
+        'li',
+        { className: `podium-slot place-${row.place}` },
+        el('span', { className: 'podium-medal', title: MEDAL[row.place], textContent: String(row.place) }),
+        el('span', { className: 'podium-name' }, playerName(row)),
+        ...(row.title ? [el('span', { className: 'chip chip-title', textContent: row.title })] : []),
+        el('span', { className: 'podium-earned' }, coinChip(row.earned)),
+      );
+
 const renderLeaders = () => {
   const rows = info.leaders;
+  setText($('leaders-note'), info.players > 0 ? `${info.players.toLocaleString('en-GB')} players have coins, holding ${info.held.toLocaleString('en-GB')} between them. Spending doesn’t cost you your place.` : '');
+  if (rows.length === 0) {
+    $('leaders').replaceChildren(el('p', { className: 'muted board-empty', textContent: 'Nobody has earned any yet. Go and seed.' }));
+    return;
+  }
+  const { top, rest } = podium(rows);
   $('leaders').replaceChildren(
-    rows.length === 0
-      ? el('p', { className: 'muted board-empty', textContent: 'Nobody has earned any yet. Go and seed.' })
-      : el(
-          'table',
-          { className: 'players-table' },
-          el('thead', {}, el('tr', {}, ...['#', 'Player', 'Earned'].map((h) => el('th', { scope: 'col', textContent: h })))),
+    el('ol', { className: 'podium' }, ...top.map(podiumPlace)),
+    ...(rest.length === 0
+      ? []
+      : [
           el(
-            'tbody',
-            {},
-            ...rows.map((p, i) =>
+            'ol',
+            { className: 'leader-list', start: 4 },
+            ...rest.map((p) =>
               el(
-                'tr',
-                {},
-                el('td', { className: 'rank', textContent: String(i + 1) }),
-                el('td', { className: 'player' }, playerName(p), ...(p.title ? [el('span', { className: 'chip chip-title', textContent: p.title })] : [])),
-                el('td', { textContent: p.earned.toLocaleString('en-GB') }),
+                'li',
+                { className: 'leader-row' },
+                el('span', { className: 'leader-name' }, playerName(p), ...(p.title ? [el('span', { className: 'chip chip-title', textContent: p.title })] : [])),
+                coinChip(p.earned),
               ),
             ),
           ),
-        ),
+        ]),
   );
 };
+
+// ---- Putting it together ----
 
 const render = () => {
   if (info === null) return;
   const focused = document.activeElement?.getAttribute?.('data-focus-key') ?? null;
   $('coins-off').hidden = true;
   $('coins-body').hidden = false;
-  renderMe();
+  renderFacts();
+  renderPurse();
+  renderSteps();
   renderMissions();
   renderShop();
   renderEarn();
@@ -290,9 +440,8 @@ const press = async (key, body) => {
     return;
   }
   armed = null;
-  clearFlash();
   if (demo) {
-    flash('good', demoAct(body));
+    toast('good', demoAct(body));
     render();
     return;
   }
@@ -303,12 +452,12 @@ const press = async (key, body) => {
     const { status, data } = await askBot('/api/account/coins', { method: 'POST', body });
     if (status === 200 && data?.ok) {
       mine = { enabled: true, linked: true, coins: data.coins };
-      flash('good', data.message);
+      toast('good', data.message);
     } else if (status === 401) {
       mine = null;
-      flash('bad', 'You were signed out. Sign in again.');
+      toast('bad', 'You were signed out. Sign in again.');
     } else {
-      flash('bad', data?.error ?? 'Could not do that just now. Try again in a minute.');
+      toast('bad', data?.error ?? 'Could not do that just now. Try again in a minute.');
       await loadMine();
     }
   } finally {
@@ -342,10 +491,9 @@ const demoAct = (body) => {
 $('me-title-select').setAttribute('data-focus-key', 'title');
 $('me-title-select').addEventListener('change', async (event) => {
   if (busy) return;
-  clearFlash();
   const id = event.target.value === '' ? null : event.target.value;
   if (demo) {
-    flash('good', 'Sample: title changed.');
+    toast('good', 'Sample: title changed.');
     return;
   }
   busy = true;
@@ -354,8 +502,8 @@ $('me-title-select').addEventListener('change', async (event) => {
     const { status, data } = await askBot('/api/account/coins', { method: 'POST', body: { action: 'title', id } });
     if (status === 200 && data?.ok) {
       mine = { enabled: true, linked: true, coins: data.coins };
-      flash('good', data.message);
-    } else flash('bad', data?.error ?? 'Could not do that just now.');
+      toast('good', data.message);
+    } else toast('bad', data?.error ?? 'Could not do that just now.');
   } finally {
     busy = false;
     render();
@@ -364,7 +512,7 @@ $('me-title-select').addEventListener('change', async (event) => {
 
 // Pressing anything else disarms a button.
 document.addEventListener('click', (event) => {
-  if (armed !== null && !event.target.closest('.shop-item button, .mission button')) {
+  if (armed !== null && !event.target.closest('.shop-card button, .mission button')) {
     armed = null;
     render();
   }
@@ -373,9 +521,15 @@ document.addEventListener('click', (event) => {
 const off = () => {
   $('coins-body').hidden = true;
   $('coins-off').hidden = false;
+  $('hero-facts').replaceChildren();
+  $('purse-art').replaceChildren(coinHeap());
 };
 
-if (arrived.error !== undefined) flash('bad', errorText(arrived.error));
+if (arrived.error !== undefined) toast('bad', errorText(arrived.error));
+// Before the numbers arrive, the purse shows the picture and the way in.
+$('purse-art').replaceChildren(coinHeap());
+if (!signedIn()) $('me-out').hidden = false;
+$('me-sign-in').href = signInHref();
 
 startLive(
   async (data) => {
@@ -391,4 +545,4 @@ startLive(
 );
 
 // Where the numbers are used elsewhere on the site, keepQuery keeps ?demo on the links in the page body.
-for (const a of document.querySelectorAll('#coins-body a[data-keep-query]')) a.href = keepQuery(a.getAttribute('href'));
+for (const a of document.querySelectorAll('#coins-body a[data-keep-query], .coins-purse a[data-keep-query]')) a.href = keepQuery(a.getAttribute('href'));
