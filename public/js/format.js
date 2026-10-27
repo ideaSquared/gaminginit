@@ -1756,3 +1756,10 @@ export const regularsText = (r) => {
 };
 
 export const regularMeta = (p) => `${plural(p.days, 'day')} in 30 · ${formatHours(p.hours * 60)}`;
+
+// What seeding earns while INITcoins are on (the bot's `coins` in /api/stats, from its coins.ts): what a seed pays and what
+// a week of whitelist costs.
+export const coinsOffer = (coins) => `Seed and earn ${coins.seed} INITcoins, then spend them on whitelist days.`;
+
+export const coinsDetail = (coins) =>
+  `A seed counts when you're on for a few minutes while the server seeds, and it goes live. A week of whitelist, which lets you skip the queue when the server is full, is ${coins.vipWeek} INITcoins: about 4 seeds, or 3 seeds and some playing. Playing and missions earn coins too.`;

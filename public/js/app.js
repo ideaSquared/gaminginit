@@ -13,6 +13,8 @@ import {
   scoreLine,
   serverState,
   timeAgo,
+  coinsDetail,
+  coinsOffer,
   vipDetail,
   vipOffer,
 } from './format.js';
@@ -103,12 +105,18 @@ const renderDiscord = () => {
 // What seeding earns, when the bot gives seeders VIP.
 const renderVip = () => {
   const vip = stats?.vip ?? null;
-  $('vip-cta').hidden = !vip;
-  $('vip').hidden = !vip;
-  if (!vip) return;
-  setText($('vip-cta-text'), vipOffer(vip));
-  setText($('vip-step-offer'), vipOffer(vip));
-  setText($('vip-step-detail'), vipDetail(vip));
+  const coins = stats?.coins ?? null;
+  $('vip-cta').hidden = !vip && !coins;
+  $('vip').hidden = !vip && !coins;
+  if (!vip && !coins) return;
+  // INITcoins replace seeder VIP: the same boxes, saying what a seed pays instead.
+  setText($('vip-cta-tag'), coins ? 'INITcoins' : 'Seeder VIP');
+  setText($('vip-cta-text'), coins ? coinsOffer(coins) : vipOffer(vip));
+  setText($('vip-step-title'), coins ? 'Seed and earn INITcoins' : 'Seed and get VIP');
+  setText($('vip-step-offer'), coins ? coinsOffer(coins) : vipOffer(vip));
+  setText($('vip-step-detail'), coins ? coinsDetail(coins) : vipDetail(vip));
+  $('vip-cta-link').href = keepQuery(coins ? 'coins' : '#vip');
+  setText($('vip-cta-link'), coins ? 'See the shop' : 'How it works');
 };
 
 // The match on now: the score and its top players. The live page follows it kill by kill.

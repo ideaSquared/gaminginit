@@ -1,6 +1,6 @@
-import { BOARDS, boardRows, emptyNote, phaseRanges, vipOffer } from './format.js';
+import { BOARDS, boardRows, coinsOffer, emptyNote, phaseRanges, vipOffer } from './format.js';
 import { serverArt, vipTicketArt } from './art-info.js';
-import { startLive } from './live.js';
+import { keepQuery, startLive } from './live.js';
 import { boardTable, el, playerName, setText } from './views.js';
 
 // The seeding page: what seeding is, in the bot's own numbers, then our top seeders and who has seeder VIP.
@@ -15,7 +15,13 @@ const until = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numer
 // Uses the bot's own thresholds, so the explanation stays right if they change. Until the stats load, the page shows
 // the bot's defaults.
 const renderSeeding = (stats) => {
-  $('seed-vip').hidden = !stats?.vip;
+  $('seed-vip').hidden = !stats?.vip && !stats?.coins;
+  // While INITcoins are on, seeding pays coins instead of a whitelist slot.
+  if (stats?.coins) {
+    setText($('seed-vip-text'), `${coinsOffer(stats.coins)} A week of whitelist is ${stats.coins.vipWeek}.`);
+    setText($('seed-vip-link'), 'How INITcoins work');
+    $('seed-vip-link').href = keepQuery('coins');
+  }
   if (!stats?.thresholds) return;
   const ranges = phaseRanges(stats.thresholds);
   for (const kind of ['empty', 'seeding', 'live']) setText($(`range-${kind}`), ranges[kind]);

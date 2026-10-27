@@ -3490,6 +3490,17 @@ html.story-open {
   color: var(--accent-ink);
 }
 
+.chip-title {
+  padding: 1px 8px;
+  border-color: var(--warning);
+  color: var(--warning);
+  font-size: 0.72rem;
+}
+
+.player .chip-title {
+  margin-left: 8px;
+}
+
 .chip-ban {
   border-color: var(--critical);
   color: color-mix(in srgb, var(--critical) 65%, white);

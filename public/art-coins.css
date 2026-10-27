@@ -1,0 +1,293 @@
+/* The INITcoins page (see coins.js). */
+
+.coins-card {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.coins-card[hidden],
+#coins-body[hidden] {
+  display: none;
+}
+
+.coins-sub {
+  margin: 0 0 12px;
+  max-width: 62ch;
+  font-size: 0.9rem;
+}
+
+.coins-fine {
+  margin-top: 12px;
+  max-width: 70ch;
+  font-size: 0.9rem;
+}
+
+.coins-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 20px;
+}
+
+.coins-columns > .coins-card {
+  margin-bottom: 0;
+}
+
+.coins-columns + .coins-card {
+  margin-top: 20px;
+}
+
+/* Your coins */
+.coins-me {
+  border-top: 3px solid var(--warning);
+}
+
+.coins-balance {
+  margin: 4px 0 12px;
+}
+
+.coins-amount {
+  margin: 0;
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--warning);
+}
+
+.coins-unit {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.coins-today {
+  margin: 0 0 6px;
+  color: var(--text-2);
+}
+
+.coins-meter {
+  height: 6px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  max-width: 420px;
+}
+
+.coins-meter > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--warning);
+}
+
+.coins-title-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.coins-title-pick select {
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  font: inherit;
+}
+
+/* Missions */
+.missions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.mission {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+}
+
+.mission.is-done {
+  border-color: color-mix(in srgb, var(--good) 60%, var(--hairline));
+}
+
+.mission-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.mission-text {
+  flex: 1;
+  font-weight: 600;
+}
+
+.mission.is-done .mission-text {
+  text-decoration: line-through;
+  color: var(--text-2);
+}
+
+.mission-reward {
+  font-weight: 800;
+  color: var(--warning);
+  font-variant-numeric: tabular-nums;
+}
+
+.tier {
+  flex: none;
+  padding: 1px 8px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+}
+
+.tier-1 {
+  border-color: var(--series);
+}
+
+.tier-2 {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.mission-bar {
+  display: block;
+  height: 6px;
+  margin-top: 10px;
+  background: var(--page);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mission-fill {
+  display: block;
+  height: 100%;
+  background: var(--series);
+}
+
+.mission.is-done .mission-fill {
+  background: var(--good);
+}
+
+.mission-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.9rem;
+  min-height: 24px;
+}
+
+/* The shop */
+.shop-group + .shop-group {
+  margin-top: 22px;
+}
+
+.shop-group h3 {
+  margin-bottom: 2px;
+}
+
+.shop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+}
+
+.shop-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+}
+
+.shop-item.is-owned {
+  border-color: color-mix(in srgb, var(--good) 50%, var(--hairline));
+}
+
+.shop-name {
+  font-weight: 700;
+}
+
+.shop-price {
+  font-weight: 800;
+  color: var(--warning);
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-item .btn {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+
+.btn-coin {
+  background: var(--warning);
+  color: #1a1203;
+  cursor: pointer;
+}
+
+.btn-coin:hover {
+  background: color-mix(in srgb, var(--warning) 85%, white);
+}
+
+button.btn-ghost,
+button.btn-coin {
+  font: inherit;
+  font-weight: 700;
+}
+
+button.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Tables */
+.coins-table th:nth-child(2),
+.coins-table td:nth-child(2) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.coins-table th:nth-child(3),
+.coins-table td:nth-child(3) {
+  text-align: left;
+  white-space: normal;
+}
+
+.coins-pays {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.coins-gain {
+  color: var(--good);
+}
+
+.coins-loss {
+  color: var(--text-2);
+}
+
+.coins-faq code {
+  padding: 1px 5px;
+  background: var(--surface-2);
+  border-radius: 4px;
+}

@@ -170,6 +170,28 @@ What it shows:
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
 `/#leaderboard` or `/#seeding`, go to their pages.
 
+## INITcoins
+
+`/coins` (`coins.html`, `js/coins.js`, `js/coinsmodel.js`, `art-coins.css`) is the page for the bot's INITcoins: a currency
+players earn by seeding, playing and doing missions, and spend on whitelist days, titles and Discord roles. The bot does all
+the sums (its `coins.ts`, see its README, "INITcoins"); the page shows them. While the bot has them off, `/api/coins` is a 404
+and the page says they aren't on yet.
+
+- **Public** (from `/api/coins`): how coins are earned (the bot's own rates, so the table stays right when they change), today's
+  and this week's missions, the shop with prices, and the top earners (never a private profile).
+- **Signed in with a linked Steam account** (from `/api/account/coins`): the balance, what they've earned and spent, how much
+  of today's playing limit is used, how long their whitelist has to run, each mission with a progress bar, the shop with what
+  they can afford, a picker for the title they show, and their last changes. A mission that isn't done can be swapped for
+  another of its kind for a few coins. Buying and swapping take two presses, then ask the bot (`POST /api/account/coins`), which
+  checks everything again: the page only shows what it said.
+- **Signed out, or no Steam account yet**: the public parts, and a button to sign in or to link Steam on `/account`. Coins go
+  to a player's Steam account as they earn them, linked or not.
+- A title a player buys shows on their player page and in the top earners.
+- `/account` has an INITcoins row with the balance and a link here, and says VIP "bought with INITcoins".
+- While INITcoins are on, the bot sends `vip: null` and `coins: { seed, vipWeek }` in `/api/stats`, so the home page's and the
+  seeding page's VIP boxes say what a seed pays instead, and link here.
+- `?demo` shows a signed-in sample; its buttons only change the sample.
+
 ## Player accounts
 
 A player signs in with Discord (`/account`), and the bot, not the website, does the rest: it keeps the account, links the Steam

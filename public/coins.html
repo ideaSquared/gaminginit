@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>INITcoins | gaminginit</title>
+    <meta name="description" content="INITcoins: earn them by seeding, playing and doing missions on the gaminginit WARDOGS server, and spend them on whitelist days, titles and Discord roles." />
+    <link rel="canonical" href="https://gaminginit.com/coins" />
+    <meta property="og:site_name" content="gaminginit" />
+    <meta property="og:title" content="INITcoins | gaminginit" />
+    <meta property="og:description" content="INITcoins: earn them by seeding, playing and doing missions on the gaminginit WARDOGS server, and spend them on whitelist days, titles and Discord roles." />
+    <meta property="og:url" content="https://gaminginit.com/coins" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://gaminginit.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="INITcoins | gaminginit" />
+    <meta name="twitter:description" content="INITcoins: earn them by seeding, playing and doing missions on the gaminginit WARDOGS server, and spend them on whitelist days, titles and Discord roles." />
+    <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
+    <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta name="theme-color" content="#0b0d10" />
+    <!-- Where the bot serves its stats. Keep it the same as in index.html. See README.md. -->
+    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="art-info.css" />
+    <link rel="stylesheet" href="art-coins.css" />
+    <script type="module" src="js/coins.js"></script>
+    <script type="module" src="js/nav.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="./" data-keep-query aria-label="gaminginit, home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
+        </a>
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
+          <span class="nav-toggle-label">Menu</span>
+          <svg class="nav-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+        <nav class="nav-sections" id="nav-menu" aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="live" data-keep-query><span class="nav-link-title">Live</span></a></li>
+            <li><a href="matches" data-keep-query><span class="nav-link-title">Matches</span></a></li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-players">Players<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Players</span>
+              <ul class="nav-sub" id="nav-sub-players">
+                <li><a href="leaderboard" data-keep-query><span class="nav-link-title">Leaderboard</span><span class="nav-link-note">Top kills, K/D and seeders</span></a></li>
+                <li><a href="players" data-keep-query><span class="nav-link-title">All players</span><span class="nav-link-note">Search anyone seen in 90 days</span></a></li>
+              </ul>
+            </li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-stats">Stats<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Stats</span>
+              <ul class="nav-sub" id="nav-sub-stats">
+                <li><a href="stats" data-keep-query><span class="nav-link-title">Server activity</span><span class="nav-link-note">Players over time and busy hours</span></a></li>
+                <li><a href="teams" data-keep-query><span class="nav-link-title">Team win rates</span><span class="nav-link-note">Which side wins most</span></a></li>
+                <li><a href="lifetime" data-keep-query><span class="nav-link-title">Lifetime stats</span><span class="nav-link-note">Everything since we started</span></a></li>
+              </ul>
+            </li>
+            <li class="nav-group">
+              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-community">Community<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+              <span class="nav-group-label">Community</span>
+              <ul class="nav-sub" id="nav-sub-community">
+                <li><a href="vote" data-keep-query data-vote-link><span class="nav-link-title">Map vote</span><span class="nav-link-note">Pick the next map</span><span class="nav-badge">Open</span></a></li>
+                <li><a href="seeding" data-keep-query><span class="nav-link-title">Seeding &amp; VIP</span><span class="nav-link-note">Help fill the server and earn VIP</span></a></li>
+                <li><a href="coins" data-keep-query aria-current="page"><span class="nav-link-title">INITcoins</span><span class="nav-link-note">Earn coins, spend them on VIP</span></a></li>
+                <li><a href="rules" data-keep-query><span class="nav-link-title">Rules</span><span class="nav-link-note">How to play fair on the server</span></a></li>
+                <li><a href="season" data-keep-query><span class="nav-link-title">Season roundup</span><span class="nav-link-note">Awards, records and team of the season</span></a></li>
+              </ul>
+            </li>
+            <li><a href="shame" data-keep-query><span class="nav-link-title">Shame</span></a></li>
+            <li class="nav-panel-cta">
+              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="menu" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                <span>Join our Discord</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <a class="status nav-status" id="nav-status" href="./#join" data-keep-query data-kind="empty" hidden>
+          <span class="status-icon" aria-hidden="true"></span>
+          <span class="nav-status-label"></span>
+          <span class="nav-status-count"></span>
+        </a>
+        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+          <span>Discord</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- The notice for every page, like the server being down. Set in announcement.json; see README.md. -->
+      <div class="announcement wrap" id="announcement" role="status" hidden></div>
+      <div class="notice wrap" id="notice" role="status" hidden></div>
+
+      <section class="section" aria-labelledby="coins-title">
+        <div class="wrap">
+          <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
+          <div class="section-head">
+            <h1 class="page-title" id="coins-title">INITcoins</h1>
+            <p class="section-note">Earn them by seeding, playing and doing missions. Spend them on whitelist days, titles and Discord roles.</p>
+          </div>
+
+          <!-- What happened on the way back from Discord, or what a purchase did, said once. -->
+          <div class="account-flash" id="coins-flash" role="status" hidden></div>
+
+          <!-- The bot has INITcoins switched off (or is not connected). -->
+          <div class="card coins-card" id="coins-off" hidden>
+            <h2 class="account-sub">Not switched on yet</h2>
+            <p>INITcoins aren’t on for the server right now. When they are, this page shows how to earn and spend them.</p>
+          </div>
+
+          <div id="coins-body" hidden>
+            <!-- Your coins: signed out, signed in without a Steam account, or the lot. -->
+            <article class="card coins-card coins-me" id="coins-me" aria-labelledby="me-title">
+              <h2 class="account-sub" id="me-title">Your coins</h2>
+              <div id="me-out" hidden>
+                <p>Sign in with Discord to see your coins, do the missions and spend them. You earn from the first game you play, signed in or not: your Steam account collects what you’ve earned once it’s linked.</p>
+                <p class="account-actions">
+                  <a class="btn btn-discord" id="me-sign-in" href="#">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
+                    <span>Sign in with Discord</span>
+                  </a>
+                </p>
+              </div>
+              <div id="me-unlinked" hidden>
+                <p>Link your Steam account to see your coins and spend them. Whatever you’ve earned in game is waiting.</p>
+                <p class="account-actions"><a class="btn btn-ghost" href="account" data-keep-query>Link your Steam account</a></p>
+              </div>
+              <div id="me-ready" hidden>
+                <div class="coins-balance">
+                  <p class="coins-amount"><span id="me-balance">0</span> <span class="coins-unit">INITcoins</span></p>
+                  <p class="muted" id="me-sub"></p>
+                </div>
+                <p class="coins-today" id="me-today"></p>
+                <div class="coins-meter" aria-hidden="true"><span id="me-meter"></span></div>
+                <p id="me-vip"></p>
+                <label class="coins-title-pick" id="me-title-pick" hidden>
+                  <span>Title on your player page</span>
+                  <select id="me-title-select"></select>
+                </label>
+              </div>
+            </article>
+
+            <div class="coins-columns">
+              <article class="card coins-card" aria-labelledby="missions-day-title">
+                <h2 class="account-sub" id="missions-day-title">Today’s missions</h2>
+                <p class="muted coins-sub" id="missions-day-sub">The same for everyone. They change at midnight, UTC.</p>
+                <ul class="missions" id="missions-day"></ul>
+              </article>
+              <article class="card coins-card" aria-labelledby="missions-week-title">
+                <h2 class="account-sub" id="missions-week-title">This week’s missions</h2>
+                <p class="muted coins-sub">They change on Monday, UTC.</p>
+                <ul class="missions" id="missions-week"></ul>
+              </article>
+            </div>
+
+            <article class="card coins-card" aria-labelledby="shop-title">
+              <h2 class="account-sub" id="shop-title">The shop</h2>
+              <p class="muted coins-sub" id="shop-sub"></p>
+              <div id="shop"></div>
+            </article>
+
+            <article class="card coins-card" aria-labelledby="earn-title">
+              <h2 class="account-sub" id="earn-title">How you earn them</h2>
+              <p class="muted coins-sub" id="earn-sub"></p>
+              <table class="players-table coins-table">
+                <thead><tr><th scope="col">What</th><th scope="col">Pays</th><th scope="col">Notes</th></tr></thead>
+                <tbody id="earn-rows"></tbody>
+              </table>
+              <p class="muted coins-fine" id="earn-fine"></p>
+            </article>
+
+            <article class="card coins-card" id="coins-history" aria-labelledby="log-title" hidden>
+              <h2 class="account-sub" id="log-title">Your last changes</h2>
+              <table class="players-table coins-table">
+                <thead><tr><th scope="col">What</th><th scope="col">Coins</th><th scope="col">When</th></tr></thead>
+                <tbody id="log-rows"></tbody>
+              </table>
+            </article>
+
+            <article class="card coins-card board" aria-labelledby="leaders-title">
+              <h2 class="account-sub" id="leaders-title">Top earners</h2>
+              <p class="board-sub" id="leaders-sub">Most INITcoins earned, ever. Spending them doesn’t cost you your place.</p>
+              <div id="leaders"></div>
+            </article>
+
+            <article class="card coins-card" aria-labelledby="faq-title">
+              <h2 class="account-sub" id="faq-title">Good to know</h2>
+              <ul class="account-perks coins-faq">
+                <li>Coins go to your Steam account as you earn them, linked or not. Link it on <a href="account" data-keep-query>your account</a> to spend them.</li>
+                <li>Whitelist is added to the days you have left. You can hold up to <span id="faq-ahead">14</span> days at once, so it can’t be stockpiled.</li>
+                <li>The server only reads the whitelist when it restarts, so it starts at the next restart, usually the daily one.</li>
+                <li>Staff have a whitelist spot already, so they don’t earn or spend coins. Private profiles are left off the board.</li>
+                <li>You’ll get a message in game when you finish a mission, and in the Discord with <code>/coins</code>, <code>/shop</code> and <code>/buy</code>.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
+        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
+        <p>Not affiliated with the developers or publishers of WARDOGS.</p>
+        <p><a href="admin" data-keep-query>Staff sign-in</a></p>
+        <p class="footer-credit">Developed by <a href="https://ideasquared.co.uk" rel="noopener">ideaSquared</a></p>
+      </div>
+    </footer>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="discord-logo" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
+        />
+      </symbol>
+    </svg>
+  </body>
+</html>
