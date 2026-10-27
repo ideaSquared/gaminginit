@@ -79,3 +79,27 @@ const ICONS = {
 };
 
 export const icon = (name, className = 'icon-art') => draw(className, '0 0 48 48', ICONS[name] ?? ICONS.mission);
+
+// A shield for each title, with its own mark inside: a sprout, a seed, rank chevrons, a paw, a dog tag and a crown. The shield
+// and the mark take the colour of the text around them, so the page's bronze, silver and gold tones choose how it looks.
+const SHIELD = '<path class="emblem-bg" d="M24 4l16 6v12c0 11-7 18-16 22C15 40 8 33 8 22V10z"/>';
+const MARK = 'class="emblem-mark" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+
+const EMBLEMS = {
+  // Two leaves on a stem: the newest.
+  sprout: `<g ${MARK}><path d="M24 35V22"/><path d="M24 26c-6.5 0-10-3.5-10-9 6.5 0 10 3.5 10 9z"/><path d="M24 22c0-5.5 3.5-9 10-9 0 5.5-3.5 9-10 9z"/></g>`,
+  // A seed with a line down its middle.
+  seeder: `<g ${MARK}><path d="M24 13c5.5 5.5 8 9.5 8 13a8 8 0 0 1-16 0c0-3.5 2.5-7.5 8-13z"/><path d="M24 20v15"/><path d="M24 26l-3.5-3M24 30l3.5-3"/></g>`,
+  // Three rank chevrons.
+  grunt: `<g ${MARK}><path d="M15.5 20L24 14l8.5 6"/><path d="M15.5 27L24 21l8.5 6"/><path d="M15.5 34L24 28l8.5 6"/></g>`,
+  // A paw print.
+  hound: `<g class="emblem-mark" fill="currentColor" stroke="none"><circle cx="16.5" cy="22" r="2.6"/><circle cx="21.5" cy="16.5" r="2.6"/><circle cx="26.5" cy="16.5" r="2.6"/><circle cx="31.5" cy="22" r="2.6"/><path d="M24 25c-4.5 0-8 3-8 6.2 0 2.2 1.8 3.3 4 3.3 1.7 0 2.6-.6 4-.6s2.3.6 4 .6c2.2 0 4-1.1 4-3.300C32 28 28.5 25 24 25z"/></g>`,
+  // A dog tag on its chain.
+  wardog: `<g ${MARK}><path d="M24 11v3"/><rect x="16" y="14" width="16" height="22" rx="6"/><circle cx="24" cy="19" r="1.7"/><path d="M20 25h8M20 30h8"/></g>`,
+  // A crown, for the top.
+  alpha: `<g ${MARK}><path d="M14.5 31l-2-13 7.5 5.500L24 14l4 9.5 7.5-5.5-2 13z"/><path d="M15 35.500h18"/></g>`,
+};
+
+// The emblem for a title, by its key ("grunt"). One the shop doesn't know gets a plain badge.
+export const titleEmblem = (key, className = 'emblem') =>
+  draw(`emblem ${className}`, '0 0 48 48', SHIELD + (EMBLEMS[key] ?? EMBLEMS.grunt));

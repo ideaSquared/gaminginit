@@ -1,4 +1,4 @@
-import { coinArt, coinHeap, icon, ring, tick } from './art-coins.js';
+import { coinArt, coinHeap, icon, ring, tick, titleEmblem } from './art-coins.js';
 import { demoCoins, demoMyCoins } from './demo.js';
 import { apiUrl, demo, keepQuery, startLive } from './live.js';
 import { errorText } from './accountmodel.js';
@@ -19,7 +19,8 @@ import {
   seedsForWeek,
   shopGroups,
   tierLabel,
-  titleTone,
+  titleKey,
+  titleToneOf,
   toGo,
   todayText,
   untilReset,
@@ -98,6 +99,10 @@ const keyed = (node, key) => {
   node.setAttribute('data-focus-key', key);
   return node;
 };
+
+// A title as it shows by a name: its emblem and its words, in its tone.
+const titleChip = (name) =>
+  el('span', { className: `chip chip-title tone-${titleToneOf(name)}` }, titleEmblem(titleKey(name), 'chip-emblem'), el('span', { textContent: name }));
 
 const coinChip = (amount, className = '') =>
   el('span', { className: `coin-chip ${className}`.trim() }, coinArt('coin-chip-art'), el('span', { textContent: typeof amount === 'number' ? amount.toLocaleString('en-GB') : amount }));
@@ -295,9 +300,11 @@ const shopCard = (item, personal, ctx) => {
     { className: `shop-card kind-${item.kind}${personal && item.owned ? ' is-owned' : ''}${best ? ' is-best' : ''}` },
     ...(best ? [el('span', { className: 'shop-flag', textContent: `Best value · ${best}` })] : []),
     ...(personal && item.owned && item.kind !== 'vip' ? [el('span', { className: 'shop-flag shop-flag-owned' }, tick(), el('span', { textContent: 'Yours' }))] : []),
-    el('span', { className: 'shop-art' }, icon(SHOP_ICON[item.kind], 'shop-icon')),
     item.kind === 'title'
-      ? el('span', { className: `title-preview tone-${titleTone(item.price)}`, textContent: itemName(item) })
+      ? el('span', { className: `shop-art title-art tone-${titleToneOf(item.id)}` }, titleEmblem(titleKey(item.id), 'shop-emblem'))
+      : el('span', { className: 'shop-art' }, icon(SHOP_ICON[item.kind], 'shop-icon')),
+    item.kind === 'title'
+      ? el('span', { className: `title-preview tone-${titleToneOf(item.id)}`, textContent: itemName(item) })
       : el('h4', { className: 'shop-name', textContent: itemName(item) }),
     el('p', { className: 'shop-blurb', textContent: itemBlurb(item) }),
     el('p', { className: 'shop-price' }, coinChip(item.price)),
@@ -381,7 +388,7 @@ const podiumPlace = (row) =>
         { className: `podium-slot place-${row.place}` },
         el('span', { className: 'podium-medal', title: MEDAL[row.place], textContent: String(row.place) }),
         el('span', { className: 'podium-name' }, playerName(row)),
-        ...(row.title ? [el('span', { className: 'chip chip-title', textContent: row.title })] : []),
+        ...(row.title ? [titleChip(row.title)] : []),
         el('span', { className: 'podium-earned' }, coinChip(row.earned)),
       );
 
@@ -405,7 +412,7 @@ const renderLeaders = () => {
               el(
                 'li',
                 { className: 'leader-row' },
-                el('span', { className: 'leader-name' }, playerName(p), ...(p.title ? [el('span', { className: 'chip chip-title', textContent: p.title })] : [])),
+                el('span', { className: 'leader-name' }, playerName(p), ...(p.title ? [titleChip(p.title)] : [])),
                 coinChip(p.earned),
               ),
             ),

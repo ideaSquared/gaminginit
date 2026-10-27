@@ -226,6 +226,11 @@ button.btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
 .shop-flag-owned .tick { width: 12px; height: 12px; stroke-width: 4; }
 .shop-art { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 4px; border-radius: 14px; background: var(--gold-soft); color: var(--gold); }
 .kind-title .shop-art { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); }
+.shop-art.title-art { width: 64px; height: 64px; border-radius: 16px; }
+.title-art.tone-bronze { color: #e0a370; background: radial-gradient(circle at 30% 20%, color-mix(in srgb, #b46b32 34%, var(--surface)), color-mix(in srgb, #b46b32 12%, var(--surface))); box-shadow: inset 0 0 0 1px color-mix(in srgb, #b46b32 55%, transparent); }
+.title-art.tone-silver { color: #e3e8f0; background: radial-gradient(circle at 30% 20%, color-mix(in srgb, #8e99a8 38%, var(--surface)), color-mix(in srgb, #8e99a8 12%, var(--surface))); box-shadow: inset 0 0 0 1px color-mix(in srgb, #8e99a8 60%, transparent); }
+.title-art.tone-gold { color: var(--gold); background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--gold) 38%, var(--surface)), color-mix(in srgb, var(--gold) 12%, var(--surface))); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 60%, transparent), 0 0 24px -8px var(--gold); }
+.shop-emblem { width: 46px; height: 46px; }
 .kind-role .shop-art { background: color-mix(in srgb, var(--discord) 30%, var(--surface)); color: #aab3ff; }
 .shop-icon { width: 32px; height: 32px; }
 .shop-name { margin: 0; font-size: 1.05rem; }
@@ -277,6 +282,14 @@ button.btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
 .leader-row::before { content: counter(rank); flex: none; width: 1.6em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .leader-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
 .chip-title { margin-left: 8px; }
+
+/* Title emblems: the shield and its mark take the colour of the text. */
+.emblem .emblem-bg { fill: color-mix(in srgb, currentColor 18%, transparent); stroke: currentColor; stroke-width: 2.6; stroke-linejoin: round; }
+.chip-title { display: inline-flex; align-items: center; gap: 6px; }
+.chip-emblem { width: 18px; height: 18px; flex: none; }
+.chip-title.tone-bronze { color: #e0a370; border-color: #b46b32; background: color-mix(in srgb, #b46b32 14%, transparent); }
+.chip-title.tone-silver { color: #e3e8f0; border-color: #8e99a8; background: color-mix(in srgb, #8e99a8 14%, transparent); }
+.chip-title.tone-gold { color: var(--gold); border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent); }
 .podium .chip-title { margin-left: 0; }
 
 /* Messages */

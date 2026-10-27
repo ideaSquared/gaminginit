@@ -167,3 +167,12 @@ export const itemBlurb = (item) => {
 
 // How grand a title looks, from its price.
 export const titleTone = (price) => (price >= 3000 ? 'gold' : price >= 1000 ? 'silver' : 'bronze');
+
+// The six titles, from the one a newcomer buys to the grandest. Their tone says how grand it looks.
+export const TITLE_TONES = { sprout: 'bronze', seeder: 'bronze', grunt: 'bronze', hound: 'silver', wardog: 'gold', alpha: 'gold' };
+
+// A title's key from its name ("Grunt" is "grunt") or its item id ("title-grunt").
+export const titleKey = (nameOrId) => String(nameOrId).toLowerCase().replace(/^title-/, '');
+
+// How grand a title looks, from its name or id. Anything else is plain.
+export const titleToneOf = (nameOrId) => TITLE_TONES[titleKey(nameOrId)] ?? 'bronze';

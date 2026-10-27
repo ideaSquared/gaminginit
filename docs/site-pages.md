@@ -195,7 +195,8 @@ and the page says they aren't on yet.
   checks everything again: the page only shows what it said.
 - **Signed out, or no Steam account yet**: the public parts, and a button to sign in or to link Steam on `/account`. Coins go
   to a player's Steam account as they earn them, linked or not.
-- A title a player buys shows on their player page and in the top earners.
+- A title a player buys shows on their player page and in the top earners. Each of the six has its own emblem (a sprout, a seed, rank
+  chevrons, a paw, a dog tag, a crown) on a shield, in bronze, silver or gold by how grand it is (`art-coins.js`, `titleEmblem`).
 - `/account` has an INITcoins row with the balance and a link here, and says VIP "bought with INITcoins".
 - While INITcoins are on, the bot sends `vip: null` and `coins: { seed, vipWeek }` in `/api/stats`, so the home page's and the
   seeding page's VIP boxes say what a seed pays instead, and link here.

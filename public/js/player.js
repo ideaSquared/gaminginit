@@ -1,3 +1,5 @@
+import { titleEmblem } from './art-coins.js';
+import { titleKey, titleToneOf } from './coinsmodel.js';
 import { activityCalendar, formChart } from './charts.js';
 import {
   bests,
@@ -124,7 +126,9 @@ const renderHead = (now) => {
     ...[
       profile.online ? el('li', { className: 'chip chip-online' }, el('span', { className: 'online-dot', ariaHidden: 'true' }), 'In game now') : null,
       profile.ban ? el('li', { className: 'chip chip-ban', textContent: 'Banned' }) : null,
-      profile.title ? el('li', { className: 'chip chip-title', textContent: profile.title }) : null,
+      profile.title
+        ? el('li', { className: `chip chip-title tone-${titleToneOf(profile.title)}` }, titleEmblem(titleKey(profile.title), 'chip-emblem'), profile.title)
+        : null,
       profile.vip ? el('li', { className: 'chip chip-vip', textContent: `VIP until ${dateLong.format(profile.vip.until)}` }) : null,
       ranks.length > 0 ? el('li', { className: 'chips-label', textContent: `Leaderboard, last ${profile.ranks.days} days` }) : null,
       ...ranks.map((rank) => el('li', { className: 'chip chip-rank', textContent: rank.text })),
