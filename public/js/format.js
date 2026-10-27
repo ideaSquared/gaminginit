@@ -1762,4 +1762,4 @@ export const regularMeta = (p) => `${plural(p.days, 'day')} in 30 · ${formatHou
 export const coinsOffer = (coins) => `Seed and earn ${coins.seed} INITcoins, then spend them on whitelist days.`;
 
 export const coinsDetail = (coins) =>
-  `A seed counts when you're on for a few minutes while the server seeds, and it goes live. A week of whitelist, which lets you skip the queue when the server is full, is ${coins.vipWeek} INITcoins${coins.seed > 0 ? `, about ${Math.ceil(coins.vipWeek / coins.seed)} seeds` : ''}. Playing and missions earn coins too.`;
+  `A seed counts when you stay on while the server seeds, without leaving, and you're still on when it goes live. A week of whitelist, which lets you skip the queue when the server is full, is ${coins.vipWeek} INITcoins${coins.seed > 0 ? `, about ${Math.ceil(coins.vipWeek / coins.seed)} seeds` : ''}. Playing and missions earn coins too.`;

@@ -15,6 +15,8 @@ import {
   seedsForWeek,
   shopGroups,
   tierLabel,
+  titleKey,
+  titleToneOf,
   titleTone,
   toGo,
   todayText,
@@ -202,5 +204,17 @@ describe('itemBlurb and titleTone', () => {
 
   it('makes dearer titles grander', () => {
     assert.deepEqual([300, 1500, 6000].map(titleTone), ['bronze', 'silver', 'gold']);
+  });
+});
+
+describe('titleKey and titleToneOf', () => {
+  it('finds a title from its name or its item id', () => {
+    assert.equal(titleKey('Grunt'), 'grunt');
+    assert.equal(titleKey('title-wardog'), 'wardog');
+  });
+
+  it('makes the dearer titles grander, and anything unknown plain', () => {
+    assert.deepEqual(['Sprout', 'title-seeder', 'Grunt', 'Hound', 'Wardog', 'title-alpha'].map(titleToneOf), ['bronze', 'bronze', 'bronze', 'silver', 'gold', 'gold']);
+    assert.equal(titleToneOf('Something else'), 'bronze');
   });
 });
