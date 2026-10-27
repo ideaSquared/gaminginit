@@ -36,7 +36,7 @@ export const dayText = (ms, locale) =>
 // The rows of "How you earn", from the bot's rates.
 export const earnRows = (rates) => {
   const rows = [
-    { icon: 'seed', what: 'A successful seed', pays: `${rates.seed}`, note: 'Once a day: you were on while the server seeded, and it went live.' },
+    { icon: 'seed', what: 'A successful seed', pays: `${rates.seed}`, note: 'Once a day. Stay on while the server seeds, and be there when it goes live: leave early and it doesn’t count.' },
   ];
   if (rates.seedMinutes.per > 0) {
     rows.push({
