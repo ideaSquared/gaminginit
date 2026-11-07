@@ -1320,7 +1320,7 @@ export const demoCall = async (path, body) => {
             : focused === 'lighting'
               ? DEMO_LIGHTINGS.map((l) => ({ name: l.name, value: l.id }))
               : [];
-    return { ok: true, json: { choices: choices.filter((c) => c.name.toLowerCase().includes(typed) || c.value.includes(typed)) } };
+    return { ok: true, json: { choices: choices.filter((c) => c.name.toLowerCase().includes(typed) || c.value.toLowerCase().includes(typed)) } };
   }
   const sub = options.subcommand ? ` ${options.subcommand}` : '';
   return { ok: true, json: { content: `Sample only: nothing was done. Signed in, this runs **/${name}${sub}** on the bot, as you.` } };
