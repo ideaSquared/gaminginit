@@ -1294,6 +1294,7 @@ export const TOOL_GROUPS = [
       ['broadcast', 'Message everyone in game'],
       ['setnextmap', 'Set the next map'],
       ['changemap', 'Change map now'],
+      ['lighting', 'Change the lighting now'],
       ['seednow', 'Call for seeders in Discord'],
     ],
   },

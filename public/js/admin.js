@@ -296,7 +296,7 @@ const openCommand = (key) => {
 $('command-close').addEventListener('click', () => commandDialog.close());
 
 // The Server menu in the staff bar: the commands for the whole server, and the rotations.
-const SERVER_COMMANDS = ['broadcast', 'setnextmap', 'changemap', 'seednow', 'moveclan'];
+const SERVER_COMMANDS = ['broadcast', 'setnextmap', 'changemap', 'lighting', 'seednow', 'moveclan'];
 const serverMenu = () => {
   const item = (text, run) => el('button', { type: 'button', className: 'account-item', textContent: text, onclick: () => ((($('server-menu').open = false), run())) });
   $('server-menu-list').replaceChildren(
