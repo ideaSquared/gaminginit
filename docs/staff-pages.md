@@ -242,9 +242,9 @@ Server's VIP.
   Steam ID, from the same suggestions as the commands' player lists. Every word typed must match, in any case. ↑ and ↓
   move, Enter or a click opens, Escape closes.
 - **Server**, in the staff bar: the commands for the whole server (message everyone in game, set the next map, change
-  map now, call for seeders, move a clan to a team) and the map rotations.
+  map now, change the lighting, call for seeders, move a clan to a team) and the map rotations.
 - A command opens its form over the page. Every staff command from Discord: look up a player, warn, kick, move to another team, ban, unban,
-  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, call for seeders, the
+  make a profile private or public again and see the private profiles, give or remove VIP, top seeders, message everyone in game, set the next map, change map now, change the lighting, call for seeders, the
   map rotations (see them and the week, swap now, pick a day's rotation, add or take out a map, save the server's
   rotation, delete one), and remove a wrongly recorded match. The forms come from the bot's own command list, and the
   pick-lists (players in game and seen lately, teams, maps, modes, lighting, zones, saved rotations, bans, the whitelist, recent matches) from the same suggestions Discord shows. A short list to pick one from, such as a ban's length or
