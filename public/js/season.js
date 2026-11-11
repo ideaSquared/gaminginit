@@ -118,10 +118,13 @@ const staffLine = (problem) => {
   line.hidden = false;
 };
 
+// Whether the bot's staff API answered: only then does the page show staff every season.
+let staffView = false;
+
 // The links to every season the reader can see: those that are over, the one shown, and for staff previewing, all.
 const renderSwitch = (page) => {
   const nav = $('season-switch');
-  const seasons = (page.seasons ?? []).filter((s) => s.open || s.number === page.number || preview);
+  const seasons = (page.seasons ?? []).filter((s) => s.open || s.number === page.number || staffView);
   nav.hidden = seasons.length < 2;
   nav.replaceChildren(
     ...seasons.map((s) => {
@@ -135,6 +138,47 @@ const renderSwitch = (page) => {
       if (s.number === page.number) a.setAttribute('aria-current', 'page');
       return a;
     }),
+  );
+};
+
+// The season going on now, with its numbers so far and nobody's name, until its roundup opens. Hidden when the page
+// shows that season's roundup (staff previewing it), or nobody has played in it yet.
+let teaseTicker = 0;
+const renderTease = (page) => {
+  const going = page.going ?? null;
+  const shown = going !== null && !(page.roundup && page.number === going.number);
+  $('tease').hidden = !shown;
+  clearInterval(teaseTicker);
+  teaseTicker = 0;
+  if (!shown) return;
+  setText($('tease-title'), `${going.name} so far`);
+  setText($('tease-matches'), compact(going.matches));
+  setText($('tease-matches-sub'), going.matches > 0 && going.peakPlayers !== null ? `Peak ${compact(going.peakPlayers)} players` : 'None yet');
+  setText($('tease-players'), compact(going.players));
+  setText($('tease-players-sub'), `Over ${plural(going.days, 'day')}`);
+  setText($('tease-kills'), compact(going.kills));
+  setText($('tease-time'), manyHours(going.playedMs / 60_000));
+  const when = () => {
+    if (going.endsAt === null) return 'The full roundup, names and all, drops at the next wipe. The date isn’t announced yet.';
+    const left = going.endsAt - Date.now();
+    return left > 0 ? `The full roundup, names and all, drops at the wipe: in ${countdownText(left)}.` : 'The full roundup drops in a moment…';
+  };
+  setText($('tease-note'), when());
+  if (going.endsAt !== null) teaseTicker = setInterval(() => !document.hidden && setText($('tease-note'), when()), 30_000);
+  const here = page.number === going.number;
+  $('tease-more').replaceChildren(
+    ...(here
+      ? ['Who’s top? Who’s feeding? Keep playing: it all counts.']
+      : [
+          'Who’s top? Who’s feeding? You’ll find out at the wipe. ',
+          link(
+            thisPage((p) => {
+              p.set('number', String(going.number));
+              p.delete('player');
+            }),
+            `${going.name}’s page`,
+          ),
+        ]),
   );
 };
 
@@ -614,6 +658,7 @@ const render = (page, problem = null) => {
   }
   renderTitle(page);
   renderSwitch(page);
+  renderTease(page);
   if (page.roundup) showRoundup(page);
   else if (!page.open) showLocked(page, problem);
   else {
@@ -642,6 +687,7 @@ const startPreview = async () => {
     const response = await fetch(botUrl(seasonPath('admin/season')), { headers: { accept: 'application/json', authorization: `Bearer ${token}` } });
     if (!response.ok) return startPublic(response.status === 401 ? 'signin' : 'failed');
     const page = await response.json();
+    staffView = true;
     render(page);
     showNotice(
       page.open

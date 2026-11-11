@@ -126,7 +126,9 @@ What it shows:
   season, from the bot's `GET /api/season`. Without `?number=` it shows the newest season that is over; `/season?number=1`
   shows Season 1. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC**, **Season 2 with the one on 12 November
   2026, 00:00 UTC** (midnight in the UK). Season 3's wipe is not announced yet, so it has no end and no countdown. Under
-  the title, a link to each season that is over (and the one shown) switches between them. Before a season ends the bot does not send the roundup to anyone, so the page shows
+  the title, a link to each season that is over (and the one shown) switches between them. Under those, **the season
+  going on now is teased** with its numbers so far (matches, players, kills, time played; the bot's `going`, with nobody's
+  name) and when its full roundup drops. Before a season ends the bot does not send the roundup to anyone, so the page shows
   a countdown and what the roundup will have. It loads the bot again every minute, so a page left open opens by
   itself, within about a minute of the end. Once open it has:
   - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One

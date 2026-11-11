@@ -119,6 +119,40 @@
         </div>
       </section>
 
+      <!-- The season going on now, teased with its numbers so far and nobody's name (the bot's `going`; see season.js). -->
+      <section class="section season-tease" id="tease" aria-labelledby="tease-title" hidden>
+        <div class="wrap">
+          <div class="card season-tease-card">
+            <p class="eyebrow" id="tease-eyebrow">Happening now</p>
+            <h2 class="season-tease-title" id="tease-title">The season so far</h2>
+            <p class="section-note" id="tease-note"></p>
+            <div class="tiles season-tiles">
+              <div class="tile">
+                <p class="tile-label">Matches</p>
+                <p class="tile-value" id="tease-matches">–</p>
+                <p class="tile-sub" id="tease-matches-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Players</p>
+                <p class="tile-value" id="tease-players">–</p>
+                <p class="tile-sub" id="tease-players-sub"></p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Kills</p>
+                <p class="tile-value" id="tease-kills">–</p>
+                <p class="tile-sub">From the scoreboards</p>
+              </div>
+              <div class="tile">
+                <p class="tile-label">Time played</p>
+                <p class="tile-value" id="tease-time">–</p>
+                <p class="tile-sub">Of matches</p>
+              </div>
+            </div>
+            <p class="season-tease-more" id="tease-more"></p>
+          </div>
+        </div>
+      </section>
+
       <!-- Until the season is over. The bot does not send the roundup before then; staff can preview it. -->
       <section class="section season-locked" id="locked" aria-labelledby="locked-title" hidden>
         <div class="wrap">
