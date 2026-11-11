@@ -46,6 +46,9 @@ import { weaponIcons } from './art-stats.js';
 // can see the season so far with ?preview, from the bot's staff API. ?demo shows a sample season, and ?demo=locked the
 // page before it opens. Once it has the roundup, the page plays the Season in Review: the season as a slideshow, and a
 // player's own season from their player page (see wrapped.js and story.js). ?player=<id> opens that player's.
+// ?number=<n> shows that season; without it the bot sends the newest that is over (staff: the one going on now). The bot
+// lists every season, and the page links to each one the reader can see. A season whose wipe is not announced yet has
+// no end (`endsAt: null`).
 
 const $ = (id) => document.getElementById(id);
 
@@ -53,6 +56,8 @@ const params = new URLSearchParams(location.search);
 const preview = params.has('preview') && !demo;
 const lockedDemo = params.get('demo') === 'locked';
 const sharedPlayer = params.get('player');
+const askedNumber = /^\d{1,3}$/.test(params.get('number') ?? '') ? params.get('number') : null;
+const seasonPath = (base) => (askedNumber === null ? base : `${base}?number=${askedNumber}`);
 
 // Days are UTC dates, like the bot's records; when the season ends and when a match ended, in the reader's own time.
 const dayLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -113,27 +118,63 @@ const staffLine = (problem) => {
   line.hidden = false;
 };
 
+// The links to every season the reader can see: those that are over, the one shown, and for staff previewing, all.
+const renderSwitch = (page) => {
+  const nav = $('season-switch');
+  const seasons = (page.seasons ?? []).filter((s) => s.open || s.number === page.number || preview);
+  nav.hidden = seasons.length < 2;
+  nav.replaceChildren(
+    ...seasons.map((s) => {
+      const a = link(
+        thisPage((p) => {
+          p.set('number', String(s.number));
+          p.delete('player');
+        }),
+        s.name,
+      );
+      if (s.number === page.number) a.setAttribute('aria-current', 'page');
+      return a;
+    }),
+  );
+};
+
+const renderTitle = (page) => {
+  setText($('season-title'), `${page.name} roundup`);
+  document.title = `${page.name} roundup | gaminginit WARDOGS server`;
+};
+
 const showLocked = (page, problem) => {
   $('locked').hidden = false;
   $('roundup').hidden = true;
-  endsAt = page.endsAt;
   setText($('season-eyebrow'), 'Opens at the wipe');
   setText($('season-lede'), `Who won. Who flopped. Who got roasted. ${page.name}, settled for good.`);
-  setText($('season-note'), `Opens ${dateLong.format(page.endsAt)}`);
   setText($('locked-title'), `${page.name} ends at the wipe`);
-  setText($('locked-text'), `${whenLong.format(page.endsAt)} (your time). Then it all drops here.`);
   staffLine(problem);
+  // No end yet: the wipe is not announced, so there is nothing to count down to.
+  $('countdown').style.display = page.endsAt === null ? 'none' : '';
+  if (page.endsAt === null) {
+    stopTicker();
+    setText($('season-note'), 'Opens at the wipe');
+    setText($('locked-text'), 'The date of the wipe isn’t announced yet. When it is, the countdown starts here.');
+    return;
+  }
+  endsAt = page.endsAt;
+  setText($('season-note'), `Opens ${dateLong.format(page.endsAt)}`);
+  setText($('locked-text'), `${whenLong.format(page.endsAt)} (your time). Then it all drops here.`);
   if (ticker === 0) ticker = setInterval(() => !document.hidden && tick(), 1000);
   tick();
 };
+
+// When the season ends, for staff seeing it before then.
+const endText = (page) => (page.endsAt === null ? 'at the next wipe, once it is announced' : `with the wipe on ${dateLong.format(page.endsAt)}`);
 
 const renderHead = (page, r) => {
   setText($('season-eyebrow'), r.partial ? 'Staff preview' : 'The season is over');
   setText(
     $('season-lede'),
     r.partial
-      ? `${page.name} so far on our server. The season ends with the wipe on ${dateLong.format(page.endsAt)}.`
-      : `The best of ${page.name} on our server, from the first match our bot recorded up to the wipe.`,
+      ? `${page.name} so far on our server. The season ends ${endText(page)}.`
+      : `The best of ${page.name} on our server, ${page.number === 1 ? 'from the first match our bot recorded up to the wipe' : 'from wipe to wipe'}.`,
   );
   setText($('season-note'), `${dayRange(r.start, r.end)}${r.partial ? ' so far' : ''} · ${plural(r.days.length, 'day')} (UTC days)`);
 };
@@ -388,6 +429,8 @@ const shareUrl = (id = null) =>
   new URL(
     thisPage((p) => {
       p.delete('preview');
+      // The season's number, so the link keeps showing this season once a newer one is over.
+      if (current) p.set('number', String(current.number));
       if (id) p.set('player', id);
       else p.delete('player');
     }),
@@ -552,7 +595,7 @@ const showRoundup = (page) => {
   setText(
     $('next-text'),
     r.partial
-      ? `The season ends with the wipe on ${dateLong.format(page.endsAt)}, when everyone can see this page.`
+      ? `The season ends ${endText(page)}, when everyone can see this page.`
       : `Thanks to everyone who played, seeded and squadded up in ${page.name}. The records start again now: see who leads the new season on the leaderboard.`,
   );
 };
@@ -569,6 +612,8 @@ const render = (page, problem = null) => {
     setText($('season-note'), 'Waiting for the bot.');
     return;
   }
+  renderTitle(page);
+  renderSwitch(page);
   if (page.roundup) showRoundup(page);
   else if (!page.open) showLocked(page, problem);
   else {
@@ -582,9 +627,10 @@ const render = (page, problem = null) => {
 // The public page, kept fresh once a minute, so it opens by itself when the season ends.
 const startPublic = (problem = null) =>
   startLive((page) => render(page, problem), {
-    url: apiUrl('season'),
+    url: apiUrl(seasonPath('season')),
     sample: (now) => demoSeason(now, { locked: lockedDemo }),
-    missing: () => setText($('season-note'), 'The season roundup is not ready yet. Check back soon.'),
+    missing: () =>
+      setText($('season-note'), askedNumber === null ? 'The season roundup is not ready yet. Check back soon.' : `There’s no Season ${askedNumber} yet.`),
   });
 
 // The season so far, from the bot's staff API, for staff signed in on the staff pages. Without a sign-in, or when the
@@ -593,12 +639,14 @@ const startPreview = async () => {
   const token = loadToken();
   if (!staffConfigured || !token) return startPublic('signin');
   try {
-    const response = await fetch(botUrl('admin/season'), { headers: { accept: 'application/json', authorization: `Bearer ${token}` } });
+    const response = await fetch(botUrl(seasonPath('admin/season')), { headers: { accept: 'application/json', authorization: `Bearer ${token}` } });
     if (!response.ok) return startPublic(response.status === 401 ? 'signin' : 'failed');
     const page = await response.json();
     render(page);
     showNotice(
-      page.open ? 'The season is over, so this is what everyone sees. ' : `Staff preview: the season so far. Everyone can see it from ${dateLong.format(page.endsAt)}. `,
+      page.open
+        ? 'The season is over, so this is what everyone sees. '
+        : `Staff preview: the season so far. Everyone can see it ${page.endsAt === null ? 'once the next wipe is announced and done' : `from ${dateLong.format(page.endsAt)}`}. `,
       link(thisPage((p) => p.delete('preview')), 'See the public page'),
     );
   } catch (error) {

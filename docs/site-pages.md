@@ -122,9 +122,11 @@ What it shows:
 - An account page (`/account`): players sign in with Discord, and see what the bot knows of them and change it. Not in the
   sitemap (`noindex`). The header on every page has a **Sign in** button next to Discord (the name they signed in as, once
   they have; a person icon on a phone) that goes here. See [Player accounts](#player-accounts) below.
-- A season page (`/season`, "Season roundup" in the menu, and a box under the home page's intro): the roundup of Season 1,
-  from the bot's `GET /api/season`. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC** (1am in the UK),
-  so the page is open to everyone. Before a season ends the bot does not send the roundup to anyone, so the page shows
+- A season page (`/season`, "Season roundup" in the menu, and a box under the home page's intro): the roundup of a
+  season, from the bot's `GET /api/season`. Without `?number=` it shows the newest season that is over; `/season?number=1`
+  shows Season 1. **Season 1 ended with the wipe on 15 October 2026, 00:00 UTC**, **Season 2 with the one on 12 November
+  2026, 00:00 UTC** (midnight in the UK). Season 3's wipe is not announced yet, so it has no end and no countdown. Under
+  the title, a link to each season that is over (and the one shown) switches between them. Before a season ends the bot does not send the roundup to anyone, so the page shows
   a countdown and what the roundup will have. It loads the bot again every minute, so a page left open opens by
   itself, within about a minute of the end. Once open it has:
   - **The Season in Review**, at the top: the season as a slideshow, like a year in review, roasting included. One
@@ -158,7 +160,8 @@ What it shows:
     opens `/season?preview`: the season up to now, from the bot's `GET /api/admin/season`, so they can check the page
     before it opens. It says it is a preview, and links back to the public page. Without a sign-in, it says to sign
     in on the staff page first. `?demo` shows a sample season, and `?demo=locked` the page before it opens.
-  - The season's end is set in the bot (`SEASON` in its `src/season.ts`); the page takes it from the bot.
+  - The seasons and their ends are set in the bot (`SEASONS` in its `src/season.ts`); the page takes them from the bot.
+    A shared link (the season's or a player's) carries `?number=`, so it keeps showing that season.
 - Seeder VIP: what seeding earns (a whitelist slot), under the intro and as step 4 of "Play with us".
   Shown only when the bot has automatic VIP on, and worded from the bot's rule, so it always matches what the bot does.
 - The staff page (`/admin`), for staff only: they sign in with Discord. **Now**: who is on the server, with anyone

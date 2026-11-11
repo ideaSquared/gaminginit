@@ -259,3 +259,35 @@ h3 > .art-medal {
     display: none;
   }
 }
+
+/* The seasons, to switch between them: the one shown is filled. */
+.season-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.season-switch a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.season-switch a:hover {
+  border-color: var(--accent);
+}
+
+.season-switch a[aria-current='page'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
