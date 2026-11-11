@@ -23,6 +23,9 @@ const hash = (text) => {
 };
 export const pick = (seed, variants) => variants[hash(seed) % variants.length];
 
+// The season after this one, for the outros: "Season 3" after Season 2.
+export const nextSeason = (page) => `Season ${page.number + 1}`;
+
 const number = (n) => Math.round(n).toLocaleString('en-GB');
 const hours = (minutes) => Math.round(minutes / 60);
 const matchCount = (n) => `${number(n)} match${n === 1 ? '' : 'es'}`;
@@ -425,7 +428,7 @@ export const seasonStory = (page) => {
     big: r.partial ? 'To be continued' : 'GG',
     line: r.partial
       ? 'The season isn’t over yet. Plenty of time for more terrible decisions.'
-      : 'Thanks for playing, seeding and point-blank refusing to play the objective. See you in Season 2.',
+      : `Thanks for playing, seeding and point-blank refusing to play the objective. See you in ${nextSeason(page)}.`,
     end: true,
   });
   return slides;
@@ -534,7 +537,7 @@ export const playerStory = (stats, page, seasonDays) => {
       unit: 'hours',
       line: `You didn’t play a minute of ${page.name}. Bold strategy. Can’t lose if you don’t play.`,
     });
-    add({ key: 'you-outro', theme: 'violet', emoji: '👋', kicker: 'That was your season', big: 'Was it?', line: 'See you in Season 2. Maybe.', end: true });
+    add({ key: 'you-outro', theme: 'violet', emoji: '👋', kicker: 'That was your season', big: 'Was it?', line: `See you in ${nextSeason(page)}. Maybe.`, end: true });
     return slides;
   }
 
@@ -644,7 +647,7 @@ export const playerStory = (stats, page, seasonDays) => {
     line:
       stats.seedDays > 0
         ? `You got the server going on ${plural(stats.seedDays, 'day')}. Actual hero. We owe you one.`
-        : 'Zero. The server doesn’t fill itself, you know. Season 2 is your chance.',
+        : `Zero. The server doesn’t fill itself, you know. ${nextSeason(page)} is your chance.`,
   });
 
   const fame = hallOfFame(r, stats.id);
@@ -671,7 +674,7 @@ export const playerStory = (stats, page, seasonDays) => {
     emoji: '👋',
     kicker: `That was your ${page.name}`,
     big: 'GG',
-    line: pick(seed('outro'), ['Same again in Season 2? Maybe aim this time.', 'See you in Season 2. Bring snacks. And a better K/D.']),
+    line: pick(seed('outro'), [`Same again in ${nextSeason(page)}? Maybe aim this time.`, `See you in ${nextSeason(page)}. Bring snacks. And a better K/D.`]),
     end: true,
   });
   return slides;

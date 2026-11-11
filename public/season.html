@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Season 1 roundup | gaminginit WARDOGS server</title>
-    <meta name="description" content="Season 1 on the gaminginit WARDOGS server, up to the wipe on 15 October 2026: the team of the season, the top players, awards for every role, the weapons and the matches to remember." />
+    <title>Season roundup | gaminginit WARDOGS server</title>
+    <meta name="description" content="Each season on the gaminginit WARDOGS server, wipe to wipe: the team of the season, the top players, awards for every role, the weapons and the matches to remember." />
     <link rel="canonical" href="https://gaminginit.com/season" />
     <meta property="og:site_name" content="gaminginit" />
-    <meta property="og:title" content="Season 1 roundup | gaminginit WARDOGS server" />
-    <meta property="og:description" content="The best of Season 1 on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
+    <meta property="og:title" content="Season roundup | gaminginit WARDOGS server" />
+    <meta property="og:description" content="The best of each season on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
     <meta property="og:url" content="https://gaminginit.com/season" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://gaminginit.com/og-image.png" />
@@ -18,8 +18,8 @@
     <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Season 1 roundup | gaminginit WARDOGS server" />
-    <meta name="twitter:description" content="The best of Season 1 on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
+    <meta name="twitter:title" content="Season roundup | gaminginit WARDOGS server" />
+    <meta name="twitter:description" content="The best of each season on the gaminginit WARDOGS server: team of the season, top players, awards and records." />
     <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
     <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta name="theme-color" content="#0b0d10" />
@@ -111,9 +111,11 @@
         <div class="wrap">
           <p class="back"><a href="./" data-keep-query><span aria-hidden="true">←</span> Home</a></p>
           <p class="eyebrow" id="season-eyebrow">Season roundup</p>
-          <h1 class="page-title" id="season-title">Season 1 roundup</h1>
-          <p class="season-lede" id="season-lede">Everything our bot recorded on our server in Season 1.</p>
+          <h1 class="page-title" id="season-title">Season roundup</h1>
+          <p class="season-lede" id="season-lede">Everything our bot recorded on our server in a season.</p>
           <p class="section-note" id="season-note">Loading…</p>
+          <!-- Every season the bot lists, to switch between them (see season.js). -->
+          <nav class="season-switch" id="season-switch" aria-label="Seasons" hidden></nav>
         </div>
       </section>
 
@@ -121,7 +123,7 @@
       <section class="section season-locked" id="locked" aria-labelledby="locked-title" hidden>
         <div class="wrap">
           <div class="card season-gate">
-            <h2 class="season-gate-title" id="locked-title">Season 1 ends at the wipe</h2>
+            <h2 class="season-gate-title" id="locked-title">The season ends at the wipe</h2>
             <p class="season-gate-text" id="locked-text"></p>
             <div class="countdown" id="countdown" role="timer" aria-labelledby="countdown-label">
               <p class="visually-hidden" id="countdown-label"></p>
@@ -321,8 +323,8 @@
         <section class="section season-end" aria-labelledby="next-title">
           <div class="wrap">
             <div class="card season-next">
-              <h2 class="season-gate-title" id="next-title">That’s Season 1</h2>
-              <p id="next-text">Thanks to everyone who played, seeded and squadded up. The records start again with Season 2: see who leads it on the leaderboard.</p>
+              <h2 class="season-gate-title" id="next-title">That’s the season</h2>
+              <p id="next-text">Thanks to everyone who played, seeded and squadded up. See who leads the new season on the leaderboard.</p>
               <div class="hero-actions">
                 <a class="btn btn-ghost" href="leaderboard" data-keep-query>The leaderboard</a>
                 <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="end" rel="noopener">
