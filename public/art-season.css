@@ -291,3 +291,29 @@ h3 > .art-medal {
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+
+/* The season going on now, teased with its numbers so far. */
+.season-tease-card {
+  padding: clamp(18px, 3vw, 28px);
+  border-top: 3px solid var(--accent);
+}
+
+.season-tease-card .tiles {
+  margin-top: 16px;
+}
+
+@media (min-width: 720px) {
+  .season-tease-card .season-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.season-tease-title {
+  margin: 4px 0 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.season-tease-more {
+  margin: 14px 0 0;
+  color: var(--text-2);
+}
