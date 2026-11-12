@@ -37,8 +37,9 @@ const nextKey = () => `m${(keys += 1)}`;
 
 const mapOf = (catalog, id) => catalog?.maps.find((m) => m.id === id) ?? null;
 
-// Infantry only and hardcore, by their ids (KOTH_InfantryOnly, KOTH_Hardcore), as the bot knows them.
-const MODIFIER = /infantryonly|hardcore/i;
+// Infantry only, hardcore and limited gear, by their ids (KOTH_InfantryOnly, KOTH_Hardcore, KOTH_LimitedGear), as the bot
+// knows them.
+const MODIFIER = /infantryonly|hardcore|limitedgear/i;
 
 // A map as the editor holds it: the game mode, the modifiers turned on, lighting and zones ('' for the map's own), and any
 // experience the editor does not know, kept as it was.

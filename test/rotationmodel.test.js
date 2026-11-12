@@ -33,6 +33,7 @@ const catalog = {
       modifiers: [
         { key: 'infantry_only', name: 'Infantry only', id: 'KOTH_InfantryOnly' },
         { key: 'hardcore', name: 'Hardcore', id: 'KOTH_Hardcore' },
+        { key: 'limited_gear', name: 'Limited gear', id: 'KOTH_LimitedGear' },
       ],
       zones: [{ id: 'ZoneAlternator.Bakurani.Default.Circle', name: 'Circle' }],
     },
@@ -81,6 +82,14 @@ describe('a map in the editor', () => {
     assert.deepEqual(fromDraft(newDraft('Kavkazi', catalog)), { map: 'Kavkazi', experiences: ['Kavkazi_KOTH_01'] });
     assert.deepEqual(fromDraft(newDraft('Europe', catalog)), { map: 'Europe' });
     assert.notEqual(newDraft('Kavkazi', catalog).key, newDraft('Kavkazi', catalog).key);
+  });
+
+  it('keeps limited gear with the modifiers, not the extras', () => {
+    const entry = { map: 'Kavkazi', experiences: ['Kavkazi_KOTH_01', 'KOTH_InfantryOnly', 'KOTH_LimitedGear'] };
+    const draft = toDraft(entry, catalog);
+    assert.deepEqual(draft.modifiers, ['KOTH_InfantryOnly', 'KOTH_LimitedGear']);
+    assert.deepEqual(draft.extras, []);
+    assert.deepEqual(fromDraft(draft), entry);
   });
 
   it('labels the map with chips for what is set', () => {
