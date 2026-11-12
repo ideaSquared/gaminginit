@@ -12,11 +12,12 @@ It has four sections:
   every kill now.
 - **Queue**: everyone the bot flagged, one row each, with the lists by flag, the team kills and the moderation log.
 - **Players**: any player's record, starting from those staff acted on and who was on lately.
-- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines, the weapon rules, the chat filter and the live chat.
+- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines, the welcome message, the weapon rules, the chat filter and the live chat.
 
 Every staff command is in the **command search** (Ctrl K), and the server's own in the **Server** menu.
 The Server menu also links to the external **Wardogs MOTD Builder** (opens in a new tab): write, preview and check the
-server welcome message (MOTD) before pasting it into the host's RCON editor.
+server welcome message (MOTD) before pasting it into the host's RCON editor. Server's **Welcome message** tab edits
+the live message itself, with no pasting.
 
 Now and Queue have a count (how many are in game, and how many are flagged), and each section says what is in it when
 you hover it. The address keeps the section and its view (`/admin#queue`, `/admin#queue/teamkills`, `/admin#players`,
@@ -24,7 +25,7 @@ you hover it. The address keeps the section and its view (`/admin#queue`, `/admi
 (`/admin#players/<Steam ID>`), so a link opens the right one, and the browser's Back goes back. Old links go where
 those are now (`staffRoute` in `format.js`): `#live` to Now; `#review`, `#alerts` and `#kills` to Queue; `#history`,
 `#history/<Steam ID>` and `#kills/<Steam ID>` to Players; `#commands` and `#admin` to Now with the command search open;
-`#bans`, `#rotations`, `#lines` and `#rules` to Server. The Server settings page, `/server-settings`, is only a link
+`#bans`, `#rotations`, `#lines`, `#motd` and `#rules` to Server. The Server settings page, `/server-settings`, is only a link
 on to Server now, keeping its tab: `/server-settings#lines` opens Server's Lines. ← → move between the sections from
 the keyboard. **Any player's name, in any section, opens their panel.**
 
@@ -286,7 +287,7 @@ says so if the bot is too old to have it (`GET /api/admin/growth`). `?demo` show
 
 ## Server: Rotations, the maps for each day
 
-A tab with changes not saved yet (Rotations, Lines or Weapon rules; the Chat filter sends each change as it is made) has a yellow dot by its name, so they are not
+A tab with changes not saved yet (Rotations, Lines, Welcome message or Weapon rules; the Chat filter sends each change as it is made) has a yellow dot by its name, so they are not
 forgotten while on another tab.
 
 - **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
@@ -330,6 +331,27 @@ forgotten while on another tab.
   bot's own back. Each list says who changed it last and when. Leaving with unsaved changes asks first.
 - A list that is marked "too long or wrong" was fine when it was saved, but the bot's settings changed since (its
   website, seeder VIP or the winning score). The bot cuts such a line short until it is changed.
+
+## Server: Welcome message, the popup players see when they join
+
+- **The message.** One line of the editor is one line of the popup; an empty line is a blank one. The page reads the
+  message from the game server (through the bot, which reads and writes `ServerSettings.ini` over RCON) and **Apply**
+  writes it back. The server shows a change from the next match.
+- **Writing it.** Tags: `<Header>…</>`, `<Bold>…</>`, `<Italic>…</>` and `<text color="#RRGGBB" size="8 to 24"
+  fontface="Bold or Italic">…</>`. Close every tag with `</>`; tags can't be inside each other; Header takes no
+  attributes; any other tag, links too, is refused by the server. To show `< > & "` write `&lt; &gt; &amp; &quot;`.
+  At most 128 lines, and 128 characters in a line (tags aren't counted; each of those four counts as one).
+- **Preview.** The popup as it would look: the header big, bold and italic, and `<text>` in its colour and size. It is an
+  approximation, not the game's own drawing. Each line has its number and how many of its 128 characters it shows (red
+  when over). A line that breaks a rule is marked, and listed under the editor with its line number.
+- **Enabled** is whether the popup shows at all. **Apply** is off while the message breaks a rule or is what the server
+  has already; it says what the server did ("Saved — shows from the next match."). **Reset** loads what the server has,
+  asking first when you have changes. If the message was changed somewhere else (by another admin, or the host's
+  editor) since you opened it, Apply is refused, never forced: press Reset to load the new one.
+- **Start from the website rules** fills the editor with the approved message (`RULES_TEMPLATE` in `motdmodel.js`:
+  header, the eight server rules, the Discord and website links). Nothing is sent until Apply.
+- The rules are in `motdmodel.js` and are the same ones the bot checks when it saves. The bot's README, "Welcome
+  message", has the file format and the API.
 
 ## Server: Weapon rules, weapons the bot warns or kicks for
 
@@ -416,7 +438,7 @@ the bot reads the game's chat for it when its last reading is 3 seconds old, so 
   public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would do,
-  and the rotations, lines, weapon rules and chat filter on Server change in the page only. Those editors load the first
+  and the rotations, lines, welcome message, weapon rules and chat filter on Server change in the page only (the sample welcome message starts as the website rules). Those editors load the first
   time they are opened. The chat filter's sample starter words are made up: the bot's own lists are in its source.
 - It only talks to the bot in its own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try them against a local bot, change the meta tag in local copies.

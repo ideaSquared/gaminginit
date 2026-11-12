@@ -75,7 +75,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; and the server’s settings: the bans and whitelist slots, the map rotations, what the bot says in game, the weapon rules, the chat filter and the live chat. Every staff command, to run from here. For Discord Administrators and members with a staff role in our server.</p>
+            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; and the server’s settings: the bans and whitelist slots, the map rotations, what the bot says in game, the welcome message, the weapon rules, the chat filter and the live chat. Every staff command, to run from here. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -97,7 +97,7 @@
               <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" tabindex="-1" data-tab="players" title="Any player’s kills, team kills and record">
                 <span class="tab-name">Players</span>
               </button>
-              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans, VIP, rotations, what the bot says in game, weapon rules, the chat filter and the live chat">
+              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans, VIP, rotations, what the bot says in game, the welcome message, weapon rules, the chat filter and the live chat">
                 <span class="tab-name">Server <span class="tab-dirty" id="dirty-server" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
               </button>
             </div>
@@ -478,6 +478,9 @@
                 <button type="button" role="tab" id="tab-lines" aria-controls="panel-lines" aria-selected="false" tabindex="-1" data-tab="lines" title="What the bot says in game">
                   <span class="tab-name">Lines <span class="tab-dirty" id="dirty-lines" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 </button>
+                <button type="button" role="tab" id="tab-motd" aria-controls="panel-motd" aria-selected="false" tabindex="-1" data-tab="motd" title="The popup players see when they join">
+                  <span class="tab-name">Welcome message <span class="tab-dirty" id="dirty-motd" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
                 <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules" title="Weapons the bot warns or kicks for">
                   <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 </button>
@@ -570,6 +573,10 @@
 
               <div class="tab-panel" role="tabpanel" id="panel-lines" aria-labelledby="tab-lines" hidden>
                 <div id="lines"></div>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-motd" aria-labelledby="tab-motd" hidden>
+                <div id="motd"></div>
               </div>
 
               <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>

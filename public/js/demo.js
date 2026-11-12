@@ -2,6 +2,7 @@ import { FACTION_HEX } from './format.js';
 import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
 import { tidyWord, wordProblem } from './chatmodel.js';
 import { ruleProblem, tidy } from './rulesmodel.js';
+import { linesOf, RULES_TEMPLATE, sameMessage, validate as motdProblems } from './motdmodel.js';
 
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
 
@@ -1727,6 +1728,25 @@ export const demoRulesChange = async (body) => {
   };
   demoRuleState.rules = body.id === null ? [...demoRuleState.rules, rule] : demoRuleState.rules.map((r) => (r.id === rule.id ? rule : r));
   return { ok: true, json: demoRulesPage() };
+};
+
+// The Welcome message tab: the message on the server, as the bot sends it, starting as the website rules. A save is checked
+// as the bot checks it, and the server shows it from the next match.
+const demoMotdState = { enabled: true, lines: [...RULES_TEMPLATE], revision: 1 };
+
+const demoMotdPage = () => ({ enabled: demoMotdState.enabled, lines: [...demoMotdState.lines], revision: String(demoMotdState.revision), problems: motdProblems(demoMotdState.lines) });
+
+export const demoMotd = async () => ({ ok: true, status: 200, json: demoMotdPage() });
+
+export const demoMotdChange = async (body) => {
+  const refuse = (status, error, extra = {}) => ({ ok: false, status, json: { error, ...extra } });
+  const problems = motdProblems(body.lines);
+  if (problems.length > 0) return refuse(400, 'The welcome message breaks the rules, so it was not saved.', { problems });
+  if (body.revision !== String(demoMotdState.revision)) return refuse(409, 'The welcome message was changed somewhere else since you opened it. Reload it, then make your change again.');
+  const next = { enabled: body.enabled, lines: linesOf(body.lines.join('\n')) };
+  const unchanged = sameMessage(next, demoMotdState);
+  if (!unchanged) Object.assign(demoMotdState, next, { revision: demoMotdState.revision + 1 });
+  return { ok: true, status: 200, json: { ...demoMotdPage(), outcome: unchanged ? 'unchanged' : 'next-match' } };
 };
 
 // The Chat filter tab: the word lists as the bot sends them. The sample starter words are made up, apart from a few of the

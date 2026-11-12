@@ -206,7 +206,7 @@ export const call = async (path, body) => {
     forgetToken();
     signedOut(RAN_OUT);
   }
-  return { ok: response.ok, json: await response.json().catch(() => null) };
+  return { ok: response.ok, status: response.status, json: await response.json().catch(() => null) };
 };
 
 // The Discord names of staff, by user ID, as the bot last sent them.

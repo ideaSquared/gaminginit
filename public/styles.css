@@ -7530,6 +7530,127 @@ body.rot-grabbing * {
   margin-top: 6px;
 }
 
+/* The Welcome message tab: the text to edit beside a preview of the popup. It shares the Weapon rules tab's cards and fields. */
+
+.motd-grid {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .motd-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.motd-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.motd-field-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.motd-total {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+textarea.motd-input {
+  width: 100%;
+  max-width: none;
+  min-height: 22rem;
+  margin-top: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+}
+
+.motd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.motd-popup {
+  margin-top: 4px;
+  padding: 12px 8px;
+  max-height: 32rem;
+  overflow: auto;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: #07090c;
+  color: #f2f2f2;
+}
+
+.motd-popup-off {
+  opacity: 0.45;
+}
+
+.motd-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.motd-row {
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  min-height: 1.4em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.motd-row-bad {
+  background: color-mix(in srgb, var(--critical) 22%, transparent);
+}
+
+.motd-num,
+.motd-count {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.motd-num {
+  text-align: right;
+}
+
+.motd-problems {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 0 1.2em;
+  color: color-mix(in srgb, var(--critical) 65%, white);
+  font-size: 0.85rem;
+}
+
+.motd-problems[hidden] {
+  display: none;
+}
+
+.motd-help summary {
+  cursor: pointer;
+  color: var(--text-2);
+}
+
 /* The Chat filter tab: the word lists chat moderation uses. It shares the Weapon rules tab's layout, cards and word pills. */
 
 .chat-list-name {
