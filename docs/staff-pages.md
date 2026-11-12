@@ -12,7 +12,7 @@ It has four sections:
   every kill now.
 - **Queue**: everyone the bot flagged, one row each, with the lists by flag, the team kills and the moderation log.
 - **Players**: any player's record, starting from those staff acted on and who was on lately.
-- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines and the weapon rules.
+- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines, the weapon rules and the chat filter.
 
 Every staff command is in the **command search** (Ctrl K), and the server's own in the **Server** menu.
 The Server menu also links to the external **Wardogs MOTD Builder** (opens in a new tab): write, preview and check the
@@ -286,7 +286,7 @@ says so if the bot is too old to have it (`GET /api/admin/growth`). `?demo` show
 
 ## Server: Rotations, the maps for each day
 
-A tab with changes not saved yet (Rotations, Lines or Weapon rules) has a yellow dot by its name, so they are not
+A tab with changes not saved yet (Rotations, Lines or Weapon rules; the Chat filter sends each change as it is made) has a yellow dot by its name, so they are not
 forgotten while on another tab.
 
 - **Today.** The rotation on the server today, and whether it came from the week or a staff member picked it; the map
@@ -348,6 +348,27 @@ forgotten while on another tab.
 - Kills within 30 seconds of the bot acting are one offence, and offences start again each day (UTC). Every warning
   and kick goes in the moderation log, done by the bot. The bot's README, "Weapon rules", has the details.
 
+## Server: Chat filter, the words the bot acts on in chat
+
+The bot reads the game's chat each minute and acts on lines that use a word from a list. Its starter lists are in the bot
+(`src/chatwords.ts`); this tab adds to them and takes words out. The bot's README, "Chat moderation", has the details.
+
+- **The lists.** **Racism and hate**: a line with one of these as a whole word, in any case, is an instant permanent
+  ban, with the line as the reason in the player's history. **Toxicity**: a whole word or phrase is a warning in game,
+  also in their history. A spelling that only resembles a word (`n1gger`, `k y s`, a word inside a longer one) is only
+  posted to the moderation log for staff to decide, as is anything a staff member says: the bot never acts on staff.
+  **Allowed words** are ordinary words that hold a listed word inside them, such as "Scunthorpe"-type matches: a
+  listed word found inside one is ignored. Swearing is allowed and is on no list.
+- **The editor.** Pick a list on the left. **Add** takes a word or phrase (up to 4 words; an allowed word is one word):
+  it is saved in lower case and matches as a whole word. **×** takes a word out: one you added is gone, and a starter
+  word is kept struck through as an exclusion, with **Put back**, so a false positive is fixed without a deploy. The
+  list shows what staff added first, then the starter words, and has a search box.
+- Each change is sent as it is made: there is nothing to save, and the bot uses it from its next check. Each list says
+  who changed the lists last and when.
+- A note at the top says when the bot is set not to read the chat (`CHAT_MOD` off), or only to post matches and not
+  ban or warn (`CHAT_MOD_ACTIONS` off).
+- `/chat` in Discord, and in the command search, shows the latest chat lines the bot read, from everyone or one player.
+
 ## Everywhere
 
 - Staff are named as they go by in our Discord, with their username: "Sarge (@paragon)". The bot learns names as staff
@@ -370,8 +391,8 @@ forgotten while on another tab.
   public player page.
 - `?demo` adds a sample kill to the kill feed every few seconds, as if the server were busy.
 - `http://localhost:3000/admin?demo` shows sample data without signing in. Its admin tools only say what they would do,
-  and the rotations, lines and weapon rules on Server change in the page only. The Rotations, Lines and Weapon rules
-  editors load the first time they are opened.
+  and the rotations, lines, weapon rules and chat filter on Server change in the page only. Those editors load the first
+  time they are opened. The chat filter's sample starter words are made up: the bot's own lists are in its source.
 - It only talks to the bot in its own `stats-url` meta tag and ignore `?stats=`, so a link can never send a staff
   member's sign-in to another site. To try them against a local bot, change the meta tag in local copies.
 - The site must be at the bot's `SITE_URL` (`https://gaminginit.com`): the bot only sends sign-ins back there, and only

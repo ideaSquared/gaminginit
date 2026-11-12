@@ -7530,6 +7530,43 @@ body.rot-grabbing * {
   margin-top: 6px;
 }
 
+/* The Chat filter tab: the word lists chat moderation uses. It shares the Weapon rules tab's layout, cards and word pills. */
+
+.chat-list-name {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.chat-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-words .chat-add-input {
+  flex: 1 1 240px;
+  max-width: 420px;
+}
+
+.chat-words .chat-search {
+  max-width: 320px;
+}
+
+.chat-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.chat-word-removed span:first-child {
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.chat-word-removed {
+  border-style: dashed;
+}
+
 /* Staff pages: the whole width of a big screen, so the staff bar fits on one line from 1100px, and the server list and
    the kill feed fit side by side from 1440px. */
 @media (min-width: 1100px) {
