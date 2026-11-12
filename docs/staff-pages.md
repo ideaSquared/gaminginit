@@ -15,6 +15,8 @@ It has four sections:
 - **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines and the weapon rules.
 
 Every staff command is in the **command search** (Ctrl K), and the server's own in the **Server** menu.
+The Server menu also links to the external **Wardogs MOTD Builder** (opens in a new tab): write, preview and check the
+server welcome message (MOTD) before pasting it into the host's RCON editor.
 
 Now and Queue have a count (how many are in game, and how many are flagged), and each section says what is in it when
 you hover it. The address keeps the section and its view (`/admin#queue`, `/admin#queue/teamkills`, `/admin#players`,
