@@ -1,5 +1,5 @@
 import { ask } from './ask.js';
-import { demoChatWords, demoChatWordsChange, demoLiveChat, demoGrowth, demoLifetime, demoLifetimeCsv, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
+import { demoChatWords, demoChatWordsChange, demoLiveChat, demoGrowth, demoLifetime, demoLifetimeCsv, demoLines, demoPlaytime, demoLinesChange, demoMotd, demoMotdChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
 import { clickPlace, growthText, SERVER_VIEWS, staffNote } from './format.js';
 import { demo, showNotice } from './live.js';
 import { $, badge, call, cell, get, getText, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
@@ -7,7 +7,7 @@ import { el } from './views.js';
 
 // The staff page's Server section, once the Server settings page, in views. Bans: the bans on the server and Discord growth.
 // VIP: the whitelist slots, with why, and staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see
-// rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see
+// rotations.js). Lines: what the bot says in game (see lines.js). Welcome message: the popup players see when they join (see motd.js). Weapon rules: weapons the bot warns or kicks for (see
 // rules.js). Chat filter: the word lists chat moderation uses (see chatwords.js). Live chat: the chat as it comes, with the bot's verdict on each line (see livechat.js). The editors load the first time they are opened, so staff who only moderate never load them.
 // `who(player)` draws a player's name, opening their panel, and `act(key, player)` opens their panel with a form, such
 // as Unban (see admin.js). `changed()` is called when what is unsaved changes, for the dot on the Server tab.
@@ -23,6 +23,11 @@ const EDITORS = {
     module: () => import('./lines.js').then((m) => m.createLines),
     load: () => (demo ? demoLines() : get('admin/lines')),
     send: (body) => (demo ? demoLinesChange(body) : call('admin/lines', body)),
+  },
+  motd: {
+    module: () => import('./motd.js').then((m) => m.createMotd),
+    load: () => (demo ? demoMotd() : get('admin/motd')),
+    send: (body) => (demo ? demoMotdChange(body) : call('admin/motd', body)),
   },
   rules: {
     module: () => import('./rules.js').then((m) => m.createRules),

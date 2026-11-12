@@ -2195,6 +2195,7 @@ const PLACES = [
   { label: 'Server: VIP', note: 'Whitelist slots and why, staff Steam accounts', words: 'settings whitelist slots', run: go('server', 'vip') },
   { label: 'Server: rotations', note: 'The maps for each day', words: 'settings maps week', run: go('server', 'rotations') },
   { label: 'Server: lines', note: 'What the bot says in game', words: 'settings messages seeding welcome', run: go('server', 'lines') },
+  { label: 'Server: welcome message', note: 'The popup players see when they join', words: 'settings motd welcome popup message rules join', run: go('server', 'motd') },
   { label: 'Server: weapon rules', note: 'Weapons the bot warns or kicks for', words: 'settings', run: go('server', 'rules') },
   { label: 'Server: live chat', note: 'The chat as it comes, with flagged lines', words: 'settings chat flagged words racism toxicity watch', run: go('server', 'livechat') },
   { label: 'Server: chat filter', note: 'The words the bot acts on in chat', words: 'settings chat words racism toxicity slurs ban allowed', run: go('server', 'chat') },
