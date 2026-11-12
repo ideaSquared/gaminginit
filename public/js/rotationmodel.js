@@ -166,6 +166,16 @@ export const lightingName = (id) => {
   return [time ?? capital(first), ...weather].join(', ');
 };
 
+// Lightings a map can only be played with, by lower-case map id (Sabatulo is Russia). A map not here allows every lighting.
+// Kept in step with the bot's src/maplightings.ts, as the server's catalogue lists every lighting, not each map's own.
+const ONLY_LIGHTINGS = new Map([['russia', ['DayClear', 'DayLateClear', 'DayLateGray', 'DayLateRain']]]);
+
+// The lightings a map can be played with, from a list of them ({ id, name }).
+export const lightingsFor = (map, lightings) => {
+  const allowed = ONLY_LIGHTINGS.get(String(map ?? '').toLowerCase());
+  return allowed === undefined ? lightings : lightings.filter((l) => allowed.some((id) => id.toLowerCase() === l.id.toLowerCase()));
+};
+
 // An experience id loses its underscores.
 const plainId = (id) => id.replace(/_/g, ' ');
 
