@@ -1679,7 +1679,7 @@ describe('staff page addresses', () => {
     assert.deepEqual(where(`#history/${id}`), ['players', id]);
     assert.deepEqual(where('#commands'), ['now', 'search']);
     assert.deepEqual(where('#admin'), ['now', 'search']);
-    for (const view of ['bans', 'vip', 'rotations', 'lines', 'rules']) assert.deepEqual(where(`#${view}`), ['server', view]);
+    for (const view of ['bans', 'vip', 'rotations', 'lines', 'rules', 'chat', 'livechat']) assert.deepEqual(where(`#${view}`), ['server', view]);
   });
   it('is not a section for the sign-in answer', () => {
     assert.equal(staffRoute('#session=abc.def'), null);

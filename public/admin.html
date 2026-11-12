@@ -75,7 +75,7 @@
 
           <div class="card panel signin" id="signin" hidden>
             <h2 class="panel-title">Staff only</h2>
-            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; and the server’s settings: the bans and whitelist slots, the map rotations, what the bot says in game and the weapon rules. Every staff command, to run from here. For Discord Administrators and members with a staff role in our server.</p>
+            <p>Who is on the server, with anyone worth a look at the top, and every kill, live; what the bot flagged (far more headshots than usual, griefing, risky Steam accounts) and every ban, kick and warning, to review; any player’s history; and the server’s settings: the bans and whitelist slots, the map rotations, what the bot says in game, the weapon rules, the chat filter and the live chat. Every staff command, to run from here. For Discord Administrators and members with a staff role in our server.</p>
             <p class="signin-error" id="signin-error" role="alert" hidden></p>
             <a class="btn btn-discord" id="signin-link" href="#">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
@@ -97,7 +97,7 @@
               <button type="button" role="tab" id="tab-players" aria-controls="panel-players" aria-selected="false" tabindex="-1" data-tab="players" title="Any player’s kills, team kills and record">
                 <span class="tab-name">Players</span>
               </button>
-              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans, VIP, rotations, what the bot says in game and weapon rules">
+              <button type="button" role="tab" id="tab-server" aria-controls="panel-server" aria-selected="false" tabindex="-1" data-tab="server" title="Bans, VIP, rotations, what the bot says in game, weapon rules, the chat filter and the live chat">
                 <span class="tab-name">Server <span class="tab-dirty" id="dirty-server" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
               </button>
             </div>
@@ -481,6 +481,12 @@
                 <button type="button" role="tab" id="tab-rules" aria-controls="panel-rules" aria-selected="false" tabindex="-1" data-tab="rules" title="Weapons the bot warns or kicks for">
                   <span class="tab-name">Weapon rules <span class="tab-dirty" id="dirty-rules" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
                 </button>
+                <button type="button" role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected="false" tabindex="-1" data-tab="chat" title="The words the bot acts on in chat">
+                  <span class="tab-name">Chat filter <span class="tab-dirty" id="dirty-chat" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
+                <button type="button" role="tab" id="tab-livechat" aria-controls="panel-livechat" aria-selected="false" tabindex="-1" data-tab="livechat" title="The chat as it comes, with what the bot made of each line">
+                  <span class="tab-name">Live chat <span class="tab-dirty" id="dirty-livechat" title="Changes not saved yet" hidden><span class="visually-hidden">(changes not saved yet)</span></span></span>
+                </button>
               </div>
 
               <div class="tab-panel" role="tabpanel" id="panel-bans" aria-labelledby="tab-bans">
@@ -568,6 +574,14 @@
 
               <div class="tab-panel" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules" hidden>
                 <div id="rules"></div>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-chat" aria-labelledby="tab-chat" hidden>
+                <div id="chat"></div>
+              </div>
+
+              <div class="tab-panel" role="tabpanel" id="panel-livechat" aria-labelledby="tab-livechat" hidden>
+                <div id="livechat"></div>
               </div>
             </div>
           </div>

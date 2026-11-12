@@ -1,5 +1,5 @@
 import { ask } from './ask.js';
-import { demoGrowth, demoLifetime, demoLifetimeCsv, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
+import { demoChatWords, demoChatWordsChange, demoLiveChat, demoGrowth, demoLifetime, demoLifetimeCsv, demoLines, demoPlaytime, demoLinesChange, demoRotations, demoRotationsChange, demoRules, demoRulesChange } from './demo.js';
 import { clickPlace, growthText, SERVER_VIEWS, staffNote } from './format.js';
 import { demo, showNotice } from './live.js';
 import { $, badge, call, cell, get, getText, load, loadToken, myProfile, number, openSteam, setStatus, showTab, staffCell, steamLink, table, tabKeys, when } from './staff.js';
@@ -8,7 +8,7 @@ import { el } from './views.js';
 // The staff page's Server section, once the Server settings page, in views. Bans: the bans on the server and Discord growth.
 // VIP: the whitelist slots, with why, and staff Steam accounts. Rotations: the map rotations, the week and what is on the server (see
 // rotations.js). Lines: what the bot says in game (see lines.js). Weapon rules: weapons the bot warns or kicks for (see
-// rules.js). The three editors load the first time they are opened, so staff who only moderate never load them.
+// rules.js). Chat filter: the word lists chat moderation uses (see chatwords.js). Live chat: the chat as it comes, with the bot's verdict on each line (see livechat.js). The editors load the first time they are opened, so staff who only moderate never load them.
 // `who(player)` draws a player's name, opening their panel, and `act(key, player)` opens their panel with a form, such
 // as Unban (see admin.js). `changed()` is called when what is unsaved changes, for the dot on the Server tab.
 
@@ -28,6 +28,16 @@ const EDITORS = {
     module: () => import('./rules.js').then((m) => m.createRules),
     load: () => (demo ? demoRules() : get('admin/rules')),
     send: (body) => (demo ? demoRulesChange(body) : call('admin/rules', body)),
+  },
+  chat: {
+    module: () => import('./chatwords.js').then((m) => m.createChatWords),
+    load: () => (demo ? demoChatWords() : get('admin/chatwords')),
+    send: (body) => (demo ? demoChatWordsChange(body) : call('admin/chatwords', body)),
+  },
+  livechat: {
+    module: () => import('./livechat.js').then((m) => m.createLiveChat),
+    load: (after = 0) => (demo ? demoLiveChat(after) : get(`admin/chat?after=${after}`)),
+    send: async () => ({ ok: false, status: 0, json: null }),
   },
 };
 
@@ -61,7 +71,7 @@ export const createServer = ({ who, act, changed = () => undefined, selected = (
     making[name] ??= EDITORS[name]
       .module()
       .then((create) => {
-        editors[name] = create({ root: $(name), load: EDITORS[name].load, send: EDITORS[name].send });
+        editors[name] = create({ root: $(name), load: EDITORS[name].load, send: EDITORS[name].send, who });
         return editors[name];
       })
       .catch((error) => {

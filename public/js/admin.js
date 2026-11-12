@@ -96,7 +96,7 @@ import { el, mapTag, playerHref } from './views.js';
 // flagged by itself, one row per player with every reason (see queue.js), the lists by flag (far more headshots than a
 // player's weapons usually get, risky Steam accounts, possible griefers), their team kills and vehicle suicides, and
 // the moderation log of what staff did. Players: any player's record, kills and headshots, and team kills, starting
-// from those staff acted on and who was on lately. Server: the bans and VIP, rotations, lines and weapon rules (see
+// from those staff acted on and who was on lately. Server: the bans and VIP, rotations, lines, weapon rules and chat filter (see
 // server.js). Every staff command from Discord is in the command search (Ctrl K, see palette.js), and the server's own
 // in the Server menu, each opening its form over the page (see tools.js). Any player's name opens their panel at the side of the page: what is worth knowing, the buttons to act
 // with the form for each (Warn, Kick, Ban, Move), their record, staff actions and latest kills. Act on a player, and the
@@ -2196,6 +2196,8 @@ const PLACES = [
   { label: 'Server: rotations', note: 'The maps for each day', words: 'settings maps week', run: go('server', 'rotations') },
   { label: 'Server: lines', note: 'What the bot says in game', words: 'settings messages seeding welcome', run: go('server', 'lines') },
   { label: 'Server: weapon rules', note: 'Weapons the bot warns or kicks for', words: 'settings', run: go('server', 'rules') },
+  { label: 'Server: live chat', note: 'The chat as it comes, with flagged lines', words: 'settings chat flagged words racism toxicity watch', run: go('server', 'livechat') },
+  { label: 'Server: chat filter', note: 'The words the bot acts on in chat', words: 'settings chat words racism toxicity slurs ban allowed', run: go('server', 'chat') },
   { label: 'Keyboard shortcuts', note: 'Every key on this page', words: 'keys help', run: () => $('keys').showModal() },
 ];
 const palette = createPalette({

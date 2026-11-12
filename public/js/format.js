@@ -1238,7 +1238,7 @@ export const recentPlayers = ({ moderation = [], joins = [], limit = 10 }) => {
 // such as the bot's answer to signing in.
 export const SECTIONS = ['now', 'queue', 'players', 'server'];
 export const QUEUE_VIEWS = ['flagged', 'flags', 'teamkills', 'log'];
-export const SERVER_VIEWS = ['bans', 'vip', 'playtime', 'lifetime', 'rotations', 'lines', 'rules'];
+export const SERVER_VIEWS = ['bans', 'vip', 'playtime', 'lifetime', 'rotations', 'lines', 'rules', 'chat', 'livechat'];
 const OLD_SECTIONS = { live: 'now', review: 'queue', alerts: 'queue', history: 'players' };
 export const staffRoute = (hash) => {
   const [asked = '', sub = ''] = hash.replace(/^#/, '').split('/');

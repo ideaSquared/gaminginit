@@ -1,5 +1,6 @@
 import { FACTION_HEX } from './format.js';
 import { lineProblem, linesToSave, sameLines } from './linesmodel.js';
+import { tidyWord, wordProblem } from './chatmodel.js';
 import { ruleProblem, tidy } from './rulesmodel.js';
 
 // Made-up numbers in the same shape as the bot's /api/stats, for previewing the page: open it with ?demo.
@@ -1729,6 +1730,125 @@ export const demoRulesChange = async (body) => {
   };
   demoRuleState.rules = body.id === null ? [...demoRuleState.rules, rule] : demoRuleState.rules.map((r) => (r.id === rule.id ? rule : r));
   return { ok: true, json: demoRulesPage() };
+};
+
+// The Chat filter tab: the word lists as the bot sends them. The sample starter words are made up, apart from a few of the
+// toxicity list: the bot's real lists are in its source.
+const demoChatState = {
+  lists: {
+    racism: {
+      defaults: ['example slur', 'another example', 'third example'],
+      added: [],
+      removed: [],
+    },
+    toxicity: {
+      defaults: ['kys', 'kill yourself', 'kill yourselves', 'retard', 'retards', 'retarded', 'hope you die'],
+      added: ['noob scum'],
+      removed: [],
+    },
+    allow: { defaults: ['snigger', 'raccoon', 'spicy', 'pakistan', 'amongus'], added: [], removed: [] },
+  },
+  changed: null,
+};
+
+const DEMO_CHAT_LISTS = [
+  ['racism', 'Racism and hate', 'A line with one of these as a whole word is an instant permanent ban. A spelling that only resembles one (leetspeak, repeated letters, spaces) is an alert for staff.'],
+  ['toxicity', 'Toxicity', 'A line with one of these as a whole word or phrase is a warning in game. A spelling that only resembles one is an alert for staff.'],
+  ['allow', 'Allowed words', 'Words that hold a listed word inside them, such as "Scunthorpe"-type matches. The bot does not alert for a listed word found inside these. A listed word typed on its own still counts.'],
+];
+
+const demoChatPage = () => ({
+  enabled: true,
+  actions: true,
+  maxWord: 60,
+  maxPhraseWords: 4,
+  maxAdded: 500,
+  changed: demoChatState.changed,
+  lists: DEMO_CHAT_LISTS.map(([id, name, note]) => {
+    const { defaults, added, removed } = demoChatState.lists[id];
+    return { id, name, note, defaults: [...defaults], added: [...added], removed: [...removed] };
+  }),
+});
+
+export const demoChatWords = async () => ({ ok: true, status: 200, json: demoChatPage() });
+
+// A change, as the bot makes it: refused with a reason, or the page as it is after it.
+export const demoChatWordsChange = async (body) => {
+  const refuse = (error) => ({ ok: false, json: { error } });
+  const page = demoChatPage();
+  const list = page.lists.find((l) => l.id === body.list);
+  if (!list) return refuse('Not a chat filter request');
+  const mine = demoChatState.lists[list.id];
+  const word = tidyWord(body.word);
+  const isDefault = mine.defaults.includes(word);
+  const done = () => {
+    demoChatState.changed = { at: Date.now(), by: 'demo', byName: 'Sarge' };
+    return { ok: true, json: demoChatPage() };
+  };
+  if (body.action === 'restore') {
+    if (!mine.removed.includes(word)) return refuse(`"${word}" is not taken out of the list.`);
+    mine.removed = mine.removed.filter((w) => w !== word);
+    return done();
+  }
+  if (body.action === 'remove') {
+    if (mine.added.includes(word)) mine.added = mine.added.filter((w) => w !== word);
+    else if (isDefault && !mine.removed.includes(word)) mine.removed = [...mine.removed, word];
+    else return refuse(`"${word}" is not on the list.`);
+    return done();
+  }
+  const why = wordProblem(body.word, list, page);
+  if (why) return refuse(why);
+  if (isDefault) mine.removed = mine.removed.filter((w) => w !== word);
+  else mine.added = [...mine.added, word];
+  return done();
+};
+
+// The Live chat tab: the bot's GET /api/admin/chat with sample lines, one more each time it is asked. The sample words are
+// made up, like the chat filter's.
+const demoChat = { lines: [], next: 1 };
+const CHAT_PLAYERS = [
+  { steamId: '76561198000000001', name: '[WD] Ash', faction: 'Valkyra' },
+  { steamId: '76561198000000002', name: 'Bo', faction: 'Kharr' },
+  { steamId: '76561198000000003', name: 'Cy', faction: 'Lonestar', shownAs: 'Olive' },
+];
+const CHAT_SAMPLES = [
+  ['push B, they are low', null],
+  ['gg well played', null],
+  ['k y s', { kind: 'fuzzy', list: 'toxicity', word: 'kys', action: 'alert' }],
+  ['kys lol', { kind: 'exact', list: 'toxicity', word: 'kys', action: 'warned' }],
+  ['medic at the church', null],
+  ['you example slur', { kind: 'exact', list: 'racism', word: 'example slur', action: 'banned' }],
+  ['3x3x3x3 anyone on the hill?', null],
+  ['@admin there is a cheater on Kharr', null, { ping: true }],
+  ['3xample 5lur', { kind: 'fuzzy', list: 'racism', word: 'example slur', action: 'alert' }],
+  ['you ****', { kind: 'exact', list: 'racism', word: 'example slur', action: 'banned' }, { rawText: 'you example slur' }],
+  ['stop apc', null],
+];
+
+const demoChatLine = (at) => {
+  const n = demoChat.next++;
+  const [text, verdict, extra = {}] = CHAT_SAMPLES[(n - 1) % CHAT_SAMPLES.length];
+  const who = CHAT_PLAYERS[n % CHAT_PLAYERS.length];
+  return {
+    id: n,
+    steamId: who.steamId,
+    name: who.name,
+    ...(who.shownAs ? { shownAs: who.shownAs } : {}),
+    text,
+    channel: n % 3 === 0 ? 'Team' : 'All',
+    faction: who.faction,
+    at,
+    verdict: verdict ?? { kind: 'clean', action: 'none' },
+    ...extra,
+  };
+};
+
+export const demoLiveChat = async (after = 0) => {
+  const now = Date.now();
+  if (demoChat.lines.length === 0) for (let i = 0; i < 11; i += 1) demoChat.lines.push(demoChatLine(now - (11 - i) * 20_000));
+  else demoChat.lines.push(demoChatLine(now));
+  const lines = demoChat.lines.slice(-200);
+  return { ok: true, status: 200, json: { enabled: true, available: true, cursor: lines.at(-1).id, lines: lines.filter((l) => l.id > after) } };
 };
 
 // A signed-in player, for /account?demo: linked, in the Discord, with VIP, as the bot's GET /api/account sends it.

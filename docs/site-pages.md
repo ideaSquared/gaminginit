@@ -169,7 +169,7 @@ What it shows:
 - The staff page (`/admin`), for staff only: they sign in with Discord. **Now**: who is on the server, with anyone
   worth a look at the top, to act on there and then, and the kill feed. **Queue**: everyone the bot flagged, one row
   each. **Players**: any player's history. **Server**: the bans and whitelist slots, the map rotations, what the bot
-  says in game and the weapon rules. Every staff command is in its command search. `/server-settings` goes to Server.
+  says in game, the weapon rules, the chat filter and the live chat. Every staff command is in its command search. `/server-settings` goes to Server.
   See [Staff page](staff-pages.md).
 
 The stats, matches, leaderboard, weapons and seeding used to be in full on the home page. Old links to them, like
