@@ -1,5 +1,5 @@
-import { clockHour } from './format.js';
-import { feedNote, filterLines, isFlagged, mergeLines, actionText, nameText, newestId, newText, nearBottom, placeText, verdictText } from './livechatmodel.js';
+import { clockHour, factionColours, sideKey } from './format.js';
+import { feedNote, filterLines, isFlagged, mergeLines, actionText, newestId, newText, nearBottom, verdictText } from './livechatmodel.js';
 import { el } from './views.js';
 
 // The staff page's Live chat tab: the chat as the bot reads it, newest at the bottom, each line with what the bot made of
@@ -45,33 +45,42 @@ export const createLiveChat = ({ root, load, who }) => {
   const wrap = el('div', { className: 'card panel livechat' }, el('h2', { className: 'panel-title', textContent: 'Live chat' }), controls, note, el('div', { className: 'livechat-box' }, log, jump));
   root.replaceChildren(wrap, announcer);
 
+  // One line, like a chat app: a header (time, channel, faction, who), the message on its own row underneath, then what
+  // the typed text was if the game changed it, and the bot's verdict on a flagged line.
   const line = (l) => {
     const { tone, badge, text } = verdictText(l);
     const did = actionText(l);
-    const place = placeText(l);
     const item = el('li', { className: `chat-line chat-line-${tone}` });
     item.dataset.id = String(l.id);
     const name = l.steamId ? who({ steamId: l.steamId, name: l.name || l.steamId }) : el('span', { textContent: l.name || 'Unknown' });
+    const channel = (l.channel ?? '').trim();
+    const colour = l.faction ? factionColours.get(sideKey(l.faction)) : undefined;
+    const faction = l.faction
+      ? el('span', { className: 'chat-faction', title: `Faction: ${l.faction}` }, el('span', { className: 'chat-dot', ariaHidden: 'true' }), l.faction)
+      : null;
+    if (faction && colour) faction.style.setProperty('--faction', colour);
     // What is not there is left out: append itself would write a null as the text "null".
-    const parts = [
+    const head = [
       el('time', { className: 'chat-time', dateTime: new Date(l.at).toISOString(), textContent: time.format(new Date(l.at)) }),
-      el('span', { className: 'chat-who' }, name, l.shownAs ? el('span', { className: 'muted', textContent: ` (shown as ${l.shownAs})` }) : null),
-      place ? el('span', { className: 'chat-place muted', textContent: place }) : null,
+      channel ? el('span', { className: `chat-channel chat-channel-${channel.toLowerCase() === 'team' ? 'team' : 'all'}`, textContent: channel }) : null,
+      faction,
+      el('span', { className: 'chat-who' }, name),
+      l.shownAs ? el('span', { className: 'chat-shown muted', textContent: `shown as ${l.shownAs}` }) : null,
       l.ping ? el('span', { className: 'badge badge-hot', textContent: '📣 Ping', title: 'The player pinged' }) : null,
-      el('span', { className: 'chat-text', textContent: l.text }),
-    ];
-    item.append(...parts.filter((part) => part !== null));
+    ].filter((part) => part !== null);
+    item.append(el('div', { className: 'chat-head' }, ...head), el('p', { className: 'chat-text', textContent: l.text }));
     if (l.rawText !== undefined && l.rawText !== l.text) {
-      item.append(el('span', { className: 'chat-raw muted', textContent: `Typed: ${l.rawText}` }));
+      item.append(el('p', { className: 'chat-raw muted', textContent: `Typed: ${l.rawText}` }));
     }
     if (tone !== 'clean') {
+      const others = l.verdict?.others?.length ? `; also ${l.verdict.others.join(', ')}` : '';
       item.append(
         el(
-          'span',
+          'div',
           { className: 'chat-verdict' },
           el('span', { className: `badge chat-badge chat-badge-${tone}`, textContent: `${tone === 'exact' ? '⛔' : '⚠'} ${badge}` }),
-          el('span', { textContent: ` ${text}${l.verdict?.others?.length ? `; also ${l.verdict.others.join(', ')}` : ''}` }),
-          did ? el('strong', { className: 'chat-action', textContent: ` · ${did}` }) : null,
+          el('span', { className: 'chat-verdict-text', textContent: `${text}${others}` }),
+          did ? el('span', { className: `chat-action chat-action-${l.verdict?.action ?? 'none'}`, textContent: did }) : null,
         ),
       );
     }
