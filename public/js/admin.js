@@ -2196,6 +2196,7 @@ const PLACES = [
   { label: 'Server: rotations', note: 'The maps for each day', words: 'settings maps week', run: go('server', 'rotations') },
   { label: 'Server: lines', note: 'What the bot says in game', words: 'settings messages seeding welcome', run: go('server', 'lines') },
   { label: 'Server: weapon rules', note: 'Weapons the bot warns or kicks for', words: 'settings', run: go('server', 'rules') },
+  { label: 'Server: live chat', note: 'The chat as it comes, with flagged lines', words: 'settings chat flagged words racism toxicity watch', run: go('server', 'livechat') },
   { label: 'Server: chat filter', note: 'The words the bot acts on in chat', words: 'settings chat words racism toxicity slurs ban allowed', run: go('server', 'chat') },
   { label: 'Keyboard shortcuts', note: 'Every key on this page', words: 'keys help', run: () => $('keys').showModal() },
 ];

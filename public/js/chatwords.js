@@ -53,6 +53,9 @@ export const createChatWords = ({ root, load, send }) => {
 
   // Bumped by reset (signing out), so an answer that arrives after it is dropped.
   let generation = 0;
+  // Bumped when a change is sent, so a read that began before it, and arrives after it, is dropped rather than showing
+  // the page as it was.
+  let version = 0;
 
   const adopt = (next) => {
     page = next;
@@ -62,10 +65,13 @@ export const createChatWords = ({ root, load, send }) => {
 
   const refresh = async () => {
     const mine = generation;
+    const read = version;
     loading ??= (async () => {
       const answer = await load().catch(() => ({ ok: false, status: 0, json: null }));
       loading = null;
       if (mine !== generation) return;
+      // A change was sent meanwhile: its answer, or the read after it, is the truth, not this.
+      if (read !== version) return;
       if (!answer.ok) {
         problem =
           answer.status === 404
@@ -82,30 +88,49 @@ export const createChatWords = ({ root, load, send }) => {
     return loading;
   };
 
-  // Sends a change; the bot sends the page as it is now. Returns whether it worked.
+  // Sends a change; the bot sends the page as it is now. Returns whether it worked. When it did not, or the answer was
+  // lost (the change may have gone through), the list is read again, so the page shows what the bot has.
   const change = async (body, done) => {
     if (busy) return false;
     const mine = generation;
+    const focused = document.activeElement?.dataset?.focus ?? null;
     busy = true;
+    version += 1;
     lock(true);
     try {
-      const answer = await send(body).catch(() => ({ ok: false, json: null }));
+      const answer = await send(body).catch(() => ({ ok: false, status: 0, json: null }));
       if (mine !== generation) return false;
       if (!answer.ok) {
         toast(answer.json?.error ?? "Couldn't reach the bot. If it was a change, check before trying again.", 'error');
+        // A refusal (400) changed nothing; anything else may have.
+        if (!answer.status || answer.status >= 500) await reread(mine);
         return false;
       }
       adopt(answer.json);
+      problem = null;
       toast(done);
       announce(done);
       return true;
     } finally {
       if (mine === generation) {
         busy = false;
-        lock(false);
-        render();
+        render(focused);
       }
     }
+  };
+
+  // Reads the page again after a change that may or may not have happened, with nothing cached: on failure the error
+  // shows over the page that is there.
+  const reread = async (mine) => {
+    const answer = await load().catch(() => ({ ok: false, status: 0, json: null }));
+    if (mine !== generation) return;
+    if (!answer.ok) {
+      problem = 'Could not check the chat filter after that. What is shown may be out of date: reload the page.';
+      loadedAt = 0;
+      return;
+    }
+    problem = null;
+    adopt(answer.json);
   };
 
   // While a change is on its way the tab can't be used, so a second click can't send another.
@@ -145,7 +170,7 @@ export const createChatWords = ({ root, load, send }) => {
     selected = id;
     typed = '';
     query = '';
-    render();
+    render(`list:${id}`);
     if (window.matchMedia('(max-width: 899px)').matches) content.querySelector('.rot-editor')?.scrollIntoView({ block: 'start' });
   };
 
@@ -167,6 +192,7 @@ export const createChatWords = ({ root, load, send }) => {
           const on = l.id === selected;
           const item = button('', { className: 'rot-name-card' });
           if (on) item.setAttribute('aria-current', 'true');
+          item.dataset.focus = `list:${l.id}`;
           item.addEventListener('click', () => select(l.id));
           item.append(
             el('span', { className: 'rot-name-top' }, el('span', { className: 'rot-name-text', textContent: l.name })),
@@ -186,6 +212,7 @@ export const createChatWords = ({ root, load, send }) => {
       title: row.kind === 'removed' ? 'Use this starter word again' : row.kind === 'added' ? 'Take it off the list' : 'Take it out: the bot keeps it as an exclusion, so it can be put back',
       disabled: busy,
     });
+    control.dataset.focus = `word:${list()?.id}:${row.word}`;
     control.addEventListener('click', () => act(row));
     pill.append(control);
     return pill;
@@ -283,8 +310,11 @@ export const createChatWords = ({ root, load, send }) => {
     );
   };
 
+  // Draws the tab. Keyboard focus goes back to what had it (`keep`, or the focused control), or when that has gone (a word
+  // taken out, a change that took the list away) to the box to add a word, or the list that is chosen. The lock stays on
+  // while a change is on its way, whatever draws the tab meanwhile.
   const render = (keep = null) => {
-    const focused = document.activeElement?.dataset?.focus ?? keep;
+    const focused = keep ?? document.activeElement?.dataset?.focus ?? null;
     if (problem && !page) {
       content.replaceChildren(el('div', { className: 'card panel' }, el('p', { textContent: problem })));
       return;
@@ -293,8 +323,16 @@ export const createChatWords = ({ root, load, send }) => {
       content.replaceChildren(el('div', { className: 'card panel rot-loading' }, el('p', { className: 'muted', textContent: 'Loading the chat filter…' })));
       return;
     }
-    content.replaceChildren(el('div', { className: 'rot-workspace' }, sideCard(), editorCard()));
-    if (focused) content.querySelector(`[data-focus="${CSS.escape(focused)}"]`)?.focus({ preventScroll: true });
+    content.replaceChildren(
+      ...(problem ? [el('p', { className: 'rot-note rot-warn', role: 'alert', textContent: problem })] : []),
+      el('div', { className: 'rot-workspace' }, sideCard(), editorCard()),
+    );
+    lock(busy);
+    if (focused) {
+      const find = (key) => content.querySelector(`[data-focus="${CSS.escape(key)}"]`);
+      const target = find(focused) ?? find('word') ?? find(`list:${selected}`);
+      target?.focus({ preventScroll: true });
+    }
   };
 
   return {

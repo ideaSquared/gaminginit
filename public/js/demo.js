@@ -1803,6 +1803,54 @@ export const demoChatWordsChange = async (body) => {
   return done();
 };
 
+// The Live chat tab: the bot's GET /api/admin/chat with sample lines, one more each time it is asked. The sample words are
+// made up, like the chat filter's.
+const demoChat = { lines: [], next: 1 };
+const CHAT_PLAYERS = [
+  { steamId: '76561198000000001', name: '[WD] Ash', faction: 'Valkyra' },
+  { steamId: '76561198000000002', name: 'Bo', faction: 'Kharr' },
+  { steamId: '76561198000000003', name: 'Cy', faction: 'Lonestar', shownAs: 'Olive' },
+];
+const CHAT_SAMPLES = [
+  ['push B, they are low', null],
+  ['gg well played', null],
+  ['k y s', { kind: 'fuzzy', list: 'toxicity', word: 'kys', action: 'alert' }],
+  ['kys lol', { kind: 'exact', list: 'toxicity', word: 'kys', action: 'warned' }],
+  ['medic at the church', null],
+  ['you example slur', { kind: 'exact', list: 'racism', word: 'example slur', action: 'banned' }],
+  ['3x3x3x3 anyone on the hill?', null],
+  ['@admin there is a cheater on Kharr', null, { ping: true }],
+  ['3xample 5lur', { kind: 'fuzzy', list: 'racism', word: 'example slur', action: 'alert' }],
+  ['you ****', { kind: 'exact', list: 'racism', word: 'example slur', action: 'banned' }, { rawText: 'you example slur' }],
+  ['stop apc', null],
+];
+
+const demoChatLine = (at) => {
+  const n = demoChat.next++;
+  const [text, verdict, extra = {}] = CHAT_SAMPLES[(n - 1) % CHAT_SAMPLES.length];
+  const who = CHAT_PLAYERS[n % CHAT_PLAYERS.length];
+  return {
+    id: n,
+    steamId: who.steamId,
+    name: who.name,
+    ...(who.shownAs ? { shownAs: who.shownAs } : {}),
+    text,
+    channel: n % 3 === 0 ? 'Team' : 'All',
+    faction: who.faction,
+    at,
+    verdict: verdict ?? { kind: 'clean', action: 'none' },
+    ...extra,
+  };
+};
+
+export const demoLiveChat = async (after = 0) => {
+  const now = Date.now();
+  if (demoChat.lines.length === 0) for (let i = 0; i < 11; i += 1) demoChat.lines.push(demoChatLine(now - (11 - i) * 20_000));
+  else demoChat.lines.push(demoChatLine(now));
+  const lines = demoChat.lines.slice(-200);
+  return { ok: true, status: 200, json: { enabled: true, available: true, cursor: lines.at(-1).id, lines: lines.filter((l) => l.id > after) } };
+};
+
 // A signed-in player, for /account?demo: linked, in the Discord, with VIP, as the bot's GET /api/account sends it.
 export const demoAccount = (now) => ({
   user: { id: '100000000000000009', name: 'Sarge' },

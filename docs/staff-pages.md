@@ -12,7 +12,7 @@ It has four sections:
   every kill now.
 - **Queue**: everyone the bot flagged, one row each, with the lists by flag, the team kills and the moderation log.
 - **Players**: any player's record, starting from those staff acted on and who was on lately.
-- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines, the weapon rules and the chat filter.
+- **Server**: the bans, whitelist slots and staff Steam accounts, the rotations, the lines, the weapon rules, the chat filter and the live chat.
 
 Every staff command is in the **command search** (Ctrl K), and the server's own in the **Server** menu.
 The Server menu also links to the external **Wardogs MOTD Builder** (opens in a new tab): write, preview and check the
@@ -368,6 +368,30 @@ The bot reads the game's chat each minute and acts on lines that use a word from
 - A note at the top says when the bot is set not to read the chat (`CHAT_MOD` off), or only to post matches and not
   ban or warn (`CHAT_MOD_ACTIONS` off).
 - `/chat` in Discord, and in the command search, shows the latest chat lines the bot read, from everyone or one player.
+
+## Server: Live chat, the chat as it comes
+
+The chat the bot reads from the game, newest at the bottom, with what the bot made of each line. The page asks the bot every
+4 seconds while the tab is shown (`GET /api/admin/chat`, staff sign-in only; chat is never on a public page), and
+the bot reads the game's chat for it when its last reading is 3 seconds old, so it is as live as that.
+
+- **Each line**: the time, the player's name (opening their panel; staff see their real name, and "(shown as …)" when
+  they chatted anonymously and other players saw another), the channel and faction (such as "Team · Lonestar"), a
+  **Ping** badge when the line was a ping, and the text. When the text players saw differs from what was typed, the
+  typed text is shown under it.
+- **The bot's verdict.** A clean line is plain. **Exact** (⛔, solid border) is a listed word as a whole word: the badge
+  says which list and word. **Resembles** (⚠, dashed border) is a spelling that only looks like a listed word (`n1gger`,
+  `k y s`, inside a longer word) and which word. Both are marked by words and a border as well as colour. After it,
+  what the bot did: **Banned**, **Warned in game**, **Alert only** (posted to the moderation log, nothing done),
+  **Staff: no action**, alert only because automatic actions are off or no player is behind the line, "Acted on for
+  another line in the same minute", "Said before the bot started" (the first lines kept when it started), or "The
+  action failed". The same marks are in `/chat` in Discord.
+- **Following.** It scrolls to new lines unless you scroll up; then a **Jump to latest** button counts the new lines.
+  It keeps the last 500 lines.
+- **Filters.** **Flagged only**, and **Player**: a name (real or shown) or a Steam ID.
+- A note at the top says when the bot is not reading the chat (`CHAT_MOD` off) or the game does not serve it. The
+  bot keeps its last 200 lines, so the tab starts with those. `?demo` shows sample lines, a new one every few seconds,
+  with made-up words.
 
 ## Everywhere
 
