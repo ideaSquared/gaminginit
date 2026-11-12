@@ -296,6 +296,7 @@ const openCommand = (key) => {
 $('command-close').addEventListener('click', () => commandDialog.close());
 
 // The Server menu in the staff bar: the commands for the whole server, and the rotations.
+const MOTD_BUILDER_URL = 'https://matttheemp.github.io/Wardogs_MOTD_Builder/';
 const SERVER_COMMANDS = ['broadcast', 'setnextmap', 'changemap', 'lighting', 'seednow', 'moveclan'];
 const serverMenu = () => {
   const item = (text, run) => el('button', { type: 'button', className: 'account-item', textContent: text, onclick: () => ((($('server-menu').open = false), run())) });
@@ -304,6 +305,15 @@ const serverMenu = () => {
     item('Map rotations', () => {
       server.show('rotations');
       selectTab('server');
+    }),
+    // Not part of this site: opens in a new tab.
+    el('a', {
+      className: 'account-item',
+      href: MOTD_BUILDER_URL,
+      rel: 'noopener noreferrer',
+      target: '_blank',
+      title: 'Write, preview and check the server welcome message (MOTD) before you paste it into the host’s RCON editor.',
+      textContent: 'MOTD Builder ↗',
     }),
   );
 };
