@@ -130,7 +130,7 @@ export const mapLabel = (mapId, catalog) => mapOf(catalog, mapId)?.name ?? FALLB
 export const mapColour = (mapId, catalog) => mapKey(mapLabel(mapId, catalog));
 
 // The map ids players know by another name, for when the bot could not send the catalogue.
-const FALLBACK_NAMES = { Kavkazi: 'Bakurani', Europe: 'Ozeti', NorthAmerica: 'Zestafona' };
+const FALLBACK_NAMES = { Kavkazi: 'Bakurani', Europe: 'Ozeti', NorthAmerica: 'Zestafona', Russia: 'Sabatulo' };
 
 const nameIn = (items, id) => items?.find((i) => i.id === id)?.name ?? null;
 

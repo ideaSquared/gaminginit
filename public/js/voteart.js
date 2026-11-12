@@ -64,12 +64,19 @@ const SCENES = {
     <g fill="none" stroke="#262b33" stroke-width="2"><circle cx="30" cy="30" r="22"/><circle cx="212" cy="96" r="30"/></g>
     <g transform="rotate(-10 120 60)"><rect x="86" y="26" width="68" height="68" rx="14" fill="#4fd6cc"/>
     <g fill="#04201e"><circle cx="105" cy="45" r="6"/><circle cx="135" cy="45" r="6"/><circle cx="120" cy="60" r="6"/><circle cx="105" cy="75" r="6"/><circle cx="135" cy="75" r="6"/></g></g>`,
+  // Placeholder green scene until Sabatulo has its own: rolling hills under a clear sky.
+  sabatulo: `
+    <defs><linearGradient id="vs-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14532d"/><stop offset="1" stop-color="#86efac"/></linearGradient></defs>
+    <rect width="240" height="120" fill="url(#vs-sky)"/>
+    <circle cx="190" cy="36" r="14" fill="#fef9c3" opacity=".9"/>
+    <path d="M-10 84c40-26 80-22 120-6s90 4 130-14v56H-10z" fill="#166534"/>
+    <path d="M-10 104c50-14 110-10 160 0s70 2 90-6v22H-10z" fill="#14532d"/>`,
 };
 
 // Which scene a map option shows: its colour name, "random", or the plain one.
 export const sceneFor = (id, name) => {
   if (id === 'random') return 'random';
-  const key = mapKey(name) ?? ['bakurani', 'ozeti', 'zestafona'].find((k) => String(id).toLowerCase().includes(k));
+  const key = mapKey(name) ?? ['bakurani', 'ozeti', 'zestafona', 'sabatulo'].find((k) => String(id).toLowerCase().includes(k));
   return key ?? 'plain';
 };
 

@@ -1610,6 +1610,11 @@ tbody tr:last-child td {
   color: #fff;
 }
 
+.map-tag[data-map='sabatulo'] {
+  background: #15803d;
+  color: #fff;
+}
+
 .match-score {
   font-weight: 700;
 }
@@ -6121,6 +6126,10 @@ textarea.tool-input {
 
 :where([data-map='zestafona']) {
   --map: #7e22ce;
+}
+
+:where([data-map='sabatulo']) {
+  --map: #15803d;
 }
 
 .rot {
