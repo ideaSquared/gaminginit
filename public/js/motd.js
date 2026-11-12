@@ -50,7 +50,10 @@ export const createMotd = ({ root, load, send }) => {
   const message = () => ({ enabled: draft.enabled, lines: linesOf(draft.text) });
   const dirty = () => page !== null && !sameMessage(message(), page);
   const problems = () => validate(message().lines);
-  const canApply = () => page !== null && !busy && !behind && dirty() && problems().length === 0;
+  // The server has the lines saved HTML-escaped, so players see the tags as text: Apply writes them properly, even with
+  // nothing else changed.
+  const needsFix = () => page?.escaped === true;
+  const canApply = () => page !== null && !busy && !behind && (dirty() || needsFix()) && problems().length === 0;
 
   window.addEventListener('beforeunload', (event) => {
     if (dirty()) event.preventDefault();
@@ -197,8 +200,8 @@ export const createMotd = ({ root, load, send }) => {
     }
     const status = content.querySelector('[data-role="status"]');
     if (status) {
-      status.textContent = busy ? 'Working…' : behind ? 'Changed elsewhere' : changed ? 'Unsaved changes' : (outcome ?? 'Saved');
-      status.classList.toggle('rot-status-dirty', busy || behind || changed);
+      status.textContent = busy ? 'Working…' : behind ? 'Changed elsewhere' : changed ? 'Unsaved changes' : needsFix() ? 'Needs fixing' : (outcome ?? 'Saved');
+      status.classList.toggle('rot-status-dirty', busy || behind || changed || needsFix());
     }
     const applyButton = content.querySelector('[data-role="apply"]');
     if (applyButton) applyButton.disabled = !canApply();
@@ -271,6 +274,13 @@ export const createMotd = ({ root, load, send }) => {
       ),
       behind
         ? el('p', { className: 'rot-note rot-warn', role: 'alert', textContent: 'The welcome message was changed somewhere else since you opened it. Press Reset to load it. Your changes here will be lost.' })
+        : null,
+      needsFix() && !behind
+        ? el('p', {
+            className: 'rot-note rot-warn',
+            role: 'alert',
+            textContent: "The server has this message saved with its tags escaped (&lt;Header&gt; instead of <Header>), so players see the tags as text. Press Apply to save it properly.",
+          })
         : null,
       el('label', { className: 'motd-toggle' }, enabled, el('span', { textContent: 'Enabled: show it to players' })),
       el(
