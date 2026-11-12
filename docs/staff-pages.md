@@ -300,7 +300,7 @@ forgotten while on another tab.
   its rotation's full name, wrapping onto more lines in a narrow card rather than cut off.
 - **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
   (or tap one to add it at the end), drag maps by their ⠿ handle into order (or focus the handle and use the arrow
-  keys), and open ⚙ for a map's game mode, infantry only, hardcore, lighting and control zones. A bar in the maps'
+  keys), and open ⚙ for a map's game mode, infantry only, hardcore, limited gear, lighting and control zones. A bar in the maps'
   colours shows the order at a glance. Nothing changes until **Save**; **Put on server** swaps to it for the rest of
   the day; **More** duplicates it, copies in the server's maps, or deletes it. Default can be changed but not renamed
   or deleted. Leaving the page with unsaved changes asks first.

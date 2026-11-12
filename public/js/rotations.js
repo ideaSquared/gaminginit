@@ -28,7 +28,7 @@ import { el } from './views.js';
 
 // The staff page's Rotations tab: what is on the server today, which rotation each day of the week plays, and an editor
 // for the saved rotations. Maps are dragged in from the palette and into order (or moved with the arrow keys), and each
-// has its options: game mode, infantry only, hardcore, lighting and zones. Nothing changes until staff press Save.
+// has its options: game mode, infantry only, hardcore, limited gear, lighting and zones. Nothing changes until staff press Save.
 // "Default" is the rotation for every day without one of its own; it can be changed, but not renamed or deleted.
 //
 // `load()` and `send(body)` reach the bot (GET and POST /api/admin/rotations) and resolve to { ok, status, json }.
@@ -875,7 +875,7 @@ export const createRotations = ({ root, load, send }) => {
       palette,
       catalog() === null ? el('p', { className: 'rot-note rot-warn', textContent: "The server isn't answering, so its modes, lighting and zones can't be listed right now. Maps added now play their own setup." }) : null,
       list,
-      el('p', { className: 'rot-note rot-tip', textContent: 'Drag ⠿ to reorder (or focus it and use the arrow keys). ⚙ sets the mode, infantry only, hardcore, lighting and zones.' }),
+      el('p', { className: 'rot-note rot-tip', textContent: 'Drag ⠿ to reorder (or focus it and use the arrow keys). ⚙ sets the mode, infantry only, hardcore, limited gear, lighting and zones.' }),
     );
   };
 
