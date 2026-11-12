@@ -311,8 +311,9 @@ forgotten while on another tab.
 
 ## Server: Lines, what the bot says in game
 
-- **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (the basic rules,
-  sent privately to each player who joins), 10 minutes in, for halfway and nearly won, one list for each faction
+- **The lists.** The bot's messages in game each pick a line at random from a list: seeding, welcome (sent privately
+  only to a player on the leaderboard, or to a regular who hasn't linked their account; the welcome popup in game has
+  the rules), 10 minutes in, for halfway and nearly won, one list for each faction
   plus level scores and any other team, and end of match (sent privately to the match's best players the moment a team
   wins, with `{earned}` such as "2nd on the scoreboard (23 kills) and best demolitions (8 kills)" and `{site}`). Pick a
   list on the left; each
