@@ -76,3 +76,11 @@ export const feedNote = (feed) => {
   if (!feed.available) return 'The game server does not serve the chat (GET /v1/chat), so there is nothing to show.';
   return null;
 };
+
+// What the bot privately told a player whose line it answered, for staff: a cheating claim, or a call for an admin.
+const REPLIES = {
+  cheat: 'Bot replied: report it in our Discord with a clip or screenshot, or from the scoreboard without',
+  admin: 'Bot replied: raise a ticket in our Discord',
+};
+// Only the table's own keys: an id such as "toString" is not a reply.
+export const replyText = (line) => (typeof line.reply === 'string' && Object.hasOwn(REPLIES, line.reply) ? REPLIES[line.reply] : '');
