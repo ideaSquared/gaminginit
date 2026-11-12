@@ -7604,36 +7604,107 @@ body.rot-grabbing * {
   bottom: 12px;
 }
 
+/* Live chat: each line is a header (time, channel, faction, who) and the message on its own row under it, so messages
+   always start in the same place; a flagged line adds its verdict underneath. */
+.livechat-log {
+  padding: 0;
+}
+
 .chat-line {
+  padding: 8px 12px 8px 10px;
+  border-left: 4px solid transparent;
+  overflow-wrap: anywhere;
+}
+
+.chat-line + .chat-line {
+  border-top: 1px solid var(--hairline);
+}
+
+.chat-head {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
-  align-items: baseline;
-  padding: 4px 8px;
-  border-left: 4px solid transparent;
-  border-radius: 4px;
-  overflow-wrap: anywhere;
+  gap: 2px 10px;
+  align-items: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .chat-time {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  font-size: 0.85rem;
+}
+
+.chat-channel {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chat-channel-team {
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.chat-channel-all {
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.chat-faction {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--faction, var(--text-2));
+}
+
+.chat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .chat-who {
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
-.chat-place,
+/* The Steam ID stays a link, small and quiet, after the name on the same row. */
+.chat-who .staff-player {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.chat-who .steam-id {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.chat-text {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
 .chat-raw {
+  margin: 2px 0 0;
   font-size: 0.85rem;
 }
 
-.chat-raw,
 .chat-verdict {
-  flex-basis: 100%;
-  padding-left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 0.85rem;
 }
 
 .chat-line-exact {
@@ -7643,7 +7714,7 @@ body.rot-grabbing * {
 
 .chat-line-fuzzy {
   border-left: 4px dashed var(--warning);
-  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  background: color-mix(in srgb, var(--warning) 9%, transparent);
 }
 
 .chat-badge {
@@ -7658,6 +7729,31 @@ body.rot-grabbing * {
 
 .chat-badge-fuzzy {
   border: 2px dashed var(--warning);
+}
+
+/* What the bot did, as its own tag: a ban or warning stands out, an alert is quiet. */
+.chat-action {
+  padding: 0 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.chat-action-banned {
+  color: #ff8a8a;
+  box-shadow: inset 0 0 0 1px var(--critical);
+}
+
+.chat-action-warned {
+  color: var(--warning);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+/* On a phone the Steam ID is left to the player panel. */
+@media (max-width: 600px) {
+  .chat-who .steam-id {
+    display: none;
+  }
 }
 
 /* Staff pages: the whole width of a big screen, so the staff bar fits on one line from 1100px, and the server list and
