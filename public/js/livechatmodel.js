@@ -82,4 +82,5 @@ const REPLIES = {
   cheat: 'Bot replied: report it in our Discord with a clip or screenshot, or from the scoreboard without',
   admin: 'Bot replied: raise a ticket in our Discord',
 };
-export const replyText = (line) => REPLIES[line.reply] ?? '';
+// Only the table's own keys: an id such as "toString" is not a reply.
+export const replyText = (line) => (typeof line.reply === 'string' && Object.hasOwn(REPLIES, line.reply) ? REPLIES[line.reply] : '');

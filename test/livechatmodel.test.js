@@ -145,5 +145,6 @@ describe('a line the bot answered', () => {
     assert.equal(replyText({ reply: 'admin' }), 'Bot replied: raise a ticket in our Discord');
     assert.equal(replyText({}), '');
     assert.equal(replyText({ reply: 'something new' }), '');
+    for (const reply of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) assert.equal(replyText({ reply }), '', reply);
   });
 });
