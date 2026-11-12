@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   actionText,
+  replyText,
   feedNote,
   filterLines,
   isFlagged,
@@ -135,5 +136,14 @@ describe('the ?demo live chat', () => {
     assert.ok(first.lines.some((l) => l.ping));
     assert.ok(first.lines.some((l) => l.rawText && l.rawText !== l.text));
     assert.ok(first.lines.every((l) => typeof l.steamId === 'string' && l.text));
+  });
+});
+
+describe('a line the bot answered', () => {
+  it('says what the bot told the player, and nothing for a line it did not answer', () => {
+    assert.match(replyText({ reply: 'cheat' }), /^Bot replied: report it in our Discord with a clip or screenshot, or from the scoreboard without$/);
+    assert.equal(replyText({ reply: 'admin' }), 'Bot replied: raise a ticket in our Discord');
+    assert.equal(replyText({}), '');
+    assert.equal(replyText({ reply: 'something new' }), '');
   });
 });

@@ -7819,6 +7819,12 @@ textarea.motd-input {
   font-size: 0.85rem;
 }
 
+.chat-reply {
+  margin: 4px 0 0;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
 .chat-verdict {
   display: flex;
   flex-wrap: wrap;

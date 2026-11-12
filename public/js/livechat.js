@@ -1,5 +1,5 @@
 import { clockHour, factionColours, sideKey } from './format.js';
-import { feedNote, filterLines, isFlagged, mergeLines, actionText, newestId, newText, nearBottom, verdictText } from './livechatmodel.js';
+import { feedNote, filterLines, isFlagged, mergeLines, actionText, newestId, newText, nearBottom, replyText, verdictText } from './livechatmodel.js';
 import { el } from './views.js';
 
 // The staff page's Live chat tab: the chat as the bot reads it, newest at the bottom, each line with what the bot made of
@@ -72,6 +72,8 @@ export const createLiveChat = ({ root, load, who }) => {
     if (l.rawText !== undefined && l.rawText !== l.text) {
       item.append(el('p', { className: 'chat-raw muted', textContent: `Typed: ${l.rawText}` }));
     }
+    const reply = replyText(l);
+    if (reply) item.append(el('p', { className: 'chat-reply', textContent: `🤖 ${reply}` }));
     if (tone !== 'clean') {
       const others = l.verdict?.others?.length ? `; also ${l.verdict.others.join(', ')}` : '';
       item.append(
