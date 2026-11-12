@@ -1732,9 +1732,10 @@ export const demoRulesChange = async (body) => {
 
 // The Welcome message tab: the message on the server, as the bot sends it, starting as the website rules. A save is checked
 // as the bot checks it, and the server shows it from the next match.
-const demoMotdState = { enabled: true, lines: [...RULES_TEMPLATE], revision: 1 };
+// Saved escaped at first, as the live server had it, so the demo shows the warning and Apply fixes it.
+const demoMotdState = { enabled: true, lines: [...RULES_TEMPLATE], revision: 1, escaped: true };
 
-const demoMotdPage = () => ({ enabled: demoMotdState.enabled, lines: [...demoMotdState.lines], revision: String(demoMotdState.revision), problems: motdProblems(demoMotdState.lines) });
+const demoMotdPage = () => ({ enabled: demoMotdState.enabled, lines: [...demoMotdState.lines], revision: String(demoMotdState.revision), problems: motdProblems(demoMotdState.lines), escaped: demoMotdState.escaped });
 
 export const demoMotd = async () => ({ ok: true, status: 200, json: demoMotdPage() });
 
@@ -1744,8 +1745,8 @@ export const demoMotdChange = async (body) => {
   if (problems.length > 0) return refuse(400, 'The welcome message breaks the rules, so it was not saved.', { problems });
   if (body.revision !== String(demoMotdState.revision)) return refuse(409, 'The welcome message was changed somewhere else since you opened it. Reload it, then make your change again.');
   const next = { enabled: body.enabled, lines: linesOf(body.lines.join('\n')) };
-  const unchanged = sameMessage(next, demoMotdState);
-  if (!unchanged) Object.assign(demoMotdState, next, { revision: demoMotdState.revision + 1 });
+  const unchanged = sameMessage(next, demoMotdState) && !demoMotdState.escaped;
+  if (!unchanged) Object.assign(demoMotdState, next, { revision: demoMotdState.revision + 1, escaped: false });
   return { ok: true, status: 200, json: { ...demoMotdPage(), outcome: unchanged ? 'unchanged' : 'next-match' } };
 };
 
