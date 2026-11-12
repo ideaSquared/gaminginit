@@ -52,13 +52,15 @@ export const createLiveChat = ({ root, load, who }) => {
     const item = el('li', { className: `chat-line chat-line-${tone}` });
     item.dataset.id = String(l.id);
     const name = l.steamId ? who({ steamId: l.steamId, name: l.name || l.steamId }) : el('span', { textContent: l.name || 'Unknown' });
-    item.append(
+    // What is not there is left out: append itself would write a null as the text "null".
+    const parts = [
       el('time', { className: 'chat-time', dateTime: new Date(l.at).toISOString(), textContent: time.format(new Date(l.at)) }),
       el('span', { className: 'chat-who' }, name, l.shownAs ? el('span', { className: 'muted', textContent: ` (shown as ${l.shownAs})` }) : null),
       place ? el('span', { className: 'chat-place muted', textContent: place }) : null,
       l.ping ? el('span', { className: 'badge badge-hot', textContent: '📣 Ping', title: 'The player pinged' }) : null,
       el('span', { className: 'chat-text', textContent: l.text }),
-    );
+    ];
+    item.append(...parts.filter((part) => part !== null));
     if (l.rawText !== undefined && l.rawText !== l.text) {
       item.append(el('span', { className: 'chat-raw muted', textContent: `Typed: ${l.rawText}` }));
     }
