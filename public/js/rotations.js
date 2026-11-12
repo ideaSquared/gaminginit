@@ -11,6 +11,7 @@ import {
   insert,
   lightingIcon,
   lightingName,
+  lightingsFor,
   mapColour,
   mapLabel,
   move,
@@ -690,7 +691,7 @@ export const createRotations = ({ root, load, send }) => {
       toggle.addEventListener('click', () => update(entry.key, { modifiers: on ? entry.modifiers.filter((id) => id !== m.id) : [...entry.modifiers, m.id] }));
       return toggle;
     });
-    const lightings = catalog()?.lightings ?? [];
+    const lightings = lightingsFor(entry.map, catalog()?.lightings ?? []);
     const zones = map?.zones ?? [];
     const room = draft.entries.length < (page?.limits.maps ?? 100);
     const duplicate = button('Duplicate', { className: 'btn btn-ghost btn-small', disabled: !room, title: room ? '' : `A rotation can have at most ${page?.limits.maps ?? 100} maps` });

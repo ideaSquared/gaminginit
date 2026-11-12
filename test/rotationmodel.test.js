@@ -10,6 +10,7 @@ import {
   insert,
   lightingIcon,
   lightingName,
+  lightingsFor,
   zoneName,
   mapColour,
   mapLabel,
@@ -206,5 +207,18 @@ describe('lightingName and zoneName', () => {
     assert.equal(zoneName('ZoneAlternator.Bakurani.Default.Circle'), 'Circle');
     assert.equal(zoneName('ZoneAlternator.Ozeti.Default.NorthSouthLine'), 'North South Line');
     assert.equal(zoneName('ZoneAlternator.Bakurani.Night.Circle'), 'Night Circle');
+  });
+});
+
+describe('lightingsFor', () => {
+  const all = ['DayClear', 'DayEarlyFog', 'DayLateGray', 'DayLateRain', 'NightClear'].map((id) => ({ id, name: id }));
+
+  it('lists only the four Sabatulo lightings for its map, whatever the case', () => {
+    assert.deepEqual(lightingsFor('Russia', all).map((l) => l.id), ['DayClear', 'DayLateGray', 'DayLateRain']);
+    assert.equal(lightingsFor('russia', all).length, 3);
+  });
+
+  it('lists every lighting for any other map', () => {
+    assert.deepEqual(lightingsFor('Kavkazi', all), all);
   });
 });
