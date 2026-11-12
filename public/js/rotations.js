@@ -113,12 +113,13 @@ export const createRotations = ({ root, load, send }) => {
   const leave = async () =>
     !dirty() || ask(`Discard your changes to ${tidyName(draft.name) || 'the new rotation'}?`, { yes: 'Discard changes', no: 'Keep editing', danger: true });
 
-  // The maps the palette offers: the catalogue's, or the three maps when the server could not say.
+  // The maps the palette offers: the catalogue's, or the four maps when the server could not say.
   const maps = () =>
     catalog()?.maps ?? [
       { id: 'Kavkazi', name: 'Bakurani', modes: [], modifiers: [], zones: [] },
       { id: 'Europe', name: 'Ozeti', modes: [], modifiers: [], zones: [] },
       { id: 'NorthAmerica', name: 'Zestafona', modes: [], modifiers: [], zones: [] },
+      { id: 'Russia', name: 'Sabatulo', modes: [], modifiers: [], zones: [] },
     ];
 
   // Where the server is in these maps, or null when they are not the server's.

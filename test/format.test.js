@@ -413,6 +413,7 @@ describe('leaderboard boards', () => {
 describe('mapKey', () => {
   it('gives the three maps their colour key, whatever the case, and nothing to any other map', () => {
     assert.deepEqual(['Bakurani', 'OZETI', ' Zestafona '].map(mapKey), ['bakurani', 'ozeti', 'zestafona']);
+    assert.equal(mapKey('Sabatulo'), 'sabatulo');
     assert.equal(mapKey('Kavkazi'), null);
     assert.equal(mapKey(''), null);
     assert.equal(mapKey(undefined), null);

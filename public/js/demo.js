@@ -11,7 +11,7 @@ const DAY = 24 * HOUR;
 // Players by UTC hour on a typical day: quiet overnight, filling up through the evening.
 const CURVE = [38, 24, 10, 4, 0, 0, 0, 0, 2, 4, 6, 9, 14, 18, 22, 26, 31, 40, 52, 61, 64, 60, 55, 46];
 const NAMES = ['Kestrel', 'Bravo_Six', 'Moth', 'Nightjar', 'Pike', 'Rook', 'Sable', 'Tusk', 'Vex', 'Ash'];
-const MAPS = ['Bakurani', 'Ozeti', 'Zestafona'];
+const MAPS = ['Bakurani', 'Ozeti', 'Zestafona', 'Sabatulo'];
 // As on the bot: the K/D board only lists players with this many matches over 30 days.
 const KD_MIN_MATCHES = 10;
 const CAPACITY = 64;
@@ -1256,6 +1256,7 @@ const DEMO_MAPS = [
   { name: '🟧 Bakurani', value: 'Kavkazi' },
   { name: '🟦 Ozeti', value: 'Europe' },
   { name: '🟪 Zestafona', value: 'Zestafona' },
+  { name: '🟩 Sabatulo', value: 'Russia' },
 ];
 
 const DEMO_ROTATIONS = [
@@ -1357,7 +1358,7 @@ const demoMap = (id, name, zones) => ({
 });
 
 const DEMO_CATALOG = {
-  maps: [demoMap('Kavkazi', 'Bakurani', ['Circle', 'Line', 'Factory']), demoMap('Europe', 'Ozeti', ['Circle', 'Village']), demoMap('NorthAmerica', 'Zestafona', ['Circle', 'Ridge'])],
+  maps: [demoMap('Kavkazi', 'Bakurani', ['Circle', 'Line', 'Factory']), demoMap('Europe', 'Ozeti', ['Circle', 'Village']), demoMap('NorthAmerica', 'Zestafona', ['Circle', 'Ridge']), demoMap('Russia', 'Sabatulo', [])],
   lightings: DEMO_LIGHTINGS,
   experiences: [],
 };

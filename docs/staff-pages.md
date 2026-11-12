@@ -298,7 +298,7 @@ forgotten while on another tab.
 - **The week.** A rotation for each day, Monday to Sunday. Days left on Default play **Default**, which starts as the
   rotation the server had. Changing today's pick puts it on the server straight away (after asking). Each day shows
   its rotation's full name, wrapping onto more lines in a narrow card rather than cut off.
-- **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti or Zestafona into the list
+- **The editor.** Pick a rotation on the left, or start a new one. Drag Bakurani, Ozeti, Zestafona or Sabatulo into the list
   (or tap one to add it at the end), drag maps by their ⠿ handle into order (or focus the handle and use the arrow
   keys), and open ⚙ for a map's game mode, infantry only, hardcore, lighting and control zones. A bar in the maps'
   colours shows the order at a glance. Nothing changes until **Save**; **Put on server** swaps to it for the rest of
