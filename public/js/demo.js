@@ -1343,13 +1343,14 @@ const DEMO_LIGHTINGS = [
   ['DayEndClear', 'Dusk, clear'],
 ].map(([id, name]) => ({ id, name }));
 
-const demoMap = (id, name, zones) => ({
+// A map's modes are named after it unless given: Sabatulo (Russia) plays Moscow_KOTH_01, and only that.
+const demoMap = (id, name, zones, modes = [
+  { id: KOTH(id), name: 'King of the Hill' },
+  { id: `${id}_KOTH_02`, name: 'King of the Hill (small)' },
+]) => ({
   id,
   name,
-  modes: [
-    { id: KOTH(id), name: 'King of the Hill' },
-    { id: `${id}_KOTH_02`, name: 'King of the Hill (small)' },
-  ],
+  modes,
   modifiers: [
     { key: 'infantry_only', name: 'Infantry only', id: 'KOTH_InfantryOnly' },
     { key: 'hardcore', name: 'Hardcore', id: 'KOTH_Hardcore' },
@@ -1358,7 +1359,7 @@ const demoMap = (id, name, zones) => ({
 });
 
 const DEMO_CATALOG = {
-  maps: [demoMap('Kavkazi', 'Bakurani', ['Circle', 'Line', 'Factory']), demoMap('Europe', 'Ozeti', ['Circle', 'Village']), demoMap('NorthAmerica', 'Zestafona', ['Circle', 'Ridge']), demoMap('Russia', 'Sabatulo', [])],
+  maps: [demoMap('Kavkazi', 'Bakurani', ['Circle', 'Line', 'Factory']), demoMap('Europe', 'Ozeti', ['Circle', 'Village']), demoMap('NorthAmerica', 'Zestafona', ['Circle', 'Ridge']), demoMap('Russia', 'Sabatulo', [], [{ id: 'Moscow_KOTH_01', name: 'King of the Hill' }])],
   lightings: DEMO_LIGHTINGS,
   experiences: [],
 };
