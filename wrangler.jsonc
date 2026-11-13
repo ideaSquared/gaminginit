@@ -2,5 +2,8 @@
   // Static site on Cloudflare Workers, deployed by ideaSquared/shipper (see ship.yaml). Static asset requests are free and unlimited.
   "name": "wardogs-community-site",
   "compatibility_date": "2026-09-30",
-  "assets": { "directory": "./public" }
+  "assets": { "directory": "./public" },
+  // Only Cloudflare Workers Builds uses this (it runs `wrangler preview` for pull requests). Remove it once Workers
+  // Builds is disconnected from this repo; shipper deploys without it.
+  "previews": {}
 }
