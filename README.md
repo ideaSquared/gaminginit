@@ -69,7 +69,9 @@ One-time setup, on GitHub:
    it to your account, then create it and copy the token.
 2. Your **Account ID** is on Workers & Pages in the Cloudflare dashboard.
 3. Repo → Settings → Secrets and variables → Actions: add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-4. If this Worker was connected to Cloudflare's Git integration (Workers Builds), disconnect it in the Cloudflare
+4. Repo → Settings → Environments → New environment: create `production`. GitHub doesn't create it on first use, and
+   the deploy fails with "environment not found" without it.
+5. If this Worker was connected to Cloudflare's Git integration (Workers Builds), disconnect it in the Cloudflare
    dashboard, so the site isn't deployed twice.
 
 To deploy `main` again without a new commit, run `ship deploy gaminginit` (install the command with
