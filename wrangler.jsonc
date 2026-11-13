@@ -1,5 +1,5 @@
 {
-  // Static site on Cloudflare Workers: `npm run deploy`. Static asset requests are free and unlimited.
+  // Static site on Cloudflare Workers: `pnpm run deploy`. Static asset requests are free and unlimited.
   "name": "wardogs-community-site",
   "compatibility_date": "2026-09-30",
   "assets": { "directory": "./public" },
