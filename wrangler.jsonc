@@ -1,8 +1,6 @@
 {
-  // Static site on Cloudflare Workers: `pnpm run deploy`. Static asset requests are free and unlimited.
+  // Static site on Cloudflare Workers, deployed by ideaSquared/shipper (see ship.yaml). Static asset requests are free and unlimited.
   "name": "wardogs-community-site",
   "compatibility_date": "2026-09-30",
-  "assets": { "directory": "./public" },
-  // Cloudflare's Git builds run `wrangler preview` for branches other than main, which needs this block.
-  "previews": {}
+  "assets": { "directory": "./public" }
 }

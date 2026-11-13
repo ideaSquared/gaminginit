@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+# Runs on main go one at a time, in the order they were pushed, so an older commit never deploys after a newer one.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'main' || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -17,3 +23,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+
+  # Deploys main through ideaSquared/shipper once the tests pass: gate, wrangler deploy, home page health check
+  # (rolls back if it fails), Discord message. See ship.yaml.
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+      checks: read
+      deployments: read
+    uses: ideaSquared/shipper/.github/workflows/deploy.yml@v1
+    with:
+      environment: production
+    secrets: inherit

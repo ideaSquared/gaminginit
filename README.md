@@ -55,90 +55,29 @@ Edit `public/index.html`, and the other pages in `public/` (`stats.html`, `lifet
 | Name and logo   | Already gaminginit: `<title>`, the `og:`/`twitter:` metas, the JSON-LD block, `og-image.png`, `apple-touch-icon.png`, the `.wordmark` spans and `favicon.svg`. The other pages have their own `<title>`, metas and wordmarks. |
 | Intro text      | The `.lede` paragraph under the heading                                                      |
 
-Commit and push the change to `main` if you will use option B or C below.
+Commit and push the change to `main`; merging to `main` deploys it.
 
 ### 3. Deploy the site
 
-Pick one option.
+The site deploys with [ideaSquared/shipper](https://github.com/ideaSquared/shipper), like the bot. Every push to
+`main` deploys it once the tests pass, then checks the home page answers and rolls back if it doesn't. A message goes
+to the `gaminginit-github` Discord channel. `ship.yaml` describes the deploy.
 
-#### Option A: from your computer (simplest)
+One-time setup, on GitHub:
 
-```bash
-git clone https://github.com/ParagonJenko/gaminginit.git
-cd gaminginit
-pnpm install
-pnpm exec wrangler login       # opens a browser to sign in to Cloudflare
-pnpm run deploy
-```
+1. In the Cloudflare dashboard: My Profile → API Tokens → Create Token → **Edit Cloudflare Workers** template. Limit
+   it to your account, then create it and copy the token.
+2. Your **Account ID** is on Workers & Pages in the Cloudflare dashboard.
+3. Repo → Settings → Secrets and variables → Actions: add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. If this Worker was connected to Cloudflare's Git integration (Workers Builds), disconnect it in the Cloudflare
+   dashboard, so the site isn't deployed twice.
 
-Wrangler prints the site's URL: `https://wardogs-community-site.<your-subdomain>.workers.dev`. The first part comes
-from `name` in `wrangler.jsonc`. Don't rename it once a custom domain is attached: a new name deploys a new Worker,
-and the domain stays on the old one.
+To deploy `main` again without a new commit, run `ship deploy gaminginit` (install the command with
+`pnpm add -g github:ideaSquared/shipper`), or Actions → CI → Run workflow.
 
-To update the site later: edit the files, then run `pnpm run deploy` again.
-
-#### Option B: deploy automatically on every push (Cloudflare)
-
-This uses Cloudflare's Git integration for Workers. Menu names in the Cloudflare dashboard change from time to time;
-the settings below are what matter.
-
-1. In the Cloudflare dashboard, go to **Workers & Pages** → **Create**, and choose to import a Git repository.
-2. Connect GitHub if asked, then pick `ParagonJenko/gaminginit`.
-3. Use these settings:
-
-   | Setting           | Value                                                            |
-   | ----------------- | ---------------------------------------------------------------- |
-   | Worker name       | `wardogs-community-site` (must match `name` in `wrangler.jsonc`) |
-   | Production branch | `main`                                                           |
-   | Build command     | leave empty                                                      |
-   | Deploy command    | `pnpm exec wrangler deploy`                                      |
-   | Root directory    | `/`                                                              |
-
-4. Save and deploy. Every push to `main` now redeploys the site.
-
-Pushes to other branches, such as pull requests, run `npx wrangler preview` and get a preview link instead. That
-command needs the `previews` block in `wrangler.jsonc`, which is already there.
-
-#### Option C: GitHub Pages
-
-GitHub Pages is free for public repos. For a private repo it needs a paid GitHub plan.
-
-1. On GitHub: repo → **Settings** → **Pages** → **Source**: **GitHub Actions**.
-2. Add this file as `.github/workflows/pages.yml` and push it:
-   ```yaml
-   name: Deploy to GitHub Pages
-
-   on:
-     push:
-       branches: [main]
-     workflow_dispatch:
-
-   permissions:
-     contents: read
-     pages: write
-     id-token: write
-
-   concurrency:
-     group: pages
-     cancel-in-progress: true
-
-   jobs:
-     deploy:
-       runs-on: ubuntu-latest
-       environment:
-         name: github-pages
-         url: ${{ steps.deployment.outputs.page_url }}
-       steps:
-         - uses: actions/checkout@v4
-         - uses: actions/configure-pages@v5
-         - uses: actions/upload-pages-artifact@v3
-           with:
-             path: public
-         - id: deployment
-           uses: actions/deploy-pages@v4
-   ```
-3. The site appears at `https://paragonjenko.github.io/gaminginit/`. The URL is also shown under
-   **Settings** → **Pages**.
+The site is the `wardogs-community-site` Worker (`name` in `wrangler.jsonc`), at
+`https://wardogs-community-site.<your-subdomain>.workers.dev`. Don't rename it once a custom domain is attached: a new
+name deploys a new Worker, and the domain stays on the old one.
 
 ### 4. Use your own domain (optional, Cloudflare)
 
@@ -176,8 +115,7 @@ page, in a slim yellow strip:
 }
 ```
 
-- To change it, edit the file and deploy (with [Option B](#option-b-deploy-automatically-on-every-push-cloudflare),
-  edit it on GitHub and commit to `main`). Pages pick it up when they load, and pages left open within 5 minutes.
+- To change it, edit the file and commit to `main` (editing it on GitHub works too). The commit deploys the site. Pages pick it up when they load, and pages left open within 5 minutes.
 - To take it down, set `"show": false`. The text stays in the file for next time.
 - `title` and `link` are optional. A link must go to a web page (`https://…`) or one of our pages (`seeding`).
 - If the file has a mistake, such as a missing comma, no notice shows and the rest of the site works as normal. Check
