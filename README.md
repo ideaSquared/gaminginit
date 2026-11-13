@@ -37,7 +37,7 @@ named in the bot's README.
 
 1. In the `wardogs-discord-bot` folder, deploy the bot if you have not already:
    ```bash
-   npm run deploy
+   pnpm run deploy
    ```
 2. Wrangler prints the bot's URL, like `https://wardogs-discord-bot.<your-subdomain>.workers.dev`.
 3. Open that URL with `/api/stats` on the end in a browser. You should see JSON. `"server": null` is fine until the
@@ -66,15 +66,16 @@ Pick one option.
 ```bash
 git clone https://github.com/ParagonJenko/gaminginit.git
 cd gaminginit
-npx --yes wrangler@4 login     # opens a browser to sign in to Cloudflare
-npm run deploy
+pnpm install
+pnpm exec wrangler login       # opens a browser to sign in to Cloudflare
+pnpm run deploy
 ```
 
 Wrangler prints the site's URL: `https://wardogs-community-site.<your-subdomain>.workers.dev`. The first part comes
 from `name` in `wrangler.jsonc`. Don't rename it once a custom domain is attached: a new name deploys a new Worker,
 and the domain stays on the old one.
 
-To update the site later: edit the files, then run `npm run deploy` again.
+To update the site later: edit the files, then run `pnpm run deploy` again.
 
 #### Option B: deploy automatically on every push (Cloudflare)
 
@@ -90,7 +91,7 @@ the settings below are what matter.
    | Worker name       | `wardogs-community-site` (must match `name` in `wrangler.jsonc`) |
    | Production branch | `main`                                                           |
    | Build command     | leave empty                                                      |
-   | Deploy command    | `npx wrangler deploy`                                            |
+   | Deploy command    | `pnpm exec wrangler deploy`                                      |
    | Root directory    | `/`                                                              |
 
 4. Save and deploy. Every push to `main` now redeploys the site.
@@ -185,7 +186,8 @@ page, in a slim yellow strip:
 ## Try it locally
 
 ```bash
-npm start                      # serves public/ on http://localhost:3000
+pnpm install
+pnpm start                     # serves public/ on http://localhost:3000
 ```
 
 - `http://localhost:3000/?demo` shows made-up numbers, so you can see the page before the bot is set up. On
@@ -198,7 +200,8 @@ Until the stats URL is set, the page says live stats are not connected and links
 ## Development
 
 ```bash
-npm test    # Node's built-in test runner; no dependencies to install
+pnpm install
+pnpm test   # Node's built-in test runner
 ```
 
 The formatting and state logic is in `public/js/format.js` and is what the tests cover. Each page has its own script in
