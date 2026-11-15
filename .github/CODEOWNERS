@@ -1,0 +1,13 @@
+# Every directory is listed separately so ownership can be split later
+# without restructuring. Today each product has a single owning team.
+
+* @ideaSquared/gaminginit
+
+# Top-level folders
+/docs/ @ideaSquared/gaminginit
+/public/ @ideaSquared/gaminginit
+/test/ @ideaSquared/gaminginit
+
+# Tooling and CI
+/.claude/ @ideaSquared/gaminginit
+/.github/ @ideaSquared/gaminginit
