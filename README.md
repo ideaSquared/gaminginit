@@ -5,7 +5,7 @@ The website for the gaminginit gaming community, at [gaminginit.com](https://gam
 
 Plain HTML, CSS and JavaScript in `public/`. No build step, no framework, no third-party requests, and no bot: the
 numbers are a saved copy in `public/data/lifetime.json`, taken from the
-[wardogs-discord-bot](https://github.com/ParagonJenko/wardogs-discord-bot)'s `GET /api/lifetime` before it closed.
+WARDOGS Discord bot's `GET /api/lifetime` before it was switched off (see `gaminginit-bot`'s README).
 
 ## Pages
 
@@ -15,13 +15,10 @@ numbers are a saved copy in `public/data/lifetime.json`, taken from the
 
 Every old page (`/stats`, `/live`, `/leaderboard`, `/discord` and so on) redirects to `/` (`public/_redirects`).
 
-## Update the numbers
+## The numbers
 
-```bash
-curl -fsS https://wardogs-discord-bot.idea-squared.workers.dev/api/lifetime -o public/data/lifetime.json
-```
-
-Do this once after the last day (24 November) while the bot still answers, then commit to `main`.
+The numbers are final: `public/data/lifetime.json` is a saved copy from the bot (to 18 November 2026) and nothing
+updates it. The bot is switched off, so there is nothing to fetch.
 
 ## Try it locally
 
