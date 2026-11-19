@@ -1,262 +1,150 @@
-import './votepeek.js';
-import { renderServerArt, setHeroKind } from './art-home.js';
-import { coinHeap } from './art-coins.js';
-import { populationChart } from './charts.js';
-import {
-  BOARDS,
-  compact,
-  formatDuration,
-  formatHours,
-  isOnline,
-  kd,
-  latestMatches,
-  peak,
-  scoreLine,
-  serverState,
-  timeAgo,
-  coinsDetail,
-  coinsOffer,
-  vipDetail,
-  vipOffer,
-} from './format.js';
-import { keepQuery, startLive } from './live.js';
-import { boardTable, el, mapTag, matchHeadline, matchMeta, playerName, playersTable, setText } from './views.js';
+import { barLengths, busiestHourText, busyLevels, localWeek, publicLifetimeTiles, publicRecords, regularMeta, regularsText, shareOf } from './format.js';
+import { watchArt } from './art-stats.js';
+import { lineChart, peopleChart } from './trends.js';
+import { el } from './views.js';
 
-// The home page: the server card, a first look at each of the other pages, and how to play with us.
-
-// The home page used to hold these sections. Old links to them, like /#leaderboard, go to their own pages now.
-const MOVED = {
-  stats: 'stats',
-  matches: 'matches',
-  leaderboard: 'leaderboard',
-  weapons: 'leaderboard#weapons',
-  seeding: 'seeding',
-};
-const redirect = () => {
-  const moved = MOVED[location.hash.slice(1)];
-  if (moved) location.replace(keepQuery(moved));
-  return Boolean(moved);
-};
-// Also when one is opened while the home page is already open.
-addEventListener('hashchange', redirect);
-const moved = redirect();
-
-const DAY = 86_400_000;
-// The first few of each. Their pages have the rest.
-const RECENT_MATCHES = 2;
-const TOP_PLAYERS = 3;
-const LEADERS = 5;
+// The landing page's numbers: the server's final lifetime stats, saved from the bot's GET /api/lifetime into
+// data/lifetime.json when the server closed. The bot is not needed any more.
 
 const $ = (id) => document.getElementById(id);
 
-let stats = null;
+const DAY_SHORT = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const MONTH = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const at = (day) => Date.parse(`${day}T00:00:00Z`);
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const population = populationChart($('population-chart'));
-
-const renderServer = (now) => {
-  const state = serverState(stats, now);
-  const server = stats?.server ?? null;
-  const online = server !== null && isOnline(state);
-
-  const status = $('server-status');
-  status.dataset.kind = state.kind;
-  setText(status.querySelector('.status-label'), state.label);
-  $('server').dataset.kind = state.kind;
-  setHeroKind($('top'), state.kind);
-  renderServerArt($('server-art'), state.kind, online ? server.map : null);
-  setText($('server-detail'), state.detail);
-  $('server-help').hidden = state.kind !== 'seeding' && state.kind !== 'empty';
-  setText($('server-name'), server?.name ?? 'Game server');
-  setText($('server-updated'), server ? `Updated ${timeAgo(now - server.seenAt)}` : '');
-  setText($('players-now'), online ? String(server.players) : '–');
-  setText($('players-max'), server ? `/ ${server.maxPlayers} players` : '');
-  $('server-map').replaceChildren(online && server.map ? mapTag(server.map) : '–');
-  setText($('server-score'), (online && scoreLine(server.factionScores)) || '–');
-  setText($('join-server-name'), server?.name ?? 'our server');
-
-  const meter = $('players-meter');
-  const max = server?.maxPlayers || 1;
-  const players = online ? server.players : 0;
-  const live = stats?.thresholds.live ?? 0;
-  meter.setAttribute('aria-valuemax', String(max));
-  meter.setAttribute('aria-valuenow', String(players));
-  const marked = Boolean(server) && live > 0;
-  // The "Live at" label is inside the meter, which screen readers read only by its value, so the value says it too.
-  meter.setAttribute('aria-valuetext', online ? `${players} of ${max} players${marked ? `, live at ${live}` : ''}` : 'No reading');
-  meter.style.setProperty('--fill', String(Math.min(players / max, 1)));
-  meter.style.setProperty('--mark', String(Math.min(live / max, 1)));
-  meter.classList.toggle('no-mark', !marked);
-  setText($('meter-label'), `Live at ${live}`);
-};
-
-const renderDiscord = () => {
-  const discord = stats?.discord;
-  const line = $('discord-count');
-  line.hidden = !discord;
-  if (!discord) return;
-  line.replaceChildren(
-    el('strong', { textContent: compact(discord.members) }),
-    ' members · ',
-    el('span', { className: 'online-dot', ariaHidden: 'true' }),
-    el('strong', { textContent: compact(discord.online) }),
-    ' online now',
+const tableOf = (table, headings, rows) => {
+  table.replaceChildren(
+    el('thead', {}, el('tr', {}, ...headings.map((h) => el('th', { scope: 'col', textContent: h })))),
+    el('tbody', {}, ...rows.map((row) => el('tr', {}, ...row.map((cell) => el('td', { textContent: String(cell) }))))),
   );
 };
 
-// The call to action under the hero, while INITcoins are on: what a seed pays and what a week of whitelist costs, from the bot.
-const renderCoinsCta = (coins) => {
-  $('coins-cta').hidden = !coins;
-  if (!coins) return;
-  const seeds = coins.seed > 0 ? Math.ceil(coins.vipWeek / coins.seed) : null;
-  setText($('cta-seed'), String(coins.seed));
-  setText($('cta-week'), String(coins.vipWeek));
-  setText(
-    $('cta-week-note'),
-    seeds === null ? 'buys a week of whitelist' : `buys a week of whitelist: about ${seeds} seeds`,
-  );
-  setText(
-    $('coins-cta-lede'),
-    'Seed an empty server, play a match, finish a mission: it all pays INITcoins. Spend them on whitelist days to skip the queue, on titles for your player page, and on Discord roles.',
-  );
-  if ($('coins-cta-art').childElementCount === 0) $('coins-cta-art').append(coinHeap());
-};
+const legend = (...items) =>
+  el('ul', { className: 'pt-legend' }, ...items.map(([className, name]) => el('li', {}, el('span', { className: `pt-key ${className}`, ariaHidden: 'true' }), name)));
 
-// What seeding earns, when the bot gives seeders VIP or pays INITcoins.
-const renderVip = () => {
-  const vip = stats?.vip ?? null;
-  const coins = stats?.coins ?? null;
-  $('vip-cta').hidden = !vip && !coins;
-  $('vip').hidden = !vip && !coins;
-  renderCoinsCta(coins);
-  if (!vip && !coins) return;
-  // INITcoins replace seeder VIP: the same boxes, saying what a seed pays instead.
-  setText($('vip-cta-tag'), coins ? 'INITcoins' : 'Seeder VIP');
-  setText($('vip-cta-text'), coins ? coinsOffer(coins) : vipOffer(vip));
-  setText($('vip-step-title'), coins ? 'Seed and earn INITcoins' : 'Seed and get VIP');
-  setText($('vip-step-offer'), coins ? coinsOffer(coins) : vipOffer(vip));
-  setText($('vip-step-detail'), coins ? coinsDetail(coins) : vipDetail(vip));
-  $('vip-cta-link').href = keepQuery(coins ? 'coins' : '#vip');
-  setText($('vip-cta-link'), coins ? 'See the shop' : 'How it works');
-};
-
-// The match on now: the score and its top players. The live page follows it kill by kill.
-const renderCurrentMatch = (now) => {
-  const root = $('current-match');
-  const state = serverState(stats, now);
-  const match = stats?.currentMatch;
-  if (!isOnline(state) || !match) {
-    const message =
-      state.kind === 'offline'
-        ? 'The server is not answering right now.'
-        : stats
-          ? 'No match running. Match stats appear once players are on.'
-          : 'Waiting for live stats.';
-    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
-    return;
-  }
-  const score = scoreLine(match.factionScores);
-  root.replaceChildren(
-    el(
-      'p',
-      { className: 'match-headline' },
-      mapTag(match.map),
-      score ? el('span', { className: 'match-score', textContent: score }) : null,
-    ),
-    matchMeta(
-      `Started ${timeAgo(now - match.startedAt)}`,
-      match.liveAt ? `live for ${formatDuration(now - match.liveAt)}` : 'not live yet',
-      `peak ${match.peakPlayers} players`,
-    ),
-    match.top.length > 0 ? playersTable(match.top.slice(0, TOP_PLAYERS)) : el('p', { className: 'muted', textContent: 'No kills yet.' }),
-  );
-};
-
-// The latest matches, one short row each.
-const renderMatches = (now) => {
-  const list = $('match-list');
-  const matches = latestMatches(stats?.matches, RECENT_MATCHES);
-  if (matches.length === 0) {
-    const message = stats ? 'No finished matches yet. They appear here after the server has been live.' : 'Waiting for live stats.';
-    list.replaceChildren(el('li', { className: 'muted', textContent: message }));
-    return;
-  }
-  list.replaceChildren(
-    ...matches.map((match) => {
-      const mvp = match.top[0];
+// The regulars: who came on 14 or more days of the last 30, most days first. Names are the game's, so they go in as text.
+const renderRegulars = (regulars) => {
+  const shown = regulars && regulars.players.length > 0;
+  $('lifetime-regulars').hidden = !shown;
+  if (!shown) return;
+  $('regulars-note').textContent = regularsText(regulars);
+  $('regulars-list').replaceChildren(
+    ...regulars.players.map((p, i) => {
+      const name = el('span', { className: 'regular-name', textContent: p.name });
       return el(
         'li',
-        { className: 'match-row' },
-        matchHeadline(match),
-        matchMeta(formatDuration(match.durationMs), `peak ${match.peakPlayers} players`, `ended ${timeAgo(now - match.endedAt)}`),
-        mvp
-          ? el(
-              'p',
-              { className: 'mvp' },
-              el('span', { className: 'mvp-label', textContent: 'Top player' }),
-              el('span', { className: 'player' }, playerName(mvp)),
-              ` ${mvp.kills} kills, ${kd(mvp.kills, mvp.deaths)} K/D`,
-            )
-          : null,
+        { className: `regular${i < 3 ? ' regular-top' : ''}` },
+        name,
+        el('span', { className: 'regular-meta', textContent: regularMeta(p) }),
+        el('span', { className: 'regular-since', textContent: `First seen ${p.since}` }),
+        ...(p.founder ? [el('span', { className: 'regular-badge', textContent: 'There from the start' })] : []),
       );
     }),
   );
 };
 
-// The top of the leaderboard's first board, most kills.
-const renderBoard = () => {
-  const root = $('peek-board');
-  const leaderboard = stats?.leaderboard;
-  if (!leaderboard) {
-    const message = stats ? 'The leaderboard appears once the bot keeps player records.' : 'Waiting for live stats.';
-    root.replaceChildren(el('p', { className: 'muted', textContent: message }));
-    return;
-  }
-  const [board] = BOARDS;
-  setText($('board-title'), `${board.title}, last ${leaderboard.days} days`);
-  const rows = (leaderboard[board.key] ?? []).slice(0, LEADERS);
-  root.replaceChildren(rows.length > 0 ? boardTable(board, rows) : el('p', { className: 'muted', textContent: 'Nobody yet.' }));
-};
-
-// Players over the last 24 hours, with the day's headline numbers above.
-const renderPopulation = (now) => {
-  population.update({
-    history: stats?.history ?? [],
-    capacity: stats?.server?.maxPlayers ?? 0,
-    live: stats?.thresholds.live ?? 20,
-    now,
-  });
-  const history = (stats?.history ?? []).filter(([at]) => at >= now - DAY);
-  const matches = (stats?.matches ?? []).filter((m) => now - m.endedAt < DAY).length;
-  const today = stats?.days.find((d) => d.day === new Date(now).toISOString().slice(0, 10));
-  setText(
-    $('peek-stats'),
-    stats
-      ? [
-          history.length > 0 ? `Peak ${peak(history)} players` : null,
-          `${matches} match${matches === 1 ? '' : 'es'}`,
-          `live ${formatHours(today?.liveMinutes ?? 0)} today`,
-        ]
-          .filter(Boolean)
-          .join(' · ')
-      : '',
+const render = (l) => {
+  // Shown first, so the charts can measure themselves.
+  $('lifetime').hidden = false;
+  renderRegulars(l.regulars);
+  $('lifetime-tiles').replaceChildren(
+    ...publicLifetimeTiles(l).map(([label, value, sub]) =>
+      el('div', { className: 'tile' }, el('p', { className: 'tile-label', textContent: label }), el('p', { className: 'tile-value', textContent: value }), el('p', { className: 'tile-sub', textContent: sub })),
+    ),
   );
+  $('lifetime-records').replaceChildren(...publicRecords(l).map((line) => el('li', { textContent: line })));
+  $('lifetime-sub').textContent = `Everything from ${l.since} to ${l.through}. Days are UTC.`;
+
+  const weeks = peopleChart($('weeks-chart'));
+  weeks.update({
+    unit: 'week',
+    slots: l.weeks.map((w) => ({ key: w.week, label: DAY_SHORT.format(at(w.week)), title: `week of ${w.week}`, total: w.players, fresh: w.new_players })),
+  });
+  tableOf($('weeks-table'), ['Week of (UTC)', 'Players', 'New players'], [...l.weeks].reverse().map((w) => [w.week, w.players, w.new_players ?? '–']));
+
+  const days = lineChart($('people-chart'));
+  days.update({ points: l.days.map((d) => ({ day: d.day, value: d.players })), average: true, label: 'Players each day', format: (v) => `${Math.round(v)} players` });
+  tableOf($('people-table'), ['Day (UTC)', 'Players'], [...l.days].reverse().map((d) => [d.day, d.players]));
+
+  // When we are busiest, as the reader's own week.
+  const week = l.busy === null ? null : localWeek(l.busy.players, new Date().getTimezoneOffset());
+  $('lifetime-busy').hidden = week === null;
+  if (week !== null) {
+    $('busy-note').textContent = `${busiestHourText(week)} Average over ${l.busy.days} days, your local time.`.trim();
+    const levels = busyLevels(week);
+    const hours = Array.from({ length: 24 }, (_, h) => h);
+    $('busy-grid').replaceChildren(
+      el('thead', {}, el('tr', {}, el('th', { scope: 'col', textContent: '' }), ...hours.map((h) => el('th', { scope: 'col', className: 'heat-hour', textContent: h % 3 === 0 ? String(h) : '' })))),
+      el(
+        'tbody',
+        {},
+        ...week.map((row, day) =>
+          el(
+            'tr',
+            {},
+            el('th', { scope: 'row', textContent: DAY_NAMES[day] }),
+            ...row.map((v, h) => {
+              const label = `${DAY_NAMES[day]} ${String(h).padStart(2, '0')}:00: ${v < 1 ? 'under 1' : `about ${Math.round(v)}`} players on average`;
+              const td = el('td', { className: `heat-cell heat-${levels[day][h]}`, title: label, tabIndex: 0 });
+              td.setAttribute('aria-label', label);
+              const show = () => ($('busy-readout').textContent = label);
+              td.addEventListener('focus', show);
+              td.addEventListener('mouseenter', show);
+              return td;
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Favourite maps: each one's share of the matches played.
+  const matches = l.maps.reduce((sum, m) => sum + m.matches, 0);
+  const lengths = barLengths(l.maps.map((m) => m.matches));
+  $('maps-bars').replaceChildren(
+    ...l.maps.map((m, i) => {
+      const fill = el('span', { className: 'pt-fill' });
+      fill.style.width = `${Math.round((lengths[i] ?? 0) * 1000) / 10}%`;
+      return el(
+        'li',
+        { className: 'pt-row' },
+        el('span', { className: 'pt-label' }, m.map, el('span', { className: 'pt-sub', textContent: `${m.matches} ${m.matches === 1 ? 'match' : 'matches'}` })),
+        el('span', { className: 'pt-track' }, fill),
+        el('span', { className: 'pt-value', textContent: shareOf(m.matches, matches) }),
+      );
+    }),
+  );
+  $('lifetime-maps').hidden = l.maps.length === 0;
+
+  tableOf(
+    $('months-table'),
+    ['Month', 'Players', 'New players', 'Hours played', 'Matches'],
+    [...l.months].reverse().map((m) => [MONTH.format(at(`${m.month}-01`)), m.players, m.new_players ?? '–', m.hours.toLocaleString('en-GB'), m.matches]),
+  );
+  $('weeks-legend').replaceChildren(legend(['pt-key-returning', 'Players'], ['pt-key-new', 'New players']));
+  $('people-legend').replaceChildren(legend(['pt-key-raw', 'Each day'], ['pt-key-avg', '7-day average']));
 };
 
-if (!moved) {
-  startLive((latest) => {
-    stats = latest;
-    const now = Date.now();
-    renderServer(now);
-    renderDiscord();
-    renderVip();
-    renderCurrentMatch(now);
-    renderMatches(now);
-    renderBoard();
-    renderPopulation(now);
-  });
+// What the page says in place of the figures, and nothing else.
+const status = (text) => {
+  $('lifetime-status').hidden = false;
+  $('lifetime-status').textContent = text;
+};
 
-  // Keep "updated 2 min ago" honest between fetches.
-  setInterval(() => {
-    if (!document.hidden) renderServer(Date.now());
-  }, 15_000);
-}
+const load = async () => {
+  try {
+    const response = await fetch('data/lifetime.json', { headers: { accept: 'application/json' } });
+    if (!response.ok) return status('We couldn’t load the numbers just now. Try again in a minute.');
+    const data = await response.json();
+    if (!data?.since) return status('There are no numbers to show.');
+    $('lifetime-status').hidden = true;
+    render(data);
+  } catch {
+    status('We couldn’t load the numbers just now. Try again in a minute.');
+  }
+};
+
+load();
+
+watchArt();

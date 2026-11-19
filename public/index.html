@@ -3,135 +3,48 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>gaminginit | WARDOGS server stats and gaming community</title>
-    <meta name="description" content="gaminginit is a gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <title>Thank you | gaminginit</title>
+    <meta name="description" content="gaminginit closed on 24 November 2026. Thank you to everyone who played on our WARDOGS server. Here is everything we did together." />
     <link rel="canonical" href="https://gaminginit.com/" />
     <meta property="og:site_name" content="gaminginit" />
-    <meta property="og:title" content="gaminginit | WARDOGS server stats and gaming community" />
-    <meta property="og:description" content="A gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta property="og:title" content="Thank you | gaminginit" />
+    <meta property="og:description" content="gaminginit closed on 24 November 2026. Thank you to everyone who played on our WARDOGS server." />
     <meta property="og:url" content="https://gaminginit.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://gaminginit.com/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="gaminginit | WARDOGS server stats and gaming community" />
-    <meta name="twitter:description" content="A gaming community. Live WARDOGS server status, player stats and our Discord." />
+    <meta name="twitter:title" content="Thank you | gaminginit" />
+    <meta name="twitter:description" content="gaminginit closed on 24 November 2026. Thank you to everyone who played on our WARDOGS server." />
     <meta name="twitter:image" content="https://gaminginit.com/og-image.png" />
-    <meta name="twitter:image:alt" content="gaminginit: a gaming community. Live WARDOGS server status, player stats and our Discord." />
     <meta name="theme-color" content="#0b0d10" />
-    <!-- Where the bot serves its stats. See README.md. -->
-    <meta name="stats-url" content="https://wardogs-discord-bot.idea-squared.workers.dev/api/stats" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="art-home.css" />
-    <link rel="stylesheet" href="art-coins.css" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "@id": "https://gaminginit.com/#website",
-            "url": "https://gaminginit.com/",
-            "name": "gaminginit",
-            "description": "A gaming community. Live WARDOGS server status, player stats and our Discord.",
-            "inLanguage": "en-GB",
-            "publisher": { "@id": "https://gaminginit.com/#organization" }
-          },
-          {
-            "@type": "Organization",
-            "@id": "https://gaminginit.com/#organization",
-            "name": "gaminginit",
-            "url": "https://gaminginit.com/",
-            "logo": "https://gaminginit.com/apple-touch-icon.png",
-            "sameAs": ["https://discord.gg/qsJFYGhSJ4"]
-          }
-        ]
-      }
-    </script>
+    <link rel="stylesheet" href="art-stats.css" />
     <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/nav.js"></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="brand" href="#top" aria-label="gaminginit, home">
+        <a class="brand" href="./" aria-label="gaminginit, home">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
             <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="currentColor" stroke-width="2" />
             <path d="M9.5 11 15 16l-5.5 5M17 21.5h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           <span class="wordmark">gaming<span class="wordmark-accent">init</span></span>
         </a>
-        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
-          <span class="nav-toggle-label">Menu</span>
-          <svg class="nav-toggle-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-        </button>
-        <nav class="nav-sections" id="nav-menu" aria-label="Sections">
-          <ul class="nav-links">
-            <li><a href="live" data-keep-query><span class="nav-link-title">Live</span></a></li>
-            <li><a href="matches" data-keep-query><span class="nav-link-title">Matches</span></a></li>
-            <li class="nav-group">
-              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-players">Players<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
-              <span class="nav-group-label">Players</span>
-              <ul class="nav-sub" id="nav-sub-players">
-                <li><a href="leaderboard" data-keep-query><span class="nav-link-title">Leaderboard</span><span class="nav-link-note">Top kills, K/D and seeders</span></a></li>
-                <li><a href="players" data-keep-query><span class="nav-link-title">All players</span><span class="nav-link-note">Search anyone seen in 90 days</span></a></li>
-              </ul>
-            </li>
-            <li class="nav-group">
-              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-stats">Stats<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
-              <span class="nav-group-label">Stats</span>
-              <ul class="nav-sub" id="nav-sub-stats">
-                <li><a href="stats" data-keep-query><span class="nav-link-title">Server activity</span><span class="nav-link-note">Players over time and busy hours</span></a></li>
-                <li><a href="teams" data-keep-query><span class="nav-link-title">Team win rates</span><span class="nav-link-note">Which side wins most</span></a></li>
-                <li><a href="lifetime" data-keep-query><span class="nav-link-title">Lifetime stats</span><span class="nav-link-note">Everything since we started</span></a></li>
-              </ul>
-            </li>
-            <li class="nav-group">
-              <button type="button" class="nav-group-btn" aria-expanded="false" aria-controls="nav-sub-community">Community<svg class="nav-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
-              <span class="nav-group-label">Community</span>
-              <ul class="nav-sub" id="nav-sub-community">
-                <li><a href="vote" data-keep-query data-vote-link><span class="nav-link-title">Map vote</span><span class="nav-link-note">Pick the next map</span><span class="nav-badge">Open</span></a></li>
-                <li><a href="seeding" data-keep-query><span class="nav-link-title">Seeding &amp; VIP</span><span class="nav-link-note">Help fill the server and earn VIP</span></a></li>
-                <li><a href="coins" data-keep-query><span class="nav-link-title">INITcoins</span><span class="nav-link-note">Earn coins, spend them on VIP</span></a></li>
-                <li><a href="rules" data-keep-query><span class="nav-link-title">Rules</span><span class="nav-link-note">How to play fair on the server</span></a></li>
-                <li><a href="season" data-keep-query><span class="nav-link-title">Season roundup</span><span class="nav-link-note">Awards, records and team of the season</span></a></li>
-              </ul>
-            </li>
-            <li><a href="shame" data-keep-query><span class="nav-link-title">Shame</span></a></li>
-            <li class="nav-panel-cta">
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="menu" rel="noopener">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                <span>Join our Discord</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-        <a class="status nav-status" id="nav-status" href="./#join" data-keep-query data-kind="empty" hidden>
-          <span class="status-icon" aria-hidden="true"></span>
-          <span class="nav-status-label"></span>
-          <span class="nav-status-count"></span>
-        </a>
-        <a class="btn btn-discord btn-small nav-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="nav" rel="noopener">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-          <span>Discord</span>
-        </a>
       </div>
     </header>
 
     <main id="main">
-      <!-- The notice for every page, like the server being down. Set in announcement.json; see README.md. -->
-      <div class="announcement wrap" id="announcement" role="status" hidden></div>
-      <div class="notice wrap" id="notice" role="status" hidden></div>
-
-      <section class="hero" id="top" data-kind="waiting">
+      <section class="hero" id="top" data-kind="offline">
         <svg class="hero-art" viewBox="0 0 1200 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="ha-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--ha-sky1)" /><stop offset="1" style="stop-color: var(--ha-sky2)" /></linearGradient>
@@ -143,224 +56,101 @@
           <circle class="ha-sun" cx="820" cy="206" r="38" style="fill: var(--ha-sun)" />
           <path d="M-20 230 120 150l90 60 130-90 150 100 120-60 140 70 130-90 160 100 110-70 130 80v70H-20z" style="fill: var(--ha-far)" />
           <path d="M-20 262c120-40 220-20 340 0s220 30 340 0 260-40 380-10 160 10 160 10v78H-20z" style="fill: var(--ha-mid)" />
-          <g data-for="seeding live" style="fill: var(--ha-near)">
-            <path d="M120 270l30-40 30 40zM150 230v-22" /><rect x="146" y="262" width="8" height="8" />
-            <path d="M330 276l22-30 22 30z" />
-          </g>
-          <g data-for="empty waiting" style="fill: var(--ha-near)"><path d="M180 276l34-46 34 46z" /><path d="M214 230v-18" stroke="currentColor" /></g>
           <g class="ha-trees" style="fill: var(--ha-near)">
             <path d="M40 290l14-44 14 44zM70 290l11-34 11 34zM1040 290l14-44 14 44zM1074 290l12-38 12 38zM1130 290l14-48 14 48z" />
           </g>
-          <g data-for="seeding live"><g class="ha-smoke" fill="#cbd5e1"><ellipse cx="150" cy="198" rx="9" ry="6" /><ellipse cx="158" cy="184" rx="11" ry="7" /></g>
-            <circle class="ha-fire" cx="340" cy="286" r="5" fill="#fbbf24" /></g>
-          <g data-for="live">
-            <path d="M0 296c180-20 340-6 520-12s300 14 480 4 200-6 200-6v38H0z" style="fill: var(--ha-near)" />
-            <g style="fill: var(--ha-near)"><path d="M470 280h60l8-12h40l6 12h30v10H470z" /><rect x="566" y="262" width="34" height="7" /><rect x="596" y="259" width="48" height="3" /></g>
-            <g style="fill: var(--ha-near)"><path d="M880 280h50l6-16h28l6 16h24v10H880z" /><rect x="944" y="256" width="38" height="3" /></g>
-            <g class="ha-tracers" stroke="#fde68a" stroke-width="2" stroke-linecap="round"><path d="M650 258 760 226M660 256 780 234" /><path d="M990 252 900 226" /></g>
-            <g class="ha-flash"><circle cx="240" cy="270" r="9" fill="#fb923c" /><circle cx="700" cy="268" r="7" fill="#fde68a" /></g>
-            <g class="ha-smoke" fill="#64748b"><ellipse cx="240" cy="252" rx="14" ry="8" /><ellipse cx="252" cy="232" rx="18" ry="9" /><ellipse cx="700" cy="248" rx="12" ry="7" /></g>
-          </g>
-          <g data-for="offline"><path d="M610 300 600 300 610 190 620 300z" fill="none" stroke="#6b7280" stroke-width="3" /><circle cx="610" cy="186" r="4" fill="#4b5563" /></g>
           <rect y="300" width="1200" height="20" style="fill: var(--ha-near)" />
         </svg>
         <div class="wrap hero-inner">
           <div class="hero-copy">
-            <p class="eyebrow"><span class="eyebrow-more">Gaming community · </span>Now playing WARDOGS</p>
+            <p class="eyebrow">Closed 24 November 2026</p>
             <h1 class="wordmark">gaming<span class="wordmark-accent">init</span></h1>
             <p class="lede">
-              A gaming community built around playing together. Right now that means our WARDOGS server: squad up with
-              regulars, <a href="seeding" data-keep-query>help seed it</a> and play full matches.
-              <!-- Left out on phones, so the server card comes up the screen. Step 2 says it too. -->
-              <span class="lede-more">Everything is organised on our Discord, and the bot there tells you when the server is filling up.</span>
+              Thank you. To everyone who joined a match, seeded an empty server at odd hours, argued about the next map
+              or just turned up to play: you made this community. The WARDOGS server shut down on 24 November 2026.
+              Below is everything we did together.
             </p>
-            <div class="hero-notes">
-              <!-- Shown when the bot gives seeders VIP, or pays them INITcoins. -->
-              <p class="vip-cta" id="vip-cta" hidden>
-                <span class="vip-tag" id="vip-cta-tag">Seeder VIP</span>
-                <span class="vip-offer" id="vip-cta-text"></span>
-                <a href="#vip" id="vip-cta-link">How it works</a>
-              </p>
-              <!-- The Season 2 roundup, open since the wipe on 12 November 2026. Styled like the Seeder VIP box above. -->
-              <p class="vip-cta">
-                <span class="vip-tag">Season 2</span>
-                <span class="vip-offer">The team of the season, the top players, awards, records and the Season in Review.</span>
-                <a href="season" data-keep-query>See the roundup</a>
-              </p>
-            </div>
             <div class="hero-actions">
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="hero" rel="noopener">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                <span>Join our Discord</span>
-              </a>
-              <!-- Shown while a next-map vote is open (see votepeek.js). -->
-              <a class="btn btn-vote" id="hero-vote" href="vote" data-keep-query hidden>Vote on the next map</a>
-              <a class="btn btn-ghost" href="#server">Server status</a>
+              <a class="btn btn-ghost" href="#lifetime">See the numbers</a>
             </div>
-            <p class="discord-count" id="discord-count" hidden></p>
-          </div>
-
-          <div class="hero-side">
-            <article class="card server-card" id="server" aria-labelledby="server-name">
-              <div class="server-art" id="server-art" aria-hidden="true"></div>
-              <div class="server-top">
-                <span class="status" id="server-status" data-kind="waiting" aria-live="polite">
-                  <span class="status-icon" aria-hidden="true"></span>
-                  <span class="status-label">Connecting</span>
-                </span>
-                <span class="updated" id="server-updated"></span>
-              </div>
-              <h2 class="server-name" id="server-name">Game server</h2>
-              <p class="server-detail" id="server-detail">Loading live status…</p>
-              <p class="server-help" id="server-help" hidden><a href="seeding" data-keep-query>What is seeding?</a></p>
-              <div class="players">
-                <p class="players-count"><strong id="players-now">–</strong> <span id="players-max"></span></p>
-                <div
-                  class="meter"
-                  id="players-meter"
-                  role="meter"
-                  aria-label="Players online"
-                  aria-valuemin="0"
-                  aria-valuemax="1"
-                  aria-valuenow="0"
-                >
-                  <span class="meter-fill"></span>
-                  <span class="meter-mark"><span class="meter-label" id="meter-label"></span></span>
-                </div>
-              </div>
-              <dl class="server-facts">
-                <div>
-                  <dt>Map</dt>
-                  <dd id="server-map">–</dd>
-                </div>
-                <div>
-                  <dt>Score</dt>
-                  <dd id="server-score">–</dd>
-                </div>
-              </dl>
-            </article>
-            <!-- The next-map vote: open while a match is on, then its result for a while. Hidden otherwise. See votepeek.js. -->
-            <article class="card vote-peek" id="vote-peek" aria-labelledby="vote-peek-title" hidden>
-              <p class="vote-peek-top"><span class="vip-tag">Next map vote</span></p>
-              <h2 class="vote-peek-title" id="vote-peek-title">Vote for the next map</h2>
-              <p class="vote-peek-detail" id="vote-peek-detail"></p>
-              <ol class="vote-peek-list" id="vote-peek-list"></ol>
-              <p class="vote-peek-actions" id="vote-peek-actions">
-                <a class="btn btn-discord" id="vote-peek-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="vote-peek" rel="noopener">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                  <span>Vote in Discord</span>
-                </a>
-                <a href="vote" data-keep-query>How it works</a>
-              </p>
-            </article>
           </div>
         </div>
       </section>
 
-      <!-- INITcoins: shown when the bot has them on. What a seed pays comes from the bot's own numbers. -->
-      <section class="section coins-cta" id="coins-cta" aria-labelledby="coins-cta-title" hidden>
+      <section class="section section-flush-bottom">
         <div class="wrap">
-          <div class="coins-cta-card">
-            <div class="coins-cta-copy">
-              <p class="coins-eyebrow"><span class="coins-eyebrow-dot" aria-hidden="true"></span>INITcoins</p>
-              <h2 id="coins-cta-title">Get paid to fill the server.</h2>
-              <p class="coins-cta-lede" id="coins-cta-lede"></p>
-              <ul class="coins-cta-points">
-                <li><strong id="cta-seed">150</strong><span>for every seed</span></li>
-                <li><strong id="cta-week">600</strong><span id="cta-week-note">buys a week of whitelist</span></li>
-                <li><strong>6</strong><span>missions a week, on top</span></li>
-              </ul>
-              <p class="coins-cta-actions">
-                <a class="btn btn-coin btn-big" id="coins-cta-shop" href="coins" data-keep-query>See the shop</a>
-                <a class="btn btn-ghost btn-big" href="coins#earn" data-keep-query>How you earn</a>
-              </p>
-            </div>
-            <div class="coins-cta-art" id="coins-cta-art" aria-hidden="true"></div>
-          </div>
+          <p class="section-note" id="lifetime-status" role="status">Loading…</p>
         </div>
       </section>
 
-      <section class="section" aria-labelledby="peeks-title">
+      <!-- The final lifetime stats, from data/lifetime.json. Hidden until they load (js/app.js). -->
+      <section class="section" id="lifetime" aria-labelledby="lifetime-data-title" hidden>
         <div class="wrap">
-          <div class="section-head">
-            <h2 id="peeks-title">On the server</h2>
-            <p class="section-note">A first look. Each has a page with the rest.</p>
-          </div>
-          <div class="peeks">
-            <article class="card peek" aria-labelledby="current-title">
-              <h3 id="current-title">On now</h3>
-              <div id="current-match"><p class="muted">Loading…</p></div>
-              <a class="more-link" href="live" data-keep-query>Watch it live: kill feed, streaks and rivalries <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="card peek" aria-labelledby="recent-title">
-              <h3 id="recent-title">Latest matches</h3>
-              <ol class="match-list" id="match-list"><li class="muted">Loading…</li></ol>
-              <a class="more-link" href="matches" data-keep-query>See all matches <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="card peek" aria-labelledby="board-title">
-              <h3 id="board-title">Most kills, last 30 days</h3>
-              <div id="peek-board"><p class="muted">Loading…</p></div>
-              <a class="more-link" href="leaderboard" data-keep-query>The full leaderboard and weapons <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="card peek" aria-labelledby="population-title">
-              <h3 id="population-title">Players, last 24 hours</h3>
-              <p class="match-meta" id="peek-stats"></p>
-              <div
-                class="chart"
-                id="population-chart"
-                tabindex="0"
-                role="img"
-                aria-label="Players online over the last 24 hours. Use the left and right arrow keys to read values."
-              ></div>
-              <a class="more-link" href="stats" data-keep-query>Busy times, the daily peak and more <span aria-hidden="true">→</span></a>
-            </article>
-          </div>
-        </div>
-      </section>
+          <h2 class="page-title" id="lifetime-data-title">The numbers</h2>
+          <p class="section-note lifetime-sub" id="lifetime-sub"></p>
 
-      <section class="section join" id="join" aria-labelledby="join-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="join-title">Play with us</h2>
+          <div class="tiles" id="lifetime-tiles"></div>
+          <ul class="lifetime-records" id="lifetime-records" role="list"></ul>
+
+          <section class="card regulars" id="lifetime-regulars" aria-labelledby="regulars-title" hidden>
+            <h3 id="regulars-title">Our regulars</h3>
+            <p class="chart-sub" id="regulars-note"></p>
+            <ol class="regulars-grid" id="regulars-list" role="list"></ol>
+          </section>
+
+          <div class="charts">
+            <figure class="card chart-card chart-card-wide">
+              <figcaption>
+                <h3>Players each week</h3>
+                <p class="chart-sub">Different players each week. The brighter part is people playing with us for the first time.</p>
+              </figcaption>
+              <div class="chart" id="weeks-chart"></div>
+              <div id="weeks-legend"></div>
+              <details class="table-view">
+                <summary>Show as table</summary>
+                <div class="table-scroll"><table id="weeks-table"></table></div>
+              </details>
+            </figure>
+
+            <figure class="card chart-card chart-card-wide">
+              <figcaption>
+                <h3>Players each day</h3>
+                <p class="chart-sub">Different players each day, the latest 90 days (UTC days), with the average of the last 7.</p>
+              </figcaption>
+              <div class="chart" id="people-chart"></div>
+              <div id="people-legend"></div>
+              <details class="table-view">
+                <summary>Show as table</summary>
+                <div class="table-scroll"><table id="people-table"></table></div>
+              </details>
+            </figure>
+
+            <figure class="card chart-card chart-card-wide" id="lifetime-busy" hidden>
+              <figcaption>
+                <h3>When we are busiest</h3>
+                <p class="chart-sub" id="busy-note"></p>
+              </figcaption>
+              <p class="section-note pt-peak" id="busy-readout" aria-live="polite"></p>
+              <div class="table-scroll"><table class="heatmap" id="busy-grid"></table></div>
+              <ul class="pt-legend"><li>Quieter</li><li><span class="pt-swatch heat-1" aria-hidden="true"></span><span class="pt-swatch heat-2" aria-hidden="true"></span><span class="pt-swatch heat-3" aria-hidden="true"></span><span class="pt-swatch heat-4" aria-hidden="true"></span></li><li>Busier</li></ul>
+            </figure>
+
+            <figure class="card chart-card" id="lifetime-maps" hidden>
+              <figcaption>
+                <h3>Favourite maps</h3>
+                <p class="chart-sub">Share of the matches we have played.</p>
+              </figcaption>
+              <ul class="pt-bars" id="maps-bars"></ul>
+            </figure>
+
+            <figure class="card chart-card">
+              <figcaption>
+                <h3>Month by month</h3>
+                <p class="chart-sub">Players, new players, hours played and matches.</p>
+              </figcaption>
+              <div class="table-scroll"><table id="months-table"></table></div>
+            </figure>
           </div>
-          <ol class="steps">
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">1</span>
-              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="6" y="14" width="52" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M24 48l-4 8h24l-4-8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><g fill="var(--accent)"><circle cx="24" cy="31" r="4"/><circle cx="40" cy="31" r="4"/></g><path d="M22 40c6 3 14 3 20 0" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M26 22c4-2 8-2 12 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".6"/></svg>
-              <h3>Join the gaminginit Discord</h3>
-              <p>Meet the regulars, find a squad and hear about events first.</p>
-              <a class="btn btn-discord" href="https://discord.gg/qsJFYGhSJ4" data-src="join" rel="noopener">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#discord-logo" /></svg>
-                <span>Join our Discord</span>
-              </a>
-              <!-- The invite as text, for when the button doesn't open Discord. -->
-              <p class="discord-fallback">Button not working? In Discord, choose Add a Server, then Join a Server, and paste <code>discord.gg/qsJFYGhSJ4</code>.</p>
-              <!-- For someone not signed in (see chip.js). -->
-              <p class="discord-fallback" data-signed-out hidden>Already playing? <a href="account" data-keep-query>Sign in with Discord</a> to link your Steam account, get a role, and be told when your seeder VIP is earned or ending.</p>
-            </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">2</span>
-              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M32 8a16 16 0 0 0-16 16c0 10-5 12-5 16h42c0-4-5-6-5-16A16 16 0 0 0 32 8z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M26 46a6 6 0 0 0 12 0" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="48" cy="14" r="7" fill="var(--accent)"/><path d="M6 20c2-5 5-8 9-10M58 36c-1 4-3 7-7 9" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></svg>
-              <h3>Watch for the alerts</h3>
-              <p>
-                The bot posts in Discord when the server starts seeding, when it goes live and when it needs players to keep
-                going. Every match it also opens a vote for the next map.
-              </p>
-            </li>
-            <li class="card step">
-              <span class="step-n" aria-hidden="true">3</span>
-              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="6" y="10" width="52" height="38" rx="6" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6 20h52" stroke="currentColor" stroke-width="2.5"/><g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity=".6"><path d="M12 28h20M12 35h14M12 42h18"/></g><circle cx="44" cy="35" r="8" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M50 41l7 7" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/><path d="M22 54h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-              <h3>Find the server</h3>
-              <p>Search the WARDOGS server browser for <strong id="join-server-name">our server</strong> and jump in.</p>
-            </li>
-            <li class="card step step-vip" id="vip" hidden>
-              <span class="step-n" aria-hidden="true">4</span>
-              <svg class="step-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M32 54V32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M32 36c-10 0-16-6-16-16 10 0 16 6 16 16z" fill="var(--accent)"/><path d="M32 30c0-9 6-15 16-15 0 9-6 15-16 15z" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 54h28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-              <h3 id="vip-step-title">Seed and get VIP</h3>
-              <p><strong id="vip-step-offer"></strong></p>
-              <p id="vip-step-detail"></p>
-            </li>
-          </ol>
         </div>
       </section>
     </main>
@@ -368,20 +158,9 @@
     <footer class="footer">
       <div class="wrap footer-inner">
         <p class="footer-brand"><span class="wordmark">gaming<span class="wordmark-accent">init</span></span> · a gaming community</p>
-        <p>Live numbers come from the game server’s RCON, read once a minute by our Discord bot.</p>
         <p>Not affiliated with the developers or publishers of WARDOGS.</p>
-        <p><a href="admin" data-keep-query>Staff sign-in</a></p>
         <p class="footer-credit">Developed by <a href="https://ideasquared.co.uk" rel="noopener">ideaSquared</a></p>
       </div>
     </footer>
-
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <symbol id="discord-logo" viewBox="0 0 24 24">
-        <path
-          fill="currentColor"
-          d="M20.32 4.37A19.8 19.8 0 0 0 15.39 2.85a.07.07 0 0 0-.08.04c-.21.38-.45.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.93 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z"
-        />
-      </symbol>
-    </svg>
   </body>
 </html>
